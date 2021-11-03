@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["VecHandoff","A [VecDeque]-based FIFO handoff."]]});

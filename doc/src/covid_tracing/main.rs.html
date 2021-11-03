@@ -178,6 +178,7 @@
 <span id="178">178</span>
 <span id="179">179</span>
 <span id="180">180</span>
+<span id="181">181</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">feature</span>(<span class="ident">never_type</span>)]</span>
 
 <span class="kw">use</span> <span class="ident">std::sync::mpsc</span>;
@@ -186,8 +187,9 @@
 <span class="kw">use</span> <span class="ident">hydroflow::compiled::pull::SymmetricHashJoin</span>;
 <span class="kw">use</span> <span class="ident">hydroflow::compiled</span>::{<span class="ident">ForEach</span>, <span class="ident">Pivot</span>, <span class="ident">Tee</span>};
 <span class="kw">use</span> <span class="ident">hydroflow::scheduled::collections::Iter</span>;
+<span class="kw">use</span> <span class="ident">hydroflow::scheduled::ctx::SendCtx</span>;
 <span class="kw">use</span> <span class="ident">hydroflow::scheduled::handoff::VecHandoff</span>;
-<span class="kw">use</span> <span class="ident">hydroflow::scheduled</span>::{<span class="ident">Hydroflow</span>, <span class="ident">SendCtx</span>};
+<span class="kw">use</span> <span class="ident">hydroflow::scheduled::Hydroflow</span>;
 <span class="kw">use</span> <span class="ident">hydroflow</span>::{<span class="ident">tl</span>, <span class="ident">tlt</span>};
 <span class="kw">use</span> <span class="ident">rand::Rng</span>;
 
