@@ -150,9 +150,38 @@
 <span id="150">150</span>
 <span id="151">151</span>
 <span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+<span id="166">166</span>
+<span id="167">167</span>
+<span id="168">168</span>
+<span id="169">169</span>
+<span id="170">170</span>
+<span id="171">171</span>
+<span id="172">172</span>
+<span id="173">173</span>
+<span id="174">174</span>
+<span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
+<span id="180">180</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">feature</span>(<span class="ident">never_type</span>)]</span>
 
 <span class="kw">use</span> <span class="ident">std::sync::mpsc</span>;
+<span class="kw">use</span> <span class="ident">std::time::Duration</span>;
 
 <span class="kw">use</span> <span class="ident">hydroflow::compiled::pull::SymmetricHashJoin</span>;
 <span class="kw">use</span> <span class="ident">hydroflow::compiled</span>::{<span class="ident">ForEach</span>, <span class="ident">Pivot</span>, <span class="ident">Tee</span>};
@@ -160,18 +189,22 @@
 <span class="kw">use</span> <span class="ident">hydroflow::scheduled::handoff::VecHandoff</span>;
 <span class="kw">use</span> <span class="ident">hydroflow::scheduled</span>::{<span class="ident">Hydroflow</span>, <span class="ident">SendCtx</span>};
 <span class="kw">use</span> <span class="ident">hydroflow</span>::{<span class="ident">tl</span>, <span class="ident">tlt</span>};
+<span class="kw">use</span> <span class="ident">rand::Rng</span>;
+
+<span class="kw">mod</span> <span class="ident">people</span>;
 
 <span class="comment">// const TRANSMISSIBLE_DURATION: Duration = Duration::from_secs(14 * 24 * 3600);</span>
 <span class="kw">const</span> <span class="ident">TRANSMISSIBLE_DURATION</span>: <span class="ident">usize</span> <span class="op">=</span> <span class="number">14</span>;
 
 <span class="kw">fn</span> <span class="ident">main</span>() {
     <span class="kw">type</span> <span class="ident">Pid</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>;
+    <span class="kw">type</span> <span class="ident">Name</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>;
     <span class="kw">type</span> <span class="ident">Phone</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>;
     <span class="kw">type</span> <span class="ident">DateTime</span> <span class="op">=</span> <span class="ident">usize</span>;
 
     <span class="kw">let</span> (<span class="ident">contacts_send</span>, <span class="ident">contacts_recv</span>) <span class="op">=</span> <span class="ident">mpsc::channel</span>::<span class="op">&lt;</span>(<span class="ident">Pid</span>, <span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">&gt;</span>();
     <span class="kw">let</span> (<span class="ident">diagnosed_send</span>, <span class="ident">diagnosed_recv</span>) <span class="op">=</span> <span class="ident">mpsc::channel</span>::<span class="op">&lt;</span>(<span class="ident">Pid</span>, (<span class="ident">DateTime</span>, <span class="ident">DateTime</span>))<span class="op">&gt;</span>();
-    <span class="kw">let</span> (<span class="ident">people_send</span>, <span class="ident">people_recv</span>) <span class="op">=</span> <span class="ident">mpsc::channel</span>::<span class="op">&lt;</span>(<span class="ident">Pid</span>, <span class="ident">Phone</span>)<span class="op">&gt;</span>();
+    <span class="kw">let</span> (<span class="ident">people_send</span>, <span class="ident">people_recv</span>) <span class="op">=</span> <span class="ident">mpsc::channel</span>::<span class="op">&lt;</span>(<span class="ident">Pid</span>, (<span class="ident">Name</span>, <span class="ident">Phone</span>))<span class="op">&gt;</span>();
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">df</span> <span class="op">=</span> <span class="ident">Hydroflow::new</span>();
 
@@ -250,15 +283,21 @@
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">people_exposure</span> <span class="op">=</span> <span class="ident">Default::default</span>();
 
-    <span class="kw">type</span> <span class="ident">NotifsIn</span> <span class="op">=</span> <span class="macro">tlt!</span>(<span class="ident">VecHandoff</span>::<span class="op">&lt;</span>(<span class="ident">Pid</span>, <span class="ident">Phone</span>)<span class="op">&gt;</span>, <span class="ident">VecHandoff</span>::<span class="op">&lt;</span>(<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">&gt;</span>);
+    <span class="kw">type</span> <span class="ident">NotifsIn</span> <span class="op">=</span> <span class="macro">tlt!</span>(
+        <span class="ident">VecHandoff</span>::<span class="op">&lt;</span>(<span class="ident">Pid</span>, (<span class="ident">Name</span>, <span class="ident">Phone</span>))<span class="op">&gt;</span>,
+        <span class="ident">VecHandoff</span>::<span class="op">&lt;</span>(<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">&gt;</span>
+    );
     <span class="kw">let</span> (<span class="macro">tl!</span>(<span class="ident">people_in</span>, <span class="ident">notifs_in</span>), ()) <span class="op">=</span>
         <span class="ident">df</span>.<span class="ident">add_subgraph</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">NotifsIn</span>, ()<span class="op">&gt;</span>(<span class="kw">move</span> <span class="op">|</span><span class="macro">tl!</span>(<span class="ident">peoples</span>, <span class="ident">exposures</span>), ()<span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">exposures</span> <span class="op">=</span> <span class="ident">exposures</span>.<span class="ident">take_inner</span>().<span class="ident">into_iter</span>();
             <span class="kw">let</span> <span class="ident">peoples</span> <span class="op">=</span> <span class="ident">peoples</span>.<span class="ident">take_inner</span>().<span class="ident">into_iter</span>();
 
             <span class="kw">let</span> <span class="ident">joined</span> <span class="op">=</span> <span class="ident">SymmetricHashJoin::new</span>(<span class="ident">peoples</span>, <span class="ident">exposures</span>, <span class="kw-2">&amp;mut</span> <span class="ident">people_exposure</span>);
-            <span class="kw">let</span> <span class="ident">joined_push</span> <span class="op">=</span> <span class="ident">ForEach::new</span>(<span class="op">|</span>(<span class="ident">pid</span>, <span class="ident">phone</span>, <span class="ident">exposure</span>)<span class="op">|</span> {
-                <span class="macro">println!</span>(<span class="string">&quot;[{}] To {}: Possible Exposure at {}&quot;</span>, <span class="ident">pid</span>, <span class="ident">phone</span>, <span class="ident">exposure</span>);
+            <span class="kw">let</span> <span class="ident">joined_push</span> <span class="op">=</span> <span class="ident">ForEach::new</span>(<span class="op">|</span>(<span class="ident">_pid</span>, (<span class="ident">name</span>, <span class="ident">phone</span>), <span class="ident">exposure</span>)<span class="op">|</span> {
+                <span class="macro">println!</span>(
+                    <span class="string">&quot;[{}] To {}: Possible Exposure at t = {}&quot;</span>,
+                    <span class="ident">name</span>, <span class="ident">phone</span>, <span class="ident">exposure</span>
+                );
             });
             <span class="kw">let</span> <span class="ident">pivot</span> <span class="op">=</span> <span class="ident">Pivot::new</span>(<span class="ident">joined</span>, <span class="ident">joined_push</span>);
             <span class="ident">pivot</span>.<span class="ident">run</span>();
@@ -268,37 +307,54 @@
     <span class="ident">df</span>.<span class="ident">add_edge</span>(<span class="ident">notifs_out</span>, <span class="ident">notifs_in</span>);
 
     <span class="kw">let</span> <span class="ident">reactor</span> <span class="op">=</span> <span class="ident">df</span>.<span class="ident">reactor</span>();
-    <span class="kw">let</span> (<span class="ident">is_done</span>, <span class="ident">set_done</span>) <span class="op">=</span> <span class="ident">std::sync::mpsc::sync_channel</span>(<span class="number">0</span>);
 
+    <span class="kw">let</span> <span class="ident">all_people</span> <span class="op">=</span> <span class="ident">people::get_people</span>();
+
+    <span class="kw">let</span> <span class="ident">inner</span> <span class="op">=</span> <span class="ident">all_people</span>.<span class="ident">clone</span>();
+    <span class="kw">let</span> <span class="ident">inner_reactor</span> <span class="op">=</span> <span class="ident">reactor</span>.<span class="ident">clone</span>();
     <span class="ident">std::thread::spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
-        <span class="ident">people_send</span>.<span class="ident">send</span>((<span class="string">&quot;Mingwei S&quot;</span>, <span class="string">&quot;+1 650 555 7283&quot;</span>)).<span class="ident">unwrap</span>();
-        <span class="ident">people_send</span>.<span class="ident">send</span>((<span class="string">&quot;Justin J&quot;</span>, <span class="string">&quot;+1 519 555 3458&quot;</span>)).<span class="ident">unwrap</span>();
-        <span class="ident">people_send</span>.<span class="ident">send</span>((<span class="string">&quot;Mae M&quot;</span>, <span class="string">&quot;+1 912 555 9129&quot;</span>)).<span class="ident">unwrap</span>();
-        <span class="ident">reactor</span>.<span class="ident">trigger</span>(<span class="ident">people_op_id</span>).<span class="ident">unwrap</span>(); <span class="comment">// Notifies scheduler. TODO(mingwei): better API.</span>
-
-        <span class="ident">contacts_send</span>.<span class="ident">send</span>((<span class="string">&quot;Mingwei S&quot;</span>, <span class="string">&quot;Justin J&quot;</span>, <span class="number">1031</span>)).<span class="ident">unwrap</span>();
-        <span class="ident">contacts_send</span>.<span class="ident">send</span>((<span class="string">&quot;Mingwei S&quot;</span>, <span class="string">&quot;Joe H&quot;</span>, <span class="number">1027</span>)).<span class="ident">unwrap</span>();
-        <span class="ident">reactor</span>.<span class="ident">trigger</span>(<span class="ident">contacts_op_id</span>).<span class="ident">unwrap</span>();
-
-        <span class="kw">let</span> <span class="ident">mae_diag_datetime</span> <span class="op">=</span> <span class="number">1022</span>;
-        <span class="ident">diagnosed_send</span>
-            .<span class="ident">send</span>((
-                <span class="string">&quot;Mae M&quot;</span>,
-                (
-                    <span class="ident">mae_diag_datetime</span>,
-                    <span class="ident">mae_diag_datetime</span> <span class="op">+</span> <span class="ident">TRANSMISSIBLE_DURATION</span>,
-                ),
-            ))
-            .<span class="ident">unwrap</span>();
-        <span class="ident">reactor</span>.<span class="ident">trigger</span>(<span class="ident">diagnosed_op_id</span>).<span class="ident">unwrap</span>();
-
-        <span class="ident">contacts_send</span>.<span class="ident">send</span>((<span class="string">&quot;Mingwei S&quot;</span>, <span class="string">&quot;Mae M&quot;</span>, <span class="number">1028</span>)).<span class="ident">unwrap</span>();
-        <span class="ident">reactor</span>.<span class="ident">trigger</span>(<span class="ident">contacts_op_id</span>).<span class="ident">unwrap</span>();
-
-        <span class="ident">set_done</span>.<span class="ident">recv</span>().<span class="ident">unwrap</span>();
+        <span class="kw">for</span> <span class="ident">person</span> <span class="kw">in</span> <span class="ident">inner</span> {
+            <span class="ident">people_send</span>.<span class="ident">send</span>(<span class="ident">person</span>).<span class="ident">unwrap</span>();
+        }
+        <span class="ident">inner_reactor</span>.<span class="ident">trigger</span>(<span class="ident">people_op_id</span>).<span class="ident">unwrap</span>();
     });
 
-    <span class="kw">while</span> <span class="ident">is_done</span>.<span class="ident">try_send</span>(()).<span class="ident">is_err</span>() {
+    <span class="ident">std::thread::spawn</span>(<span class="kw">move</span> <span class="op">|</span><span class="op">|</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">t</span> <span class="op">=</span> <span class="number">0</span>;
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">rand::thread_rng</span>();
+        <span class="kw">loop</span> {
+            <span class="ident">t</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
+            <span class="kw">match</span> <span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">0</span>..<span class="number">2</span>) {
+                <span class="number">0</span> =&gt; {
+                    <span class="comment">// New contact.</span>
+                    <span class="kw">if</span> <span class="ident">all_people</span>.<span class="ident">len</span>() <span class="op">&gt;</span><span class="op">=</span> <span class="number">2</span> {
+                        <span class="kw">let</span> <span class="ident">p1</span> <span class="op">=</span> <span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">0</span>..<span class="ident">all_people</span>.<span class="ident">len</span>());
+                        <span class="kw">let</span> <span class="ident">p2</span> <span class="op">=</span> <span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">0</span>..<span class="ident">all_people</span>.<span class="ident">len</span>());
+                        <span class="kw">if</span> <span class="ident">p1</span> <span class="op">!</span><span class="op">=</span> <span class="ident">p2</span> {
+                            <span class="ident">contacts_send</span>
+                                .<span class="ident">send</span>((<span class="ident">all_people</span>[<span class="ident">p1</span>].<span class="number">0</span>, <span class="ident">all_people</span>[<span class="ident">p2</span>].<span class="number">0</span>, <span class="ident">t</span>))
+                                .<span class="ident">unwrap</span>();
+                            <span class="ident">reactor</span>.<span class="ident">trigger</span>(<span class="ident">contacts_op_id</span>).<span class="ident">unwrap</span>();
+                        }
+                    }
+                }
+                <span class="number">1</span> =&gt; {
+                    <span class="comment">// Diagnosis.</span>
+                    <span class="kw">if</span> <span class="op">!</span><span class="ident">all_people</span>.<span class="ident">is_empty</span>() {
+                        <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">0</span>..<span class="ident">all_people</span>.<span class="ident">len</span>());
+                        <span class="ident">diagnosed_send</span>
+                            .<span class="ident">send</span>((<span class="ident">all_people</span>[<span class="ident">p</span>].<span class="number">0</span>, (<span class="ident">t</span>, <span class="ident">t</span> <span class="op">+</span> <span class="ident">TRANSMISSIBLE_DURATION</span>)))
+                            .<span class="ident">unwrap</span>();
+                        <span class="ident">reactor</span>.<span class="ident">trigger</span>(<span class="ident">diagnosed_op_id</span>).<span class="ident">unwrap</span>();
+                    }
+                }
+                <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
+            }
+            <span class="ident">std::thread::sleep</span>(<span class="ident">Duration::from_millis</span>(<span class="number">100</span>));
+        }
+    });
+
+    <span class="kw">loop</span> {
         <span class="ident">df</span>.<span class="ident">tick</span>();
     }
 }
