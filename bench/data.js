@@ -1,6 +1,6 @@
 window.BENCHMARK_DATA = 
 {
-  "lastUpdate": 1635972729835,
+  "lastUpdate": 1635974247844,
   "repoUrl": "https://github.com/hydro-project/hydroflow",
   "entries": {
     "Benchmark": [
@@ -954,6 +954,90 @@ window.BENCHMARK_DATA =
             "name": "reachability/hydroflow",
             "value": 2586284,
             "range": "± 2399",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "mingwei.samuel@gmail.com",
+            "name": "Mingwei Samuel",
+            "username": "MingweiSamuel"
+          },
+          "committer": {
+            "email": "mingwei.samuel@gmail.com",
+            "name": "Mingwei Samuel",
+            "username": "MingweiSamuel"
+          },
+          "distinct": true,
+          "id": "b1f4d69adf9176173b33cd0ede41c6f6c1ded831",
+          "message": "Split scheduled module into smaller pieces",
+          "timestamp": "2021-11-03T14:08:22-07:00",
+          "tree_id": "59d7a921deb6015f15b037aa697f9e6e2b082488",
+          "url": "https://github.com/hydro-project/hydroflow/commit/b1f4d69adf9176173b33cd0ede41c6f6c1ded831"
+        },
+        "date": 1635974247842,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "arithmetic/hydroflow/compiled",
+            "value": 374809,
+            "range": "± 2573",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/hydroflow",
+            "value": 196596146,
+            "range": "± 433211",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/scheduled",
+            "value": 193832066,
+            "range": "± 10762725",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/teer",
+            "value": 57965932,
+            "range": "± 328030",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow",
+            "value": 13104551,
+            "range": "± 53254",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow_builder",
+            "value": 46054287,
+            "range": "± 1837529",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow",
+            "value": 48308799,
+            "range": "± 381528",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow/compiled",
+            "value": 14688791,
+            "range": "± 81121",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/scheduled",
+            "value": 2645936,
+            "range": "± 2856",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow",
+            "value": 2600648,
+            "range": "± 2146",
             "unit": "ns/iter"
           }
         ]
