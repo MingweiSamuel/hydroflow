@@ -1,6 +1,6 @@
 window.BENCHMARK_DATA = 
 {
-  "lastUpdate": 1635911322936,
+  "lastUpdate": 1635972729835,
   "repoUrl": "https://github.com/hydro-project/hydroflow",
   "entries": {
     "Benchmark": [
@@ -870,6 +870,90 @@ window.BENCHMARK_DATA =
             "name": "reachability/hydroflow",
             "value": 2584035,
             "range": "± 1817",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "justin.jaffray@gmail.com",
+            "name": "Justin Jaffray",
+            "username": "justinj"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "6d424e7d6474b049f604f2de6855897591536505",
+          "message": "Extend Covid tracing demo (#4)\n\nThis commit extends the Covid tracing demo to run in real-time. Includes a\r\nbunch of randomly generated data to give it some texture.",
+          "timestamp": "2021-11-03T13:41:21-07:00",
+          "tree_id": "8c61f5637b9eab45b53f67f9dfa592b52cdd5eeb",
+          "url": "https://github.com/hydro-project/hydroflow/commit/6d424e7d6474b049f604f2de6855897591536505"
+        },
+        "date": 1635972729834,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "arithmetic/hydroflow/compiled",
+            "value": 375270,
+            "range": "± 2707",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/hydroflow",
+            "value": 204742143,
+            "range": "± 2942681",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/scheduled",
+            "value": 206982129,
+            "range": "± 2839406",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/teer",
+            "value": 60655494,
+            "range": "± 989345",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow",
+            "value": 9439682,
+            "range": "± 25274",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow_builder",
+            "value": 46115710,
+            "range": "± 1847212",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow",
+            "value": 48979169,
+            "range": "± 567073",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow/compiled",
+            "value": 14692228,
+            "range": "± 7714",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/scheduled",
+            "value": 2612959,
+            "range": "± 63455",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow",
+            "value": 2586284,
+            "range": "± 2399",
             "unit": "ns/iter"
           }
         ]
