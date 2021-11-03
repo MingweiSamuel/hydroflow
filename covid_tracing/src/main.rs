@@ -5,8 +5,9 @@ use std::sync::mpsc;
 use hydroflow::compiled::pull::SymmetricHashJoin;
 use hydroflow::compiled::{ForEach, Pivot, Tee};
 use hydroflow::scheduled::collections::Iter;
+use hydroflow::scheduled::ctx::SendCtx;
 use hydroflow::scheduled::handoff::VecHandoff;
-use hydroflow::scheduled::{Hydroflow, SendCtx};
+use hydroflow::scheduled::Hydroflow;
 use hydroflow::{tl, tlt};
 
 // const TRANSMISSIBLE_DURATION: Duration = Duration::from_secs(14 * 24 * 3600);
