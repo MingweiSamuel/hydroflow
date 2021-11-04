@@ -1,6 +1,6 @@
 window.BENCHMARK_DATA = 
 {
-  "lastUpdate": 1635997754005,
+  "lastUpdate": 1636057683424,
   "repoUrl": "https://github.com/hydro-project/hydroflow",
   "entries": {
     "Benchmark": [
@@ -1204,6 +1204,90 @@ window.BENCHMARK_DATA =
             "name": "reachability/hydroflow",
             "value": 3075319,
             "range": "± 20946",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "mingwei.samuel@gmail.com",
+            "name": "Mingwei Samuel",
+            "username": "MingweiSamuel"
+          },
+          "committer": {
+            "email": "mingwei.samuel@gmail.com",
+            "name": "Mingwei Samuel",
+            "username": "MingweiSamuel"
+          },
+          "distinct": true,
+          "id": "9a191e21feb75d5d869c6ce039749d882ff1f35c",
+          "message": "Make HandoffId distinct for parallel multigraph edges",
+          "timestamp": "2021-11-04T13:18:46-07:00",
+          "tree_id": "0f0bd95f1e1d6b70b761f97664851b05a510f665",
+          "url": "https://github.com/hydro-project/hydroflow/commit/9a191e21feb75d5d869c6ce039749d882ff1f35c"
+        },
+        "date": 1636057683423,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "arithmetic/hydroflow/compiled",
+            "value": 375481,
+            "range": "± 2618",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/hydroflow",
+            "value": 190027635,
+            "range": "± 241918",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/scheduled",
+            "value": 190608338,
+            "range": "± 6157315",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/teer",
+            "value": 59332192,
+            "range": "± 601101",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow",
+            "value": 14076754,
+            "range": "± 150021",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow_builder",
+            "value": 46955414,
+            "range": "± 82366",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow",
+            "value": 50240966,
+            "range": "± 687294",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow/compiled",
+            "value": 14689160,
+            "range": "± 5618",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/scheduled",
+            "value": 2627643,
+            "range": "± 2673",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow",
+            "value": 2606017,
+            "range": "± 3248",
             "unit": "ns/iter"
           }
         ]
