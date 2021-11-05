@@ -1,5 +1,5 @@
 {
-  "lastUpdate": 1636057683424,
+  "lastUpdate": 1636084189389,
   "repoUrl": "https://github.com/hydro-project/hydroflow",
   "entries": {
     "Benchmark": [
@@ -1287,6 +1287,88 @@
             "name": "reachability/hydroflow",
             "value": 2606017,
             "range": "± 3248",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Justin Jaffray",
+            "username": "justinj",
+            "email": "justin.jaffray@gmail.com"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "56cec4343a9aaba80c688168d2407634c0211daf",
+          "message": "Introduce an \"Input\" for ingressing data (#6)\n\nThis also does some minor optimization to make it less expensive to constantly\r\nschedule the same operator. Only did a thread-local version for now, just to\r\ntry to get it working, I think it's easy to extend to a version that can be\r\ncross-thread from here.",
+          "timestamp": "2021-11-04T22:11:41Z",
+          "url": "https://github.com/hydro-project/hydroflow/commit/56cec4343a9aaba80c688168d2407634c0211daf"
+        },
+        "date": 1636084189388,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "arithmetic/hydroflow/compiled",
+            "value": 384868,
+            "range": "± 22245",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/hydroflow",
+            "value": 234781974,
+            "range": "± 6166925",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/scheduled",
+            "value": 253681998,
+            "range": "± 8939243",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/teer",
+            "value": 69256807,
+            "range": "± 3375021",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow",
+            "value": 18500100,
+            "range": "± 1242007",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow_builder",
+            "value": 56136576,
+            "range": "± 2458359",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow",
+            "value": 64049689,
+            "range": "± 4478736",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow/compiled",
+            "value": 17407680,
+            "range": "± 771768",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/scheduled",
+            "value": 3274774,
+            "range": "± 142151",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow",
+            "value": 3250199,
+            "range": "± 183231",
             "unit": "ns/iter"
           }
         ]
