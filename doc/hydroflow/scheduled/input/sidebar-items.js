@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Input",""]]});
+initSidebarItems({"struct":[["Buffer",""],["Input",""]],"trait":[["Give",""]]});
