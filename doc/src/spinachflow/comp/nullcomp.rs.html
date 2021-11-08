@@ -28,23 +28,41 @@
 <span id="28">28</span>
 <span id="29">29</span>
 <span id="30">30</span>
+<span id="31">31</span>
+<span id="32">32</span>
+<span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
+<span id="37">37</span>
+<span id="38">38</span>
+<span id="39">39</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::future::Future</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::op::OpDelta</span>;
 
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Comp</span>, <span class="ident">Next</span>};
 
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">NullComp</span><span class="op">&lt;</span><span class="ident">O</span>: <span class="ident">OpDelta</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">NullComp</span><span class="op">&lt;</span><span class="ident">O</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">O</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">OpDelta</span>,
+{
     <span class="ident">op</span>: <span class="ident">O</span>,
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">O</span>: <span class="ident">OpDelta</span><span class="op">&gt;</span> <span class="ident">NullComp</span><span class="op">&lt;</span><span class="ident">O</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">O</span><span class="op">&gt;</span> <span class="ident">NullComp</span><span class="op">&lt;</span><span class="ident">O</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">O</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">OpDelta</span>,
+{
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">op</span>: <span class="ident">O</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">op</span> }
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">O</span>: <span class="ident">OpDelta</span><span class="op">&gt;</span> <span class="ident">Comp</span> <span class="kw">for</span> <span class="ident">NullComp</span><span class="op">&lt;</span><span class="ident">O</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">O</span><span class="op">&gt;</span> <span class="ident">Comp</span> <span class="kw">for</span> <span class="ident">NullComp</span><span class="op">&lt;</span><span class="ident">O</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">O</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">OpDelta</span>,
+{
     <span class="kw">type</span> <span class="ident">Error</span> <span class="op">=</span> ();
 
     <span class="kw">type</span> <span class="ident">TickFuture</span><span class="op">&lt;</span><span class="lifetime">&#39;s</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">impl</span> <span class="ident">Future</span><span class="op">&lt;</span><span class="ident">Output</span> <span class="op">=</span> <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident"><span class="self">Self</span>::Error</span><span class="op">&gt;</span><span class="op">&gt;</span>;
