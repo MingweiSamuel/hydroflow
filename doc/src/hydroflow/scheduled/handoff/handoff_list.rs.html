@@ -81,6 +81,9 @@
 <span id="81">81</span>
 <span id="82">82</span>
 <span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
+<span id="86">86</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::cell::RefCell</span>;
 <span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
 
@@ -88,8 +91,8 @@
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::ctx</span>::{<span class="ident">InputPort</span>, <span class="ident">OutputPort</span>, <span class="ident">RecvCtx</span>, <span class="ident">SendCtx</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::handoff::Handoff</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::OpId</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::util</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::OpId</span>;
 
 <span class="doccomment">/**
  * A variadic list of Handoff types, represented using a lisp-style tuple structure.
@@ -127,7 +130,10 @@
         <span class="kw">let</span> (<span class="ident">send_once</span>, <span class="ident">once</span>) <span class="op">=</span> <span class="ident">util::once</span>();
 
         <span class="kw">let</span> <span class="ident">recv</span> <span class="op">=</span> <span class="ident">RecvCtx</span> { <span class="ident">once</span> };
-        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident">InputPort</span> { <span class="ident">op_id</span>, <span class="ident">once</span>: <span class="ident">send_once</span> };
+        <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident">InputPort</span> {
+            <span class="ident">op_id</span>,
+            <span class="ident">once</span>: <span class="ident">send_once</span>,
+        };
 
         <span class="kw">let</span> (<span class="ident">recv_rest</span>, <span class="ident">input_rest</span>) <span class="op">=</span> <span class="ident">L::make_input</span>(<span class="ident">op_id</span>);
 
