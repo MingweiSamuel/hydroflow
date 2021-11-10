@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Once","The receiving half of a once channel."]],"fn":[["once","Creates a once channel where the [SendOnce] end can set a value which the [Once] end will receive and store."]],"struct":[["SendOnce","The sending half of a once channel."]]});
+initSidebarItems({"fn":[["once","Creates a once channel where the [SendOnce] end can set a value which the [Once] end will receive and store."]],"struct":[["Once","The receiving half of a once channel."],["SendOnce","The sending half of a once channel."]]});

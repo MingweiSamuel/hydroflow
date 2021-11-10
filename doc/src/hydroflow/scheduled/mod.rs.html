@@ -699,6 +699,9 @@
 <span id="699">699</span>
 <span id="700">700</span>
 <span id="701">701</span>
+<span id="702">702</span>
+<span id="703">703</span>
+<span id="704">704</span>
 </pre><pre class="rust"><code><span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">collections</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">ctx</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">handoff</span>;
@@ -903,9 +906,12 @@
 
         <span class="kw">for</span> <span class="kw">_</span> <span class="kw">in</span> <span class="number">0</span>..<span class="ident">n</span> {
             <span class="kw">let</span> <span class="ident">handoff</span> <span class="op">=</span> <span class="ident">Rc::new</span>(<span class="ident">RefCell::new</span>(<span class="ident">R::default</span>()));
-            <span class="kw">let</span> <span class="ident">once</span> <span class="op">=</span> <span class="ident">Rc::new</span>(<span class="ident">RefCell::new</span>(<span class="prelude-val">None</span>));
-            <span class="ident">recvs</span>.<span class="ident">push</span>(<span class="ident">RecvCtx</span> { <span class="ident">once</span>: <span class="ident">once</span>.<span class="ident">clone</span>() });
-            <span class="ident">input_ports</span>.<span class="ident">push</span>(<span class="ident">InputPort</span> { <span class="ident">once</span>, <span class="ident">op_id</span> });
+            <span class="kw">let</span> (<span class="ident">send_once</span>, <span class="ident">once</span>) <span class="op">=</span> <span class="ident">util::once</span>();
+            <span class="ident">recvs</span>.<span class="ident">push</span>(<span class="ident">RecvCtx</span> { <span class="ident">once</span> });
+            <span class="ident">input_ports</span>.<span class="ident">push</span>(<span class="ident">InputPort</span> {
+                <span class="ident">op_id</span>,
+                <span class="ident">once</span>: <span class="ident">send_once</span>,
+            });
             <span class="ident">input_metas</span>.<span class="ident">push</span>(<span class="ident">Box::new</span>(<span class="ident">handoff</span>) <span class="kw">as</span> <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">HandoffMeta</span><span class="op">&gt;</span>);
         }
 
@@ -1063,7 +1069,7 @@
         <span class="comment">// Add predacessor.</span>
         <span class="self">self</span>.<span class="ident">subgraphs</span>[<span class="ident">input_port</span>.<span class="ident">op_id</span>].<span class="ident">preds</span>.<span class="ident">push</span>(<span class="ident">handoff_id</span>);
 
-        <span class="kw-2">*</span><span class="ident">input_port</span>.<span class="ident">once</span>.<span class="ident">borrow_mut</span>() <span class="op">=</span> <span class="prelude-val">Some</span>(<span class="ident">output_port</span>.<span class="ident">handoff</span>);
+        <span class="ident">input_port</span>.<span class="ident">once</span>.<span class="ident">send</span>(<span class="ident">output_port</span>.<span class="ident">handoff</span>);
     }
 }
 
