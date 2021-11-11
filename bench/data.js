@@ -1,6 +1,6 @@
 window.BENCHMARK_DATA = 
 {
-  "lastUpdate": 1636585603493,
+  "lastUpdate": 1636602489253,
   "repoUrl": "https://github.com/hydro-project/hydroflow",
   "entries": {
     "Benchmark": [
@@ -1866,6 +1866,88 @@ window.BENCHMARK_DATA =
             "name": "reachability/hydroflow",
             "value": 2585773,
             "range": "± 2446",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Mingwei Samuel",
+            "username": "MingweiSamuel",
+            "email": "mingwei.samuel@gmail.com"
+          },
+          "committer": {
+            "name": "Mingwei Samuel",
+            "username": "MingweiSamuel",
+            "email": "mingwei.samuel@gmail.com"
+          },
+          "id": "6bbbaf200f765973573f1df1b92462b57f184248",
+          "message": "Make Handoff trait take shared &self",
+          "timestamp": "2021-11-10T22:52:24Z",
+          "url": "https://github.com/hydro-project/hydroflow/commit/6bbbaf200f765973573f1df1b92462b57f184248"
+        },
+        "date": 1636602489251,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "arithmetic/hydroflow/compiled",
+            "value": 376040,
+            "range": "± 2758",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/hydroflow",
+            "value": 206701990,
+            "range": "± 996094",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/scheduled",
+            "value": 204793616,
+            "range": "± 1927904",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/teer",
+            "value": 70167446,
+            "range": "± 360901",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow",
+            "value": 12840298,
+            "range": "± 61030",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow_builder",
+            "value": 49684445,
+            "range": "± 265018",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow",
+            "value": 62387941,
+            "range": "± 796548",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow/compiled",
+            "value": 14706223,
+            "range": "± 9326",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/scheduled",
+            "value": 2779590,
+            "range": "± 22665",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow",
+            "value": 2667410,
+            "range": "± 13822",
             "unit": "ns/iter"
           }
         ]
