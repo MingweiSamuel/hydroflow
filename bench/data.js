@@ -1,6 +1,6 @@
 window.BENCHMARK_DATA = 
 {
-  "lastUpdate": 1636702293336,
+  "lastUpdate": 1636704816077,
   "repoUrl": "https://github.com/hydro-project/hydroflow",
   "entries": {
     "Benchmark": [
@@ -2106,6 +2106,82 @@ window.BENCHMARK_DATA =
             "name": "reachability/hydroflow",
             "value": 3175314,
             "range": "± 196468",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Mingwei Samuel",
+            "username": "MingweiSamuel",
+            "email": "mingwei.samuel@gmail.com"
+          },
+          "committer": {
+            "name": "Mingwei Samuel",
+            "username": "MingweiSamuel",
+            "email": "mingwei.samuel@gmail.com"
+          },
+          "id": "dd3b77425f8511a80ca62672c552aa8a49ce7b90",
+          "message": "Change handoffs to be owned by Hydroflow, use dyn Any casts\n\nNotes\n- TeeingHandoff is commented out (TODO).\n- Variadic generics require GATs now due to reference in args.",
+          "timestamp": "2021-11-11T18:04:51Z",
+          "url": "https://github.com/hydro-project/hydroflow/commit/dd3b77425f8511a80ca62672c552aa8a49ce7b90"
+        },
+        "date": 1636704816075,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "arithmetic/hydroflow/compiled",
+            "value": 375929,
+            "range": "± 2499",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/hydroflow",
+            "value": 199188480,
+            "range": "± 926167",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/scheduled",
+            "value": 189267466,
+            "range": "± 3562338",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow",
+            "value": 8350521,
+            "range": "± 46447",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow_builder",
+            "value": 44975973,
+            "range": "± 179244",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow",
+            "value": 50270554,
+            "range": "± 1821803",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow/compiled",
+            "value": 14694104,
+            "range": "± 7593",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/scheduled",
+            "value": 2591817,
+            "range": "± 3798",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow",
+            "value": 2563773,
+            "range": "± 4248",
             "unit": "ns/iter"
           }
         ]
