@@ -1,6 +1,6 @@
 window.BENCHMARK_DATA = 
 {
-  "lastUpdate": 1636602489253,
+  "lastUpdate": 1636688876724,
   "repoUrl": "https://github.com/hydro-project/hydroflow",
   "entries": {
     "Benchmark": [
@@ -1948,6 +1948,88 @@ window.BENCHMARK_DATA =
             "name": "reachability/hydroflow",
             "value": 2667410,
             "range": "± 13822",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Mingwei Samuel",
+            "username": "MingweiSamuel",
+            "email": "mingwei.samuel@gmail.com"
+          },
+          "committer": {
+            "name": "Mingwei Samuel",
+            "username": "MingweiSamuel",
+            "email": "mingwei.samuel@gmail.com"
+          },
+          "id": "d40c1b8789630c987f7f7605ddd21421eaf9aaee",
+          "message": "Replace concrete Subgraph types with FnMut()\n\nAlso removes a few more unneccesary `&mut`s",
+          "timestamp": "2021-11-11T18:33:41Z",
+          "url": "https://github.com/hydro-project/hydroflow/commit/d40c1b8789630c987f7f7605ddd21421eaf9aaee"
+        },
+        "date": 1636688876722,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "arithmetic/hydroflow/compiled",
+            "value": 331951,
+            "range": "± 2772",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/hydroflow",
+            "value": 187530209,
+            "range": "± 3913182",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/scheduled",
+            "value": 190190897,
+            "range": "± 9033812",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/teer",
+            "value": 63848309,
+            "range": "± 670046",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow",
+            "value": 12493760,
+            "range": "± 54563",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow_builder",
+            "value": 42918733,
+            "range": "± 2402235",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow",
+            "value": 57405632,
+            "range": "± 969137",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow/compiled",
+            "value": 12976639,
+            "range": "± 5364",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/scheduled",
+            "value": 2736909,
+            "range": "± 53908",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow",
+            "value": 2709776,
+            "range": "± 25708",
             "unit": "ns/iter"
           }
         ]
