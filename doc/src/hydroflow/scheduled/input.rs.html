@@ -67,7 +67,7 @@
 <span id="67">67</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">cell::RefCell</span>, <span class="ident">marker::PhantomData</span>, <span class="ident">rc::Rc</span>, <span class="ident">sync::mpsc::SyncSender</span>};
 
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">OpId</span>, <span class="ident">Reactor</span>};
+<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Reactor</span>, <span class="ident">SubgraphId</span>};
 
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Give</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span> {
     <span class="kw">fn</span> <span class="ident">give</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">t</span>: <span class="ident">T</span>) -&gt; <span class="ident">bool</span>;
@@ -107,7 +107,7 @@
     <span class="ident">G</span>: <span class="ident">Give</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
 {
     <span class="ident">reactor</span>: <span class="ident">Reactor</span>,
-    <span class="ident">op_id</span>: <span class="ident">OpId</span>,
+    <span class="ident">sg_id</span>: <span class="ident">SubgraphId</span>,
     <span class="ident">givable</span>: <span class="ident">G</span>,
     <span class="ident">_marker</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
 }
@@ -115,10 +115,10 @@
 <span class="kw">where</span>
     <span class="ident">G</span>: <span class="ident">Give</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
 {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">reactor</span>: <span class="ident">Reactor</span>, <span class="ident">op_id</span>: <span class="ident">OpId</span>, <span class="ident">givable</span>: <span class="ident">G</span>) -&gt; <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">reactor</span>: <span class="ident">Reactor</span>, <span class="ident">sg_id</span>: <span class="ident">SubgraphId</span>, <span class="ident">givable</span>: <span class="ident">G</span>) -&gt; <span class="self">Self</span> {
         <span class="ident">Input</span> {
             <span class="ident">reactor</span>,
-            <span class="ident">op_id</span>,
+            <span class="ident">sg_id</span>,
             <span class="ident">givable</span>,
             <span class="ident">_marker</span>: <span class="ident">PhantomData</span>,
         }
@@ -129,7 +129,7 @@
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">flush</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) {
-        <span class="self">self</span>.<span class="ident">reactor</span>.<span class="ident">trigger</span>(<span class="self">self</span>.<span class="ident">op_id</span>).<span class="ident">unwrap</span>(<span class="comment">/* TODO(justin) */</span>);
+        <span class="self">self</span>.<span class="ident">reactor</span>.<span class="ident">trigger</span>(<span class="self">self</span>.<span class="ident">sg_id</span>).<span class="ident">unwrap</span>(<span class="comment">/* TODO(justin) */</span>);
     }
 }
 </code></pre></div>

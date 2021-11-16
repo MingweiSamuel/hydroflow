@@ -78,17 +78,6 @@
 <span id="78">78</span>
 <span id="79">79</span>
 <span id="80">80</span>
-<span id="81">81</span>
-<span id="82">82</span>
-<span id="83">83</span>
-<span id="84">84</span>
-<span id="85">85</span>
-<span id="86">86</span>
-<span id="87">87</span>
-<span id="88">88</span>
-<span id="89">89</span>
-<span id="90">90</span>
-<span id="91">91</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Organizational module for Hydroflow Send/RecvCtx structs and Input/OutputPort structs.</span>
 <span class="kw">use</span> <span class="ident">std::cell::Cell</span>;
 <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
@@ -97,7 +86,7 @@
 <span class="kw">use</span> <span class="ident">ref_cast::RefCast</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::handoff</span>::{<span class="ident">CanReceive</span>, <span class="ident">Handoff</span>, <span class="ident">TryCanReceive</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled</span>::{<span class="ident">HandoffId</span>, <span class="ident">OpId</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled</span>::{<span class="ident">HandoffId</span>, <span class="ident">SubgraphId</span>};
 
 <span class="doccomment">/**
  * Context provided to a compiled component for writing to an [OutputPort].
@@ -133,19 +122,14 @@
  */</span>
 <span class="attribute">#[<span class="ident">must_use</span>]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">OutputPort</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Handoff</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">op_id</span>: <span class="ident">OpId</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">sg_id</span>: <span class="ident">SubgraphId</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">handoff_id</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">HandoffId</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">_phantom</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw">fn</span>() -&gt; <span class="ident">H</span><span class="op">&gt;</span>,
-}
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Handoff</span><span class="op">&gt;</span> <span class="ident">OutputPort</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">op_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">OpId</span> {
-        <span class="self">self</span>.<span class="ident">op_id</span>
-    }
 }
 <span class="comment">// impl&lt;T: Clone&gt; Clone for OutputPort&lt;TeeingHandoff&lt;T&gt;&gt; {</span>
 <span class="comment">//     fn clone(&amp;self) -&gt; Self {</span>
 <span class="comment">//         Self {</span>
-<span class="comment">//             op_id: self.op_id,</span>
+<span class="comment">//             sg_id: self.sg_id,</span>
 <span class="comment">//             handoff_id: Rc::new(RefCell::new(self.handoff.borrow().tee())),</span>
 <span class="comment">//         }</span>
 <span class="comment">//     }</span>
@@ -168,17 +152,11 @@
 <span class="doccomment">/**
  * Handle corresponding to a [RecvCtx]. Consumed by [crate::scheduled::Hydroflow::add_edge] to construct the Hydroflow graph.
  */</span>
-<span class="comment">// TODO: figure out how to explain succinctly why this and output port both use Writable</span>
 <span class="attribute">#[<span class="ident">must_use</span>]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">InputPort</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Handoff</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">op_id</span>: <span class="ident">OpId</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">sg_id</span>: <span class="ident">SubgraphId</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">handoff_id</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">HandoffId</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">_phantom</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw">fn</span>() -&gt; <span class="ident">H</span><span class="op">&gt;</span>,
-}
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Handoff</span><span class="op">&gt;</span> <span class="ident">InputPort</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">op_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">OpId</span> {
-        <span class="self">self</span>.<span class="ident">op_id</span>
-    }
 }
 </code></pre></div>
 </section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-search-index-js="../../../search-index.js" data-search-js="../../../search.js"></div>

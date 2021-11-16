@@ -150,7 +150,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::ctx</span>::{<span class="ident">InputPort</span>, <span class="ident">OutputPort</span>, <span class="ident">RecvCtx</span>, <span class="ident">SendCtx</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::handoff::Handoff</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::HandoffData</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled</span>::{<span class="ident">HandoffId</span>, <span class="ident">OpId</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled</span>::{<span class="ident">HandoffId</span>, <span class="ident">SubgraphId</span>};
 
 <span class="doccomment">/**
  * A variadic list of Handoff types, represented using a lisp-style tuple structure.
@@ -169,14 +169,14 @@
     <span class="kw">type</span> <span class="ident">InputHid</span>;
     <span class="kw">type</span> <span class="ident">InputPort</span>;
     <span class="kw">type</span> <span class="ident">RecvCtx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>;
-    <span class="kw">fn</span> <span class="ident">make_input</span>(<span class="ident">op_id</span>: <span class="ident">OpId</span>) -&gt; (<span class="ident"><span class="self">Self</span>::InputHid</span>, <span class="ident"><span class="self">Self</span>::InputPort</span>);
+    <span class="kw">fn</span> <span class="ident">make_input</span>(<span class="ident">sg_id</span>: <span class="ident">SubgraphId</span>) -&gt; (<span class="ident"><span class="self">Self</span>::InputHid</span>, <span class="ident"><span class="self">Self</span>::InputPort</span>);
     <span class="kw">fn</span> <span class="ident">make_recv</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">handoffs</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">HandoffData</span>], <span class="ident">input_hids</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::InputHid</span>)
         -&gt; <span class="ident"><span class="self">Self</span>::RecvCtx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>;
 
     <span class="kw">type</span> <span class="ident">OutputHid</span>;
     <span class="kw">type</span> <span class="ident">OutputPort</span>;
     <span class="kw">type</span> <span class="ident">SendCtx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>;
-    <span class="kw">fn</span> <span class="ident">make_output</span>(<span class="ident">op_id</span>: <span class="ident">OpId</span>) -&gt; (<span class="ident"><span class="self">Self</span>::OutputHid</span>, <span class="ident"><span class="self">Self</span>::OutputPort</span>);
+    <span class="kw">fn</span> <span class="ident">make_output</span>(<span class="ident">sg_id</span>: <span class="ident">SubgraphId</span>) -&gt; (<span class="ident"><span class="self">Self</span>::OutputHid</span>, <span class="ident"><span class="self">Self</span>::OutputPort</span>);
     <span class="kw">fn</span> <span class="ident">make_send</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
         <span class="ident">handoffs</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">HandoffData</span>],
         <span class="ident">output_hids</span>: <span class="kw-2">&amp;</span><span class="ident"><span class="self">Self</span>::OutputHid</span>,
@@ -191,15 +191,15 @@
     <span class="kw">type</span> <span class="ident">InputHid</span> <span class="op">=</span> (<span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">HandoffId</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">L::InputHid</span>);
     <span class="kw">type</span> <span class="ident">InputPort</span> <span class="op">=</span> (<span class="ident">InputPort</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>, <span class="ident">L::InputPort</span>);
     <span class="kw">type</span> <span class="ident">RecvCtx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">RecvCtx</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>, <span class="ident">L::RecvCtx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>);
-    <span class="kw">fn</span> <span class="ident">make_input</span>(<span class="ident">op_id</span>: <span class="ident">OpId</span>) -&gt; (<span class="ident"><span class="self">Self</span>::InputHid</span>, <span class="ident"><span class="self">Self</span>::InputPort</span>) {
+    <span class="kw">fn</span> <span class="ident">make_input</span>(<span class="ident">sg_id</span>: <span class="ident">SubgraphId</span>) -&gt; (<span class="ident"><span class="self">Self</span>::InputHid</span>, <span class="ident"><span class="self">Self</span>::InputPort</span>) {
         <span class="kw">let</span> <span class="ident">hid</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">HandoffId</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::default</span>();
         <span class="kw">let</span> <span class="ident">input</span> <span class="op">=</span> <span class="ident">InputPort</span> {
-            <span class="ident">op_id</span>,
+            <span class="ident">sg_id</span>,
             <span class="ident">handoff_id</span>: <span class="ident">hid</span>.<span class="ident">clone</span>(),
             <span class="ident">_phantom</span>: <span class="ident">PhantomData</span>,
         };
 
-        <span class="kw">let</span> (<span class="ident">hid_rest</span>, <span class="ident">input_rest</span>) <span class="op">=</span> <span class="ident">L::make_input</span>(<span class="ident">op_id</span>);
+        <span class="kw">let</span> (<span class="ident">hid_rest</span>, <span class="ident">input_rest</span>) <span class="op">=</span> <span class="ident">L::make_input</span>(<span class="ident">sg_id</span>);
 
         ((<span class="ident">hid</span>, <span class="ident">hid_rest</span>), (<span class="ident">input</span>, <span class="ident">input_rest</span>))
     }
@@ -225,15 +225,15 @@
     <span class="kw">type</span> <span class="ident">OutputHid</span> <span class="op">=</span> (<span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">HandoffId</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">L::OutputHid</span>);
     <span class="kw">type</span> <span class="ident">OutputPort</span> <span class="op">=</span> (<span class="ident">OutputPort</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>, <span class="ident">L::OutputPort</span>);
     <span class="kw">type</span> <span class="ident">SendCtx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">SendCtx</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>, <span class="ident">L::SendCtx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>);
-    <span class="kw">fn</span> <span class="ident">make_output</span>(<span class="ident">op_id</span>: <span class="ident">OpId</span>) -&gt; (<span class="ident"><span class="self">Self</span>::OutputHid</span>, <span class="ident"><span class="self">Self</span>::OutputPort</span>) {
+    <span class="kw">fn</span> <span class="ident">make_output</span>(<span class="ident">sg_id</span>: <span class="ident">SubgraphId</span>) -&gt; (<span class="ident"><span class="self">Self</span>::OutputHid</span>, <span class="ident"><span class="self">Self</span>::OutputPort</span>) {
         <span class="kw">let</span> <span class="ident">hid</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">HandoffId</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::default</span>();
         <span class="kw">let</span> <span class="ident">output</span> <span class="op">=</span> <span class="ident">OutputPort</span> {
-            <span class="ident">op_id</span>,
+            <span class="ident">sg_id</span>,
             <span class="ident">handoff_id</span>: <span class="ident">hid</span>.<span class="ident">clone</span>(),
             <span class="ident">_phantom</span>: <span class="ident">PhantomData</span>,
         };
 
-        <span class="kw">let</span> (<span class="ident">hid_rest</span>, <span class="ident">output_rest</span>) <span class="op">=</span> <span class="ident">L::make_output</span>(<span class="ident">op_id</span>);
+        <span class="kw">let</span> (<span class="ident">hid_rest</span>, <span class="ident">output_rest</span>) <span class="op">=</span> <span class="ident">L::make_output</span>(<span class="ident">sg_id</span>);
 
         ((<span class="ident">hid</span>, <span class="ident">hid_rest</span>), (<span class="ident">output</span>, <span class="ident">output_rest</span>))
     }
@@ -261,7 +261,7 @@
     <span class="kw">type</span> <span class="ident">InputHid</span> <span class="op">=</span> ();
     <span class="kw">type</span> <span class="ident">InputPort</span> <span class="op">=</span> ();
     <span class="kw">type</span> <span class="ident">RecvCtx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> ();
-    <span class="kw">fn</span> <span class="ident">make_input</span>(<span class="kw">_</span>: <span class="ident">OpId</span>) -&gt; (<span class="ident"><span class="self">Self</span>::InputHid</span>, <span class="ident"><span class="self">Self</span>::InputPort</span>) {
+    <span class="kw">fn</span> <span class="ident">make_input</span>(<span class="kw">_</span>: <span class="ident">SubgraphId</span>) -&gt; (<span class="ident"><span class="self">Self</span>::InputHid</span>, <span class="ident"><span class="self">Self</span>::InputPort</span>) {
         ((), ())
     }
     <span class="kw">fn</span> <span class="ident">make_recv</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
@@ -273,7 +273,7 @@
     <span class="kw">type</span> <span class="ident">OutputHid</span> <span class="op">=</span> ();
     <span class="kw">type</span> <span class="ident">OutputPort</span> <span class="op">=</span> ();
     <span class="kw">type</span> <span class="ident">SendCtx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> ();
-    <span class="kw">fn</span> <span class="ident">make_output</span>(<span class="kw">_</span>: <span class="ident">OpId</span>) -&gt; (<span class="ident"><span class="self">Self</span>::OutputHid</span>, <span class="ident"><span class="self">Self</span>::OutputPort</span>) {
+    <span class="kw">fn</span> <span class="ident">make_output</span>(<span class="kw">_</span>: <span class="ident">SubgraphId</span>) -&gt; (<span class="ident"><span class="self">Self</span>::OutputHid</span>, <span class="ident"><span class="self">Self</span>::OutputPort</span>) {
         ((), ())
     }
     <span class="kw">fn</span> <span class="ident">make_send</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
