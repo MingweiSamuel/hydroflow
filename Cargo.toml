@@ -2,6 +2,7 @@
 
 members = [
     "hydroflow",
+    "pyro",
     "spinachflow",
     "babyflow",
     "benches",

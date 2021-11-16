@@ -13,6 +13,7 @@ criterion = { version = "0.3", features = [ "async_tokio" ] }
 hydroflow = { path = "../hydroflow" }
 lazy_static = "1.4.0"
 # pprof = { version = "0.6", features = [ "flamegraph", "criterion" ] }
+pyro = { path = "../pyro" }
 rand = "0.8.4"
 seq-macro = "0.2"
 spinachflow = { path = "../spinachflow" }

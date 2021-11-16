@@ -61,6 +61,7 @@ dependencies = [
  "differential-dataflow",
  "hydroflow",
  "lazy_static",
+ "pyro",
  "rand",
  "seq-macro",
  "spinachflow",
@@ -661,6 +662,17 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "edc3358ebc67bc8b7fa0c007f945b0b18226f78437d61bec735a9eb96b61ee70"
 dependencies = [
  "unicode-xid",
+]
+
+[[package]]
+name = "pyro"
+version = "0.0.0"
+dependencies = [
+ "criterion",
+ "ref-cast",
+ "sealed",
+ "slotmap",
+ "tuple_list",
 ]
 
 [[package]]

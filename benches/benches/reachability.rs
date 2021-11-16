@@ -267,11 +267,77 @@ fn benchmark_hydroflow(c: &mut Criterion) {
     });
 }
 
+fn benchmark_pyro_plumbing(c: &mut Criterion) {
+    use pyro::{Context, Pyro};
+
+    type Handoff = Vec<usize>;
+
+    let edges = &*EDGES;
+    let reachable = &*REACHABLE;
+
+    c.bench_function("reachability/pyro_plumbing", |b| {
+        b.iter(|| {
+            // A dataflow that represents graph reachability.
+            let mut pyro = Pyro::new();
+
+            let origins_handoff = pyro.default_state::<Handoff>();
+            let reached_handoff = pyro.default_state::<Handoff>();
+            let output_handoff = pyro.default_state::<Handoff>();
+
+            let reachable_verts = Rc::new(RefCell::new(HashSet::new()));
+            let reachable_inner = reachable_verts.clone();
+            let sink_tid = pyro.new_task(move |mut ctx: Context<'_>| {
+                let output = std::mem::take(ctx.get_state_mut(output_handoff));
+                reachable_inner.borrow_mut().extend(output);
+            });
+
+            let seen_state = pyro.default_state::<HashSet<usize>>();
+            let main_tid = pyro.new_task(move |mut ctx: Context<'_>| {
+                let origins = std::mem::take(ctx.get_state_mut(origins_handoff)).into_iter();
+                let did_reach_recv = std::mem::take(ctx.get_state_mut(reached_handoff)).into_iter();
+
+                let seen = ctx.get_state_mut(seen_state);
+
+                let possible_reach = did_reach_recv
+                    .filter_map(|v| edges.get(&v))
+                    .flatten()
+                    .copied();
+
+                let reached: Vec<_> = origins
+                    .chain(possible_reach)
+                    .filter(|v| seen.insert(*v))
+                    .collect();
+
+                if !reached.is_empty() {
+                    ctx.schedule(sink_tid);
+                    ctx.schedule(ctx.current_tid());
+                    for v in reached {
+                        ctx.get_state_mut(reached_handoff).push(v);
+                        ctx.get_state_mut(output_handoff).push(v);
+                    }
+                }
+            });
+
+            let source_tid = pyro.new_task(move |mut ctx: Context<'_>| {
+                let origins = ctx.get_state_mut(origins_handoff);
+                origins.push(1);
+                ctx.schedule(main_tid)
+            });
+
+            pyro.schedule(source_tid);
+            pyro.tick();
+
+            assert_eq!(&*reachable_verts.borrow(), reachable);
+        });
+    });
+}
+
 criterion_group!(
     reachability,
     benchmark_timely,
     benchmark_differential,
     benchmark_hydroflow_scheduled,
     benchmark_hydroflow,
+    benchmark_pyro_plumbing,
 );
 criterion_main!(reachability);
