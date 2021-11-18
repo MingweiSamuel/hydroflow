@@ -17,7 +17,7 @@ impl Query {
     pub fn source<F, T>(&mut self, f: F) -> Operator<T>
     where
         T: 'static,
-        F: 'static + FnMut(&SendCtx<VecHandoff<T>>),
+        F: 'static + FnMut(SendCtx<VecHandoff<T>>),
     {
         let output_port = (*self.df).borrow_mut().add_source(f);
         Operator {
@@ -26,29 +26,29 @@ impl Query {
         }
     }
 
-    pub fn concat<T>(&mut self, ops: Vec<Operator<T>>) -> Operator<T>
-    where
-        T: 'static,
-    {
-        let (inputs, output) = (*self.df).borrow_mut().add_n_in_m_out(
-            ops.len(),
-            1,
-            |ins: &[&RecvCtx<VecHandoff<T>>], out| {
-                for input in ins {
-                    out[0].give(Iter(input.take_inner().into_iter()));
-                }
-            },
-        );
+    // pub fn concat<T>(&mut self, ops: Vec<Operator<T>>) -> Operator<T>
+    // where
+    //     T: 'static,
+    // {
+    //     let (inputs, output) = (*self.df).borrow_mut().add_n_in_m_out(
+    //         ops.len(),
+    //         1,
+    //         |ins: &[RecvCtx<VecHandoff<T>>], out| {
+    //             for input in ins {
+    //                 out[0].give(Iter(input.take_inner().into_iter()));
+    //             }
+    //         },
+    //     );
 
-        for (op, input) in ops.into_iter().zip(inputs.into_iter()) {
-            (*self.df).borrow_mut().add_edge(op.output_port, input)
-        }
+    //     for (op, input) in ops.into_iter().zip(inputs.into_iter()) {
+    //         (*self.df).borrow_mut().add_edge(op.output_port, input)
+    //     }
 
-        Operator {
-            df: self.df.clone(),
-            output_port: output.into_iter().next().unwrap(),
-        }
-    }
+    //     Operator {
+    //         df: self.df.clone(),
+    //         output_port: output.into_iter().next().unwrap(),
+    //     }
+    // }
 
     pub fn tick(&mut self) {
         (*self.df).borrow_mut().tick()
@@ -75,7 +75,7 @@ where
         let (input, output) =
             (*self.df)
                 .borrow_mut()
-                .add_inout(move |recv: &RecvCtx<VecHandoff<T>>, send| {
+                .add_inout(move |recv: RecvCtx<VecHandoff<T>>, send| {
                     #[allow(clippy::redundant_closure)]
                     send.give(Iter(recv.take_inner().into_iter().map(|x| f(x))));
                 });
@@ -95,7 +95,7 @@ where
         let (input, output) =
             (*self.df)
                 .borrow_mut()
-                .add_inout(move |recv: &RecvCtx<VecHandoff<T>>, send| {
+                .add_inout(move |recv: RecvCtx<VecHandoff<T>>, send| {
                     send.give(Iter(recv.take_inner().into_iter().filter(|x| f(x))));
                 });
 
@@ -110,7 +110,7 @@ where
     pub fn concat(self, other: Operator<T>) -> Operator<T> {
         // TODO(justin): this is very slow.
         let (input1, input2, output) = (*self.df).borrow_mut().add_binary(
-            |recv1: &RecvCtx<VecHandoff<T>>, recv2: &RecvCtx<VecHandoff<T>>, send| {
+            |recv1: RecvCtx<VecHandoff<T>>, recv2: RecvCtx<VecHandoff<T>>, send| {
                 send.give(Iter(recv1.take_inner().into_iter()));
                 send.give(Iter(recv2.take_inner().into_iter()));
             },
@@ -130,7 +130,7 @@ where
     {
         let input = (*self.df)
             .borrow_mut()
-            .add_sink(move |recv: &RecvCtx<VecHandoff<T>>| {
+            .add_sink(move |recv: RecvCtx<VecHandoff<T>>| {
                 for v in recv.take_inner() {
                     f(v)
                 }
@@ -141,35 +141,35 @@ where
 }
 
 impl<T: Clone> Operator<T> {
-    pub fn tee(self, n: usize) -> Vec<Operator<T>>
-    where
-        T: 'static,
-    {
-        // TODO(justin): this is very slow.
-        let (inputs, outputs) = (*self.df).borrow_mut().add_n_in_m_out(
-            1,
-            n,
-            move |recvs: &[&RecvCtx<VecHandoff<T>>], sends| {
-                // TODO(justin): optimize this (extra clone, etc.).
-                #[allow(clippy::into_iter_on_ref)]
-                for v in recvs.into_iter().next().unwrap().take_inner() {
-                    for s in sends {
-                        s.give(Some(v.clone()));
-                    }
-                }
-            },
-        );
+    // pub fn tee(self, n: usize) -> Vec<Operator<T>>
+    // where
+    //     T: 'static,
+    // {
+    //     // TODO(justin): this is very slow.
+    //     let (inputs, outputs) = (*self.df).borrow_mut().add_n_in_m_out(
+    //         1,
+    //         n,
+    //         move |recvs: &[RecvCtx<VecHandoff<T>>], sends| {
+    //             // TODO(justin): optimize this (extra clone, etc.).
+    //             #[allow(clippy::into_iter_on_ref)]
+    //             for v in recvs.into_iter().next().unwrap().take_inner() {
+    //                 for s in sends {
+    //                     s.give(Some(v.clone()));
+    //                 }
+    //             }
+    //         },
+    //     );
 
-        (*self.df)
-            .borrow_mut()
-            .add_edge(self.output_port, inputs.into_iter().next().unwrap());
+    //     (*self.df)
+    //         .borrow_mut()
+    //         .add_edge(self.output_port, inputs.into_iter().next().unwrap());
 
-        outputs
-            .into_iter()
-            .map(|output_port| Operator {
-                df: self.df.clone(),
-                output_port,
-            })
-            .collect()
-    }
+    //     outputs
+    //         .into_iter()
+    //         .map(|output_port| Operator {
+    //             df: self.df.clone(),
+    //             output_port,
+    //         })
+    //         .collect()
+    // }
 }

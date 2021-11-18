@@ -129,7 +129,7 @@ fn benchmark_hydroflow_scheduled(c: &mut Criterion) {
             // A dataflow that represents graph reachability.
             let mut df = Hydroflow::new();
 
-            let reachable_out = df.add_source(move |send: &SendCtx<VecHandoff<usize>>| {
+            let reachable_out = df.add_source(move |send: SendCtx<VecHandoff<usize>>| {
                 send.give(Some(1));
             });
 
@@ -147,16 +147,16 @@ fn benchmark_hydroflow_scheduled(c: &mut Criterion) {
                 );
 
             let (merge_lhs, merge_rhs, merge_out) = df.add_binary(
-                |recv1: &RecvCtx<VecHandoff<_>>,
-                 recv2: &RecvCtx<VecHandoff<_>>,
-                 send: &SendCtx<VecHandoff<usize>>| {
+                |recv1: RecvCtx<VecHandoff<_>>,
+                 recv2: RecvCtx<VecHandoff<_>>,
+                 send: SendCtx<VecHandoff<usize>>| {
                     send.give(Iter(recv1.take_inner().into_iter()));
                     send.give(Iter(recv2.take_inner().into_iter()));
                 },
             );
 
             let (neighbors_in, neighbors_out) =
-                df.add_inout(move |recv: &RecvCtx<VecHandoff<_>>, send| {
+                df.add_inout(move |recv: RecvCtx<VecHandoff<_>>, send| {
                     for v in recv.take_inner() {
                         if let Some(neighbors) = edges.get(&v) {
                             send.give(Iter(neighbors.iter().copied()));
@@ -165,9 +165,9 @@ fn benchmark_hydroflow_scheduled(c: &mut Criterion) {
                 });
 
             let (tee_in, tee_out1, tee_out2) = df.add_binary_out(
-                |recv: &RecvCtx<VecHandoff<usize>>,
-                 send1: &SendCtx<VecHandoff<usize>>,
-                 send2: &SendCtx<VecHandoff<usize>>| {
+                |recv: RecvCtx<VecHandoff<usize>>,
+                 send1: SendCtx<VecHandoff<usize>>,
+                 send2: SendCtx<VecHandoff<usize>>| {
                     for v in recv.take_inner() {
                         send1.give(Some(v));
                         send2.give(Some(v));
@@ -177,7 +177,7 @@ fn benchmark_hydroflow_scheduled(c: &mut Criterion) {
 
             let reachable_verts = Rc::new(RefCell::new(HashSet::new()));
             let reachable_inner = reachable_verts.clone();
-            let sink_in = df.add_sink(move |recv: &RecvCtx<VecHandoff<_>>| {
+            let sink_in = df.add_sink(move |recv: RecvCtx<VecHandoff<_>>| {
                 (*reachable_inner).borrow_mut().extend(recv.take_inner());
             });
 
@@ -210,7 +210,7 @@ fn benchmark_hydroflow(c: &mut Criterion) {
             // A dataflow that represents graph reachability.
             let mut df = Hydroflow::new();
 
-            let reachable_out = df.add_source(move |send: &SendCtx<VecHandoff<usize>>| {
+            let reachable_out = df.add_source(move |send: SendCtx<VecHandoff<usize>>| {
                 send.give(Some(1));
             });
 
@@ -249,7 +249,7 @@ fn benchmark_hydroflow(c: &mut Criterion) {
 
             let reachable_verts = Rc::new(RefCell::new(HashSet::new()));
             let reachable_inner = reachable_verts.clone();
-            let sink_in = df.add_sink(move |recv: &RecvCtx<VecHandoff<_>>| {
+            let sink_in = df.add_sink(move |recv: RecvCtx<VecHandoff<_>>| {
                 (*reachable_inner).borrow_mut().extend(recv.take_inner());
             });
 

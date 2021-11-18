@@ -1,14 +1,13 @@
-use std::cell::Cell;
+use std::cell::{Cell, RefCell};
 use std::marker::PhantomData;
 use std::rc::Rc;
 
-use ref_cast::RefCast;
 use sealed::sealed;
 
-use crate::scheduled::ctx::{InputPort, OutputPort, RecvCtx, SendCtx};
+use crate::scheduled::ctx::{HandoffStateHandle, InputPort, OutputPort, RecvCtx, SendCtx};
 use crate::scheduled::handoff::Handoff;
-use crate::scheduled::HandoffData;
-use crate::scheduled::{HandoffId, SubgraphId};
+use crate::scheduled::state::StateHandle;
+use crate::scheduled::{Context, SubgraphId};
 
 /**
  * A variadic list of Handoff types, represented using a lisp-style tuple structure.
@@ -28,17 +27,13 @@ pub trait HandoffList {
     type InputPort;
     type RecvCtx<'a>;
     fn make_input(sg_id: SubgraphId) -> (Self::InputHid, Self::InputPort);
-    fn make_recv<'a>(handoffs: &'a [HandoffData], input_hids: &Self::InputHid)
-        -> Self::RecvCtx<'a>;
+    fn make_recv<'a>(context: &'a Context<'a>, input_hids: &Self::InputHid) -> Self::RecvCtx<'a>;
 
     type OutputHid;
     type OutputPort;
     type SendCtx<'a>;
     fn make_output(sg_id: SubgraphId) -> (Self::OutputHid, Self::OutputPort);
-    fn make_send<'a>(
-        handoffs: &'a [HandoffData],
-        output_hids: &Self::OutputHid,
-    ) -> Self::SendCtx<'a>;
+    fn make_send<'a>(context: &'a Context<'a>, output_hids: &Self::OutputHid) -> Self::SendCtx<'a>;
 }
 #[sealed]
 impl<H, L> HandoffList for (H, L)
@@ -46,14 +41,15 @@ where
     H: 'static + Handoff,
     L: HandoffList,
 {
-    type InputHid = (Rc<Cell<Option<HandoffId>>>, L::InputHid);
+    #[allow(clippy::type_complexity)]
+    type InputHid = (Rc<Cell<Option<HandoffStateHandle<H>>>>, L::InputHid);
     type InputPort = (InputPort<H>, L::InputPort);
-    type RecvCtx<'a> = (&'a RecvCtx<H>, L::RecvCtx<'a>);
+    type RecvCtx<'a> = (RecvCtx<'a, H>, L::RecvCtx<'a>);
     fn make_input(sg_id: SubgraphId) -> (Self::InputHid, Self::InputPort) {
-        let hid = <Rc<Cell<Option<HandoffId>>>>::default();
+        let hid = <Rc<Cell<Option<StateHandle<RefCell<H::State>>>>>>::default();
         let input = InputPort {
             sg_id,
-            handoff_id: hid.clone(),
+            state_handle: hid.clone(),
             _phantom: PhantomData,
         };
 
@@ -61,33 +57,29 @@ where
 
         ((hid, hid_rest), (input, input_rest))
     }
-    fn make_recv<'a>(
-        handoffs: &'a [HandoffData],
-        input_hids: &Self::InputHid,
-    ) -> Self::RecvCtx<'a> {
+    fn make_recv<'a>(context: &'a Context<'a>, input_hids: &Self::InputHid) -> Self::RecvCtx<'a> {
         let (hid, hid_rest) = input_hids;
         let hid = hid.get().expect("Attempted to use unattached handoff.");
-        let handoff = handoffs
-            .get(hid)
-            .unwrap()
-            .handoff
-            .any_ref()
-            .downcast_ref()
-            .expect("Attempted to cast handoff to wrong type.");
-        let ctx = RefCast::ref_cast(handoff);
 
-        let ctx_rest = L::make_recv(handoffs, hid_rest);
+        let ctx = RecvCtx {
+            state_handle: hid,
+            context,
+            _phantom: PhantomData,
+        };
+
+        let ctx_rest = L::make_recv(context, hid_rest);
         (ctx, ctx_rest)
     }
 
-    type OutputHid = (Rc<Cell<Option<HandoffId>>>, L::OutputHid);
+    #[allow(clippy::type_complexity)]
+    type OutputHid = (Rc<Cell<Option<HandoffStateHandle<H>>>>, L::OutputHid);
     type OutputPort = (OutputPort<H>, L::OutputPort);
-    type SendCtx<'a> = (&'a SendCtx<H>, L::SendCtx<'a>);
+    type SendCtx<'a> = (SendCtx<'a, H>, L::SendCtx<'a>);
     fn make_output(sg_id: SubgraphId) -> (Self::OutputHid, Self::OutputPort) {
-        let hid = <Rc<Cell<Option<HandoffId>>>>::default();
+        let hid = <Rc<Cell<Option<StateHandle<RefCell<H::State>>>>>>::default();
         let output = OutputPort {
             sg_id,
-            handoff_id: hid.clone(),
+            state_handle: hid.clone(),
             _phantom: PhantomData,
         };
 
@@ -95,22 +87,17 @@ where
 
         ((hid, hid_rest), (output, output_rest))
     }
-    fn make_send<'a>(
-        handoffs: &'a [HandoffData],
-        output_hids: &Self::OutputHid,
-    ) -> Self::SendCtx<'a> {
+    fn make_send<'a>(context: &'a Context<'a>, output_hids: &Self::OutputHid) -> Self::SendCtx<'a> {
         let (hid, hid_rest) = output_hids;
         let hid = hid.get().expect("Attempted to use unattached handoff.");
-        let handoff = handoffs
-            .get(hid)
-            .unwrap()
-            .handoff
-            .any_ref()
-            .downcast_ref()
-            .expect("Attempted to cast handoff to wrong type.");
-        let ctx = RefCast::ref_cast(handoff);
 
-        let ctx_rest = L::make_send(handoffs, hid_rest);
+        let ctx = SendCtx {
+            state_handle: hid,
+            context,
+            _phantom: PhantomData,
+        };
+
+        let ctx_rest = L::make_send(context, hid_rest);
         (ctx, ctx_rest)
     }
 }
@@ -123,7 +110,7 @@ impl HandoffList for () {
         ((), ())
     }
     fn make_recv<'a>(
-        _handoffs: &'a [HandoffData],
+        _handoffs: &'a Context<'a>,
         _input_hids: &Self::InputHid,
     ) -> Self::RecvCtx<'a> {
     }
@@ -135,7 +122,7 @@ impl HandoffList for () {
         ((), ())
     }
     fn make_send<'a>(
-        _handoffs: &'a [HandoffData],
+        _handoffs: &'a Context<'a>,
         _output_hids: &Self::OutputHid,
     ) -> Self::SendCtx<'a> {
     }

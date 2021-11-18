@@ -1,44 +1,37 @@
-mod tee;
-mod vector;
+// mod tee;
+// pub use tee::TeeingHandoff;
 
-pub use tee::TeeingHandoff;
+mod vector;
 pub use vector::VecHandoff;
 
-use std::any::Any;
-
-pub trait TryCanReceive<T> {
-    fn try_give(&self, item: T) -> Result<T, T>;
+pub trait TryCanReceive<T>: Handoff {
+    fn try_give(state: &mut Self::State, item: T) -> Result<T, T>;
 }
-pub trait CanReceive<T> {
-    fn give(&self, item: T) -> T;
+pub trait CanReceive<T>: Handoff {
+    fn give(state: &mut Self::State, item: T) -> T;
 }
 
-/**
- * A handle onto the metadata part of a [Handoff], with no element type.
- */
-pub trait HandoffMeta: Any {
-    fn any_ref(&self) -> &dyn Any;
+pub trait Handoff {
+    type State;
 
+    // Scheduling metadata.
     // TODO(justin): more fine-grained info here.
-    fn is_bottom(&self) -> bool;
-}
+    fn is_bottom(state: &Self::State) -> bool;
 
-pub trait Handoff: Default + HandoffMeta {
     type Inner;
+    fn take_inner(state: &mut Self::State) -> Self::Inner;
 
-    fn take_inner(&self) -> Self::Inner;
-
-    fn give<T>(&self, item: T) -> T
+    fn give<T>(state: &mut Self::State, item: T) -> T
     where
         Self: CanReceive<T>,
     {
-        <Self as CanReceive<T>>::give(self, item)
+        <Self as CanReceive<T>>::give(state, item)
     }
 
-    fn try_give<T>(&self, item: T) -> Result<T, T>
+    fn try_give<T>(state: &mut Self::State, item: T) -> Result<T, T>
     where
         Self: TryCanReceive<T>,
     {
-        <Self as TryCanReceive<T>>::try_give(self, item)
+        <Self as TryCanReceive<T>>::try_give(state, item)
     }
 }

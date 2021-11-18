@@ -17,7 +17,7 @@ fn benchmark_hydroflow(c: &mut Criterion) {
             let mut df = Hydroflow::new();
 
             let mut sent = false;
-            let source = df.add_source(move |send: &SendCtx<VecHandoff<_>>| {
+            let source = df.add_source(move |send: SendCtx<VecHandoff<_>>| {
                 if !sent {
                     sent = true;
                     send.give(Iter(0..NUM_INTS));
@@ -25,9 +25,9 @@ fn benchmark_hydroflow(c: &mut Criterion) {
             });
 
             let (tee_in, mut out1, mut out2) = df.add_binary_out(
-                |recv: &RecvCtx<VecHandoff<_>>,
-                 send1: &SendCtx<VecHandoff<_>>,
-                 send2: &SendCtx<VecHandoff<_>>| {
+                |recv: RecvCtx<VecHandoff<_>>,
+                 send1: SendCtx<VecHandoff<_>>,
+                 send2: SendCtx<VecHandoff<_>>| {
                     for v in recv.take_inner().into_iter() {
                         if v % 2 == 0 {
                             send1.give(Some(v));
@@ -41,8 +41,8 @@ fn benchmark_hydroflow(c: &mut Criterion) {
             df.add_edge(source, tee_in);
             for _ in 0..NUM_OPS {
                 let (in1, in2, mut new_out1, mut new_out2) = df.add_binary_in_binary_out(
-                    |recv1: &RecvCtx<VecHandoff<_>>,
-                     recv2: &RecvCtx<VecHandoff<_>>,
+                    |recv1: RecvCtx<VecHandoff<_>>,
+                     recv2: RecvCtx<VecHandoff<_>>,
                      send1,
                      send2| {
                         for v in recv1
@@ -65,7 +65,7 @@ fn benchmark_hydroflow(c: &mut Criterion) {
             }
 
             let (sink1, sink2) = df.add_binary_sink(
-                |recv1: &RecvCtx<VecHandoff<_>>, recv2: &RecvCtx<VecHandoff<_>>| {
+                |recv1: RecvCtx<VecHandoff<_>>, recv2: RecvCtx<VecHandoff<_>>| {
                     for x in recv1.take_inner() {
                         black_box(x);
                     }
@@ -83,32 +83,32 @@ fn benchmark_hydroflow(c: &mut Criterion) {
     });
 }
 
-fn benchmark_hydroflow_builder(c: &mut Criterion) {
-    c.bench_function("fork_join/hydroflow_builder", |b| {
-        b.iter(|| {
-            // TODO(justin): this creates more operators than necessary.
-            let mut q = Q::new();
+// fn benchmark_hydroflow_builder(c: &mut Criterion) {
+//     c.bench_function("fork_join/hydroflow_builder", |b| {
+//         b.iter(|| {
+//             // TODO(justin): this creates more operators than necessary.
+//             let mut q = Q::new();
 
-            let mut source = q.source(|send| {
-                send.give(Iter(0..NUM_INTS));
-            });
+//             let mut source = q.source(|send| {
+//                 send.give(Iter(0..NUM_INTS));
+//             });
 
-            for _ in 0..NUM_OPS {
-                let mut outs = source.tee(2).into_iter();
-                let (mut out1, mut out2) = (outs.next().unwrap(), outs.next().unwrap());
-                out1 = out1.filter(|x| x % 2 == 0);
-                out2 = out2.filter(|x| x % 2 == 1);
-                source = out1.concat(out2);
-            }
+//             for _ in 0..NUM_OPS {
+//                 let mut outs = source.tee(2).into_iter();
+//                 let (mut out1, mut out2) = (outs.next().unwrap(), outs.next().unwrap());
+//                 out1 = out1.filter(|x| x % 2 == 0);
+//                 out2 = out2.filter(|x| x % 2 == 1);
+//                 source = out1.concat(out2);
+//             }
 
-            source.sink(|v| {
-                black_box(v);
-            });
+//             source.sink(|v| {
+//                 black_box(v);
+//             });
 
-            q.tick();
-        })
-    });
-}
+//             q.tick();
+//         })
+//     });
+// }
 
 fn benchmark_raw(c: &mut Criterion) {
     c.bench_function("fork_join/raw", |b| {
@@ -363,7 +363,7 @@ fn benchmark_spinachflow_asym(c: &mut Criterion) {
 criterion_group!(
     fork_join_dataflow,
     benchmark_hydroflow,
-    benchmark_hydroflow_builder,
+    // benchmark_hydroflow_builder,
     benchmark_babyflow,
     benchmark_timely,
     benchmark_raw,

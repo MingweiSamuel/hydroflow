@@ -10,29 +10,29 @@ fn make_ints(i: usize) -> impl Iterator<Item = usize> {
     (i * NUM_INTS)..((i + 1) * NUM_INTS)
 }
 
-fn benchmark_hydroflow(c: &mut Criterion) {
-    c.bench_function("fan_in/hydroflow", |b| {
-        b.iter(|| {
-            let mut q = Q::new();
+// fn benchmark_hydroflow(c: &mut Criterion) {
+//     c.bench_function("fan_in/hydroflow", |b| {
+//         b.iter(|| {
+//             let mut q = Q::new();
 
-            let sources: Vec<_> = (0..NUM_OPS)
-                .map(|i| {
-                    q.source(move |send| {
-                        send.give(Iter(make_ints(i)));
-                    })
-                })
-                .collect();
+//             let sources: Vec<_> = (0..NUM_OPS)
+//                 .map(|i| {
+//                     q.source(move |send| {
+//                         send.give(Iter(make_ints(i)));
+//                     })
+//                 })
+//                 .collect();
 
-            let op = q.concat(sources);
+//             let op = q.concat(sources);
 
-            op.sink(move |v| {
-                black_box(v);
-            });
+//             op.sink(move |v| {
+//                 black_box(v);
+//             });
 
-            q.tick();
-        })
-    });
-}
+//             q.tick();
+//         })
+//     });
+// }
 
 fn benchmark_babyflow(c: &mut Criterion) {
     c.bench_function("fan_in/babyflow", |b| {
@@ -126,7 +126,7 @@ fn benchmark_for_loops(c: &mut Criterion) {
 criterion_group!(
     fan_in_dataflow,
     benchmark_babyflow,
-    benchmark_hydroflow,
+    // benchmark_hydroflow,
     benchmark_timely,
     benchmark_spinachflow,
     benchmark_iters,

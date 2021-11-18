@@ -12,7 +12,6 @@ mod handoff_list;
 pub use handoff_list::HandoffList;
 
 use std::any::Any;
-use std::cell::Cell;
 use std::cell::RefCell;
 use std::collections::VecDeque;
 use std::marker::PhantomData;
@@ -22,11 +21,10 @@ use std::sync::mpsc::{self, Receiver, RecvError, SyncSender, TrySendError};
 use std::task::{self, Poll};
 
 use futures::stream::Stream;
-use ref_cast::RefCast;
 
 use crate::tl;
 use ctx::{InputPort, OutputPort, RecvCtx, SendCtx};
-use handoff::{Handoff, HandoffMeta, VecHandoff};
+use handoff::{Handoff, VecHandoff};
 use state::StateHandle;
 #[cfg(feature = "variadic_generics")]
 use subgraph::Subgraph;
@@ -102,19 +100,19 @@ impl Hydroflow {
         while let Some(sg_id) = self.ready_queue.pop_front() {
             self.subgraphs[sg_id].scheduled = false;
             let sg_data = self.subgraphs.get_mut(sg_id).unwrap(/* TODO(mingwei) */);
-            let context = Context {
+            let mut context = Context {
                 handoffs: &mut self.handoffs,
                 states: &mut self.states,
             };
-            sg_data.subgraph.run(context);
+            sg_data.subgraph.run(&mut context);
             for handoff_id in sg_data.succs.iter().copied() {
-                let handoff = self.handoffs.get(handoff_id).unwrap(/* TODO(mingwei) */);
+                let handoff = context.handoffs.get(handoff_id).unwrap(/* TODO(mingwei) */);
                 let succ_id = handoff.succ;
                 if self.ready_queue.contains(&succ_id) {
                     // TODO(mingwei): Slow? O(N)
                     continue;
                 }
-                if !handoff.handoff.is_bottom() {
+                if !handoff.handoff.is_bottom(&context) {
                     self.ready_queue.push_back(succ_id);
                 }
             }
@@ -171,10 +169,10 @@ impl Hydroflow {
         let (input_hids, input_ports) = R::make_input(sg_id);
         let (output_hids, output_ports) = W::make_output(sg_id);
 
-        let subgraph = move |context: Context<'_>| {
-            let recv = R::make_recv(context.handoffs, &input_hids);
-            let send = W::make_send(context.handoffs, &output_hids);
-            (subgraph)(&context, recv, send);
+        let subgraph = move |context: &mut Context<'_>| {
+            let recv = R::make_recv(context, &input_hids);
+            let send = W::make_send(context, &output_hids);
+            (subgraph)(context, recv, send);
         };
         self.subgraphs.push(SubgraphData::new(subgraph));
         self.ready_queue.push_back(sg_id);
@@ -204,7 +202,7 @@ impl Hydroflow {
     #[cfg(feature = "variadic_generics")]
     pub fn add_inout<F, R, W>(&mut self, mut subgraph: F) -> (InputPort<R>, OutputPort<W>)
     where
-        F: 'static + FnMut(&RecvCtx<R>, &SendCtx<W>),
+        F: 'static + FnMut(RecvCtx<R>, SendCtx<W>),
         R: 'static + Handoff,
         W: 'static + Handoff,
     {
@@ -221,7 +219,7 @@ impl Hydroflow {
         mut subgraph: F,
     ) -> (InputPort<R>, OutputPort<W1>, OutputPort<W2>)
     where
-        F: 'static + FnMut(&RecvCtx<R>, &SendCtx<W1>, &SendCtx<W2>),
+        F: 'static + FnMut(RecvCtx<R>, SendCtx<W1>, SendCtx<W2>),
         R: 'static + Handoff,
         W1: 'static + Handoff,
         W2: 'static + Handoff,
@@ -233,85 +231,85 @@ impl Hydroflow {
         (input_port, output_port1, output_port2)
     }
 
-    /**
-     * Adds a new compiled subraph with a variable number of inputs and outputs.
-     */
-    pub fn add_n_in_m_out<F, R, W>(
-        &mut self,
-        n: usize,
-        m: usize,
-        f: F,
-    ) -> (Vec<InputPort<R>>, Vec<OutputPort<W>>)
-    where
-        F: 'static + FnMut(&[&RecvCtx<R>], &[&SendCtx<W>]),
-        R: 'static + Handoff,
-        W: 'static + Handoff,
-    {
-        // TODO(justin): is there a nice way to encapsulate the below?
-        let sg_id = self.subgraphs.len();
+    // /**
+    //  * Adds a new compiled subraph with a variable number of inputs and outputs.
+    //  */
+    // pub fn add_n_in_m_out<F, R, W>(
+    //     &mut self,
+    //     n: usize,
+    //     m: usize,
+    //     f: F,
+    // ) -> (Vec<InputPort<R>>, Vec<OutputPort<W>>)
+    // where
+    //     F: 'static + FnMut(&[RecvCtx<R>], &[SendCtx<W>]),
+    //     R: 'static + Handoff,
+    //     W: 'static + Handoff,
+    // {
+    //     // TODO(justin): is there a nice way to encapsulate the below?
+    //     let sg_id = self.subgraphs.len();
 
-        let mut input_hids = Vec::new();
-        input_hids.resize_with(n, <Rc<Cell<Option<HandoffId>>>>::default);
-        let mut output_hids = Vec::new();
-        output_hids.resize_with(m, <Rc<Cell<Option<HandoffId>>>>::default);
+    //     let mut input_hids = Vec::new();
+    //     input_hids.resize_with(n, <Rc<Cell<Option<HandoffId>>>>::default);
+    //     let mut output_hids = Vec::new();
+    //     output_hids.resize_with(m, <Rc<Cell<Option<HandoffId>>>>::default);
 
-        let input_ports = input_hids
-            .iter()
-            .cloned()
-            .map(|handoff_id| InputPort {
-                sg_id,
-                handoff_id,
-                _phantom: PhantomData,
-            })
-            .collect();
-        let output_ports = output_hids
-            .iter()
-            .cloned()
-            .map(|handoff_id| OutputPort {
-                sg_id,
-                handoff_id,
-                _phantom: PhantomData,
-            })
-            .collect();
+    //     let input_ports = input_hids
+    //         .iter()
+    //         .cloned()
+    //         .map(|handoff_id| InputPort {
+    //             sg_id,
+    //             handoff_id,
+    //             _phantom: PhantomData,
+    //         })
+    //         .collect();
+    //     let output_ports = output_hids
+    //         .iter()
+    //         .cloned()
+    //         .map(|handoff_id| OutputPort {
+    //             sg_id,
+    //             handoff_id,
+    //             _phantom: PhantomData,
+    //         })
+    //         .collect();
 
-        let mut f = f;
-        let subgraph = move |context: Context<'_>| {
-            let recvs: Vec<&RecvCtx<R>> = input_hids
-                .iter()
-                .map(|hid| hid.get().expect("Attempted to use unattached handoff."))
-                .map(|hid| context.handoffs.get(hid).unwrap())
-                .map(|h_data| {
-                    h_data
-                        .handoff
-                        .any_ref()
-                        .downcast_ref()
-                        .expect("Attempted to cast handoff to wrong type.")
-                })
-                .map(RefCast::ref_cast)
-                .collect();
+    //     let mut f = f;
+    //     let subgraph = move |context: Context<'_>| {
+    //         let recvs: Vec<RecvCtx<R>> = input_hids
+    //             .iter()
+    //             .map(|hid| hid.get().expect("Attempted to use unattached handoff."))
+    //             .map(|hid| context.handoffs.get(hid).unwrap())
+    //             .map(|h_data| {
+    //                 h_data
+    //                     .handoff
+    //                     .any_ref()
+    //                     .downcast_ref()
+    //                     .expect("Attempted to cast handoff to wrong type.")
+    //             })
+    //             .map(RefCast::ref_cast)
+    //             .collect();
 
-            let sends: Vec<&SendCtx<W>> = output_hids
-                .iter()
-                .map(|hid| hid.get().expect("Attempted to use unattached handoff."))
-                .map(|hid| context.handoffs.get(hid).unwrap())
-                .map(|h_data| {
-                    h_data
-                        .handoff
-                        .any_ref()
-                        .downcast_ref()
-                        .expect("Attempted to cast handoff to wrong type.")
-                })
-                .map(RefCast::ref_cast)
-                .collect();
+    //         let sends: Vec<SendCtx<W>> = output_hids
+    //             .iter()
+    //             .map(|hid| hid.get().expect("Attempted to use unattached handoff."))
+    //             .map(|hid| context.handoffs.get(hid).unwrap())
+    //             .map(|h_data| {
+    //                 h_data
+    //                     .handoff
+    //                     .any_ref()
+    //                     .downcast_ref()
+    //                     .expect("Attempted to cast handoff to wrong type.")
+    //             })
+    //             .map(RefCast::ref_cast)
+    //             .collect();
 
-            // self.handoffs.
-            f(&recvs, &sends)
-        };
-        self.subgraphs.push(SubgraphData::new(subgraph));
-        self.ready_queue.push_back(sg_id);
+    //         // self.handoffs.
+    //         f(&recvs, &sends)
+    //     };
+    //     self.subgraphs.push(SubgraphData::new(subgraph));
+    //     self.ready_queue.push_back(sg_id);
 
-        (input_ports, output_ports)
-    }
+    //     (input_ports, output_ports)
+    // }
 
     /**
      * Adds a new compiled subraph with one input and two outputs, and returns the input/output handles.
@@ -321,7 +319,7 @@ impl Hydroflow {
         mut subgraph: F,
     ) -> (InputPort<R1>, InputPort<R2>, OutputPort<W1>, OutputPort<W2>)
     where
-        F: 'static + FnMut(&RecvCtx<R1>, &RecvCtx<R2>, &SendCtx<W1>, &SendCtx<W2>),
+        F: 'static + FnMut(RecvCtx<R1>, RecvCtx<R2>, SendCtx<W1>, SendCtx<W2>),
         R1: 'static + Handoff,
         R2: 'static + Handoff,
         W1: 'static + Handoff,
@@ -343,7 +341,7 @@ impl Hydroflow {
         mut subgraph: F,
     ) -> (InputPort<R1>, InputPort<R2>, OutputPort<W>)
     where
-        F: 'static + FnMut(&RecvCtx<R1>, &RecvCtx<R2>, &SendCtx<W>),
+        F: 'static + FnMut(RecvCtx<R1>, RecvCtx<R2>, SendCtx<W>),
         R1: 'static + Handoff,
         R2: 'static + Handoff,
         W: 'static + Handoff,
@@ -361,7 +359,7 @@ impl Hydroflow {
     #[cfg(feature = "variadic_generics")]
     pub fn add_binary_sink<F, R1, R2>(&mut self, mut subgraph: F) -> (InputPort<R1>, InputPort<R2>)
     where
-        F: 'static + FnMut(&RecvCtx<R1>, &RecvCtx<R2>),
+        F: 'static + FnMut(RecvCtx<R1>, RecvCtx<R2>),
         R1: 'static + Handoff,
         R2: 'static + Handoff,
     {
@@ -445,7 +443,7 @@ impl Hydroflow {
     #[cfg(feature = "variadic_generics")]
     pub fn add_source<F, W>(&mut self, mut subgraph: F) -> OutputPort<W>
     where
-        F: 'static + FnMut(&SendCtx<W>),
+        F: 'static + FnMut(SendCtx<W>),
         W: 'static + Handoff,
     {
         let (tl!(), tl!(output_port)) =
@@ -459,7 +457,7 @@ impl Hydroflow {
     #[cfg(feature = "variadic_generics")]
     pub fn add_sink<F, R>(&mut self, mut subgraph: F) -> InputPort<R>
     where
-        F: 'static + FnMut(&RecvCtx<R>),
+        F: 'static + FnMut(RecvCtx<R>),
         R: 'static + Handoff,
     {
         let (tl!(input_port), tl!()) =
@@ -470,17 +468,22 @@ impl Hydroflow {
     pub fn add_edge<H>(&mut self, output_port: OutputPort<H>, input_port: InputPort<H>)
     where
         H: 'static + Handoff,
+        H::State: 'static + Default,
     {
-        let handoff_id: HandoffId = self.handoffs.len();
+        let state_handle = self.add_state(<RefCell<H::State>>::default());
 
-        // Send handoff_ids.
-        input_port.handoff_id.set(Some(handoff_id));
-        output_port.handoff_id.set(Some(handoff_id));
+        // Send handoff_ids. TODO(mingwei)
+        input_port.state_handle.set(Some(state_handle));
+        output_port.state_handle.set(Some(state_handle));
 
         // Create and insert handoff.
-        let handoff = H::default();
+        let handoff_id = self.handoffs.len();
+        let handoff_meta: HandoffMetaWrapper<H> = HandoffMetaWrapper {
+            state_handle,
+            _phantom: PhantomData,
+        };
         self.handoffs.push(HandoffData::new(
-            handoff,
+            handoff_meta,
             output_port.sg_id,
             input_port.sg_id,
         ));
@@ -573,12 +576,32 @@ impl Reactor {
     }
 }
 
+trait HandoffMeta {
+    fn is_bottom(&self, context: &Context<'_>) -> bool;
+}
+struct HandoffMetaWrapper<H>
+where
+    H: Handoff,
+    H::State: 'static,
+{
+    state_handle: StateHandle<RefCell<H::State>>,
+    _phantom: PhantomData<*mut H>,
+}
+impl<H> HandoffMeta for HandoffMetaWrapper<H>
+where
+    H: Handoff,
+    H::State: 'static,
+{
+    fn is_bottom(&self, context: &Context<'_>) -> bool {
+        let state = context.state_ref(self.state_handle).borrow();
+        H::is_bottom(&*state)
+    }
+}
+
 /**
  * A handoff and its input and output [SubgraphId]s.
- *
- * NOT PART OF PUBLIC API.
  */
-pub struct HandoffData {
+struct HandoffData {
     handoff: Box<dyn HandoffMeta>,
     #[allow(dead_code)] // TODO(mingwei)
     pred: SubgraphId,
@@ -635,7 +658,7 @@ fn map_filter() {
     });
 
     let (map_in, map_out) = df.add_inout(
-        |recv: &RecvCtx<VecHandoff<i32>>, send: &SendCtx<VecHandoff<_>>| {
+        |recv: RecvCtx<VecHandoff<i32>>, send: SendCtx<VecHandoff<_>>| {
             for x in recv.take_inner().into_iter() {
                 send.give(Some(3 * x + 1));
             }
@@ -643,7 +666,7 @@ fn map_filter() {
     );
 
     let (filter_in, filter_out) = df.add_inout(
-        |recv: &RecvCtx<VecHandoff<i32>>, send: &SendCtx<VecHandoff<_>>| {
+        |recv: RecvCtx<VecHandoff<i32>>, send: SendCtx<VecHandoff<_>>| {
             for x in recv.take_inner().into_iter() {
                 if x % 2 == 0 {
                     send.give(Some(x));
@@ -654,7 +677,7 @@ fn map_filter() {
 
     let outputs = Rc::new(RefCell::new(Vec::new()));
     let inner_outputs = outputs.clone();
-    let sink = df.add_sink(move |recv: &RecvCtx<VecHandoff<i32>>| {
+    let sink = df.add_sink(move |recv: RecvCtx<VecHandoff<i32>>| {
         for x in recv.take_inner().into_iter() {
             (*inner_outputs).borrow_mut().push(x);
         }
@@ -682,14 +705,14 @@ mod tests {
     #[test]
     fn test_basic_variadic() {
         let mut df = Hydroflow::new();
-        let source_handle = df.add_source(move |send: &SendCtx<VecHandoff<usize>>| {
+        let source_handle = df.add_source(move |send: SendCtx<VecHandoff<usize>>| {
             send.give(Some(5));
         });
 
         let val = <Rc<Cell<Option<usize>>>>::default();
         let val_ref = val.clone();
 
-        let sink_handle = df.add_sink(move |recv: &RecvCtx<VecHandoff<usize>>| {
+        let sink_handle = df.add_sink(move |recv: RecvCtx<VecHandoff<usize>>| {
             for v in recv.take_inner().into_iter() {
                 let old_val = val_ref.replace(Some(v));
                 assert!(old_val.is_none()); // Only run once.
@@ -702,36 +725,36 @@ mod tests {
         assert_eq!(Some(5), val.get());
     }
 
-    #[test]
-    fn test_basic_n_m() {
-        let mut df = Hydroflow::new();
-        let (_, mut source_handle) = df.add_n_in_m_out(
-            0,
-            1,
-            move |_: &[&RecvCtx<VecHandoff<usize>>], send: &[&SendCtx<VecHandoff<usize>>]| {
-                send[0].give(Some(5));
-            },
-        );
+    // #[test]
+    // fn test_basic_n_m() {
+    //     let mut df = Hydroflow::new();
+    //     let (_, mut source_handle) = df.add_n_in_m_out(
+    //         0,
+    //         1,
+    //         move |_: &[RecvCtx<VecHandoff<usize>>], send: &[SendCtx<VecHandoff<usize>>]| {
+    //             send[0].give(Some(5));
+    //         },
+    //     );
 
-        let val = <Rc<Cell<Option<usize>>>>::default();
-        let val_ref = val.clone();
+    //     let val = <Rc<Cell<Option<usize>>>>::default();
+    //     let val_ref = val.clone();
 
-        let (mut sink_handle, _) = df.add_n_in_m_out(
-            1,
-            0,
-            move |recv: &[&RecvCtx<VecHandoff<usize>>], _: &[&SendCtx<VecHandoff<usize>>]| {
-                for v in recv[0].take_inner().into_iter() {
-                    let old_val = val_ref.replace(Some(v));
-                    assert!(old_val.is_none()); // Only run once.
-                }
-            },
-        );
+    //     let (mut sink_handle, _) = df.add_n_in_m_out(
+    //         1,
+    //         0,
+    //         move |recv: &[RecvCtx<VecHandoff<usize>>], _: &[SendCtx<VecHandoff<usize>>]| {
+    //             for v in recv[0].take_inner().into_iter() {
+    //                 let old_val = val_ref.replace(Some(v));
+    //                 assert!(old_val.is_none()); // Only run once.
+    //             }
+    //         },
+    //     );
 
-        df.add_edge(source_handle.pop().unwrap(), sink_handle.pop().unwrap());
-        df.tick();
+    //     df.add_edge(source_handle.pop().unwrap(), sink_handle.pop().unwrap());
+    //     df.tick();
 
-        assert_eq!(Some(5), val.get());
-    }
+    //     assert_eq!(Some(5), val.get());
+    // }
 
     #[test]
     fn test_cycle() {
@@ -754,7 +777,7 @@ mod tests {
         let mut df = Hydroflow::new();
 
         let mut initially_reachable = vec![1];
-        let reachable = df.add_source(move |send: &SendCtx<VecHandoff<usize>>| {
+        let reachable = df.add_source(move |send: SendCtx<VecHandoff<usize>>| {
             for v in initially_reachable.drain(..) {
                 send.give(Some(v));
             }
@@ -762,7 +785,7 @@ mod tests {
 
         let mut seen = HashSet::new();
         let (distinct_in, distinct_out) = df.add_inout(
-            move |recv: &RecvCtx<VecHandoff<usize>>, send: &SendCtx<VecHandoff<usize>>| {
+            move |recv: RecvCtx<VecHandoff<usize>>, send: SendCtx<VecHandoff<usize>>| {
                 for v in recv.take_inner().into_iter() {
                     if seen.insert(v) {
                         send.give(Some(v));
@@ -772,9 +795,9 @@ mod tests {
         );
 
         let (merge_lhs, merge_rhs, merge_out) = df.add_binary(
-            |recv1: &RecvCtx<VecHandoff<usize>>,
-             recv2: &RecvCtx<VecHandoff<usize>>,
-             send: &SendCtx<VecHandoff<usize>>| {
+            |recv1: RecvCtx<VecHandoff<usize>>,
+             recv2: RecvCtx<VecHandoff<usize>>,
+             send: SendCtx<VecHandoff<usize>>| {
                 for v in (recv1.take_inner().into_iter()).chain(recv2.take_inner().into_iter()) {
                     send.give(Some(v));
                 }
@@ -782,7 +805,7 @@ mod tests {
         );
 
         let (neighbors_in, neighbors_out) =
-            df.add_inout(move |recv: &RecvCtx<VecHandoff<usize>>, send| {
+            df.add_inout(move |recv: RecvCtx<VecHandoff<usize>>, send| {
                 for v in recv.take_inner().into_iter() {
                     if let Some(neighbors) = edges.get(&v) {
                         for &n in neighbors {
@@ -793,9 +816,9 @@ mod tests {
             });
 
         let (tee_in, tee_out1, tee_out2) = df.add_binary_out(
-            |recv: &RecvCtx<VecHandoff<usize>>,
-             send1: &SendCtx<VecHandoff<usize>>,
-             send2: &SendCtx<VecHandoff<usize>>| {
+            |recv: RecvCtx<VecHandoff<usize>>,
+             send1: SendCtx<VecHandoff<usize>>,
+             send2: SendCtx<VecHandoff<usize>>| {
                 for v in recv.take_inner().into_iter() {
                     send1.give(Some(v));
                     send2.give(Some(v));
@@ -805,7 +828,7 @@ mod tests {
 
         let reachable_verts = Rc::new(RefCell::new(Vec::new()));
         let reachable_inner = reachable_verts.clone();
-        let sink_in = df.add_sink(move |recv: &RecvCtx<VecHandoff<usize>>| {
+        let sink_in = df.add_sink(move |recv: RecvCtx<VecHandoff<usize>>| {
             for v in recv.take_inner().into_iter() {
                 (*reachable_inner).borrow_mut().push(v);
             }
@@ -834,14 +857,14 @@ mod tests {
 //     let mut df = Hydroflow::new();
 
 //     let mut data = vec![1, 2, 3, 4];
-//     let source = df.add_source(move |send: &SendCtx<TeeingHandoff<_>>| {
+//     let source = df.add_source(move |send: SendCtx<TeeingHandoff<_>>| {
 //         send.give(std::mem::take(&mut data));
 //     });
 
 //     let out1 = Rc::new(RefCell::new(Vec::new()));
 //     let out1_inner = out1.clone();
 
-//     let sink1 = df.add_sink(move |recv: &RecvCtx<_>| {
+//     let sink1 = df.add_sink(move |recv: RecvCtx<_>| {
 //         for v in recv.take_inner() {
 //             out1_inner.borrow_mut().extend(v);
 //         }
@@ -849,7 +872,7 @@ mod tests {
 
 //     let out2 = Rc::new(RefCell::new(Vec::new()));
 //     let out2_inner = out2.clone();
-//     let sink2 = df.add_sink(move |recv: &RecvCtx<_>| {
+//     let sink2 = df.add_sink(move |recv: RecvCtx<_>| {
 //         for v in recv.take_inner() {
 //             out2_inner.borrow_mut().extend(v);
 //         }
@@ -874,7 +897,7 @@ fn test_input_handle() {
 
     let vec = Rc::new(RefCell::new(Vec::new()));
     let inner_vec = vec.clone();
-    let input_port = df.add_sink(move |recv: &RecvCtx<VecHandoff<usize>>| {
+    let input_port = df.add_sink(move |recv: RecvCtx<VecHandoff<usize>>| {
         for v in recv.take_inner() {
             (*inner_vec).borrow_mut().push(v);
         }
@@ -911,7 +934,7 @@ fn test_input_handle_thread() {
 
     let vec = Rc::new(RefCell::new(Vec::new()));
     let inner_vec = vec.clone();
-    let input_port = df.add_sink(move |recv: &RecvCtx<VecHandoff<usize>>| {
+    let input_port = df.add_sink(move |recv: RecvCtx<VecHandoff<usize>>| {
         for v in recv.take_inner() {
             (*inner_vec).borrow_mut().push(v);
         }

@@ -1,7 +1,6 @@
-use std::any::Any;
 use std::{cell::RefCell, collections::VecDeque, rc::Rc};
 
-use super::{CanReceive, Handoff, HandoffMeta};
+use super::{CanReceive, Handoff};
 
 struct ReaderHandoff<T> {
     contents: VecDeque<Vec<T>>,
@@ -55,16 +54,6 @@ where
             read_from: id,
             internal: self.internal.clone(),
         }
-    }
-}
-
-impl<T> HandoffMeta for TeeingHandoff<T> {
-    fn any_ref(&self) -> &dyn Any {
-        self
-    }
-
-    fn is_bottom(&self) -> bool {
-        true
     }
 }
 
