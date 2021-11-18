@@ -1,6 +1,6 @@
 window.BENCHMARK_DATA = 
 {
-  "lastUpdate": 1637120970350,
+  "lastUpdate": 1637207345564,
   "repoUrl": "https://github.com/hydro-project/hydroflow",
   "entries": {
     "Benchmark": [
@@ -2562,6 +2562,82 @@ window.BENCHMARK_DATA =
             "name": "reachability/hydroflow",
             "value": 2777866,
             "range": "± 2155",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Mingwei Samuel",
+            "username": "MingweiSamuel",
+            "email": "mingwei.samuel@gmail.com"
+          },
+          "committer": {
+            "name": "Mingwei Samuel",
+            "username": "MingweiSamuel",
+            "email": "mingwei.samuel@gmail.com"
+          },
+          "id": "9db3b81b191fde45dac4c0641f7e660a7f7e9af9",
+          "message": "Remove handoff-style state connecting, instead use StateHandle as pointers with Context<'_>",
+          "timestamp": "2021-11-17T02:41:44Z",
+          "url": "https://github.com/hydro-project/hydroflow/commit/9db3b81b191fde45dac4c0641f7e660a7f7e9af9"
+        },
+        "date": 1637207345562,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "arithmetic/hydroflow/compiled",
+            "value": 387224,
+            "range": "± 20019",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/hydroflow",
+            "value": 208972639,
+            "range": "± 4367876",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/scheduled",
+            "value": 259337132,
+            "range": "± 27228973",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow",
+            "value": 11854548,
+            "range": "± 446966",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow_builder",
+            "value": 53017709,
+            "range": "± 1923706",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow",
+            "value": 59273694,
+            "range": "± 2673256",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow/compiled",
+            "value": 18136141,
+            "range": "± 702556",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/scheduled",
+            "value": 3222574,
+            "range": "± 193910",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow",
+            "value": 3228859,
+            "range": "± 132644",
             "unit": "ns/iter"
           }
         ]
