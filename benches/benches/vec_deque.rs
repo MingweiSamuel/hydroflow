@@ -1,32 +1,77 @@
 use std::any::Any;
-use std::cell::RefCell;
+use std::marker::PhantomData;
 
-use criterion::{black_box, criterion_group, criterion_main, Criterion};
+use criterion::{criterion_group, criterion_main, Criterion};
 
 const NUM_OPS: usize = 20;
 const NUM_INTS: usize = 100_000;
 
+#[derive(Default)]
+pub struct StateManager {
+    states: Vec<Box<dyn Any>>,
+}
+impl StateManager {
+    pub fn new() -> Self {
+        Default::default()
+    }
+
+    pub fn new_state<T: 'static>(&mut self, val: T) -> StateHandle<T> {
+        let i = self.states.len();
+        self.states.push(Box::new(val));
+        StateHandle {
+            i,
+            _phantom: PhantomData,
+        }
+    }
+
+    pub fn get_ref<T: 'static>(&self, handle: StateHandle<T>) -> &T {
+        self.states[handle.i].downcast_ref().unwrap()
+    }
+
+    pub fn get_mut<T: 'static>(&mut self, handle: StateHandle<T>) -> &mut T {
+        self.states[handle.i].downcast_mut().unwrap()
+    }
+}
+
+pub struct StateHandle<T> {
+    i: usize,
+    _phantom: PhantomData<*mut T>,
+}
+impl<T> Clone for StateHandle<T> {
+    fn clone(&self) -> Self {
+        Self {
+            i: self.i,
+            _phantom: PhantomData,
+        }
+    }
+}
+impl<T> Copy for StateHandle<T> {}
+
 fn benchmark_vec(c: &mut Criterion) {
     c.bench_function("vec_deque/vec", |b| {
         b.iter(|| {
-            type Buf = RefCell<Vec<usize>>;
+            type Buf = Vec<usize>;
 
-            let handoffs: Vec<Box<dyn Any>> = (0..=NUM_OPS)
-                .map(|_| Box::new(Buf::default()) as Box<dyn Any>)
-                .collect();
+            let mut state_mgr = StateManager::new();
 
-            *handoffs[0].downcast_ref::<Buf>().unwrap().borrow_mut() = (0..NUM_INTS).collect();
+            let handoff = state_mgr.new_state((0..NUM_INTS).collect::<Buf>());
+            let evns = state_mgr.new_state(Buf::new());
+            let odds = state_mgr.new_state(Buf::new());
 
-            for i in 0..NUM_OPS {
-                let mut handoff_prev = handoffs[i].downcast_ref::<Buf>().unwrap().borrow_mut();
-                let mut handoff_next = handoffs[i + 1].downcast_ref::<Buf>().unwrap().borrow_mut();
-                for x in std::mem::take(&mut *handoff_prev) {
-                    handoff_next.push(x);
+            for _ in 0..NUM_OPS {
+                for x in std::mem::take(state_mgr.get_mut(handoff)) {
+                    if x % 2 == 0 {
+                        state_mgr.get_mut(evns).push(x);
+                    } else {
+                        state_mgr.get_mut(odds).push(x);
+                    }
                 }
-            }
 
-            for x in std::mem::take(&mut *handoffs[NUM_OPS].downcast_ref::<Buf>().unwrap().borrow_mut()) {
-                black_box(x);
+                let evns_iter = std::mem::take(state_mgr.get_mut(evns)).into_iter();
+                let odds_iter = std::mem::take(state_mgr.get_mut(odds)).into_iter();
+                for x in evns_iter.chain(odds_iter) {
+                    state_mgr.get_mut(handoff).push(x);
+                }
             }
         });
     });
@@ -37,24 +82,28 @@ fn benchmark_vecdeque(c: &mut Criterion) {
 
     c.bench_function("vec_deque/vecdeque", |b| {
         b.iter(|| {
-            type Buf = RefCell<VecDeque<usize>>;
+            type Buf = VecDeque<usize>;
 
-            let handoffs: Vec<Box<dyn Any>> = (0..=NUM_OPS)
-                .map(|_| Box::new(Buf::default()) as Box<dyn Any>)
-                .collect();
+            let mut state_mgr = StateManager::new();
 
-            *handoffs[0].downcast_ref::<Buf>().unwrap().borrow_mut() = (0..NUM_INTS).collect();
+            let handoff = state_mgr.new_state((0..NUM_INTS).collect::<Buf>());
+            let evns = state_mgr.new_state(Buf::new());
+            let odds = state_mgr.new_state(Buf::new());
 
-            for i in 0..NUM_OPS {
-                let mut handoff_prev = handoffs[i].downcast_ref::<Buf>().unwrap().borrow_mut();
-                let mut handoff_next = handoffs[i + 1].downcast_ref::<Buf>().unwrap().borrow_mut();
-                for x in std::mem::take(&mut *handoff_prev) {
-                    handoff_next.push_back(x);
+            for _ in 0..NUM_OPS {
+                for x in std::mem::take(state_mgr.get_mut(handoff)) {
+                    if x % 2 == 0 {
+                        state_mgr.get_mut(evns).push_back(x);
+                    } else {
+                        state_mgr.get_mut(odds).push_back(x);
+                    }
                 }
-            }
 
-            for x in std::mem::take(&mut *handoffs[NUM_OPS].downcast_ref::<Buf>().unwrap().borrow_mut()) {
-                black_box(x);
+                let evns_iter = std::mem::take(state_mgr.get_mut(evns)).into_iter();
+                let odds_iter = std::mem::take(state_mgr.get_mut(odds)).into_iter();
+                for x in evns_iter.chain(odds_iter) {
+                    state_mgr.get_mut(handoff).push_back(x);
+                }
             }
         });
     });
