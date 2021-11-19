@@ -55,3 +55,7 @@ harness = false
 [[bench]]
 name = "reachability"
 harness = false
+
+[[bench]]
+name = "vec_deque"
+harness = false
