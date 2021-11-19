@@ -41,10 +41,10 @@ fn benchmark_hydroflow(c: &mut Criterion) {
             df.add_edge(source, tee_in);
             for _ in 0..NUM_OPS {
                 let (in1, in2, mut new_out1, mut new_out2) = df.add_binary_in_binary_out(
-                    |recv1: &RecvCtx<VecHandoff<_>>,
-                     recv2: &RecvCtx<VecHandoff<_>>,
-                     send1,
-                     send2| {
+                    move |recv1: &RecvCtx<VecHandoff<_>>,
+                          recv2: &RecvCtx<VecHandoff<_>>,
+                          send1,
+                          send2| {
                         for v in recv1
                             .take_inner()
                             .into_iter()
@@ -113,17 +113,22 @@ fn benchmark_hydroflow_builder(c: &mut Criterion) {
 fn benchmark_raw(c: &mut Criterion) {
     c.bench_function("fork_join/raw", |b| {
         b.iter(|| {
-            let mut parts = [(); BRANCH_FACTOR].map(|_| Vec::new());
+            let mut evn = Vec::new();
+            let mut odd = Vec::new();
+
             let mut data: Vec<_> = (0..NUM_INTS).collect();
 
             for _ in 0..NUM_OPS {
                 for i in data.drain(..) {
-                    parts[i % BRANCH_FACTOR].push(i);
+                    if i % 2 == 0 {
+                        evn.push(i);
+                    } else {
+                        odd.push(i)
+                    }
                 }
 
-                for part in parts.iter_mut() {
-                    data.append(part);
-                }
+                data.append(&mut evn);
+                data.append(&mut odd);
             }
         })
     });
@@ -217,149 +222,90 @@ fn benchmark_spinachflow_asym(c: &mut Criterion) {
     });
 }
 
-// fn benchmark_spinach(c: &mut Criterion) {
-//     c.bench_function("spinach", |b| {
-//         b.to_async(
-//             tokio::runtime::Builder::new_current_thread()
-//                 .build()
-//                 .unwrap(),
-//         )
-//         .iter(|| {
-//             async {
-//                 use spinachflow::comp::Comp;
+fn benchmark_pyro_plumbing(c: &mut Criterion) {
+    use std::cell::RefCell;
 
-//                 type MyLatRepr =
-//                     spinachflow::lattice::set_union::SetUnionRepr<spinachflow::tag::VEC, usize>;
-//                 let op = <spinachflow::op::OnceOp<MyLatRepr>>::new((0..NUM_INTS).collect());
+    use pyro::{Context, Pyro};
 
-//                 struct Even();
-//                 impl spinachflow::func::unary::Morphism for Even {
-//                     type InLatRepr = MyLatRepr;
-//                     type OutLatRepr = MyLatRepr;
-//                     fn call<Y: spinachflow::hide::Qualifier>(
-//                         &self,
-//                         item: spinachflow::hide::Hide<Y, Self::InLatRepr>,
-//                     ) -> spinachflow::hide::Hide<Y, Self::OutLatRepr> {
-//                         item.filter(|i| 0 == i % 2)
-//                     }
-//                 }
+    type Handoff = RefCell<Vec<usize>>;
 
-//                 struct Odds();
-//                 impl spinachflow::func::unary::Morphism for Odds {
-//                     type InLatRepr = MyLatRepr;
-//                     type OutLatRepr = MyLatRepr;
-//                     fn call<Y: spinachflow::hide::Qualifier>(
-//                         &self,
-//                         item: spinachflow::hide::Hide<Y, Self::InLatRepr>,
-//                     ) -> spinachflow::hide::Hide<Y, Self::OutLatRepr> {
-//                         item.filter(|i| 1 == i % 2)
-//                     }
-//                 }
+    c.bench_function("fork_join/pyro_plumbing", |b| {
+        b.iter(|| {
+            let mut pyro = Pyro::new();
 
-//                 ///// MAGIC NUMBER!!!!!!!! is NUM_OPS
-//                 seq_macro::seq!(N in 0..20 {
-//                     let [ op_even, op_odds ] = spinachflow::op::fixed_split::<_, 2>(op);
-//                     let op_even = spinachflow::op::MorphismOp::new(op_even, Even());
-//                     let op_odds = spinachflow::op::MorphismOp::new(op_odds, Odds());
-//                     let op = spinachflow::op::MergeOp::new(op_even, op_odds);
-//                     let op = spinachflow::op::DynOpDelta::new(Box::new(op));
-//                 });
+            let mut handoff_evn = pyro.default_state::<Handoff>();
+            let mut handoff_odd = pyro.default_state::<Handoff>();
 
-//                 let comp = spinachflow::comp::NullComp::new(op);
-//                 spinachflow::comp::CompExt::run(&comp).await.unwrap_err();
-//             }
-//         });
-//     });
-// }
+            let mut next_tid = pyro.new_task(move |mut ctx: Context<'_>| {
+                let input_evn = std::mem::take(ctx.get_state_mut(handoff_evn).get_mut()).into_iter();
+                let input_odd = std::mem::take(ctx.get_state_mut(handoff_odd).get_mut()).into_iter();
+                for x in input_evn.chain(input_odd) {
+                    black_box(x);
+                }
+            });
 
-// fn benchmark_spinach_switch(c: &mut Criterion) {
-//     c.bench_function("spinach w/ switch", |b| {
-//         b.to_async(
-//             tokio::runtime::Builder::new_current_thread()
-//                 .build()
-//                 .unwrap(),
-//         )
-//         .iter(|| {
-//             async {
-//                 use spinachflow::comp::Comp;
+            for _ in 0..NUM_OPS {
+                let pred_handoff_evn = pyro.default_state::<Handoff>();
+                let pred_handoff_odd = pyro.default_state::<Handoff>();
 
-//                 type MyLatRepr =
-//                     spinachflow::lattice::set_union::SetUnionRepr<spinachflow::tag::VEC, usize>;
-//                 let op = <spinachflow::op::OnceOp<MyLatRepr>>::new((0..NUM_INTS).collect());
+                let fj_tid = pyro.new_task(move |mut ctx: Context<'_>| {
+                    let should_schedule = {
+                        let input_evn = std::mem::take(ctx.get_state_mut(pred_handoff_evn).get_mut()).into_iter();
+                        let input_odd = std::mem::take(ctx.get_state_mut(pred_handoff_odd).get_mut()).into_iter();
+                        let mut outpt_evn = ctx.get_state_ref(handoff_evn).borrow_mut();
+                        let mut outpt_odd = ctx.get_state_ref(handoff_odd).borrow_mut();
+                        for x in input_evn.chain(input_odd) {
+                            if x % 2 == 0 {
+                                outpt_evn.push(x);
+                            } else {
+                                outpt_odd.push(x);
+                            }
+                        }
+                        !outpt_evn.is_empty() || !outpt_odd.is_empty()
+                    };
+                    if should_schedule {
+                        ctx.schedule(next_tid);
+                    }
+                });
 
-//                 struct SwitchEvenOdd();
-//                 impl spinachflow::func::unary::Morphism for SwitchEvenOdd {
-//                     type InLatRepr = MyLatRepr;
-//                     type OutLatRepr = spinachflow::lattice::pair::PairRepr<MyLatRepr, MyLatRepr>;
-//                     fn call<Y: spinachflow::hide::Qualifier>(
-//                         &self,
-//                         item: spinachflow::hide::Hide<Y, Self::InLatRepr>,
-//                     ) -> spinachflow::hide::Hide<Y, Self::OutLatRepr> {
-//                         let (a, b) = item.switch(|i| 0 == i % 2);
-//                         spinachflow::hide::Hide::zip(a, b)
-//                     }
-//                 }
+                handoff_evn = pred_handoff_evn;
+                handoff_odd = pred_handoff_odd;
+                next_tid = fj_tid;
+            }
 
-//                 ///// MAGIC NUMBER!!!!!!!! is NUM_OPS
-//                 seq_macro::seq!(N in 0..20 {
-//                     let op = spinachflow::op::MorphismOp::new(op, SwitchEvenOdd());
-//                     let ( op_even, op_odds ) = spinachflow::op::SwitchOp::new(op);
-//                     let op = spinachflow::op::MergeOp::new(op_even, op_odds);
-//                     let op = spinachflow::op::DynOpDelta::new(Box::new(op));
-//                 });
+            let source_handoff = pyro.default_state::<Handoff>();
+            let split_tid = pyro.new_task(move |mut ctx: Context<'_>| {
+                let should_schedule = {
+                    let mut input = ctx.get_state_ref(source_handoff).borrow_mut();
+                    let mut outpt_evn = ctx.get_state_ref(handoff_evn).borrow_mut();
+                    let mut outpt_odd = ctx.get_state_ref(handoff_odd).borrow_mut();
+                    for x in input.drain(..) {
+                        if x % 2 == 0 {
+                            outpt_evn.push(x);
+                        } else {
+                            outpt_odd.push(x);
+                        }
+                    }
+                    !outpt_evn.is_empty() || !outpt_odd.is_empty()
+                };
+                if should_schedule {
+                    ctx.schedule(next_tid);
+                }
+            });
 
-//                 let comp = spinachflow::comp::NullComp::new(op);
-//                 spinachflow::comp::CompExt::run(&comp).await.unwrap_err();
-//             }
-//         });
-//     });
-// }
+            let source_tid = pyro.new_task(move |mut ctx: Context<'_>| {
+                ctx.get_state_mut(source_handoff)
+                    .get_mut()
+                    .extend(0..NUM_INTS);
+                ctx.schedule(split_tid);
+            });
 
-// fn benchmark_spinachflow_symm(c: &mut Criterion) {
-//     c.bench_function("spinachflow (symmetric)", |b| {
-//         b.to_async(
-//             tokio::runtime::Builder::new_current_thread()
-//                 .build()
-//                 .unwrap(),
-//         )
-//         .iter(|| {
-//             async {
-//                 use spinachflow::futures::StreamExt;
-//                 use spinachflow::futures::future::ready;
+            pyro.schedule(source_tid);
+            pyro.tick();
+        });
+    });
+}
 
-//                 let stream = spinachflow::futures::stream::iter(0..NUM_INTS);
-
-//                 ///// MAGIC NUMBER!!!!!!!! is NUM_OPS
-//                 seq_macro::seq!(N in 0..20 {
-//                     let splitter = spinachflow::stream::Splitter::new(stream);
-//                     let mut i = 0;
-//                     let splits = [(); BRANCH_FACTOR].map(|_| {
-//                         let j = i;
-//                         i += 1;
-//                         splitter.add_split().filter(move |x| ready(j == x % BRANCH_FACTOR))
-//                     });
-//                     let stream = spinachflow::stream::SelectArr::new(splits);
-//                     let stream: std::pin::Pin<Box<dyn spinachflow::futures::Stream<Item = usize>>> = Box::pin(stream);
-//                 });
-
-//                 let mut stream = stream;
-//                 loop {
-//                     let item = stream.next().await;
-//                     if item.is_none() {
-//                         break;
-//                     }
-//                 }
-//             }
-//         });
-//     });
-// }
-
-// criterion_group!(
-//     name = fork_join_dataflow;
-//     config = Criterion::default().with_profiler(PProfProfiler::new(100, Output::Flamegraph(None)));
-//     targets = benchmark_babyflow
-// );
-// criterion_group!(fork_join_dataflow, benchmark_timely,);
 criterion_group!(
     fork_join_dataflow,
     benchmark_hydroflow,
@@ -367,9 +313,7 @@ criterion_group!(
     benchmark_babyflow,
     benchmark_timely,
     benchmark_raw,
-    // benchmark_spinach,
-    // benchmark_spinach_switch,
-    // benchmark_spinachflow_symm,
     benchmark_spinachflow_asym,
+    benchmark_pyro_plumbing,
 );
 criterion_main!(fork_join_dataflow);
