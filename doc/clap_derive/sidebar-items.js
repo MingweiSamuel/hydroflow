@@ -1,0 +1,1 @@
+initSidebarItems({"derive":[["ArgEnum","Generates the `ArgEnum` impl."],["Args","Generates the `Args` impl."],["IntoApp","Generates the `IntoApp` impl."],["Parser","Generates the `Parser` implementation."],["Subcommand","Generates the `Subcommand` impl."]]});

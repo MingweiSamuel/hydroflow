@@ -1140,7 +1140,7 @@
      * Block and wait for an external event.
      */</span>
     <span class="kw">fn</span> <span class="ident">poll_events</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">RecvError</span><span class="op">&gt;</span> {
-        <span class="self">self</span>.<span class="ident">ready_queue</span>.<span class="ident">push_back</span>(<span class="self">self</span>.<span class="ident">event_queue_recv</span>.<span class="ident">recv</span>()<span class="question-mark">?</span>);
+        <span class="self">self</span>.<span class="ident">ready_queue</span>.<span class="ident">extend</span>(<span class="self">self</span>.<span class="ident">event_queue_recv</span>.<span class="ident">try_iter</span>());
         <span class="prelude-val">Ok</span>(())
     }
 
@@ -1457,7 +1457,7 @@
     }
 
     <span class="doccomment">/**
-     * Adds a new compiled subgraph with one inputs and no outputs.
+     * Adds a new compiled subgraph with one input and no outputs.
      */</span>
     <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;variadic_generics&quot;</span>)]</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_sink</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">R</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">subgraph</span>: <span class="ident">F</span>) -&gt; <span class="ident">InputPort</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>
