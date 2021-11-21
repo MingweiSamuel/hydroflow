@@ -27,7 +27,7 @@ can until it is “caught up” in time to where it should be.
 <p>Note that because the executor cannot guarantee exact precision with timers,
 these strategies will only apply when the delay is greater than 5
 milliseconds.</p>
-</div></details><h2 id="variants" class="variants small-section-header">Variants<a href="#variants" class="anchor"></a></h2><div id="variant.Burst" class="variant small-section-header"><a href="#variant.Burst" class="anchor field"></a><code>Burst</code></div><div class="docblock"><p>Tick as fast as possible until caught up.</p>
+</div></details><h2 id="variants" class="variants small-section-header">Variants<a href="#variants" class="anchor"></a></h2><h3 id="variant.Burst" class="variant small-section-header"><a href="#variant.Burst" class="anchor field"></a><code>Burst</code></h3><div class="docblock"><p>Tick as fast as possible until caught up.</p>
 <p>When this strategy is used, <a href="struct.Interval.html" title="Interval"><code>Interval</code></a> schedules ticks “normally” (the
 same as it would have if the ticks hadn’t been delayed), which results
 in it firing ticks as fast as possible until it is caught up in time to
@@ -67,7 +67,7 @@ Actual ticks:   | work -----|          delay          | work | work | work -| wo
 <span class="ident">interval</span>.<span class="ident">tick</span>().<span class="kw">await</span>;</code></pre></div>
 <p>This is the default behavior when <a href="struct.Interval.html" title="Interval"><code>Interval</code></a> is created with
 <a href="fn.interval.html" title="interval"><code>interval</code></a> and <a href="fn.interval_at.html" title="interval_at"><code>interval_at</code></a>.</p>
-</div><div id="variant.Delay" class="variant small-section-header"><a href="#variant.Delay" class="anchor field"></a><code>Delay</code></div><div class="docblock"><p>Tick at multiples of <code>period</code> from when <a href="struct.Interval.html#method.tick"><code>tick</code></a> was called, rather than
+</div><h3 id="variant.Delay" class="variant small-section-header"><a href="#variant.Delay" class="anchor field"></a><code>Delay</code></h3><div class="docblock"><p>Tick at multiples of <code>period</code> from when <a href="struct.Interval.html#method.tick"><code>tick</code></a> was called, rather than
 from <code>start</code>.</p>
 <p>When this strategy is used and <a href="struct.Interval.html" title="Interval"><code>Interval</code></a> has missed a tick, instead
 of scheduling ticks to fire at multiples of <code>period</code> from <code>start</code> (the
@@ -98,7 +98,7 @@ Actual ticks:   | work -----|          delay          | work -----| work -----| 
 <span class="comment">// 50ms (or whatever the `period` is) from right then, not from when</span>
 <span class="comment">// were were *supposed* to tick</span>
 <span class="ident">interval</span>.<span class="ident">tick</span>().<span class="kw">await</span>;</code></pre></div>
-</div><div id="variant.Skip" class="variant small-section-header"><a href="#variant.Skip" class="anchor field"></a><code>Skip</code></div><div class="docblock"><p>Skip missed ticks and tick on the next multiple of <code>period</code> from
+</div><h3 id="variant.Skip" class="variant small-section-header"><a href="#variant.Skip" class="anchor field"></a><code>Skip</code></h3><div class="docblock"><p>Skip missed ticks and tick on the next multiple of <code>period</code> from
 <code>start</code>.</p>
 <p>When this strategy is used, <a href="struct.Interval.html" title="Interval"><code>Interval</code></a> schedules the next tick to fire
 at the next-closest tick that is a multiple of <code>period</code> away from

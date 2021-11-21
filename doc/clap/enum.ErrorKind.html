@@ -22,9 +22,9 @@
     Io,
     Format,
 </details>}</code></pre></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Command line argument parser kind of error</p>
-</div></details><h2 id="variants" class="variants small-section-header">Variants<a href="#variants" class="anchor"></a></h2><div id="variant.InvalidValue" class="variant small-section-header"><a href="#variant.InvalidValue" class="anchor field"></a><code>InvalidValue</code></div><div class="docblock"><p>Occurs when an <a href="struct.Arg.html" title="Arg"><code>Arg</code></a> has a set of possible values,
+</div></details><h2 id="variants" class="variants small-section-header">Variants<a href="#variants" class="anchor"></a></h2><h3 id="variant.InvalidValue" class="variant small-section-header"><a href="#variant.InvalidValue" class="anchor field"></a><code>InvalidValue</code></h3><div class="docblock"><p>Occurs when an <a href="struct.Arg.html" title="Arg"><code>Arg</code></a> has a set of possible values,
 and the user provides a value which isn’t in that set.</p>
-<h3 id="examples" class="section-header"><a href="#examples">Examples</a></h3>
+<h4 id="examples" class="section-header"><a href="#examples">Examples</a></h4>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="string">&quot;prog&quot;</span>)
     .<span class="ident">arg</span>(<span class="ident">Arg::new</span>(<span class="string">&quot;speed&quot;</span>)
         .<span class="ident">possible_value</span>(<span class="string">&quot;fast&quot;</span>)
@@ -32,18 +32,18 @@ and the user provides a value which isn’t in that set.</p>
     .<span class="ident">try_get_matches_from</span>(<span class="macro">vec!</span>[<span class="string">&quot;prog&quot;</span>, <span class="string">&quot;other&quot;</span>]);
 <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_err</span>());
 <span class="macro">assert_eq!</span>(<span class="ident">result</span>.<span class="ident">unwrap_err</span>().<span class="ident">kind</span>, <span class="ident">ErrorKind::InvalidValue</span>);</code></pre></div>
-</div><div id="variant.UnknownArgument" class="variant small-section-header"><a href="#variant.UnknownArgument" class="anchor field"></a><code>UnknownArgument</code></div><div class="docblock"><p>Occurs when a user provides a flag, option, argument or subcommand which isn’t defined.</p>
-<h3 id="examples-1" class="section-header"><a href="#examples-1">Examples</a></h3>
+</div><h3 id="variant.UnknownArgument" class="variant small-section-header"><a href="#variant.UnknownArgument" class="anchor field"></a><code>UnknownArgument</code></h3><div class="docblock"><p>Occurs when a user provides a flag, option, argument or subcommand which isn’t defined.</p>
+<h4 id="examples-1" class="section-header"><a href="#examples-1">Examples</a></h4>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="string">&quot;prog&quot;</span>)
     .<span class="ident">arg</span>(<span class="ident">Arg::from</span>(<span class="string">&quot;--flag &#39;some flag&#39;&quot;</span>))
     .<span class="ident">try_get_matches_from</span>(<span class="macro">vec!</span>[<span class="string">&quot;prog&quot;</span>, <span class="string">&quot;--other&quot;</span>]);
 <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_err</span>());
 <span class="macro">assert_eq!</span>(<span class="ident">result</span>.<span class="ident">unwrap_err</span>().<span class="ident">kind</span>, <span class="ident">ErrorKind::UnknownArgument</span>);</code></pre></div>
-</div><div id="variant.InvalidSubcommand" class="variant small-section-header"><a href="#variant.InvalidSubcommand" class="anchor field"></a><code>InvalidSubcommand</code></div><div class="docblock"><p>Occurs when the user provides an unrecognized <a href="trait.Subcommand.html"><code>Subcommand</code></a> which meets the threshold for
+</div><h3 id="variant.InvalidSubcommand" class="variant small-section-header"><a href="#variant.InvalidSubcommand" class="anchor field"></a><code>InvalidSubcommand</code></h3><div class="docblock"><p>Occurs when the user provides an unrecognized <a href="trait.Subcommand.html"><code>Subcommand</code></a> which meets the threshold for
 being similar enough to an existing subcommand.
 If it doesn’t meet the threshold, or the ‘suggestions’ feature is disabled,
 the more general <a href="enum.ErrorKind.html#variant.UnknownArgument"><code>UnknownArgument</code></a> error is returned.</p>
-<h3 id="examples-2" class="section-header"><a href="#examples-2">Examples</a></h3>
+<h4 id="examples-2" class="section-header"><a href="#examples-2">Examples</a></h4>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="string">&quot;prog&quot;</span>)
    .<span class="ident">subcommand</span>(<span class="ident">App::new</span>(<span class="string">&quot;config&quot;</span>)
        .<span class="ident">about</span>(<span class="string">&quot;Used for configuration&quot;</span>)
@@ -53,13 +53,13 @@ the more general <a href="enum.ErrorKind.html#variant.UnknownArgument"><code>Unk
    .<span class="ident">try_get_matches_from</span>(<span class="macro">vec!</span>[<span class="string">&quot;prog&quot;</span>, <span class="string">&quot;confi&quot;</span>]);
 <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_err</span>());
 <span class="macro">assert_eq!</span>(<span class="ident">result</span>.<span class="ident">unwrap_err</span>().<span class="ident">kind</span>, <span class="ident">ErrorKind::InvalidSubcommand</span>);</code></pre></div>
-</div><div id="variant.UnrecognizedSubcommand" class="variant small-section-header"><a href="#variant.UnrecognizedSubcommand" class="anchor field"></a><code>UnrecognizedSubcommand</code></div><div class="docblock"><p>Occurs when the user provides an unrecognized <a href="trait.Subcommand.html"><code>Subcommand</code></a> which either
+</div><h3 id="variant.UnrecognizedSubcommand" class="variant small-section-header"><a href="#variant.UnrecognizedSubcommand" class="anchor field"></a><code>UnrecognizedSubcommand</code></h3><div class="docblock"><p>Occurs when the user provides an unrecognized <a href="trait.Subcommand.html"><code>Subcommand</code></a> which either
 doesn’t meet the threshold for being similar enough to an existing subcommand,
 or the ‘suggestions’ feature is disabled.
 Otherwise the more detailed <a href="enum.ErrorKind.html#variant.InvalidSubcommand"><code>InvalidSubcommand</code></a> error is returned.</p>
 <p>This error typically happens when passing additional subcommand names to the <code>help</code>
 subcommand. Otherwise, the more general <a href="enum.ErrorKind.html#variant.UnknownArgument"><code>UnknownArgument</code></a> error is used.</p>
-<h3 id="examples-3" class="section-header"><a href="#examples-3">Examples</a></h3>
+<h4 id="examples-3" class="section-header"><a href="#examples-3">Examples</a></h4>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="string">&quot;prog&quot;</span>)
     .<span class="ident">subcommand</span>(<span class="ident">App::new</span>(<span class="string">&quot;config&quot;</span>)
         .<span class="ident">about</span>(<span class="string">&quot;Used for configuration&quot;</span>)
@@ -69,9 +69,9 @@ subcommand. Otherwise, the more general <a href="enum.ErrorKind.html#variant.Unk
     .<span class="ident">try_get_matches_from</span>(<span class="macro">vec!</span>[<span class="string">&quot;prog&quot;</span>, <span class="string">&quot;help&quot;</span>, <span class="string">&quot;nothing&quot;</span>]);
 <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_err</span>());
 <span class="macro">assert_eq!</span>(<span class="ident">result</span>.<span class="ident">unwrap_err</span>().<span class="ident">kind</span>, <span class="ident">ErrorKind::UnrecognizedSubcommand</span>);</code></pre></div>
-</div><div id="variant.EmptyValue" class="variant small-section-header"><a href="#variant.EmptyValue" class="anchor field"></a><code>EmptyValue</code></div><div class="docblock"><p>Occurs when the user provides an empty value for an option that does not allow empty
+</div><h3 id="variant.EmptyValue" class="variant small-section-header"><a href="#variant.EmptyValue" class="anchor field"></a><code>EmptyValue</code></h3><div class="docblock"><p>Occurs when the user provides an empty value for an option that does not allow empty
 values.</p>
-<h3 id="examples-4" class="section-header"><a href="#examples-4">Examples</a></h3>
+<h4 id="examples-4" class="section-header"><a href="#examples-4">Examples</a></h4>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="string">&quot;prog&quot;</span>)
     .<span class="ident">arg</span>(<span class="ident">Arg::new</span>(<span class="string">&quot;color&quot;</span>)
          .<span class="ident">setting</span>(<span class="ident">ArgSettings::TakesValue</span>)
@@ -80,7 +80,7 @@ values.</p>
     .<span class="ident">try_get_matches_from</span>(<span class="macro">vec!</span>[<span class="string">&quot;prog&quot;</span>, <span class="string">&quot;--color=&quot;</span>]);
 <span class="macro">assert!</span>(<span class="ident">res</span>.<span class="ident">is_err</span>());
 <span class="macro">assert_eq!</span>(<span class="ident">res</span>.<span class="ident">unwrap_err</span>().<span class="ident">kind</span>, <span class="ident">ErrorKind::EmptyValue</span>);</code></pre></div>
-</div><div id="variant.NoEquals" class="variant small-section-header"><a href="#variant.NoEquals" class="anchor field"></a><code>NoEquals</code></div><div class="docblock"><p>Occurs when the user doesn’t use equals for an option that requres equal
+</div><h3 id="variant.NoEquals" class="variant small-section-header"><a href="#variant.NoEquals" class="anchor field"></a><code>NoEquals</code></h3><div class="docblock"><p>Occurs when the user doesn’t use equals for an option that requres equal
 sign to provide values.</p>
 
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">res</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="string">&quot;prog&quot;</span>)
@@ -91,9 +91,9 @@ sign to provide values.</p>
     .<span class="ident">try_get_matches_from</span>(<span class="macro">vec!</span>[<span class="string">&quot;prog&quot;</span>, <span class="string">&quot;--color&quot;</span>, <span class="string">&quot;red&quot;</span>]);
 <span class="macro">assert!</span>(<span class="ident">res</span>.<span class="ident">is_err</span>());
 <span class="macro">assert_eq!</span>(<span class="ident">res</span>.<span class="ident">unwrap_err</span>().<span class="ident">kind</span>, <span class="ident">ErrorKind::NoEquals</span>);</code></pre></div>
-</div><div id="variant.ValueValidation" class="variant small-section-header"><a href="#variant.ValueValidation" class="anchor field"></a><code>ValueValidation</code></div><div class="docblock"><p>Occurs when the user provides a value for an argument with a custom validation and the
+</div><h3 id="variant.ValueValidation" class="variant small-section-header"><a href="#variant.ValueValidation" class="anchor field"></a><code>ValueValidation</code></h3><div class="docblock"><p>Occurs when the user provides a value for an argument with a custom validation and the
 value fails that validation.</p>
-<h3 id="examples-5" class="section-header"><a href="#examples-5">Examples</a></h3>
+<h4 id="examples-5" class="section-header"><a href="#examples-5">Examples</a></h4>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">fn</span> <span class="ident">is_numeric</span>(<span class="ident">val</span>: <span class="kw-2">&amp;</span><span class="ident">str</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">String</span><span class="op">&gt;</span> {
     <span class="kw">match</span> <span class="ident">val</span>.<span class="ident">parse</span>::<span class="op">&lt;</span><span class="ident">i64</span><span class="op">&gt;</span>() {
         <span class="prelude-val">Ok</span>(..) =&gt; <span class="prelude-val">Ok</span>(()),
@@ -107,18 +107,18 @@ value fails that validation.</p>
     .<span class="ident">try_get_matches_from</span>(<span class="macro">vec!</span>[<span class="string">&quot;prog&quot;</span>, <span class="string">&quot;NotANumber&quot;</span>]);
 <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_err</span>());
 <span class="macro">assert_eq!</span>(<span class="ident">result</span>.<span class="ident">unwrap_err</span>().<span class="ident">kind</span>, <span class="ident">ErrorKind::ValueValidation</span>);</code></pre></div>
-</div><div id="variant.TooManyValues" class="variant small-section-header"><a href="#variant.TooManyValues" class="anchor field"></a><code>TooManyValues</code></div><div class="docblock"><p>Occurs when a user provides more values for an argument than were defined by setting
+</div><h3 id="variant.TooManyValues" class="variant small-section-header"><a href="#variant.TooManyValues" class="anchor field"></a><code>TooManyValues</code></h3><div class="docblock"><p>Occurs when a user provides more values for an argument than were defined by setting
 <a href="struct.Arg.html#method.max_values"><code>Arg::max_values</code></a>.</p>
-<h3 id="examples-6" class="section-header"><a href="#examples-6">Examples</a></h3>
+<h4 id="examples-6" class="section-header"><a href="#examples-6">Examples</a></h4>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="string">&quot;prog&quot;</span>)
     .<span class="ident">arg</span>(<span class="ident">Arg::new</span>(<span class="string">&quot;arg&quot;</span>)
         .<span class="ident">max_values</span>(<span class="number">2</span>))
     .<span class="ident">try_get_matches_from</span>(<span class="macro">vec!</span>[<span class="string">&quot;prog&quot;</span>, <span class="string">&quot;too&quot;</span>, <span class="string">&quot;many&quot;</span>, <span class="string">&quot;values&quot;</span>]);
 <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_err</span>());
 <span class="macro">assert_eq!</span>(<span class="ident">result</span>.<span class="ident">unwrap_err</span>().<span class="ident">kind</span>, <span class="ident">ErrorKind::TooManyValues</span>);</code></pre></div>
-</div><div id="variant.TooFewValues" class="variant small-section-header"><a href="#variant.TooFewValues" class="anchor field"></a><code>TooFewValues</code></div><div class="docblock"><p>Occurs when the user provides fewer values for an argument than were defined by setting
+</div><h3 id="variant.TooFewValues" class="variant small-section-header"><a href="#variant.TooFewValues" class="anchor field"></a><code>TooFewValues</code></h3><div class="docblock"><p>Occurs when the user provides fewer values for an argument than were defined by setting
 <a href="struct.Arg.html#method.min_values"><code>Arg::min_values</code></a>.</p>
-<h3 id="examples-7" class="section-header"><a href="#examples-7">Examples</a></h3>
+<h4 id="examples-7" class="section-header"><a href="#examples-7">Examples</a></h4>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="string">&quot;prog&quot;</span>)
     .<span class="ident">arg</span>(<span class="ident">Arg::new</span>(<span class="string">&quot;some_opt&quot;</span>)
         .<span class="ident">long</span>(<span class="string">&quot;opt&quot;</span>)
@@ -126,9 +126,9 @@ value fails that validation.</p>
     .<span class="ident">try_get_matches_from</span>(<span class="macro">vec!</span>[<span class="string">&quot;prog&quot;</span>, <span class="string">&quot;--opt&quot;</span>, <span class="string">&quot;too&quot;</span>, <span class="string">&quot;few&quot;</span>]);
 <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_err</span>());
 <span class="macro">assert_eq!</span>(<span class="ident">result</span>.<span class="ident">unwrap_err</span>().<span class="ident">kind</span>, <span class="ident">ErrorKind::TooFewValues</span>);</code></pre></div>
-</div><div id="variant.TooManyOccurrences" class="variant small-section-header"><a href="#variant.TooManyOccurrences" class="anchor field"></a><code>TooManyOccurrences</code></div><div class="docblock"><p>Occurs when a user provides more occurrences for an argument than were defined by setting
+</div><h3 id="variant.TooManyOccurrences" class="variant small-section-header"><a href="#variant.TooManyOccurrences" class="anchor field"></a><code>TooManyOccurrences</code></h3><div class="docblock"><p>Occurs when a user provides more occurrences for an argument than were defined by setting
 <a href="struct.Arg.html#method.max_occurrences"><code>Arg::max_occurrences</code></a>.</p>
-<h3 id="examples-8" class="section-header"><a href="#examples-8">Examples</a></h3>
+<h4 id="examples-8" class="section-header"><a href="#examples-8">Examples</a></h4>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="string">&quot;prog&quot;</span>)
     .<span class="ident">arg</span>(<span class="ident">Arg::new</span>(<span class="string">&quot;verbosity&quot;</span>)
         .<span class="ident">short</span>(<span class="string">&#39;v&#39;</span>)
@@ -136,10 +136,10 @@ value fails that validation.</p>
     .<span class="ident">try_get_matches_from</span>(<span class="macro">vec!</span>[<span class="string">&quot;prog&quot;</span>, <span class="string">&quot;-vvv&quot;</span>]);
 <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_err</span>());
 <span class="macro">assert_eq!</span>(<span class="ident">result</span>.<span class="ident">unwrap_err</span>().<span class="ident">kind</span>, <span class="ident">ErrorKind::TooManyOccurrences</span>);</code></pre></div>
-</div><div id="variant.WrongNumberOfValues" class="variant small-section-header"><a href="#variant.WrongNumberOfValues" class="anchor field"></a><code>WrongNumberOfValues</code></div><div class="docblock"><p>Occurs when the user provides a different number of values for an argument than what’s
+</div><h3 id="variant.WrongNumberOfValues" class="variant small-section-header"><a href="#variant.WrongNumberOfValues" class="anchor field"></a><code>WrongNumberOfValues</code></h3><div class="docblock"><p>Occurs when the user provides a different number of values for an argument than what’s
 been defined by setting <a href="struct.Arg.html#method.number_of_values"><code>Arg::number_of_values</code></a> or than was implicitly set by
 <a href="struct.Arg.html#method.value_names"><code>Arg::value_names</code></a>.</p>
-<h3 id="examples-9" class="section-header"><a href="#examples-9">Examples</a></h3>
+<h4 id="examples-9" class="section-header"><a href="#examples-9">Examples</a></h4>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="string">&quot;prog&quot;</span>)
     .<span class="ident">arg</span>(<span class="ident">Arg::new</span>(<span class="string">&quot;some_opt&quot;</span>)
         .<span class="ident">long</span>(<span class="string">&quot;opt&quot;</span>)
@@ -148,9 +148,9 @@ been defined by setting <a href="struct.Arg.html#method.number_of_values"><code>
     .<span class="ident">try_get_matches_from</span>(<span class="macro">vec!</span>[<span class="string">&quot;prog&quot;</span>, <span class="string">&quot;--opt&quot;</span>, <span class="string">&quot;wrong&quot;</span>]);
 <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_err</span>());
 <span class="macro">assert_eq!</span>(<span class="ident">result</span>.<span class="ident">unwrap_err</span>().<span class="ident">kind</span>, <span class="ident">ErrorKind::WrongNumberOfValues</span>);</code></pre></div>
-</div><div id="variant.ArgumentConflict" class="variant small-section-header"><a href="#variant.ArgumentConflict" class="anchor field"></a><code>ArgumentConflict</code></div><div class="docblock"><p>Occurs when the user provides two values which conflict with each other and can’t be used
+</div><h3 id="variant.ArgumentConflict" class="variant small-section-header"><a href="#variant.ArgumentConflict" class="anchor field"></a><code>ArgumentConflict</code></h3><div class="docblock"><p>Occurs when the user provides two values which conflict with each other and can’t be used
 together.</p>
-<h3 id="examples-10" class="section-header"><a href="#examples-10">Examples</a></h3>
+<h4 id="examples-10" class="section-header"><a href="#examples-10">Examples</a></h4>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="string">&quot;prog&quot;</span>)
     .<span class="ident">arg</span>(<span class="ident">Arg::new</span>(<span class="string">&quot;debug&quot;</span>)
         .<span class="ident">long</span>(<span class="string">&quot;debug&quot;</span>)
@@ -160,17 +160,17 @@ together.</p>
     .<span class="ident">try_get_matches_from</span>(<span class="macro">vec!</span>[<span class="string">&quot;prog&quot;</span>, <span class="string">&quot;--debug&quot;</span>, <span class="string">&quot;--color&quot;</span>]);
 <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_err</span>());
 <span class="macro">assert_eq!</span>(<span class="ident">result</span>.<span class="ident">unwrap_err</span>().<span class="ident">kind</span>, <span class="ident">ErrorKind::ArgumentConflict</span>);</code></pre></div>
-</div><div id="variant.MissingRequiredArgument" class="variant small-section-header"><a href="#variant.MissingRequiredArgument" class="anchor field"></a><code>MissingRequiredArgument</code></div><div class="docblock"><p>Occurs when the user does not provide one or more required arguments.</p>
-<h3 id="examples-11" class="section-header"><a href="#examples-11">Examples</a></h3>
+</div><h3 id="variant.MissingRequiredArgument" class="variant small-section-header"><a href="#variant.MissingRequiredArgument" class="anchor field"></a><code>MissingRequiredArgument</code></h3><div class="docblock"><p>Occurs when the user does not provide one or more required arguments.</p>
+<h4 id="examples-11" class="section-header"><a href="#examples-11">Examples</a></h4>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="string">&quot;prog&quot;</span>)
     .<span class="ident">arg</span>(<span class="ident">Arg::new</span>(<span class="string">&quot;debug&quot;</span>)
         .<span class="ident">required</span>(<span class="bool-val">true</span>))
     .<span class="ident">try_get_matches_from</span>(<span class="macro">vec!</span>[<span class="string">&quot;prog&quot;</span>]);
 <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_err</span>());
 <span class="macro">assert_eq!</span>(<span class="ident">result</span>.<span class="ident">unwrap_err</span>().<span class="ident">kind</span>, <span class="ident">ErrorKind::MissingRequiredArgument</span>);</code></pre></div>
-</div><div id="variant.MissingSubcommand" class="variant small-section-header"><a href="#variant.MissingSubcommand" class="anchor field"></a><code>MissingSubcommand</code></div><div class="docblock"><p>Occurs when a subcommand is required (as defined by <a href="enum.AppSettings.html#variant.SubcommandRequired"><code>AppSettings::SubcommandRequired</code></a>),
+</div><h3 id="variant.MissingSubcommand" class="variant small-section-header"><a href="#variant.MissingSubcommand" class="anchor field"></a><code>MissingSubcommand</code></h3><div class="docblock"><p>Occurs when a subcommand is required (as defined by <a href="enum.AppSettings.html#variant.SubcommandRequired"><code>AppSettings::SubcommandRequired</code></a>),
 but the user does not provide one.</p>
-<h3 id="examples-12" class="section-header"><a href="#examples-12">Examples</a></h3>
+<h4 id="examples-12" class="section-header"><a href="#examples-12">Examples</a></h4>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">err</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="string">&quot;prog&quot;</span>)
     .<span class="ident">setting</span>(<span class="ident">AppSettings::SubcommandRequired</span>)
     .<span class="ident">subcommand</span>(<span class="ident">App::new</span>(<span class="string">&quot;test&quot;</span>))
@@ -179,8 +179,8 @@ but the user does not provide one.</p>
     ]);
 <span class="macro">assert!</span>(<span class="ident">err</span>.<span class="ident">is_err</span>());
 <span class="macro">assert_eq!</span>(<span class="ident">err</span>.<span class="ident">unwrap_err</span>().<span class="ident">kind</span>, <span class="ident">ErrorKind::MissingSubcommand</span>);</code></pre></div>
-</div><div id="variant.UnexpectedMultipleUsage" class="variant small-section-header"><a href="#variant.UnexpectedMultipleUsage" class="anchor field"></a><code>UnexpectedMultipleUsage</code></div><div class="docblock"><p>Occurs when the user provides multiple values to an argument which doesn’t allow that.</p>
-<h3 id="examples-13" class="section-header"><a href="#examples-13">Examples</a></h3>
+</div><h3 id="variant.UnexpectedMultipleUsage" class="variant small-section-header"><a href="#variant.UnexpectedMultipleUsage" class="anchor field"></a><code>UnexpectedMultipleUsage</code></h3><div class="docblock"><p>Occurs when the user provides multiple values to an argument which doesn’t allow that.</p>
+<h4 id="examples-13" class="section-header"><a href="#examples-13">Examples</a></h4>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="string">&quot;prog&quot;</span>)
     .<span class="ident">arg</span>(<span class="ident">Arg::new</span>(<span class="string">&quot;debug&quot;</span>)
         .<span class="ident">long</span>(<span class="string">&quot;debug&quot;</span>)
@@ -188,16 +188,16 @@ but the user does not provide one.</p>
     .<span class="ident">try_get_matches_from</span>(<span class="macro">vec!</span>[<span class="string">&quot;prog&quot;</span>, <span class="string">&quot;--debug&quot;</span>, <span class="string">&quot;--debug&quot;</span>]);
 <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_err</span>());
 <span class="macro">assert_eq!</span>(<span class="ident">result</span>.<span class="ident">unwrap_err</span>().<span class="ident">kind</span>, <span class="ident">ErrorKind::UnexpectedMultipleUsage</span>);</code></pre></div>
-</div><div id="variant.InvalidUtf8" class="variant small-section-header"><a href="#variant.InvalidUtf8" class="anchor field"></a><code>InvalidUtf8</code></div><div class="docblock"><p>Occurs when the user provides a value containing invalid UTF-8.</p>
+</div><h3 id="variant.InvalidUtf8" class="variant small-section-header"><a href="#variant.InvalidUtf8" class="anchor field"></a><code>InvalidUtf8</code></h3><div class="docblock"><p>Occurs when the user provides a value containing invalid UTF-8.</p>
 <p>To allow arbitrary data</p>
 <ul>
 <li>Set <a href="enum.ArgSettings.html#variant.AllowInvalidUtf8"><code>ArgSettings::AllowInvalidUtf8</code></a> for argument values</li>
 <li>Set <a href="enum.AppSettings.html#variant.AllowInvalidUtf8ForExternalSubcommands"><code>AppSettings::AllowInvalidUtf8ForExternalSubcommands</code></a> for external-subcommand
 values</li>
 </ul>
-<h3 id="platform-specific" class="section-header"><a href="#platform-specific">Platform Specific</a></h3>
+<h4 id="platform-specific" class="section-header"><a href="#platform-specific">Platform Specific</a></h4>
 <p>Non-Windows platforms only (such as Linux, Unix, OSX, etc.)</p>
-<h3 id="examples-14" class="section-header"><a href="#examples-14">Examples</a></h3>
+<h4 id="examples-14" class="section-header"><a href="#examples-14">Examples</a></h4>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="string">&quot;prog&quot;</span>)
    .<span class="ident">arg</span>(<span class="ident">Arg::new</span>(<span class="string">&quot;utf8&quot;</span>)
        .<span class="ident">short</span>(<span class="string">&#39;u&#39;</span>)
@@ -207,20 +207,20 @@ values</li>
                                <span class="ident">OsString::from_vec</span>(<span class="macro">vec!</span>[<span class="number">0xE9</span>])]);
 <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_err</span>());
 <span class="macro">assert_eq!</span>(<span class="ident">result</span>.<span class="ident">unwrap_err</span>().<span class="ident">kind</span>, <span class="ident">ErrorKind::InvalidUtf8</span>);</code></pre></div>
-</div><div id="variant.DisplayHelp" class="variant small-section-header"><a href="#variant.DisplayHelp" class="anchor field"></a><code>DisplayHelp</code></div><div class="docblock"><p>Not a true “error” as it means <code>--help</code> or similar was used.
+</div><h3 id="variant.DisplayHelp" class="variant small-section-header"><a href="#variant.DisplayHelp" class="anchor field"></a><code>DisplayHelp</code></h3><div class="docblock"><p>Not a true “error” as it means <code>--help</code> or similar was used.
 The help message will be sent to <code>stdout</code>.</p>
 <p><strong>Note</strong>: If the help is displayed due to an error (such as missing subcommands) it will
 be sent to <code>stderr</code> instead of <code>stdout</code>.</p>
-<h3 id="examples-15" class="section-header"><a href="#examples-15">Examples</a></h3>
+<h4 id="examples-15" class="section-header"><a href="#examples-15">Examples</a></h4>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="string">&quot;prog&quot;</span>)
     .<span class="ident">try_get_matches_from</span>(<span class="macro">vec!</span>[<span class="string">&quot;prog&quot;</span>, <span class="string">&quot;--help&quot;</span>]);
 <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_err</span>());
 <span class="macro">assert_eq!</span>(<span class="ident">result</span>.<span class="ident">unwrap_err</span>().<span class="ident">kind</span>, <span class="ident">ErrorKind::DisplayHelp</span>);</code></pre></div>
-</div><div id="variant.DisplayHelpOnMissingArgumentOrSubcommand" class="variant small-section-header"><a href="#variant.DisplayHelpOnMissingArgumentOrSubcommand" class="anchor field"></a><code>DisplayHelpOnMissingArgumentOrSubcommand</code></div><div class="docblock"><p>Occurs when either an argument or a <a href="trait.Subcommand.html"><code>Subcommand</code></a> is required, as defined by
+</div><h3 id="variant.DisplayHelpOnMissingArgumentOrSubcommand" class="variant small-section-header"><a href="#variant.DisplayHelpOnMissingArgumentOrSubcommand" class="anchor field"></a><code>DisplayHelpOnMissingArgumentOrSubcommand</code></h3><div class="docblock"><p>Occurs when either an argument or a <a href="trait.Subcommand.html"><code>Subcommand</code></a> is required, as defined by
 <a href="enum.AppSettings.html#variant.ArgRequiredElseHelp"><code>AppSettings::ArgRequiredElseHelp</code></a> and
 <a href="enum.AppSettings.html#variant.SubcommandRequiredElseHelp"><code>AppSettings::SubcommandRequiredElseHelp</code></a>, but the user did not provide
 one.</p>
-<h3 id="examples-16" class="section-header"><a href="#examples-16">Examples</a></h3>
+<h4 id="examples-16" class="section-header"><a href="#examples-16">Examples</a></h4>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="string">&quot;prog&quot;</span>)
     .<span class="ident">setting</span>(<span class="ident">AppSettings::ArgRequiredElseHelp</span>)
     .<span class="ident">subcommand</span>(<span class="ident">App::new</span>(<span class="string">&quot;config&quot;</span>)
@@ -230,20 +230,20 @@ one.</p>
     .<span class="ident">try_get_matches_from</span>(<span class="macro">vec!</span>[<span class="string">&quot;prog&quot;</span>]);
 <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_err</span>());
 <span class="macro">assert_eq!</span>(<span class="ident">result</span>.<span class="ident">unwrap_err</span>().<span class="ident">kind</span>, <span class="ident">ErrorKind::DisplayHelpOnMissingArgumentOrSubcommand</span>);</code></pre></div>
-</div><div id="variant.DisplayVersion" class="variant small-section-header"><a href="#variant.DisplayVersion" class="anchor field"></a><code>DisplayVersion</code></div><div class="docblock"><p>Not a true “error” as it means <code>--version</code> or similar was used.
+</div><h3 id="variant.DisplayVersion" class="variant small-section-header"><a href="#variant.DisplayVersion" class="anchor field"></a><code>DisplayVersion</code></h3><div class="docblock"><p>Not a true “error” as it means <code>--version</code> or similar was used.
 The message will be sent to <code>stdout</code>.</p>
-<h3 id="examples-17" class="section-header"><a href="#examples-17">Examples</a></h3>
+<h4 id="examples-17" class="section-header"><a href="#examples-17">Examples</a></h4>
 <div class="example-wrap"><pre class="rust rust-example-rendered"><code><span class="kw">let</span> <span class="ident">result</span> <span class="op">=</span> <span class="ident">App::new</span>(<span class="string">&quot;prog&quot;</span>)
     .<span class="ident">version</span>(<span class="string">&quot;3.0&quot;</span>)
     .<span class="ident">try_get_matches_from</span>(<span class="macro">vec!</span>[<span class="string">&quot;prog&quot;</span>, <span class="string">&quot;--version&quot;</span>]);
 <span class="macro">assert!</span>(<span class="ident">result</span>.<span class="ident">is_err</span>());
 <span class="macro">assert_eq!</span>(<span class="ident">result</span>.<span class="ident">unwrap_err</span>().<span class="ident">kind</span>, <span class="ident">ErrorKind::DisplayVersion</span>);</code></pre></div>
-</div><div id="variant.ArgumentNotFound" class="variant small-section-header"><a href="#variant.ArgumentNotFound" class="anchor field"></a><code>ArgumentNotFound</code></div><div class="docblock"><p>Occurs when using the <a href="struct.ArgMatches.html#method.value_of_t"><code>ArgMatches::value_of_t</code></a> and friends to convert an argument value
+</div><h3 id="variant.ArgumentNotFound" class="variant small-section-header"><a href="#variant.ArgumentNotFound" class="anchor field"></a><code>ArgumentNotFound</code></h3><div class="docblock"><p>Occurs when using the <a href="struct.ArgMatches.html#method.value_of_t"><code>ArgMatches::value_of_t</code></a> and friends to convert an argument value
 into type <code>T</code>, but the argument you requested wasn’t used. I.e. you asked for an argument
 with name <code>config</code> to be converted, but <code>config</code> wasn’t used by the user.</p>
-</div><div id="variant.Io" class="variant small-section-header"><a href="#variant.Io" class="anchor field"></a><code>Io</code></div><div class="docblock"><p>Represents an <a href="https://doc.rust-lang.org/nightly/std/io/error/struct.Error.html">I/O error</a>.
+</div><h3 id="variant.Io" class="variant small-section-header"><a href="#variant.Io" class="anchor field"></a><code>Io</code></h3><div class="docblock"><p>Represents an <a href="https://doc.rust-lang.org/nightly/std/io/error/struct.Error.html">I/O error</a>.
 Can occur when writing to <code>stderr</code> or <code>stdout</code> or reading a configuration file.</p>
-</div><div id="variant.Format" class="variant small-section-header"><a href="#variant.Format" class="anchor field"></a><code>Format</code></div><div class="docblock"><p>Represents a <a href="https://doc.rust-lang.org/nightly/core/fmt/struct.Error.html">Format error</a> (which is a part of <a href="https://doc.rust-lang.org/nightly/core/fmt/trait.Display.html"><code>Display</code></a>).
+</div><h3 id="variant.Format" class="variant small-section-header"><a href="#variant.Format" class="anchor field"></a><code>Format</code></h3><div class="docblock"><p>Represents a <a href="https://doc.rust-lang.org/nightly/core/fmt/struct.Error.html">Format error</a> (which is a part of <a href="https://doc.rust-lang.org/nightly/core/fmt/trait.Display.html"><code>Display</code></a>).
 Typically caused by writing to <code>stderr</code> or <code>stdout</code>.</p>
 </div><h2 id="trait-implementations" class="small-section-header">Trait Implementations<a href="#trait-implementations" class="anchor"></a></h2><div id="trait-implementations-list"><details class="rustdoc-toggle implementors-toggle" open><summary><div id="impl-Clone" class="impl has-srclink"><div class="rightside"><a class="srclink" href="../src/clap/parse/errors.rs.html#25" title="goto source code">[src]</a></div><a href="#impl-Clone" class="anchor"></a><h3 class="code-header in-band">impl <a class="trait" href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html" title="trait core::clone::Clone">Clone</a> for <a class="enum" href="enum.ErrorKind.html" title="enum clap::ErrorKind">ErrorKind</a></h3></div></summary><div class="impl-items"><details class="rustdoc-toggle method-toggle" open><summary><div id="method.clone" class="method trait-impl has-srclink"><div class="rightside"><a class="srclink" href="../src/clap/parse/errors.rs.html#25" title="goto source code">[src]</a></div><a href="#method.clone" class="anchor"></a><h4 class="code-header">fn <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone" class="fnname">clone</a>(&amp;self) -&gt; <a class="enum" href="enum.ErrorKind.html" title="enum clap::ErrorKind">ErrorKind</a></h4></div></summary><div class='docblock'><p>Returns a copy of the value. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone">Read more</a></p>
 </div></details><details class="rustdoc-toggle method-toggle" open><summary><div id="method.clone_from" class="method trait-impl has-srclink"><div class="rightside"><span class="since" title="Stable since Rust version 1.0.0">1.0.0</span><a class="srclink" href="https://doc.rust-lang.org/nightly/src/core/clone.rs.html#130" title="goto source code">[src]</a></div><a href="#method.clone_from" class="anchor"></a><h4 class="code-header">fn <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from" class="fnname">clone_from</a>(&amp;mut self, source: <a class="primitive" href="https://doc.rust-lang.org/nightly/std/primitive.reference.html">&amp;</a>Self)</h4></div></summary><div class='docblock'><p>Performs copy-assignment from <code>source</code>. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from">Read more</a></p>

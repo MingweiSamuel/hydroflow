@@ -3,8 +3,8 @@
     Pending,
 }</code></pre></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Indicates whether a value is available or if the current task has been
 scheduled to receive a wakeup instead.</p>
-</div></details><h2 id="variants" class="variants small-section-header">Variants<a href="#variants" class="anchor"></a></h2><div id="variant.Ready" class="variant small-section-header"><a href="#variant.Ready" class="anchor field"></a><code>Ready(T)</code></div><div class="docblock"><p>Represents that a value is immediately ready.</p>
-</div><div class="sub-variant" id="variant.Ready.fields"><h3>Tuple Fields of <b>Ready</b></h3><div><span id="variant.Ready.field.0" class="variant small-section-header"><a href="#variant.Ready.field.0" class="anchor field"></a><code>0:&nbsp;T</code></span></div></div><div id="variant.Pending" class="variant small-section-header"><a href="#variant.Pending" class="anchor field"></a><code>Pending</code></div><div class="docblock"><p>Represents that a value is not ready yet.</p>
+</div></details><h2 id="variants" class="variants small-section-header">Variants<a href="#variants" class="anchor"></a></h2><h3 id="variant.Ready" class="variant small-section-header"><a href="#variant.Ready" class="anchor field"></a><code>Ready(T)</code></h3><div class="sub-variant" id="variant.Ready.fields"><h4>Tuple Fields</h4><div class="sub-variant-field"><span id="variant.Ready.field.0" class="variant small-section-header"><a href="#variant.Ready.field.0" class="anchor field"></a><code>0:&nbsp;T</code></span></div></div><div class="docblock"><p>Represents that a value is immediately ready.</p>
+</div><h3 id="variant.Pending" class="variant small-section-header"><a href="#variant.Pending" class="anchor field"></a><code>Pending</code></h3><div class="docblock"><p>Represents that a value is not ready yet.</p>
 <p>When a function returns <code>Pending</code>, the function <em>must</em> also
 ensure that the current task is scheduled to be awoken when
 progress can be made.</p>
