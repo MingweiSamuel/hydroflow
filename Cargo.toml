@@ -1,6 +1,7 @@
 [workspace]
 
 members = [
+    "taskpool",
     "hydroflow",
     "spinachflow",
     "babyflow",
