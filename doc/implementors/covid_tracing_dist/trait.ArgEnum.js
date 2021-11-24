@@ -1,3 +1,0 @@
-(function() {var implementors = {};
-implementors["covid_tracing_dist"] = [{"text":"impl <a class=\"trait\" href=\"covid_tracing_dist/trait.ArgEnum.html\" title=\"trait covid_tracing_dist::ArgEnum\">ArgEnum</a> for <a class=\"enum\" href=\"covid_tracing_dist/enum.Role.html\" title=\"enum covid_tracing_dist::Role\">Role</a>","synthetic":false,"types":["covid_tracing_dist::Role"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

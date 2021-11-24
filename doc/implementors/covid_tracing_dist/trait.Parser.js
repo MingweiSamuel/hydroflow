@@ -1,3 +1,0 @@
-(function() {var implementors = {};
-implementors["covid_tracing_dist"] = [{"text":"impl <a class=\"trait\" href=\"covid_tracing_dist/trait.Parser.html\" title=\"trait covid_tracing_dist::Parser\">Parser</a> for <a class=\"struct\" href=\"covid_tracing_dist/struct.Opts.html\" title=\"struct covid_tracing_dist::Opts\">Opts</a>","synthetic":false,"types":["covid_tracing_dist::Opts"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
