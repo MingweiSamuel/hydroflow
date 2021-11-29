@@ -5,6 +5,21 @@ use std::marker::PhantomData;
 pub use slotmap;
 use slotmap::{DefaultKey, Key, SlotMap};
 
+pub trait Context<Sid, Tid>
+where
+    Sid: Key,
+    Tid: Key,
+{
+    fn get_state_ref<T>(&self, state_handle: StateHandle<T, Sid>) -> &T
+    where
+        T: 'static;
+    fn get_state_mut<T>(&mut self, state_handle: StateHandle<T, Sid>) -> &mut T
+    where
+        T: 'static;
+
+    fn schedule(&mut self, tid: Tid);
+}
+
 pub struct Taskpool<Sid = DefaultKey, Tid = DefaultKey>
 where
     Sid: Key,
@@ -44,7 +59,7 @@ where
     }
     pub fn tick(&mut self) {
         while let Some(tid) = self.ready_queue.pop_front() {
-            let context = Context {
+            let context = TaskContext {
                 tid,
                 state: &mut self.state,
                 ready_queue: &mut self.ready_queue,
@@ -52,9 +67,6 @@ where
             let task = self.tasks.get_mut(tid).expect("Task not found");
             task.run(context);
         }
-    }
-    pub fn schedule(&mut self, tid: Tid) {
-        self.ready_queue.push_back(tid);
     }
 
     pub fn new_state<T>(&mut self, state: T) -> StateHandle<T, Sid>
@@ -85,8 +97,41 @@ where
         self.tasks.insert(Box::new(f))
     }
 }
+impl<Sid, Tid> Context<Sid, Tid> for Taskpool<Sid, Tid>
+where
+    Sid: Key,
+    Tid: Key,
+{
+    fn get_state_ref<T>(&self, state_handle: StateHandle<T, Sid>) -> &T
+    where
+        T: 'static
+    {
+        self.state
+            .get(state_handle.sid)
+            .expect("Failed to find state for Sid.")
+            .downcast_ref()
+            .expect("StateHandle wrong type T, cannot cast.")
+    }
 
-pub struct Context<'a, Sid = DefaultKey, Tid = DefaultKey>
+    fn get_state_mut<T>(&mut self, state_handle: StateHandle<T, Sid>) -> &mut T
+    where
+        T: 'static
+    {
+        self.state
+            .get_mut(state_handle.sid)
+            .expect("Failed to find state for Sid.")
+            .downcast_mut()
+            .expect("StateHandle wrong type T, cannot cast.")
+    }
+
+    fn schedule(&mut self, tid: Tid) {
+        if !self.ready_queue.contains(&tid) {
+            self.ready_queue.push_back(tid);
+        }
+    }
+}
+
+pub struct TaskContext<'a, Sid, Tid>
 where
     Sid: Key,
     Tid: Key,
@@ -95,7 +140,7 @@ where
     state: &'a mut SlotMap<Sid, Box<dyn Any>>,
     ready_queue: &'a mut VecDeque<Tid>,
 }
-impl<'a, Sid, Tid> Context<'a, Sid, Tid>
+impl<'a, Sid, Tid> TaskContext<'a, Sid, Tid>
 where
     Sid: Key,
     Tid: Key,
@@ -103,8 +148,13 @@ where
     pub fn current_tid(&self) -> Tid {
         self.tid
     }
-
-    pub fn get_state_ref<T>(&self, state_handle: StateHandle<T, Sid>) -> &T
+}
+impl<'a, Sid, Tid> Context<Sid, Tid> for TaskContext<'a, Sid, Tid>
+where
+    Sid: Key,
+    Tid: Key,
+{
+    fn get_state_ref<T>(&self, state_handle: StateHandle<T, Sid>) -> &T
     where
         T: 'static,
     {
@@ -114,7 +164,7 @@ where
             .downcast_ref()
             .expect("StateHandle wrong type T, cannot cast.")
     }
-    pub fn get_state_mut<T>(&mut self, state_handle: StateHandle<T, Sid>) -> &mut T
+    fn get_state_mut<T>(&mut self, state_handle: StateHandle<T, Sid>) -> &mut T
     where
         T: 'static,
     {
@@ -125,19 +175,27 @@ where
             .expect("StateHandle wrong type T, cannot cast.")
     }
 
-    pub fn schedule(&mut self, tid: Tid) {
+    fn schedule(&mut self, tid: Tid) {
         if !self.ready_queue.contains(&tid) {
             self.ready_queue.push_back(tid);
         }
     }
 }
 
-pub struct StateHandle<T, Sid = DefaultKey>
+pub struct StateHandle<T, Sid>
 where
     Sid: Key,
 {
     sid: Sid,
     _phantom: PhantomData<fn() -> T>,
+}
+impl<T, Sid> std::fmt::Debug for StateHandle<T, Sid>
+where
+    Sid: Key,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> Result<(), std::fmt::Error> {
+        self.sid.fmt(f)
+    }
 }
 impl<T, Sid> Clone for StateHandle<T, Sid>
 where
@@ -153,20 +211,20 @@ where
 
 impl<T, Sid> Copy for StateHandle<T, Sid> where Sid: Key {}
 
-pub trait Task<Sid = DefaultKey, Tid = DefaultKey>
+pub trait Task<Sid, Tid>
 where
     Sid: Key,
     Tid: Key,
 {
-    fn run(&mut self, context: Context<'_, Sid, Tid>);
+    fn run(&mut self, context: TaskContext<'_, Sid, Tid>);
 }
 impl<F, Sid, Tid> Task<Sid, Tid> for F
 where
     Sid: Key,
     Tid: Key,
-    F: FnMut(Context<'_, Sid, Tid>),
+    F: FnMut(TaskContext<'_, Sid, Tid>),
 {
-    fn run(&mut self, context: Context<'_, Sid, Tid>) {
+    fn run(&mut self, context: TaskContext<'_, Sid, Tid>) {
         (self)(context);
     }
 }
@@ -182,19 +240,19 @@ pub mod test {
     pub fn test_basic() {
         let mut taskpool = Taskpool::new();
 
-        let handoff_handle: StateHandle<VecDeque<usize>> = taskpool.default_state();
+        let handoff_handle: StateHandle<VecDeque<usize>, _> = taskpool.default_state();
 
         let output: Rc<RefCell<Vec<usize>>> = Default::default();
         let output_send = output.clone();
 
         // Sink
-        let sink_tid = taskpool.new_task(move |mut ctx: Context<'_>| {
+        let sink_tid = taskpool.new_task(move |mut ctx: TaskContext<'_, _, _>| {
             for x in ctx.get_state_mut(handoff_handle).drain(..) {
                 output_send.borrow_mut().push(x);
             }
         });
 
-        let source_tid = taskpool.new_task(move |mut ctx: Context<'_>| {
+        let source_tid = taskpool.new_task(move |mut ctx: TaskContext<'_, _, _>| {
             let handoff = ctx.get_state_mut(handoff_handle);
             for x in 0..100 {
                 handoff.push_back(x);

@@ -4,12 +4,14 @@ version = "0.1.0"
 edition = "2021"
 
 [features]
-default = [ "async", "variadic_generics" ]
+default = [ "async", "variadic_generics", "alt" ]
 async = [ "futures" ]
+alt = [ "taskpool" ]
 variadic_generics = []
 
 [dependencies]
 futures = { version = "0.3", optional = true }
+taskpool = { path = "../taskpool", optional = true }
 ref-cast = "1.0"
 sealed = "0.3"
 slotmap = "1.0"

@@ -516,6 +516,7 @@ dependencies = [
  "ref-cast",
  "sealed",
  "slotmap",
+ "taskpool",
  "tuple_list",
 ]
 
