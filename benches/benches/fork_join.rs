@@ -1,10 +1,5 @@
 use babyflow::babyflow::Query;
 use criterion::{black_box, criterion_group, criterion_main, Criterion};
-use hydroflow::scheduled::collections::Iter;
-use hydroflow::scheduled::ctx::{RecvCtx, SendCtx};
-use hydroflow::scheduled::handoff::VecHandoff;
-use hydroflow::scheduled::query::Query as Q;
-use hydroflow::scheduled::Hydroflow;
 use timely::dataflow::operators::{Concatenate, Filter, Inspect, ToStream};
 
 const NUM_OPS: usize = 20;
@@ -12,6 +7,11 @@ const NUM_INTS: usize = 100_000;
 const BRANCH_FACTOR: usize = 2;
 
 fn benchmark_hydroflow(c: &mut Criterion) {
+    use hydroflow::scheduled::collections::Iter;
+    use hydroflow::scheduled::ctx::{RecvCtx, SendCtx};
+    use hydroflow::scheduled::handoff::VecHandoff;
+    use hydroflow::scheduled::Hydroflow;
+
     c.bench_function("fork_join/hydroflow", |b| {
         b.iter(|| {
             let mut df = Hydroflow::new();
@@ -84,6 +84,9 @@ fn benchmark_hydroflow(c: &mut Criterion) {
 }
 
 fn benchmark_hydroflow_builder(c: &mut Criterion) {
+    use hydroflow::scheduled::collections::Iter;
+    use hydroflow::scheduled::query::Query as Q;
+
     c.bench_function("fork_join/hydroflow_builder", |b| {
         b.iter(|| {
             // TODO(justin): this creates more operators than necessary.
@@ -106,6 +109,85 @@ fn benchmark_hydroflow_builder(c: &mut Criterion) {
             });
 
             q.tick();
+        })
+    });
+}
+
+fn benchmark_hydroflow_alt(c: &mut Criterion) {
+    use hydroflow::scheduled::collections::Iter;
+    use hydroflow::scheduled_alt::ctx::{RecvCtx, SendCtx};
+    use hydroflow::scheduled_alt::handoff::VecHandoff;
+    use hydroflow::scheduled_alt::Hydroflow;
+
+    c.bench_function("fork_join/hydroflow_alt", |b| {
+        b.iter(|| {
+            let mut df = Hydroflow::new();
+
+            let mut sent = false;
+            let (_tid, source) = df.add_source(move |_ctx: &_, send: &SendCtx<VecHandoff<_>>| {
+                if !sent {
+                    sent = true;
+                    send.give(Iter(0..NUM_INTS));
+                }
+            });
+
+            let (_tid, tee_in, mut out1, mut out2) = df.add_split(
+                |_ctx: &_,
+                 recv: &RecvCtx<VecHandoff<_>>,
+                 send1: &SendCtx<VecHandoff<_>>,
+                 send2: &SendCtx<VecHandoff<_>>| {
+                    for v in recv.take_inner().into_iter() {
+                        if v % 2 == 0 {
+                            send1.give(Some(v));
+                        } else {
+                            send2.give(Some(v));
+                        }
+                    }
+                },
+            );
+
+            df.add_edge(source, tee_in);
+            for _ in 0..NUM_OPS {
+                let (_tid, in1, in2, mut new_out1, mut new_out2) = df.add_merge_split(
+                    |_ctx: &_,
+                     recv1: &RecvCtx<VecHandoff<_>>,
+                     recv2: &RecvCtx<VecHandoff<_>>,
+                     send1,
+                     send2| {
+                        for v in recv1
+                            .take_inner()
+                            .into_iter()
+                            .chain(recv2.take_inner().into_iter())
+                        {
+                            if v % 2 == 0 {
+                                send1.give(Some(v));
+                            } else {
+                                send2.give(Some(v));
+                            }
+                        }
+                    },
+                );
+                std::mem::swap(&mut out1, &mut new_out1);
+                std::mem::swap(&mut out2, &mut new_out2);
+                df.add_edge(new_out1, in1);
+                df.add_edge(new_out2, in2);
+            }
+
+            let (_tid, sink1) = df.add_sink(|_ctx: &_, recv1: &RecvCtx<VecHandoff<_>>| {
+                for x in recv1.take_inner() {
+                    black_box(x);
+                }
+            });
+            let (_tid, sink2) = df.add_sink(|_ctx: &_, recv2: &RecvCtx<VecHandoff<_>>| {
+                for x in recv2.take_inner() {
+                    black_box(x);
+                }
+            });
+
+            df.add_edge(out1, sink1);
+            df.add_edge(out2, sink2);
+
+            df.tick()
         })
     });
 }
@@ -364,6 +446,7 @@ criterion_group!(
     fork_join_dataflow,
     benchmark_hydroflow,
     benchmark_hydroflow_builder,
+    benchmark_hydroflow_alt,
     benchmark_babyflow,
     benchmark_timely,
     benchmark_raw,
