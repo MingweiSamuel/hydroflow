@@ -1,1 +1,1 @@
-initSidebarItems({"constant":[["ADDRESS_LEN",""],["CONTACTS_ADDR",""],["DIAGNOSES_ADDR",""],["MESSAGE_DATA",""],["TYPE_LEN",""]],"enum":[["Message",""],["Role",""]],"fn":[["add_tcp_stream",""],["main",""]],"mod":[["database",""],["people",""],["tracker",""]],"struct":[["Opts",""]],"trait":[["Decode",""],["Encode",""]]});
+initSidebarItems({"constant":[["CONTACTS_ADDR",""],["DIAGNOSES_ADDR",""]],"enum":[["Role",""]],"fn":[["main",""]],"mod":[["database",""],["people",""],["tracker",""]],"struct":[["Opts",""]],"trait":[["Decode",""],["Encode",""]]});

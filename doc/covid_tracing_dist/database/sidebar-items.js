@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["bind_one",""],["run_database",""]]});
+initSidebarItems({"fn":[["run_database",""]]});

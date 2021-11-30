@@ -1,1 +1,1 @@
-initSidebarItems({"fn":[["connect",""],["run_tracker",""]]});
+initSidebarItems({"fn":[["run_tracker",""]]});

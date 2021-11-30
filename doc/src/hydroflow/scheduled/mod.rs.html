@@ -1002,11 +1002,17 @@
 <span id="1001">1001</span>
 <span id="1002">1002</span>
 <span id="1003">1003</span>
+<span id="1004">1004</span>
+<span id="1005">1005</span>
+<span id="1006">1006</span>
+<span id="1007">1007</span>
+<span id="1008">1008</span>
 </pre><pre class="rust"><code><span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">collections</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">ctx</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">handoff</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;variadic_generics&quot;</span>)]</span>
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">input</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">net</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">query</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">state</span>;
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod</span> <span class="ident">subgraph</span>;
@@ -1055,6 +1061,9 @@
     <span class="ident">ready_queue</span>: <span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">SubgraphId</span><span class="op">&gt;</span>,
     <span class="ident">event_queue_send</span>: <span class="ident">SyncSender</span><span class="op">&lt;</span><span class="ident">SubgraphId</span><span class="op">&gt;</span>, <span class="comment">// TODO(mingwei) remove this, to prevent hanging.</span>
     <span class="ident">event_queue_recv</span>: <span class="ident">Receiver</span><span class="op">&lt;</span><span class="ident">SubgraphId</span><span class="op">&gt;</span>,
+
+    <span class="comment">// TODO(justin): Get this out of here.</span>
+    <span class="kw">pub</span> <span class="ident">rt</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">tokio::runtime::Runtime</span><span class="op">&gt;</span>,
 }
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Hydroflow</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
@@ -1067,6 +1076,7 @@
             <span class="ident">ready_queue</span>,
             <span class="ident">event_queue_send</span>,
             <span class="ident">event_queue_recv</span>,
+            <span class="ident">rt</span>: <span class="ident">Rc::new</span>(<span class="ident">tokio::runtime::Runtime::new</span>().<span class="ident">unwrap</span>()),
         }
     }
 }
@@ -2006,5 +2016,5 @@
     <span class="macro">assert_eq!</span>(<span class="ident">result</span>, <span class="ident">expected</span>);
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (db9d361a4 2021-11-28)" ></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (6db0a0e9a 2021-11-29)" ></div>
 </body></html>
