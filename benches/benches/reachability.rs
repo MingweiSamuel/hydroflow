@@ -264,11 +264,79 @@ fn benchmark_hydroflow(c: &mut Criterion) {
     });
 }
 
+fn benchmark_hydroflow_alt(c: &mut Criterion) {
+    use hydroflow::compiled::{ForEach, Pivot, Tee};
+    use hydroflow::scheduled_alt::ctx::{RecvCtx, SendCtx};
+    use hydroflow::scheduled_alt::handoff::VecHandoff;
+    use hydroflow::scheduled_alt::Hydroflow;
+    use hydroflow::taskpool::Context;
+
+    let edges = &*EDGES;
+    let reachable = &*REACHABLE;
+
+    c.bench_function("reachability/hydroflow_alt", |b| {
+        b.iter(|| {
+            // A dataflow that represents graph reachability.
+            let mut df = Hydroflow::new();
+
+            let (_tid, reachable_out) = df.add_source(move |_ctx: &_, send: &SendCtx<VecHandoff<usize>>| {
+                send.give(Some(1));
+            });
+
+            let seen_handle = df.new_state::<RefCell<HashSet<usize>>>(Default::default());
+
+            let (_tid, origins_in, possible_reach_in, did_reach_out, output_out) = df
+                .add_merge_split::<_, VecHandoff<usize>, VecHandoff<usize>, VecHandoff<usize>, VecHandoff<usize>>(
+                    move |context, origins, did_reach_recv, did_reach_send, output| {
+                        let origins = origins.take_inner().into_iter();
+                        let possible_reach = did_reach_recv
+                            .take_inner()
+                            .into_iter()
+                            .filter_map(|v| edges.get(&v))
+                            .flatten()
+                            .copied();
+
+                        let mut seen_state = context.get_state_ref(seen_handle).borrow_mut();
+                        let pull = origins
+                            .chain(possible_reach)
+                            .filter(|v| seen_state.insert(*v));
+
+                        let push_reach = ForEach::new(|v| {
+                            did_reach_send.give(Some(v));
+                        });
+                        let push_output = ForEach::new(|v| {
+                            output.give(Some(v));
+                        });
+                        let push = Tee::new(push_reach, push_output);
+
+                        let pivot = Pivot::new(pull, push);
+                        pivot.run();
+                    },
+                );
+
+            let reachable_verts = Rc::new(RefCell::new(HashSet::new()));
+            let reachable_inner = reachable_verts.clone();
+            let (_tid, sink_in) = df.add_sink(move |_ctx, recv: &RecvCtx<VecHandoff<_>>| {
+                (*reachable_inner).borrow_mut().extend(recv.take_inner());
+            });
+
+            df.add_edge(reachable_out, origins_in);
+            df.add_edge(did_reach_out, possible_reach_in);
+            df.add_edge(output_out, sink_in);
+
+            df.tick();
+
+            assert_eq!(&*reachable_verts.borrow(), reachable);
+        });
+    });
+}
+
 criterion_group!(
     reachability,
     benchmark_timely,
     benchmark_differential,
     benchmark_hydroflow_scheduled,
     benchmark_hydroflow,
+    benchmark_hydroflow_alt,
 );
 criterion_main!(reachability);

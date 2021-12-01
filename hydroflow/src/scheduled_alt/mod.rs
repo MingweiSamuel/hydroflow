@@ -1,3 +1,5 @@
+use std::any::Any;
+
 use ref_cast::RefCast;
 use taskpool::slotmap::{DefaultKey, Key};
 use taskpool::{Context, StateHandle, TaskContext, Taskpool};
@@ -47,6 +49,40 @@ where
      */
     pub fn with_key() -> Self {
         Default::default()
+    }
+
+    pub fn tick(&mut self) {
+        self.taskpool.tick()
+    }
+
+    pub fn add_edge<H>(
+        &mut self,
+        output_port: OutputPort<H, Sid, Tid>,
+        input_port: InputPort<H, Sid, Tid>,
+    ) where
+        H: 'static + Handoff,
+    {
+        let sid = self.taskpool.new_state(HandoffData {
+            handoff: H::default(),
+            pred: output_port.subgraph,
+            succ: input_port.subgraph,
+        });
+        *self.taskpool.get_state_mut(output_port.handle) = Some(sid);
+        *self.taskpool.get_state_mut(input_port.handle) = Some(sid);
+    }
+
+    pub fn new_state<T>(&mut self, state: T) -> StateHandle<T, Sid>
+    where
+        T: Any,
+    {
+        self.taskpool.new_state(state)
+    }
+
+    pub fn default_state<T>(&mut self) -> StateHandle<T, Sid>
+    where
+        T: Any + Default,
+    {
+        self.taskpool.default_state()
     }
 
     pub fn add_inout<F, R, W>(
@@ -144,22 +180,6 @@ where
 
         let input_port = InputPort { subgraph: tid, handle: r_hid };
         (tid, input_port)
-    }
-
-    pub fn add_edge<H>(
-        &mut self,
-        output_port: OutputPort<H, Sid, Tid>,
-        input_port: InputPort<H, Sid, Tid>,
-    ) where
-        H: 'static + Handoff,
-    {
-        let sid = self.taskpool.new_state(HandoffData {
-            handoff: H::default(),
-            pred: output_port.subgraph,
-            succ: input_port.subgraph,
-        });
-        *self.taskpool.get_state_mut(output_port.handle) = Some(sid);
-        *self.taskpool.get_state_mut(input_port.handle) = Some(sid);
     }
 
     pub fn add_split<F, R, W1, W2>(
@@ -332,10 +352,6 @@ where
         let output_port_1 = OutputPort { subgraph: tid, handle: w_hid_1 };
         let output_port_2 = OutputPort { subgraph: tid, handle: w_hid_2 };
         (tid, input_port_1, input_port_2, output_port_1, output_port_2)
-    }
-
-    pub fn tick(&mut self) {
-        self.taskpool.tick()
     }
 
     // #[cfg(feature = "variadic_generics")]
