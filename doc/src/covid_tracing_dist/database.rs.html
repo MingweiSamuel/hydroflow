@@ -141,6 +141,7 @@
 <span id="140">140</span>
 <span id="141">141</span>
 <span id="142">142</span>
+<span id="143">143</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">people</span>, <span class="ident">Decode</span>, <span class="ident">Encode</span>, <span class="ident">Opts</span>, <span class="ident">CONTACTS_ADDR</span>, <span class="ident">DIAGNOSES_ADDR</span>};
 
 <span class="kw">use</span> <span class="ident">std::time::Duration</span>;
@@ -169,15 +170,16 @@
 
     <span class="kw">let</span> (<span class="ident">network_in</span>, <span class="ident">network_out</span>) <span class="op">=</span> <span class="ident">df</span>.<span class="ident">bind_one</span>(<span class="ident">opts</span>.<span class="ident">port</span>);
 
-    <span class="kw">let</span> (<span class="ident">encoded_notifs_in</span>, <span class="ident">notifs</span>) <span class="op">=</span> <span class="ident">df</span>.<span class="ident">add_inout</span>(<span class="op">|</span><span class="ident">recv</span>: <span class="kw-2">&amp;</span><span class="ident">RecvCtx</span><span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">send</span><span class="op">|</span> {
-        <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="ident">recv</span>.<span class="ident">take_inner</span>().<span class="ident">into_iter</span>() {
-            <span class="kw">match</span> <span class="ident">message</span> {
-                <span class="ident">Message::Data</span> { <span class="ident">batch</span>, .. } =&gt; {
-                    <span class="ident">send</span>.<span class="ident">give</span>(<span class="ident">Iter</span>(<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">usize</span>)<span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::decode</span>(<span class="ident">batch</span>).<span class="ident">into_iter</span>()));
+    <span class="kw">let</span> (<span class="ident">encoded_notifs_in</span>, <span class="ident">notifs</span>) <span class="op">=</span>
+        <span class="ident">df</span>.<span class="ident">add_inout</span>(<span class="op">|</span><span class="ident">_ctx</span>, <span class="ident">recv</span>: <span class="kw-2">&amp;</span><span class="ident">RecvCtx</span><span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">send</span><span class="op">|</span> {
+            <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="ident">recv</span>.<span class="ident">take_inner</span>().<span class="ident">into_iter</span>() {
+                <span class="kw">match</span> <span class="ident">message</span> {
+                    <span class="ident">Message::Data</span> { <span class="ident">batch</span>, .. } =&gt; {
+                        <span class="ident">send</span>.<span class="ident">give</span>(<span class="ident">Iter</span>(<span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">usize</span>)<span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::decode</span>(<span class="ident">batch</span>).<span class="ident">into_iter</span>()));
+                    }
                 }
             }
-        }
-    });
+        });
 
     <span class="ident">df</span>.<span class="ident">add_edge</span>(<span class="ident">network_out</span>, <span class="ident">encoded_notifs_in</span>);
 
@@ -231,7 +233,7 @@
     <span class="kw">let</span> (<span class="ident">contacts_merge</span>, <span class="ident">diagnoses_merge</span>) <span class="op">=</span> (<span class="ident">ins</span>.<span class="ident">pop</span>().<span class="ident">unwrap</span>(), <span class="ident">ins</span>.<span class="ident">pop</span>().<span class="ident">unwrap</span>());
 
     <span class="kw">let</span> (<span class="ident">encode_contacts_in</span>, <span class="ident">encode_contacts_out</span>) <span class="op">=</span> <span class="ident">df</span>.<span class="ident">add_inout</span>(
-        <span class="op">|</span><span class="ident">recv</span>: <span class="kw-2">&amp;</span><span class="ident">RecvCtx</span><span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">usize</span>)<span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">send</span><span class="op">|</span> {
+        <span class="op">|</span><span class="ident">_ctx</span>, <span class="ident">recv</span>: <span class="kw-2">&amp;</span><span class="ident">RecvCtx</span><span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">usize</span>)<span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">send</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buf</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
             <span class="ident">recv</span>.<span class="ident">take_inner</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">buf</span>);
             <span class="ident">send</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>(<span class="ident">Message::Data</span> {
@@ -245,7 +247,7 @@
     <span class="ident">df</span>.<span class="ident">add_edge</span>(<span class="ident">encode_contacts_out</span>, <span class="ident">contacts_merge</span>);
 
     <span class="kw">let</span> (<span class="ident">encode_diagnoses_in</span>, <span class="ident">encode_diagnoses_out</span>) <span class="op">=</span> <span class="ident">df</span>.<span class="ident">add_inout</span>(
-        <span class="op">|</span><span class="ident">recv</span>: <span class="kw-2">&amp;</span><span class="ident">RecvCtx</span><span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, (<span class="ident">usize</span>, <span class="ident">usize</span>))<span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">send</span><span class="op">|</span> {
+        <span class="op">|</span><span class="ident">_ctx</span>, <span class="ident">recv</span>: <span class="kw-2">&amp;</span><span class="ident">RecvCtx</span><span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, (<span class="ident">usize</span>, <span class="ident">usize</span>))<span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">send</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buf</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
             <span class="ident">recv</span>.<span class="ident">take_inner</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">buf</span>);
             <span class="ident">send</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>(<span class="ident">Message::Data</span> {
@@ -265,7 +267,7 @@
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">join_state</span> <span class="op">=</span> <span class="ident">Default::default</span>();
     <span class="kw">let</span> (<span class="macro">tl!</span>(<span class="ident">notif_sink</span>, <span class="ident">people_sink</span>), <span class="macro">tl!</span>()) <span class="op">=</span>
-        <span class="ident">df</span>.<span class="ident">add_subgraph</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">SubgraphIn</span>, ()<span class="op">&gt;</span>(<span class="kw">move</span> <span class="op">|</span><span class="macro">tl!</span>(<span class="ident">notifs</span>, <span class="ident">people</span>), <span class="macro">tl!</span>()<span class="op">|</span> {
+        <span class="ident">df</span>.<span class="ident">add_subgraph</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">SubgraphIn</span>, ()<span class="op">&gt;</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">_ctx</span>, <span class="macro">tl!</span>(<span class="ident">notifs</span>, <span class="ident">people</span>), <span class="macro">tl!</span>()<span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">join</span> <span class="op">=</span> <span class="ident">SymmetricHashJoin::new</span>(
                 <span class="ident">notifs</span>.<span class="ident">take_inner</span>().<span class="ident">into_iter</span>(),
                 <span class="ident">people</span>.<span class="ident">take_inner</span>().<span class="ident">into_iter</span>(),
@@ -284,5 +286,5 @@
     <span class="ident">df</span>.<span class="ident">run</span>().<span class="ident">unwrap</span>();
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing_dist" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (207c80f10 2021-11-30)" ></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing_dist" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (48a5999fc 2021-12-01)" ></div>
 </body></html>

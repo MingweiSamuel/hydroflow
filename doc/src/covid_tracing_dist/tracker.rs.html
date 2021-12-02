@@ -118,6 +118,8 @@
 <span id="117">117</span>
 <span id="118">118</span>
 <span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Decode</span>, <span class="ident">Encode</span>, <span class="ident">Opts</span>, <span class="ident">CONTACTS_ADDR</span>, <span class="ident">DIAGNOSES_ADDR</span>};
 
 <span class="kw">use</span> <span class="ident">hydroflow</span>::{
@@ -142,7 +144,7 @@
     );
 
     <span class="kw">let</span> (<span class="macro">tl!</span>(<span class="ident">demux_in</span>), <span class="macro">tl!</span>(<span class="ident">contacts</span>, <span class="ident">diagnoses</span>)) <span class="op">=</span> <span class="ident">df</span>
-        .<span class="ident">add_subgraph</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">MultiplexIn</span>, <span class="ident">MultiplexOut</span><span class="op">&gt;</span>(<span class="kw">move</span> <span class="op">|</span><span class="macro">tl!</span>(<span class="ident">recv</span>), <span class="macro">tl!</span>(<span class="ident">send1</span>, <span class="ident">send2</span>)<span class="op">|</span> {
+        .<span class="ident">add_subgraph</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">MultiplexIn</span>, <span class="ident">MultiplexOut</span><span class="op">&gt;</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">_ctx</span>, <span class="macro">tl!</span>(<span class="ident">recv</span>), <span class="macro">tl!</span>(<span class="ident">send1</span>, <span class="ident">send2</span>)<span class="op">|</span> {
             <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="ident">recv</span>.<span class="ident">take_inner</span>() {
                 <span class="kw">match</span> <span class="ident">message</span> {
                     <span class="ident">Message::Data</span> { <span class="ident">address</span>, <span class="ident">batch</span> } =&gt; <span class="kw">match</span> <span class="ident">address</span> {
@@ -174,7 +176,9 @@
     <span class="kw">type</span> <span class="ident">MainOut</span> <span class="op">=</span> <span class="macro">tlt!</span>(<span class="ident">VecHandoff</span>::<span class="op">&lt;</span>(<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">&gt;</span>, <span class="ident">VecHandoff</span>::<span class="op">&lt;</span>(<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">&gt;</span>);
     <span class="kw">let</span> (<span class="macro">tl!</span>(<span class="ident">contacts_in</span>, <span class="ident">diagnosed_in</span>, <span class="ident">loop_in</span>), <span class="macro">tl!</span>(<span class="ident">notifs_out</span>, <span class="ident">loop_out</span>)) <span class="op">=</span> <span class="ident">df</span>
         .<span class="ident">add_subgraph</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">MainIn</span>, <span class="ident">MainOut</span><span class="op">&gt;</span>(
-            <span class="kw">move</span> <span class="op">|</span><span class="macro">tl!</span>(<span class="ident">contacts_recv</span>, <span class="ident">diagnosed_recv</span>, <span class="ident">loop_recv</span>), <span class="macro">tl!</span>(<span class="ident">notifs_send</span>, <span class="ident">loop_send</span>)<span class="op">|</span> {
+            <span class="kw">move</span> <span class="op">|</span><span class="ident">_ctx</span>,
+                  <span class="macro">tl!</span>(<span class="ident">contacts_recv</span>, <span class="ident">diagnosed_recv</span>, <span class="ident">loop_recv</span>),
+                  <span class="macro">tl!</span>(<span class="ident">notifs_send</span>, <span class="ident">loop_send</span>)<span class="op">|</span> {
                 <span class="kw">let</span> <span class="ident">looped</span> <span class="op">=</span> <span class="ident">loop_recv</span>
                     .<span class="ident">take_inner</span>()
                     .<span class="ident">into_iter</span>()
@@ -216,7 +220,7 @@
         );
 
     <span class="kw">let</span> (<span class="ident">encoder_in</span>, <span class="ident">encoder_out</span>) <span class="op">=</span>
-        <span class="ident">df</span>.<span class="ident">add_inout</span>(<span class="op">|</span><span class="ident">recv</span>: <span class="kw-2">&amp;</span><span class="ident">RecvCtx</span><span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">usize</span>)<span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">send</span><span class="op">|</span> {
+        <span class="ident">df</span>.<span class="ident">add_inout</span>(<span class="op">|</span><span class="ident">_ctx</span>, <span class="ident">recv</span>: <span class="kw-2">&amp;</span><span class="ident">RecvCtx</span><span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">usize</span>)<span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">send</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buf</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
             <span class="ident">recv</span>.<span class="ident">take_inner</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">buf</span>);
             <span class="ident">send</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>(<span class="ident">Message::Data</span> {
@@ -238,5 +242,5 @@
     <span class="ident">df</span>.<span class="ident">run</span>().<span class="ident">unwrap</span>();
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing_dist" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (207c80f10 2021-11-30)" ></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing_dist" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (48a5999fc 2021-12-01)" ></div>
 </body></html>
