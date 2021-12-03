@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Message",""]],"trait":[["Net",""]]});
+initSidebarItems({"enum":[["Message",""]]});

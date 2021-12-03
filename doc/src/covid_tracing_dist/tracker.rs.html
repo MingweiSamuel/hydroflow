@@ -114,27 +114,15 @@
 <span id="113">113</span>
 <span id="114">114</span>
 <span id="115">115</span>
-<span id="116">116</span>
-<span id="117">117</span>
-<span id="118">118</span>
-<span id="119">119</span>
-<span id="120">120</span>
-<span id="121">121</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Decode</span>, <span class="ident">Encode</span>, <span class="ident">Opts</span>, <span class="ident">CONTACTS_ADDR</span>, <span class="ident">DIAGNOSES_ADDR</span>};
 
 <span class="kw">use</span> <span class="ident">hydroflow</span>::{
     <span class="ident">compiled</span>::{<span class="ident">pull::SymmetricHashJoin</span>, <span class="ident">ForEach</span>, <span class="ident">Pivot</span>, <span class="ident">Tee</span>},
-    <span class="ident">scheduled</span>::{
-        <span class="ident">collections::Iter</span>,
-        <span class="ident">ctx::RecvCtx</span>,
-        <span class="ident">handoff::VecHandoff</span>,
-        <span class="ident">net</span>::{<span class="ident">Message</span>, <span class="ident">Net</span>},
-        <span class="ident">Hydroflow</span>,
-    },
+    <span class="ident">scheduled</span>::{<span class="ident">collections::Iter</span>, <span class="ident">ctx::RecvCtx</span>, <span class="ident">handoff::VecHandoff</span>, <span class="ident">net::Message</span>, <span class="ident">Hydroflow</span>},
     <span class="ident">tl</span>, <span class="ident">tlt</span>,
 };
 
-<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">run_tracker</span>(<span class="ident">opts</span>: <span class="ident">Opts</span>) {
+<span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">run_tracker</span>(<span class="ident">opts</span>: <span class="ident">Opts</span>) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">df</span> <span class="op">=</span> <span class="ident">Hydroflow::new</span>();
 
     <span class="kw">type</span> <span class="ident">MultiplexIn</span> <span class="op">=</span> <span class="macro">tlt!</span>(<span class="ident">VecHandoff</span>::<span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span>);
@@ -233,14 +221,14 @@
     <span class="ident">df</span>.<span class="ident">add_edge</span>(<span class="ident">diagnoses</span>, <span class="ident">diagnosed_in</span>);
     <span class="ident">df</span>.<span class="ident">add_edge</span>(<span class="ident">loop_out</span>, <span class="ident">loop_in</span>);
 
-    <span class="kw">let</span> (<span class="ident">network_out</span>, <span class="ident">network_in</span>) <span class="op">=</span> <span class="ident">df</span>.<span class="ident">connect</span>(<span class="ident">opts</span>.<span class="ident">addr</span>.<span class="ident">as_str</span>());
+    <span class="kw">let</span> (<span class="ident">network_out</span>, <span class="ident">network_in</span>) <span class="op">=</span> <span class="ident">df</span>.<span class="ident">connect</span>(<span class="ident">opts</span>.<span class="ident">addr</span>.<span class="ident">as_str</span>()).<span class="kw">await</span>;
 
     <span class="ident">df</span>.<span class="ident">add_edge</span>(<span class="ident">notifs_out</span>, <span class="ident">encoder_in</span>);
     <span class="ident">df</span>.<span class="ident">add_edge</span>(<span class="ident">encoder_out</span>, <span class="ident">network_out</span>);
     <span class="ident">df</span>.<span class="ident">add_edge</span>(<span class="ident">network_in</span>, <span class="ident">demux_in</span>);
 
-    <span class="ident">df</span>.<span class="ident">run</span>().<span class="ident">unwrap</span>();
+    <span class="ident">df</span>.<span class="ident">run_async</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing_dist" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (48a5999fc 2021-12-01)" ></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing_dist" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (acbe4443c 2021-12-02)" ></div>
 </body></html>

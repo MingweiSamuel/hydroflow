@@ -82,8 +82,11 @@
 <span id="81">81</span>
 <span id="82">82</span>
 <span id="83">83</span>
+<span id="84">84</span>
+<span id="85">85</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">clap</span>::{<span class="ident">ArgEnum</span>, <span class="ident">Parser</span>};
 <span class="kw">use</span> <span class="ident">database::run_database</span>;
+<span class="kw">use</span> <span class="ident">hydroflow::tokio</span>;
 <span class="kw">use</span> <span class="ident">serde</span>::{<span class="ident">de::DeserializeOwned</span>, <span class="ident">Serialize</span>};
 <span class="kw">use</span> <span class="ident">tracker::run_tracker</span>;
 
@@ -153,18 +156,19 @@
 <span class="kw">const</span> <span class="ident">CONTACTS_ADDR</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">0</span>;
 <span class="kw">const</span> <span class="ident">DIAGNOSES_ADDR</span>: <span class="ident">u32</span> <span class="op">=</span> <span class="number">1</span>;
 
-<span class="kw">fn</span> <span class="ident">main</span>() {
+<span class="attribute">#[<span class="ident">tokio::main</span>]</span>
+<span class="kw">async</span> <span class="kw">fn</span> <span class="ident">main</span>() {
     <span class="kw">let</span> <span class="ident">opts</span> <span class="op">=</span> <span class="ident">Opts::parse</span>();
 
     <span class="kw">match</span> <span class="ident">opts</span>.<span class="ident">role</span> {
         <span class="ident">Role::Database</span> =&gt; {
-            <span class="ident">run_database</span>(<span class="ident">opts</span>);
+            <span class="ident">run_database</span>(<span class="ident">opts</span>).<span class="kw">await</span>;
         }
         <span class="ident">Role::Tracker</span> =&gt; {
-            <span class="ident">run_tracker</span>(<span class="ident">opts</span>);
+            <span class="ident">run_tracker</span>(<span class="ident">opts</span>).<span class="kw">await</span>;
         }
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing_dist" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (48a5999fc 2021-12-01)" ></div>
+</section><section id="search" class="content hidden"></section><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing_dist" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (acbe4443c 2021-12-02)" ></div>
 </body></html>
