@@ -59,6 +59,7 @@ sourcesIndex["rand_chacha"] = {"name":"","files":["chacha.rs","guts.rs","lib.rs"
 sourcesIndex["rand_core"] = {"name":"","files":["block.rs","error.rs","impls.rs","le.rs","lib.rs","os.rs"]};
 sourcesIndex["ref_cast"] = {"name":"","files":["layout.rs","lib.rs","trivial.rs"]};
 sourcesIndex["ref_cast_impl"] = {"name":"","files":["lib.rs"]};
+sourcesIndex["relalg"] = {"name":"","files":["lib.rs","runtime.rs","sexp.rs"]};
 sourcesIndex["ryu"] = {"name":"","dirs":[{"name":"buffer","files":["mod.rs"]},{"name":"pretty","files":["exponent.rs","mantissa.rs","mod.rs"]}],"files":["common.rs","d2s.rs","d2s_full_table.rs","d2s_intrinsics.rs","digit_table.rs","f2s.rs","f2s_intrinsics.rs","lib.rs"]};
 sourcesIndex["scopeguard"] = {"name":"","files":["lib.rs"]};
 sourcesIndex["sealed"] = {"name":"","files":["lib.rs"]};
