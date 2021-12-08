@@ -1,6 +1,6 @@
 window.BENCHMARK_DATA = 
 {
-  "lastUpdate": 1638848894425,
+  "lastUpdate": 1638935320795,
   "repoUrl": "https://github.com/hydro-project/hydroflow",
   "entries": {
     "Benchmark": [
@@ -4158,6 +4158,82 @@ window.BENCHMARK_DATA =
             "name": "reachability/hydroflow",
             "value": 2804751,
             "range": "± 1907",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Justin Jaffray",
+            "username": "justinj",
+            "email": "justin.jaffray@gmail.com"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "5dab68b90a4892120e34fddebdec4fb094adb523",
+          "message": "Add a basic implementation of relational algebra (#23)\n\nThis is a WIP implementation of relational algebra that runs in Hydroflow.\r\n\r\nRight now it only uses scheduled components and is only at runtime, no codegen,\r\njust for simplicity. It's also not how I would design a non-proof-of-concept IR\r\nbut I think for our purposes for now it will be fine.",
+          "timestamp": "2021-12-07T18:48:13Z",
+          "url": "https://github.com/hydro-project/hydroflow/commit/5dab68b90a4892120e34fddebdec4fb094adb523"
+        },
+        "date": 1638935320787,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "arithmetic/hydroflow/compiled",
+            "value": 436924,
+            "range": "± 6652",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/hydroflow",
+            "value": 209765941,
+            "range": "± 1597314",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/scheduled",
+            "value": 182947538,
+            "range": "± 4466322",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow",
+            "value": 9590119,
+            "range": "± 116987",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow_builder",
+            "value": 50115542,
+            "range": "± 517830",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow",
+            "value": 55392749,
+            "range": "± 710221",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow/compiled",
+            "value": 17064224,
+            "range": "± 202164",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/scheduled",
+            "value": 3049236,
+            "range": "± 32536",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow",
+            "value": 2971586,
+            "range": "± 28395",
             "unit": "ns/iter"
           }
         ]
