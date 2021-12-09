@@ -6,6 +6,7 @@
 pub mod compiled;
 pub mod lang;
 pub mod scheduled;
+pub mod builder;
 
 pub use tokio;
 pub use tuple_list::tuple_list as tl;
