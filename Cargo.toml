@@ -7,5 +7,6 @@ members = [
     "benches",
     "covid_tracing",
     "covid_tracing_dist",
+    "word_count",
     "relalg",
 ]
