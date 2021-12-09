@@ -155,7 +155,7 @@
         <span class="ident">net::Message</span>,
         <span class="ident">Hydroflow</span>,
     },
-    <span class="ident">tl</span>, <span class="ident">tlt</span>,
+    <span class="ident">tl</span>, <span class="ident">tt</span>,
 };
 <span class="kw">use</span> <span class="ident">rand::Rng</span>;
 
@@ -260,7 +260,7 @@
     <span class="ident">df</span>.<span class="ident">add_edge</span>(<span class="ident">diagnoses_out</span>, <span class="ident">encode_diagnoses_in</span>);
     <span class="ident">df</span>.<span class="ident">add_edge</span>(<span class="ident">encode_diagnoses_out</span>, <span class="ident">diagnoses_merge</span>);
 
-    <span class="kw">type</span> <span class="ident">SubgraphIn</span> <span class="op">=</span> <span class="macro">tlt!</span>(
+    <span class="kw">type</span> <span class="ident">SubgraphIn</span> <span class="op">=</span> <span class="macro">tt!</span>(
         <span class="ident">VecHandoff</span>::<span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">usize</span>)<span class="op">&gt;</span>,
         <span class="ident">VecHandoff</span>::<span class="op">&lt;</span>(<span class="ident">String</span>, (<span class="ident">String</span>, <span class="ident">String</span>))<span class="op">&gt;</span>,
     );

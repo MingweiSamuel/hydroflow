@@ -1,1 +1,1 @@
-initSidebarItems({"macro":[["tl","Macro creating tuple list values from list of expressions."],["tlt","Macro creating tuple list types from list of element types."]],"mod":[["compiled",""],["lang",""],["scheduled",""]]});
+initSidebarItems({"macro":[["tl","Macro creating tuple list values from list of expressions."],["tt","Macro creating tuple list types from list of element types."]],"mod":[["compiled",""],["lang",""],["scheduled",""]]});
