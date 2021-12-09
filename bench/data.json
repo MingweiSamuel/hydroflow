@@ -1,5 +1,5 @@
 {
-  "lastUpdate": 1638935320795,
+  "lastUpdate": 1639021678576,
   "repoUrl": "https://github.com/hydro-project/hydroflow",
   "entries": {
     "Benchmark": [
@@ -4233,6 +4233,82 @@
             "name": "reachability/hydroflow",
             "value": 2971586,
             "range": "± 28395",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Justin Jaffray",
+            "username": "justinj",
+            "email": "justin.jaffray@gmail.com"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "964de20560c5bc856ad6c3e5216fe58f309e0a17",
+          "message": "Add a simple codegen path for relational algebra (#24)\n\nThis currenly only handles some very simple patterns, and doesn't invoke\r\nscheduled components at all, but this is the general pattern I was thinking for\r\nnow. Comments on the overall design welcome, you can see examples of the\r\ngenerated code in testdata/compile/compile.\r\n\r\nWhat's more, I think this PR will probably fail on CI since it shells out to\r\nrustfmt to format the generated code. Suggestions welcome for how to fix, I\r\nmight just make it skip running the test (probably with a warning) if rustfmt\r\ndoes not just work.\r\n\r\nNext step is to introduce a let binding layer to the language, to force the\r\ncodegen to use scheduled components/invoke Hydroflow.",
+          "timestamp": "2021-12-08T20:48:51Z",
+          "url": "https://github.com/hydro-project/hydroflow/commit/964de20560c5bc856ad6c3e5216fe58f309e0a17"
+        },
+        "date": 1639021678572,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "arithmetic/hydroflow/compiled",
+            "value": 274542,
+            "range": "± 6763",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/hydroflow",
+            "value": 164693135,
+            "range": "± 572441",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/scheduled",
+            "value": 154730601,
+            "range": "± 3221008",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow",
+            "value": 8067106,
+            "range": "± 15296",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow_builder",
+            "value": 40076250,
+            "range": "± 188232",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow",
+            "value": 57638332,
+            "range": "± 96551",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow/compiled",
+            "value": 18209264,
+            "range": "± 97726",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/scheduled",
+            "value": 2853006,
+            "range": "± 4880",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow",
+            "value": 2833171,
+            "range": "± 3034",
             "unit": "ns/iter"
           }
         ]
