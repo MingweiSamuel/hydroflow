@@ -9,9 +9,10 @@ pub struct PusheratorBuilder<T> {
 pub trait PusheratorBuild {
     type Item;
 
-    type Input;
-    type Output;
-    fn build(self, input: Self::Input) -> Self::Output;
+    type Output<O: Pusherator<Item = Self::Item>>;
+    fn build<O>(self, input: O) -> Self::Output<O>
+    where
+        O: Pusherator<Item = Self::Item>;
 
     // fn map<U, F>(f: F) -> MapBuild<Self::Item, U, O, F, P>
     // where
@@ -21,63 +22,65 @@ pub trait PusheratorBuild {
     // }
 }
 
-pub struct InputBuild<T, O>(PhantomData<(T, O)>);
-impl<T, O> PusheratorBuild for InputBuild<T, O> {
+pub struct InputBuild<T>(PhantomData<T>);
+impl<T> PusheratorBuild for InputBuild<T> {
     type Item = T;
 
-    type Input = O;
-    type Output = O;
-    fn build(self, input: O) -> O {
+    type Output<O: Pusherator<Item = Self::Item>> = O;
+    fn build<O>(self, input: O) -> Self::Output<O>
+    where
+        O: Pusherator<Item = Self::Item>,
+    {
         input
     }
 }
 
-pub struct MapBuild<T, U, F, O, P>
+pub struct MapBuild<T, U, F, P>
 where
     F: Fn(T) -> U,
-    O: Pusherator<Item = U>,
-    P: PusheratorBuild<Item = T, Input = Map<T, U, F, O>>,
+    P: PusheratorBuild<Item = T>,
 {
     prev: P,
     f: F,
-    _marker: PhantomData<(T, O)>,
+    _marker: PhantomData<T>,
 }
-impl<T, U, F, O, P> PusheratorBuild for MapBuild<T, U, F, O, P>
+impl<T, U, F, P> PusheratorBuild for MapBuild<T, U, F, P>
 where
     F: Fn(T) -> U,
-    O: Pusherator<Item = U>,
-    P: PusheratorBuild<Item = T, Input = Map<T, U, F, O>>,
+    P: PusheratorBuild<Item = T>,
 {
     type Item = U;
 
-    type Input = O;
-    type Output = P::Output;
-    fn build(self, input: Self::Input) -> Self::Output {
+    type Output<O: Pusherator<Item = Self::Item>> = P::Output<Map<T, U, F, O>>;
+    fn build<O>(self, input: O) -> Self::Output<O>
+    where
+        O: Pusherator<Item = Self::Item>,
+    {
         self.prev.build(Map::new(self.f, input))
     }
 }
 
-pub struct FilterBuild<T, F, O, P>
+pub struct FilterBuild<T, F, P>
 where
     F: Fn(&T) -> bool,
-    O: Pusherator<Item = T>,
-    P: PusheratorBuild<Item = T, Input = Filter<T, F, O>>,
+    P: PusheratorBuild<Item = T>,
 {
     prev: P,
     f: F,
-    _marker: PhantomData<(T, O)>,
+    _marker: PhantomData<T>,
 }
-impl<T, F, O, P> PusheratorBuild for FilterBuild<T, F, O, P>
+impl<T, F, P> PusheratorBuild for FilterBuild<T, F, P>
 where
     F: Fn(&T) -> bool,
-    O: Pusherator<Item = T>,
-    P: PusheratorBuild<Item = T, Input = Filter<T, F, O>>,
+    P: PusheratorBuild<Item = T>,
 {
     type Item = T;
 
-    type Input = O;
-    type Output = P::Output;
-    fn build(self, input: Self::Input) -> Self::Output {
+    type Output<O: Pusherator<Item = Self::Item>> = P::Output<Filter<T, F, O>>;
+    fn build<O>(self, input: O) -> Self::Output<O>
+    where
+        O: Pusherator<Item = Self::Item>,
+    {
         self.prev.build(Filter::new(self.f, input))
     }
 }
@@ -88,7 +91,7 @@ mod test {
 
     #[test]
     fn test_builder() {
-        let pb = InputBuild::<usize, _>(PhantomData);
+        let pb = InputBuild::<usize>(PhantomData);
         let pb = FilterBuild {
             prev: pb,
             f: |&x| 0 == x % 2,
