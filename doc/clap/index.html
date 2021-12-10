@@ -508,7 +508,7 @@ clap = &quot;~3.0.0-beta.5&quot;</code></pre></div>
 <li><a href="https://github.com/assert-rs/assert_cmd"><code>assert_cmd</code></a> - This crate allows you test your CLIs in a very intuitive and functional way!</li>
 </ul>
 <p><a href="https://github.com/clap-rs/clap">https://github.com/clap-rs/clap</a></p>
-</div></details><h2 id="macros" class="section-header"><a href="#macros">Macros</a></h2>
+</div></details><h2 id="macros" class="small-section-header"><a href="#macros">Macros</a></h2>
 <div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="macro" href="macro.app_from_crate.html" title="clap::app_from_crate macro">app_from_crate</a></div><div class="item-right docblock-short"><p>Allows you to build the <code>App</code> instance from your Cargo.toml at compile time.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="macro" href="macro.clap_app.html" title="clap::clap_app macro">clap_app</a><span class="stab deprecated" title="">Deprecated</span></div><div class="item-right docblock-short"><p>Build <code>App</code>, <code>Arg</code> and <code>Group</code> with Usage-string like input
 but without the associated parsing runtime cost.</p>
@@ -526,7 +526,7 @@ returned.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="macro" href="macro.value_t_or_exit.html" title="clap::value_t_or_exit macro">value_t_or_exit</a><span class="stab deprecated" title="">Deprecated</span></div><div class="item-right docblock-short"><p>Deprecated, see [<code>ArgMatches::value_of_t_or_exit</code>]</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="macro" href="macro.values_t.html" title="clap::values_t macro">values_t</a><span class="stab deprecated" title="">Deprecated</span></div><div class="item-right docblock-short"><p>Deprecated, see [<code>ArgMatches::values_of_t</code>]</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="macro" href="macro.values_t_or_exit.html" title="clap::values_t_or_exit macro">values_t_or_exit</a><span class="stab deprecated" title="">Deprecated</span></div><div class="item-right docblock-short"><p>Deprecated, see [<code>ArgMatches::values_of_t_or_exit</code>]</p>
-</div></div></div><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+</div></div></div><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2>
 <div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.App.html" title="clap::App struct">App</a></div><div class="item-right docblock-short"><p>Represents a command line interface which is made up of all possible
 command line arguments and subcommands. Interface arguments and settings are
 configured using the “builder pattern.” Once all configuration is complete,
@@ -552,7 +552,7 @@ method. Usage of this iterator allows values which contain invalid UTF-8 code po
 </div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.SubCommand.html" title="clap::SubCommand struct">SubCommand</a></div><div class="item-right docblock-short"><p>Deprecated, see <a href="struct.App.html" title="App"><code>App</code></a></p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.Values.html" title="clap::Values struct">Values</a></div><div class="item-right docblock-short"><p>An iterator for getting multiple values out of an argument via the <a href="struct.ArgMatches.html#method.values_of"><code>ArgMatches::values_of</code></a>
 method.</p>
-</div></div></div><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
+</div></div></div><h2 id="enums" class="small-section-header"><a href="#enums">Enums</a></h2>
 <div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.AppSettings.html" title="clap::AppSettings enum">AppSettings</a></div><div class="item-right docblock-short"><p>Application level settings, which affect how <a href="struct.App.html"><code>App</code></a> operates</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.ArgSettings.html" title="clap::ArgSettings enum">ArgSettings</a></div><div class="item-right docblock-short"><p>Various settings that apply to arguments and may be set, unset, and checked via getter/setter
 methods <a href="struct.Arg.html#method.setting"><code>Arg::setting</code></a>, <a href="struct.Arg.html#method.unset_setting"><code>Arg::unset_setting</code></a>, and <a href="struct.Arg.html#method.is_set"><code>Arg::is_set</code></a>. This is what the
@@ -560,14 +560,14 @@ methods <a href="struct.Arg.html#method.setting"><code>Arg::setting</code></a>, 
 </div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.ColorChoice.html" title="clap::ColorChoice enum">ColorChoice</a></div><div class="item-right docblock-short"><p>Represents the color preferences for program output</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.ErrorKind.html" title="clap::ErrorKind enum">ErrorKind</a></div><div class="item-right docblock-short"><p>Command line argument parser kind of error</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.ValueHint.html" title="clap::ValueHint enum">ValueHint</a></div><div class="item-right docblock-short"><p>Provides hints about argument types for shell command completion.</p>
-</div></div></div><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+</div></div></div><h2 id="traits" class="small-section-header"><a href="#traits">Traits</a></h2>
 <div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.ArgEnum.html" title="clap::ArgEnum trait">ArgEnum</a></div><div class="item-right docblock-short"><p>Parse arguments into enums.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.Args.html" title="clap::Args trait">Args</a></div><div class="item-right docblock-short"><p>Parse arguments into a user-defined container.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.FromArgMatches.html" title="clap::FromArgMatches trait">FromArgMatches</a></div><div class="item-right docblock-short"><p>Converts an instance of <a href="struct.ArgMatches.html" title="ArgMatches"><code>ArgMatches</code></a> to a user-defined container.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.IntoApp.html" title="clap::IntoApp trait">IntoApp</a></div><div class="item-right docblock-short"><p>Build an <a href="struct.App.html" title="App"><code>App</code></a> relevant for a user-defined container.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.Parser.html" title="clap::Parser trait">Parser</a></div><div class="item-right docblock-short"><p>Parse command-line arguments into <code>Self</code>.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.Subcommand.html" title="clap::Subcommand trait">Subcommand</a></div><div class="item-right docblock-short"><p>Parse a sub-command into a user-defined enum.</p>
-</div></div></div><h2 id="types" class="section-header"><a href="#types">Type Definitions</a></h2>
+</div></div></div><h2 id="types" class="small-section-header"><a href="#types">Type Definitions</a></h2>
 <div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="type" href="type.Result.html" title="clap::Result type">Result</a></div><div class="item-right docblock-short"><p>Short hand for <a href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html"><code>Result</code></a> type</p>
-</div></div></div></section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="clap" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (e6b883c74 2021-12-08)" ></div>
+</div></div></div></section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../" data-current-crate="clap" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (0b42deacc 2021-12-09)" ></div>
 </body></html>

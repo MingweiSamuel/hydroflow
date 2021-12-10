@@ -13,7 +13,7 @@ for operating with asynchronous I/O objects, including ways to work with
 them using futures, streams and sinks.</p>
 <p>This module is only available when the <code>std</code> feature of this
 library is activated, and it is activated by default.</p>
-</div></details><h2 id="structs" class="section-header"><a href="#structs">Structs</a></h2>
+</div></details><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2>
 <div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.AllowStdIo.html" title="futures::io::AllowStdIo struct">AllowStdIo</a></div><div class="item-right docblock-short"><p>A simple wrapper type which allows types which implement only
 implement <code>std::io::Read</code> or <code>std::io::Write</code>
 to be used in contexts which expect an <code>AsyncRead</code> or <code>AsyncWrite</code>.</p>
@@ -54,10 +54,10 @@ of a <code>AsyncRead + AsyncWrite</code>, and thus could not be <code>reunite</c
 </div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.WriteAll.html" title="futures::io::WriteAll struct">WriteAll</a></div><div class="item-right docblock-short"><p>Future for the <a href="trait.AsyncWriteExt.html#method.write_all"><code>write_all</code></a> method.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.WriteHalf.html" title="futures::io::WriteHalf struct">WriteHalf</a></div><div class="item-right docblock-short"><p>The writable half of an object returned from <code>AsyncRead::split</code>.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.WriteVectored.html" title="futures::io::WriteVectored struct">WriteVectored</a></div><div class="item-right docblock-short"><p>Future for the <a href="trait.AsyncWriteExt.html#method.write_vectored"><code>write_vectored</code></a> method.</p>
-</div></div></div><h2 id="enums" class="section-header"><a href="#enums">Enums</a></h2>
+</div></div></div><h2 id="enums" class="small-section-header"><a href="#enums">Enums</a></h2>
 <div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.ErrorKind.html" title="futures::io::ErrorKind enum">ErrorKind</a></div><div class="item-right docblock-short"><p>A list specifying general categories of I/O error.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="enum" href="enum.SeekFrom.html" title="futures::io::SeekFrom enum">SeekFrom</a></div><div class="item-right docblock-short"><p>Enumeration of possible methods to seek within an I/O object.</p>
-</div></div></div><h2 id="traits" class="section-header"><a href="#traits">Traits</a></h2>
+</div></div></div><h2 id="traits" class="small-section-header"><a href="#traits">Traits</a></h2>
 <div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.AsyncBufRead.html" title="futures::io::AsyncBufRead trait">AsyncBufRead</a></div><div class="item-right docblock-short"><p>Read bytes asynchronously.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.AsyncBufReadExt.html" title="futures::io::AsyncBufReadExt trait">AsyncBufReadExt</a></div><div class="item-right docblock-short"><p>An extension trait which adds utility methods to <code>AsyncBufRead</code> types.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.AsyncRead.html" title="futures::io::AsyncRead trait">AsyncRead</a></div><div class="item-right docblock-short"><p>Read bytes asynchronously.</p>
@@ -66,13 +66,13 @@ of a <code>AsyncRead + AsyncWrite</code>, and thus could not be <code>reunite</c
 </div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.AsyncSeekExt.html" title="futures::io::AsyncSeekExt trait">AsyncSeekExt</a></div><div class="item-right docblock-short"><p>An extension trait which adds utility methods to <code>AsyncSeek</code> types.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.AsyncWrite.html" title="futures::io::AsyncWrite trait">AsyncWrite</a></div><div class="item-right docblock-short"><p>Write bytes asynchronously.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="trait" href="trait.AsyncWriteExt.html" title="futures::io::AsyncWriteExt trait">AsyncWriteExt</a></div><div class="item-right docblock-short"><p>An extension trait which adds utility methods to <code>AsyncWrite</code> types.</p>
-</div></div></div><h2 id="functions" class="section-header"><a href="#functions">Functions</a></h2>
+</div></div></div><h2 id="functions" class="small-section-header"><a href="#functions">Functions</a></h2>
 <div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.copy.html" title="futures::io::copy fn">copy</a></div><div class="item-right docblock-short"><p>Creates a future which copies all the bytes from one object to another.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.copy_buf.html" title="futures::io::copy_buf fn">copy_buf</a></div><div class="item-right docblock-short"><p>Creates a future which copies all the bytes from one object to another.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.empty.html" title="futures::io::empty fn">empty</a></div><div class="item-right docblock-short"><p>Constructs a new handle to an empty reader.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.repeat.html" title="futures::io::repeat fn">repeat</a></div><div class="item-right docblock-short"><p>Creates an instance of a reader that infinitely repeats one byte.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="fn" href="fn.sink.html" title="futures::io::sink fn">sink</a></div><div class="item-right docblock-short"><p>Creates an instance of a writer which will successfully consume all data.</p>
-</div></div></div><h2 id="types" class="section-header"><a href="#types">Type Definitions</a></h2>
+</div></div></div><h2 id="types" class="small-section-header"><a href="#types">Type Definitions</a></h2>
 <div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="type" href="type.Result.html" title="futures::io::Result type">Result</a></div><div class="item-right docblock-short"><p>A specialized <a href="https://doc.rust-lang.org/nightly/core/result/enum.Result.html"><code>Result</code></a> type for I/O operations.</p>
-</div></div></div></section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="futures" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (e6b883c74 2021-12-08)" ></div>
+</div></div></div></section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="futures" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (0b42deacc 2021-12-09)" ></div>
 </body></html>
