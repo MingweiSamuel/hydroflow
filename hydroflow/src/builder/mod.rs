@@ -1,10 +1,5 @@
-use crate::compiled::{Filter, ForEach, Map, Pusherator};
-use crate::{tl, tt};
+use crate::compiled::{Filter, ForEach, Map, Pusherator, Tee};
 use std::marker::PhantomData;
-
-pub struct PusheratorBuilder<T> {
-    _todo: T,
-}
 
 pub trait PusheratorBuild {
     type Item;
@@ -14,15 +9,63 @@ pub trait PusheratorBuild {
     where
         O: Pusherator<Item = Self::Item>;
 
-    // fn map<U, F>(f: F) -> MapBuild<Self::Item, U, O, F, P>
-    // where
-    //     F: FnMut(Self::Item) -> U,
-    // {
-    //     unimplemented!();
-    // }
+    fn map<U, F>(self, f: F) -> MapBuild<Self::Item, U, F, Self>
+    where
+        Self: Sized,
+        F: FnMut(Self::Item) -> U,
+    {
+        MapBuild {
+            prev: self,
+            f,
+            _marker: PhantomData,
+        }
+    }
+
+    fn filter<F>(self, f: F) -> FilterBuild<Self::Item, F, Self>
+    where
+        Self: Sized,
+        F: FnMut(&Self::Item) -> bool,
+    {
+        FilterBuild {
+            prev: self,
+            f,
+            _marker: PhantomData,
+        }
+    }
+
+    fn tee<O1>(self, first_out: O1) -> TeeBuild<Self::Item, O1, Self>
+    where
+        Self: Sized,
+        Self::Item: Clone,
+        O1: Pusherator<Item = Self::Item>,
+    {
+        TeeBuild {
+            prev: self,
+            first_out,
+            _marker: PhantomData,
+        }
+    }
+
+    fn for_each<F>(self, f: F) -> Self::Output<ForEach<Self::Item, F>>
+    where
+        Self: Sized,
+        F: FnMut(Self::Item),
+    {
+        self.build(ForEach::new(f))
+    }
 }
 
 pub struct InputBuild<T>(PhantomData<T>);
+impl<T> Default for InputBuild<T> {
+    fn default() -> Self {
+        Self(PhantomData)
+    }
+}
+impl<T> InputBuild<T> {
+    pub fn new() -> Self {
+        Default::default()
+    }
+}
 impl<T> PusheratorBuild for InputBuild<T> {
     type Item = T;
 
@@ -37,7 +80,7 @@ impl<T> PusheratorBuild for InputBuild<T> {
 
 pub struct MapBuild<T, U, F, P>
 where
-    F: Fn(T) -> U,
+    F: FnMut(T) -> U,
     P: PusheratorBuild<Item = T>,
 {
     prev: P,
@@ -46,7 +89,7 @@ where
 }
 impl<T, U, F, P> PusheratorBuild for MapBuild<T, U, F, P>
 where
-    F: Fn(T) -> U,
+    F: FnMut(T) -> U,
     P: PusheratorBuild<Item = T>,
 {
     type Item = U;
@@ -62,7 +105,7 @@ where
 
 pub struct FilterBuild<T, F, P>
 where
-    F: Fn(&T) -> bool,
+    F: FnMut(&T) -> bool,
     P: PusheratorBuild<Item = T>,
 {
     prev: P,
@@ -71,7 +114,7 @@ where
 }
 impl<T, F, P> PusheratorBuild for FilterBuild<T, F, P>
 where
-    F: Fn(&T) -> bool,
+    F: FnMut(&T) -> bool,
     P: PusheratorBuild<Item = T>,
 {
     type Item = T;
@@ -85,12 +128,106 @@ where
     }
 }
 
+pub struct TeeBuild<T, O1, P>
+where
+    T: Clone,
+    P: PusheratorBuild<Item = T>,
+    O1: Pusherator<Item = T>,
+{
+    prev: P,
+    first_out: O1,
+    _marker: PhantomData<T>,
+}
+impl<T, O1, P> PusheratorBuild for TeeBuild<T, O1, P>
+where
+    T: Clone,
+    P: PusheratorBuild<Item = T>,
+    O1: Pusherator<Item = T>,
+{
+    type Item = T;
+
+    type Output<O: Pusherator<Item = Self::Item>> = P::Output<Tee<T, O1, O>>;
+    fn build<O>(self, input: O) -> Self::Output<O>
+    where
+        O: Pusherator<Item = Self::Item>,
+    {
+        self.prev.build(Tee::new(self.first_out, input))
+    }
+}
+
+pub trait IteratorToPusherator: Iterator {
+    fn pusherator(self) -> BuiltSubgraphBuild<Self>
+    where
+        Self: Sized,
+    {
+        BuiltSubgraphBuild { pull: self }
+    }
+}
+impl<I> IteratorToPusherator for I where I: Sized + Iterator {}
+
+pub struct BuiltSubgraph<I, O>
+where
+    I: Iterator,
+    O: Pusherator<Item = I::Item>,
+{
+    pull: I,
+    push: O,
+}
+impl<I, O> BuiltSubgraph<I, O>
+where
+    I: Iterator,
+    O: Pusherator<Item = I::Item>,
+{
+    pub fn run_no_context(mut self) {
+        for item in self.pull {
+            self.push.give(item);
+        }
+    }
+}
+impl<I, O> crate::scheduled::subgraph::Subgraph for BuiltSubgraph<I, O>
+where
+    I: Iterator,
+    O: Pusherator<Item = I::Item>,
+{
+    fn run(&mut self, _context: crate::scheduled::Context<'_>) {
+        // TODO(mingwei): something smart with context.
+        // TODO(mingwei): how does this handle statefulness/reentrancy? Do we need to rebuild it every time, or something?
+        for item in &mut self.pull {
+            self.push.give(item);
+        }
+    }
+}
+
+pub struct BuiltSubgraphBuild<I>
+where
+    I: Iterator,
+{
+    pull: I,
+}
+impl<I> PusheratorBuild for BuiltSubgraphBuild<I>
+where
+    I: Iterator,
+{
+    type Item = I::Item;
+
+    type Output<O: Pusherator<Item = Self::Item>> = BuiltSubgraph<I, O>;
+    fn build<O>(self, input: O) -> Self::Output<O>
+    where
+        O: Pusherator<Item = Self::Item>,
+    {
+        BuiltSubgraph {
+            pull: self.pull,
+            push: input,
+        }
+    }
+}
+
 #[cfg(test)]
 mod test {
     use super::*;
 
     #[test]
-    fn test_builder() {
+    fn test_builder_constructed() {
         let pb = InputBuild::<usize>(PhantomData);
         let pb = FilterBuild {
             prev: pb,
@@ -103,160 +240,76 @@ mod test {
             _marker: PhantomData,
         };
 
-        let mut z = pb.build(ForEach::new(|x| println!("val: {}", x)));
+        let mut output = Vec::new();
+        let mut pusherator = pb.build(ForEach::new(|x| output.push(x)));
 
         for x in 0..10 {
-            z.give(x);
+            pusherator.give(x);
         }
+
+        assert_eq!(&[0, 4, 16, 36, 64], &*output);
+    }
+
+    #[test]
+    fn test_builder() {
+        let mut output = Vec::new();
+
+        let mut pusherator = <InputBuild<usize>>::new()
+            .filter(|&x| 0 == x % 2)
+            .map(|x| x * x)
+            .for_each(|x| output.push(x));
+
+        for x in 0..10 {
+            pusherator.give(x);
+        }
+
+        assert_eq!(&[0, 4, 16, 36, 64], &*output);
+    }
+
+    #[test]
+    fn test_builder_tee() {
+        let mut output_evn = Vec::new();
+        let mut output_odd = Vec::new();
+
+        let mut pusherator = <InputBuild<usize>>::new()
+            .tee(
+                <InputBuild<usize>>::new()
+                    .filter(|&x| 0 == x % 2)
+                    .for_each(|x| output_evn.push(x)),
+            )
+            .filter(|&x| 1 == x % 2)
+            .for_each(|x| output_odd.push(x));
+
+        for x in 0..10 {
+            pusherator.give(x);
+        }
+
+        assert_eq!(&[0, 2, 4, 6, 8], &*output_evn);
+        assert_eq!(&[1, 3, 5, 7, 9], &*output_odd);
+    }
+
+    #[test]
+    fn test_built_subgraph() {
+        let mut output_evn = Vec::new();
+        let mut output_odd = Vec::new();
+
+        let built_subgraph = [1, 2, 3, 4, 5]
+            .into_iter()
+            .chain([3, 4, 5, 6, 7])
+            .map(|x| x * 9)
+            .pusherator()
+            .map(|x| if 0 == x % 2 { x / 2 } else { 3 * x + 1 })
+            .tee(
+                <InputBuild<usize>>::new()
+                    .filter(|&x| 0 == x % 2)
+                    .for_each(|x| output_evn.push(x)),
+            )
+            .filter(|&x| 1 == x % 2)
+            .for_each(|x| output_odd.push(x));
+
+        built_subgraph.run_no_context();
+
+        assert_eq!(&[28, 82, 18, 136, 82, 18, 136, 190], &*output_evn);
+        assert_eq!(&[9, 27], &*output_odd);
     }
 }
-
-// pub struct ForEachBuild<T, F, P>
-// where
-//     F: FnMut(T),
-//     P: PusheratorBuild<Item = T>,
-// {
-//     prev: P,
-//     f: F,
-//     _marker: PhantomData<T>,
-// }
-// impl<T, F, P> PusheratorBuild for ForEachBuild<T, F, P>
-// where
-//     F: FnMut(T),
-//     P: PusheratorBuild<Item = T>,
-// {
-//     type Item = !;
-
-//     type Input = O;
-//     type Output = Filter<T, F, O>;
-//     fn build(self, input: Self::Input) -> Self::Output {
-//         Self::Output::new(self.f, input)
-//     }
-// }
-
-//////////
-
-// pub struct PusheratorBuilder<B, O>
-// where
-//     B: PusheratorBuild<O>,
-// {
-//     build: B,
-//     _phantom: PhantomData<fn(O)>,
-// }
-
-// pub trait PusheratorBuild<O> {
-//     type OutputChain;
-
-//     type Output: Pusherator;
-//     fn build(self, out: O) -> Self::Output;
-// }
-
-// pub struct MapBuild<T, U, F>
-// where
-//     F: Fn(T) -> U,
-// {
-//     f: F,
-//     _marker: PhantomData<T>,
-// }
-// impl<T, U, F, O> PusheratorBuild<O> for MapBuild<T, U, F>
-// where
-//     F: Fn(T) -> U,
-//     O: Pusherator<Item = U>,
-// {
-//     type OutputChain = !; // TODO(mingwei)!
-
-//     type Output = Map<T, U, F, O>;
-//     fn build(self, out: O) -> Self::Output {
-//         Map::new(self.f, out)
-//     }
-// }
-
-// // pub trait Append<T> {
-// //     type Append;
-// // }
-// // impl<A, B, T> Append<T> for (A, B)
-// // where
-// //     B: Append<T>,
-// // {
-// //     type Append = (A, B::Append);
-// // }
-// // impl<T> Append<T> for () {
-// //     type Append = (T, ());
-// // }
-
-// // pub trait Reverse {
-// //     type Reverse;
-// // }
-
-// // impl<A, B> Reverse for (A, B)
-// // where
-// //     B: Reverse,
-// //     B::Reverse: Append<A>,
-// // {
-// //     type Reverse = <B::Reverse as Append<A>>::Append;
-// // }
-// // impl Reverse for () {
-// //     type Reverse = ();
-// // }
-
-// // struct A0();
-// // struct B0();
-// // struct C0();
-
-// // type MyList1 = tt!(A0, B0, C0);
-// // type MyList2 = <MyList1 as Reverse>::Reverse;
-
-// // fn x() {
-// //     let z: MyList2 = tl!(C0(), B0(), A0());
-// // }
-
-// // use crate::compiled::Pusherator;
-
-// // pub trait PusheratorBuild<T> {
-// //     type Build: Pusherator<Item = T>;
-// //     fn build(self) -> Self::Build;
-
-// //     fn map<F, U>(self, f: F) -> MapBuild<F, T, U, Self>
-// //     where
-// //         Self: Sized,
-// //         F: Fn(T) -> U,
-// //     {
-// //         MapBuild::new(self, f)
-// //     }
-// // }
-
-// // pub struct MapBuild<F, T, U, B>
-// // where
-// //     F: FnMut(T) -> U,
-// //     B: PusheratorBuild<T>,
-// // {
-// //     build: B,
-// //     f: F,
-// //     _phantom: PhantomData<fn(T) -> U>,
-// // }
-// // impl<F, T, U, B> MapBuild<F, T, U, B>
-// // where
-// //     F: FnMut(T) -> U,
-// //     B: PusheratorBuild<T>,
-// // {
-// //     pub fn new(build: B, f: F) -> Self {
-// //         Self {
-// //             build,
-// //             f,
-// //             _phantom: PhantomData,
-// //         }
-// //     }
-// // }
-// // impl<F, T, U, B> PusheratorBuild<T> for MapBuild<F, T, U, B>
-// // where
-// //     F: FnMut(T) -> U,
-// //     B: PusheratorBuild<T>,
-// // {
-// //     type Build =
-// // }
-
-// // pub struct Builder<T> {
-// //     _phantom: PhantomData<*mut T>,
-// // }
-
-// // impl<T> Builder<T> {}
