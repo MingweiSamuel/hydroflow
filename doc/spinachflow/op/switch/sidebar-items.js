@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["SwitchModeA",""],["SwitchModeB",""]],"struct":[["SwitchOrder",""]],"trait":[["SwitchMode",""]]});

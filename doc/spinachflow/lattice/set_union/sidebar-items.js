@@ -1,1 +1,0 @@
-initSidebarItems({"struct":[["SetUnion",""],["SetUnionRepr",""]],"trait":[["SetTag",""]]});
