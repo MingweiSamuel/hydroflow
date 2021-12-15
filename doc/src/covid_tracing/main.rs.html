@@ -162,6 +162,8 @@
 <span id="161">161</span>
 <span id="162">162</span>
 <span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">feature</span>(<span class="ident">never_type</span>)]</span>
 
 <span class="kw">use</span> <span class="ident">std::cell::RefCell</span>;
@@ -169,10 +171,11 @@
 
 <span class="kw">use</span> <span class="ident">hydroflow::compiled::pull::JoinState</span>;
 <span class="kw">use</span> <span class="ident">hydroflow::compiled::pull::SymmetricHashJoin</span>;
-<span class="kw">use</span> <span class="ident">hydroflow::compiled</span>::{<span class="ident">ForEach</span>, <span class="ident">Pivot</span>, <span class="ident">Tee</span>};
-<span class="kw">use</span> <span class="ident">hydroflow::scheduled::collections::Iter</span>;
+<span class="kw">use</span> <span class="ident">hydroflow::compiled</span>::{<span class="ident">InputBuild</span>, <span class="ident">IteratorToPusherator</span>, <span class="ident">PusheratorBuild</span>};
+<span class="kw">use</span> <span class="ident">hydroflow::lang::collections::Iter</span>;
+<span class="kw">use</span> <span class="ident">hydroflow::scheduled::graph::Hydroflow</span>;
+<span class="kw">use</span> <span class="ident">hydroflow::scheduled::graph_ext::GraphExt</span>;
 <span class="kw">use</span> <span class="ident">hydroflow::scheduled::handoff::VecHandoff</span>;
-<span class="kw">use</span> <span class="ident">hydroflow::scheduled::Hydroflow</span>;
 <span class="kw">use</span> <span class="ident">hydroflow</span>::{<span class="ident">tl</span>, <span class="ident">tt</span>};
 
 <span class="kw">use</span> <span class="ident">rand::Rng</span>;
@@ -226,10 +229,6 @@
                 <span class="kw">let</span> <span class="ident">new_exposed</span> <span class="op">=</span> <span class="ident">join_exposed_contacts</span>.<span class="ident">filter_map</span>(
                     <span class="op">|</span>(<span class="ident">_pid_a</span>, (<span class="ident">t_from</span>, <span class="ident">t_to</span>), (<span class="ident">pid_b</span>, <span class="ident">t_contact</span>))<span class="op">|</span> {
                         <span class="kw">if</span> <span class="ident">t_from</span> <span class="op">&lt;</span> <span class="ident">t_contact</span> <span class="op">&amp;&amp;</span> <span class="ident">t_contact</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">t_to</span> {
-                            <span class="comment">// println!(</span>
-                            <span class="comment">//     &quot;DEBUG: post_join {} ({} {}) ({} {})&quot;,</span>
-                            <span class="comment">//     _pid_a, t_from, t_to, pid_b, t_contact</span>
-                            <span class="comment">// );</span>
                             <span class="prelude-val">Some</span>((<span class="ident">pid_b</span>, <span class="ident">t_contact</span>))
                         } <span class="kw">else</span> {
                             <span class="prelude-val">None</span>
@@ -237,17 +236,19 @@
                     },
                 );
 
-                <span class="kw">let</span> <span class="ident">notif_push</span> <span class="op">=</span> <span class="ident">ForEach::new</span>(<span class="op">|</span><span class="ident">exposed_person</span>: (<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">|</span> {
-                    <span class="comment">// println!(&quot;DEBUG: will_notif {} {}&quot;, exposed_person.0, exposed_person.1);</span>
-                    <span class="ident">notifs_send</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>(<span class="ident">exposed_person</span>));
-                });
-                <span class="kw">let</span> <span class="ident">loop_push</span> <span class="op">=</span> <span class="ident">ForEach::new</span>(<span class="op">|</span><span class="ident">exposed_person</span>: (<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">|</span> {
-                    <span class="comment">// println!(&quot;DEBUG: will_loop {}, {}&quot;, exposed_person.0, exposed_person.1);</span>
-                    <span class="ident">loop_send</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>(<span class="ident">exposed_person</span>));
-                });
-                <span class="kw">let</span> <span class="ident">push_exposed</span> <span class="op">=</span> <span class="ident">Tee::new</span>(<span class="ident">notif_push</span>, <span class="ident">loop_push</span>);
+                <span class="kw">let</span> <span class="ident">pivot</span> <span class="op">=</span> <span class="ident">new_exposed</span>
+                    .<span class="ident">pusherator</span>()
+                    .<span class="ident">tee</span>(
+                        <span class="ident">InputBuild::new</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">exposed_person</span>: (<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">|</span> {
+                            <span class="comment">// Notif push.</span>
+                            <span class="ident">notifs_send</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>(<span class="ident">exposed_person</span>));
+                        }),
+                    )
+                    .<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">exposed_person</span>: (<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">|</span> {
+                        <span class="comment">// Loop push.</span>
+                        <span class="ident">loop_send</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>(<span class="ident">exposed_person</span>));
+                    });
 
-                <span class="kw">let</span> <span class="ident">pivot</span> <span class="op">=</span> <span class="ident">Pivot::new</span>(<span class="ident">new_exposed</span>, <span class="ident">push_exposed</span>);
                 <span class="ident">pivot</span>.<span class="ident">run</span>();
             },
         );
@@ -268,13 +269,16 @@
             <span class="kw">let</span> <span class="ident">peoples</span> <span class="op">=</span> <span class="ident">peoples</span>.<span class="ident">take_inner</span>().<span class="ident">into_iter</span>();
 
             <span class="kw">let</span> <span class="ident">joined</span> <span class="op">=</span> <span class="ident">SymmetricHashJoin::new</span>(<span class="ident">peoples</span>, <span class="ident">exposures</span>, <span class="kw-2">&amp;mut</span> <span class="ident">people_exposure</span>);
-            <span class="kw">let</span> <span class="ident">joined_push</span> <span class="op">=</span> <span class="ident">ForEach::new</span>(<span class="op">|</span>(<span class="ident">_pid</span>, (<span class="ident">name</span>, <span class="ident">phone</span>), <span class="ident">exposure</span>)<span class="op">|</span> {
-                <span class="macro">println!</span>(
-                    <span class="string">&quot;[{}] To {}: Possible Exposure at t = {}&quot;</span>,
-                    <span class="ident">name</span>, <span class="ident">phone</span>, <span class="ident">exposure</span>
-                );
-            });
-            <span class="kw">let</span> <span class="ident">pivot</span> <span class="op">=</span> <span class="ident">Pivot::new</span>(<span class="ident">joined</span>, <span class="ident">joined_push</span>);
+
+            <span class="kw">let</span> <span class="ident">pivot</span> <span class="op">=</span> <span class="ident">joined</span>
+                .<span class="ident">pusherator</span>()
+                .<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">_pid</span>, (<span class="ident">name</span>, <span class="ident">phone</span>), <span class="ident">exposure</span>)<span class="op">|</span> {
+                    <span class="macro">println!</span>(
+                        <span class="string">&quot;[{}] To {}: Possible Exposure at t = {}&quot;</span>,
+                        <span class="ident">name</span>, <span class="ident">phone</span>, <span class="ident">exposure</span>
+                    );
+                });
+
             <span class="ident">pivot</span>.<span class="ident">run</span>();
         });
 
@@ -326,5 +330,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (8f117a77d 2021-12-13)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (404c8471a 2021-12-14)" ></div>
 </body></html>

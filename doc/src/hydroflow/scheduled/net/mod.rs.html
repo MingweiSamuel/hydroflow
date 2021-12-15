@@ -172,6 +172,7 @@
 <span id="171">171</span>
 <span id="172">172</span>
 <span id="173">173</span>
+<span id="174">174</span>
 </pre><pre class="rust"><code><span class="doccomment">//! This module contiains networking code.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ## How Tokio interacts with Hydroflow (Mingwei 2021-12-07)</span>
@@ -237,8 +238,9 @@
 
 <span class="kw">use</span> <span class="kw">super</span>::{
     <span class="ident">ctx</span>::{<span class="ident">InputPort</span>, <span class="ident">OutputPort</span>, <span class="ident">RecvCtx</span>},
+    <span class="ident">graph::Hydroflow</span>,
+    <span class="ident">graph_ext::GraphExt</span>,
     <span class="ident">handoff::VecHandoff</span>,
-    <span class="ident">Hydroflow</span>,
 };
 
 <span class="kw">const</span> <span class="ident">MESSAGE_DATA</span>: <span class="ident">u8</span> <span class="op">=</span> <span class="number">0</span>;
@@ -346,5 +348,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (8f117a77d 2021-12-13)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (404c8471a 2021-12-14)" ></div>
 </body></html>

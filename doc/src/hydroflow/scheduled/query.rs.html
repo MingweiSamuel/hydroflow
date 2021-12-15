@@ -174,11 +174,19 @@
 <span id="173">173</span>
 <span id="174">174</span>
 <span id="175">175</span>
+<span id="176">176</span>
+<span id="177">177</span>
+<span id="178">178</span>
+<span id="179">179</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">cell::RefCell</span>, <span class="ident">rc::Rc</span>};
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::collections::Iter</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::lang::collections::Iter</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::graph::Hydroflow</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::handoff::VecHandoff</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled</span>::{<span class="ident">Context</span>, <span class="ident">Hydroflow</span>, <span class="ident">OutputPort</span>, <span class="ident">RecvCtx</span>, <span class="ident">SendCtx</span>};
+
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::context::Context</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::ctx</span>::{<span class="ident">OutputPort</span>, <span class="ident">RecvCtx</span>, <span class="ident">SendCtx</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::graph_ext::GraphExt</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">Default</span>)]</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Query</span> {
@@ -350,5 +358,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (8f117a77d 2021-12-13)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (404c8471a 2021-12-14)" ></div>
 </body></html>

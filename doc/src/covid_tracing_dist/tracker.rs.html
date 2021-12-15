@@ -114,11 +114,19 @@
 <span id="113">113</span>
 <span id="114">114</span>
 <span id="115">115</span>
+<span id="116">116</span>
+<span id="117">117</span>
+<span id="118">118</span>
+<span id="119">119</span>
+<span id="120">120</span>
+<span id="121">121</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Decode</span>, <span class="ident">Encode</span>, <span class="ident">Opts</span>, <span class="ident">CONTACTS_ADDR</span>, <span class="ident">DIAGNOSES_ADDR</span>};
 
+<span class="kw">use</span> <span class="ident">hydroflow::lang::collections::Iter</span>;
+<span class="kw">use</span> <span class="ident">hydroflow::scheduled</span>::{<span class="ident">ctx::RecvCtx</span>, <span class="ident">graph::Hydroflow</span>, <span class="ident">handoff::VecHandoff</span>, <span class="ident">net::Message</span>};
 <span class="kw">use</span> <span class="ident">hydroflow</span>::{
-    <span class="ident">compiled</span>::{<span class="ident">pull::SymmetricHashJoin</span>, <span class="ident">ForEach</span>, <span class="ident">Pivot</span>, <span class="ident">Tee</span>},
-    <span class="ident">scheduled</span>::{<span class="ident">collections::Iter</span>, <span class="ident">ctx::RecvCtx</span>, <span class="ident">handoff::VecHandoff</span>, <span class="ident">net::Message</span>, <span class="ident">Hydroflow</span>},
+    <span class="ident">compiled</span>::{<span class="ident">pull::SymmetricHashJoin</span>, <span class="ident">InputBuild</span>, <span class="ident">IteratorToPusherator</span>, <span class="ident">PusheratorBuild</span>},
+    <span class="ident">scheduled::graph_ext::GraphExt</span>,
     <span class="ident">tl</span>, <span class="ident">tt</span>,
 };
 
@@ -194,15 +202,19 @@
                     },
                 );
 
-                <span class="kw">let</span> <span class="ident">notif_push</span> <span class="op">=</span> <span class="ident">ForEach::new</span>(<span class="op">|</span><span class="ident">exposed_person</span>: (<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">|</span> {
-                    <span class="ident">notifs_send</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>(<span class="ident">exposed_person</span>));
-                });
-                <span class="kw">let</span> <span class="ident">loop_push</span> <span class="op">=</span> <span class="ident">ForEach::new</span>(<span class="op">|</span><span class="ident">exposed_person</span>: (<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">|</span> {
-                    <span class="ident">loop_send</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>(<span class="ident">exposed_person</span>));
-                });
-                <span class="kw">let</span> <span class="ident">push_exposed</span> <span class="op">=</span> <span class="ident">Tee::new</span>(<span class="ident">notif_push</span>, <span class="ident">loop_push</span>);
+                <span class="kw">let</span> <span class="ident">pivot</span> <span class="op">=</span> <span class="ident">new_exposed</span>
+                    .<span class="ident">pusherator</span>()
+                    .<span class="ident">tee</span>(
+                        <span class="ident">InputBuild::new</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">exposed_person</span>: (<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">|</span> {
+                            <span class="comment">// Notif push.</span>
+                            <span class="ident">notifs_send</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>(<span class="ident">exposed_person</span>));
+                        }),
+                    )
+                    .<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">exposed_person</span>: (<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">|</span> {
+                        <span class="comment">// Loop push.</span>
+                        <span class="ident">loop_send</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>(<span class="ident">exposed_person</span>));
+                    });
 
-                <span class="kw">let</span> <span class="ident">pivot</span> <span class="op">=</span> <span class="ident">Pivot::new</span>(<span class="ident">new_exposed</span>, <span class="ident">push_exposed</span>);
                 <span class="ident">pivot</span>.<span class="ident">run</span>();
             },
         );
@@ -230,5 +242,5 @@
     <span class="ident">df</span>.<span class="ident">run_async</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing_dist" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (8f117a77d 2021-12-13)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing_dist" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (404c8471a 2021-12-14)" ></div>
 </body></html>

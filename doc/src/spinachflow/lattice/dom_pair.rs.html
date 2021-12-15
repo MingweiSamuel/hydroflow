@@ -147,7 +147,41 @@
 <span id="146">146</span>
 <span id="147">147</span>
 <span id="148">148</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::cmp::Ordering</span>;
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
+<span id="160">160</span>
+<span id="161">161</span>
+<span id="162">162</span>
+<span id="163">163</span>
+<span id="164">164</span>
+<span id="165">165</span>
+</pre><pre class="rust"><code><span class="doccomment">//! **[DomPair] is not always a valid lattice, i.e. it does not always satisfy</span>
+<span class="doccomment">//! the ACI properties.</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! For example, consider the following:</span>
+<span class="doccomment">//! ```txt</span>
+<span class="doccomment">//! A = ([0, 1], 1)</span>
+<span class="doccomment">//! B = ([1, 0], 1)</span>
+<span class="doccomment">//! C = ([1, 1], 0)</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! (AB)C = ([1, 1], 1) join ([1, 1], 0) = ([1, 1], 1)</span>
+<span class="doccomment">//! A(BC) = ([0, 1], 1) join ([1, 1], 0) = ([1, 1], 0)</span>
+<span class="doccomment">//! ```</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! However if the LHS is a proper vector clock (monotonic clocks on multiple</span>
+<span class="doccomment">//! machines which increase per lattice instance tagged), then the above</span>
+<span class="doccomment">//! anomaly does not arrise.</span>
+
+<span class="kw">use</span> <span class="ident">std::cmp::Ordering</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::bottom::BottomRepr</span>;
 <span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">Compare</span>, <span class="ident">Convert</span>, <span class="ident">Debottom</span>, <span class="ident">Lattice</span>, <span class="ident">LatticeRepr</span>, <span class="ident">Merge</span>, <span class="ident">Top</span>};
@@ -296,5 +330,5 @@
     );
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="spinachflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (8f117a77d 2021-12-13)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="spinachflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (404c8471a 2021-12-14)" ></div>
 </body></html>

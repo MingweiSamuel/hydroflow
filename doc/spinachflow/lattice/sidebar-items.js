@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["bottom",""],["dom_pair",""],["map_union",""],["ord",""],["pair",""],["set_union",""],["top",""]],"trait":[["Compare",""],["Convert",""],["Debottom",""],["Lattice",""],["LatticeRepr",""],["Merge",""],["Top",""]]});
+initSidebarItems({"mod":[["bottom",""],["dom_pair","**[DomPair] is not always a valid lattice, i.e. it does not always satisfy the ACI properties."],["map_union",""],["ord",""],["pair",""],["set_union",""],["top",""]],"trait":[["Compare",""],["Convert",""],["Debottom",""],["Lattice",""],["LatticeRepr",""],["Merge",""],["Top",""]]});

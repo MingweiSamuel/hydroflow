@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["pull",""]],"struct":[["Filter",""],["ForEach",""],["GroupBy",""],["Map",""],["Partition",""],["Pivot",""],["Tee",""],["TeeN",""]],"trait":[["Pusherator",""]]});
+initSidebarItems({"mod":[["filter",""],["for_each",""],["group_by",""],["map",""],["partition",""],["pivot",""],["pull",""],["tee",""]],"struct":[["InputBuild",""]],"trait":[["IteratorToPusherator",""],["Pusherator",""],["PusheratorBuild",""]]});

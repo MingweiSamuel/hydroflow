@@ -71,17 +71,15 @@
 <span id="70">70</span>
 <span id="71">71</span>
 <span id="72">72</span>
-<span id="73">73</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
 
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">cell::RefCell</span>, <span class="ident">rc::Rc</span>};
 
-<span class="kw">use</span> <span class="ident">hydroflow::scheduled</span>::{
-    <span class="ident">collections::Iter</span>,
-    <span class="ident">ctx</span>::{<span class="ident">OutputPort</span>, <span class="ident">RecvCtx</span>},
-    <span class="ident">handoff::VecHandoff</span>,
-    <span class="ident">Hydroflow</span>,
-};
+<span class="kw">use</span> <span class="ident">hydroflow::lang::collections::Iter</span>;
+<span class="kw">use</span> <span class="ident">hydroflow::scheduled::ctx</span>::{<span class="ident">OutputPort</span>, <span class="ident">RecvCtx</span>};
+<span class="kw">use</span> <span class="ident">hydroflow::scheduled::graph::Hydroflow</span>;
+<span class="kw">use</span> <span class="ident">hydroflow::scheduled::graph_ext::GraphExt</span>;
+<span class="kw">use</span> <span class="ident">hydroflow::scheduled::handoff::VecHandoff</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Datum</span>, <span class="ident">RelExpr</span>};
 
@@ -146,5 +144,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="relalg" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (8f117a77d 2021-12-13)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="relalg" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (404c8471a 2021-12-14)" ></div>
 </body></html>

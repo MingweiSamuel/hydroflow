@@ -141,6 +141,7 @@
 <span id="140">140</span>
 <span id="141">141</span>
 <span id="142">142</span>
+<span id="143">143</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::cell::Cell</span>;
 <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
 <span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
@@ -150,8 +151,9 @@
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::ctx</span>::{<span class="ident">InputPort</span>, <span class="ident">OutputPort</span>, <span class="ident">RecvCtx</span>, <span class="ident">SendCtx</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::handoff::Handoff</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::HandoffData</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled</span>::{<span class="ident">HandoffId</span>, <span class="ident">SubgraphId</span>};
+
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::graph::HandoffData</span>;
+<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">HandoffId</span>, <span class="ident">SubgraphId</span>};
 
 <span class="doccomment">/**
  * A variadic list of Handoff types, represented using a lisp-style tuple structure.
@@ -284,5 +286,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (8f117a77d 2021-12-13)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (404c8471a 2021-12-14)" ></div>
 </body></html>

@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["Max",""]],"trait":[["Lattice",""]]});
+initSidebarItems({"mod":[["collections",""],["lattice",""],["tag",""]]});

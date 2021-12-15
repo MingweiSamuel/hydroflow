@@ -139,22 +139,16 @@
 <span id="138">138</span>
 <span id="139">139</span>
 <span id="140">140</span>
-<span id="141">141</span>
-<span id="142">142</span>
-<span id="143">143</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">people</span>, <span class="ident">Decode</span>, <span class="ident">Encode</span>, <span class="ident">Opts</span>, <span class="ident">CONTACTS_ADDR</span>, <span class="ident">DIAGNOSES_ADDR</span>};
 
 <span class="kw">use</span> <span class="ident">std::time::Duration</span>;
 
+<span class="kw">use</span> <span class="ident">hydroflow::compiled</span>::{<span class="ident">pull::SymmetricHashJoin</span>, <span class="ident">IteratorToPusherator</span>, <span class="ident">PusheratorBuild</span>};
+<span class="kw">use</span> <span class="ident">hydroflow::lang::collections::Iter</span>;
+<span class="kw">use</span> <span class="ident">hydroflow::scheduled::ctx</span>::{<span class="ident">RecvCtx</span>, <span class="ident">SendCtx</span>};
+<span class="kw">use</span> <span class="ident">hydroflow::scheduled</span>::{<span class="ident">handoff::VecHandoff</span>, <span class="ident">net::Message</span>};
 <span class="kw">use</span> <span class="ident">hydroflow</span>::{
-    <span class="ident">compiled</span>::{<span class="ident">pull::SymmetricHashJoin</span>, <span class="ident">ForEach</span>, <span class="ident">Pivot</span>},
-    <span class="ident">scheduled</span>::{
-        <span class="ident">collections::Iter</span>,
-        <span class="ident">ctx</span>::{<span class="ident">RecvCtx</span>, <span class="ident">SendCtx</span>},
-        <span class="ident">handoff::VecHandoff</span>,
-        <span class="ident">net::Message</span>,
-        <span class="ident">Hydroflow</span>,
-    },
+    <span class="ident">scheduled</span>::{<span class="ident">graph::Hydroflow</span>, <span class="ident">graph_ext::GraphExt</span>},
     <span class="ident">tl</span>, <span class="ident">tt</span>,
 };
 <span class="kw">use</span> <span class="ident">rand::Rng</span>;
@@ -268,15 +262,15 @@
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">join_state</span> <span class="op">=</span> <span class="ident">Default::default</span>();
     <span class="kw">let</span> (<span class="macro">tl!</span>(<span class="ident">notif_sink</span>, <span class="ident">people_sink</span>), <span class="macro">tl!</span>()) <span class="op">=</span>
         <span class="ident">df</span>.<span class="ident">add_subgraph</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">SubgraphIn</span>, ()<span class="op">&gt;</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">_ctx</span>, <span class="macro">tl!</span>(<span class="ident">notifs</span>, <span class="ident">people</span>), <span class="macro">tl!</span>()<span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">join</span> <span class="op">=</span> <span class="ident">SymmetricHashJoin::new</span>(
+            <span class="kw">let</span> <span class="ident">pivot</span> <span class="op">=</span> <span class="ident">SymmetricHashJoin::new</span>(
                 <span class="ident">notifs</span>.<span class="ident">take_inner</span>().<span class="ident">into_iter</span>(),
                 <span class="ident">people</span>.<span class="ident">take_inner</span>().<span class="ident">into_iter</span>(),
                 <span class="kw-2">&amp;mut</span> <span class="ident">join_state</span>,
             )
-            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">_id</span>, <span class="ident">t</span>, (<span class="ident">name</span>, <span class="ident">phone</span>))<span class="op">|</span> (<span class="ident">name</span>, <span class="ident">phone</span>, <span class="ident">t</span>));
-            <span class="kw">let</span> <span class="ident">notify</span> <span class="op">=</span>
-                <span class="ident">ForEach::new</span>(<span class="op">|</span>(<span class="ident">name</span>, <span class="ident">phone</span>, <span class="ident">t</span>)<span class="op">|</span> <span class="macro">println!</span>(<span class="string">&quot;notifying {}, {}@{}&quot;</span>, <span class="ident">name</span>, <span class="ident">phone</span>, <span class="ident">t</span>));
-            <span class="kw">let</span> <span class="ident">pivot</span> <span class="op">=</span> <span class="ident">Pivot::new</span>(<span class="ident">join</span>, <span class="ident">notify</span>);
+            .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">_id</span>, <span class="ident">t</span>, (<span class="ident">name</span>, <span class="ident">phone</span>))<span class="op">|</span> (<span class="ident">name</span>, <span class="ident">phone</span>, <span class="ident">t</span>))
+            .<span class="ident">pusherator</span>()
+            .<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">name</span>, <span class="ident">phone</span>, <span class="ident">t</span>)<span class="op">|</span> <span class="macro">println!</span>(<span class="string">&quot;notifying {}, {}@{}&quot;</span>, <span class="ident">name</span>, <span class="ident">phone</span>, <span class="ident">t</span>));
+
             <span class="ident">pivot</span>.<span class="ident">run</span>();
         });
 
@@ -286,5 +280,5 @@
     <span class="ident">df</span>.<span class="ident">run_async</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing_dist" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (8f117a77d 2021-12-13)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing_dist" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.59.0-nightly (404c8471a 2021-12-14)" ></div>
 </body></html>
