@@ -1,5 +1,5 @@
 {
-  "lastUpdate": 1639453709411,
+  "lastUpdate": 1639626391516,
   "repoUrl": "https://github.com/hydro-project/hydroflow",
   "entries": {
     "Benchmark": [
@@ -4689,6 +4689,64 @@
             "name": "reachability/hydroflow",
             "value": 3033512,
             "range": "± 30370",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Mingwei Samuel",
+            "username": "MingweiSamuel",
+            "email": "mingwei.samuel@gmail.com"
+          },
+          "committer": {
+            "name": "Mingwei Samuel",
+            "username": "MingweiSamuel",
+            "email": "mingwei.samuel@gmail.com"
+          },
+          "id": "cd8ecacaa1d1c09bb831f3d10f7c3d2c240b6b88",
+          "message": "Make CI check all targets",
+          "timestamp": "2021-12-15T23:25:24Z",
+          "url": "https://github.com/hydro-project/hydroflow/commit/cd8ecacaa1d1c09bb831f3d10f7c3d2c240b6b88"
+        },
+        "date": 1639626391513,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "fan_in/hydroflow",
+            "value": 163048551,
+            "range": "± 781979",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/scheduled",
+            "value": 154031008,
+            "range": "± 8721194",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow",
+            "value": 8913618,
+            "range": "± 48888",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow_builder",
+            "value": 39412455,
+            "range": "± 169398",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow",
+            "value": 57238715,
+            "range": "± 196488",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/scheduled",
+            "value": 2987352,
+            "range": "± 3954",
             "unit": "ns/iter"
           }
         ]
