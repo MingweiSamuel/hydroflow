@@ -5,14 +5,14 @@ fn main() {
     type DateTime = usize;
 
     build_hydroflow(|mut build_ctx| {
-        let (loop_send, loop_recv) = build_ctx.make_handoff::<(Pid, DateTime)>();
-        let (notifs_send, notifs_recv) = build_ctx.make_handoff::<(Pid, DateTime)>();
+        let (loop_send, loop_recv) = build_ctx.make_handoff::<VecHandoff<(Pid, DateTime)>>();
+        let (notifs_send, notifs_recv) = build_ctx.make_handoff::<VecHandoff<(Pid, DateTime)>>();
 
         let exposed = loop_recv
             .map(|(pid, t)| (pid, (t, t + TRANSMISSIBLE_DURATION)))
             .chain(build_ctx.make_input::<(Pid, (DateTime, DateTime))>("diagnosed_recv"));
 
-        build_ctx
+        let subgraph_main = build_ctx
             .make_input::<(Pid, DateTime)>("contacts_recv")
             .flat_map(|(pid_a, pid_b, t)| [(pid_a, (pid_b, t)), (pid_b, (pid_a, t))])
             .join(exposed, &mut build_ctx)
@@ -22,7 +22,7 @@ fn main() {
             .tee(loop_send)
             .push_to(notifs_send);
 
-        notifs_recv
+        let subgraph_notifs = notifs_recv
             .handoff(&mut build_ctx)
             .join(build_ctx.make_input("peoples_recv"))
             .pusherator()
@@ -32,6 +32,9 @@ fn main() {
                     name, phone, exposure
                 );
             });
+
+        build_ctx.add_subgraph(subgraph_main);
+        build_ctx.add_subgraph(subgraph_notifs);
 
         // Q: how does timely do loops
     });
