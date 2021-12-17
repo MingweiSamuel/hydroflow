@@ -20,7 +20,7 @@ fn main() {
             .map(|(_pid_a, pid_b_t_contact, _t_from_to)| pid_b_t_contact)
             .pusherator()
             .tee(loop_send)
-            .push_to(notifs_send);
+            .push_to(notifs_send)
 
         let subgraph_notifs = notifs_recv
             .handoff(&mut build_ctx)
@@ -37,5 +37,9 @@ fn main() {
         build_ctx.add_subgraph(subgraph_notifs);
 
         // Q: how does timely do loops
+
+        // Other options:
+        // - return tuple for chaining handoffs
+        // - grouping handoffs together?
     });
 }
