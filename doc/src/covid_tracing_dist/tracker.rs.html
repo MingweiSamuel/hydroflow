@@ -121,10 +121,15 @@
 <span id="119">119</span>
 <span id="120">120</span>
 <span id="121">121</span>
+<span id="122">122</span>
+<span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Decode</span>, <span class="ident">Encode</span>, <span class="ident">Opts</span>, <span class="ident">CONTACTS_ADDR</span>, <span class="ident">DIAGNOSES_ADDR</span>};
 
 <span class="kw">use</span> <span class="ident">hydroflow::lang::collections::Iter</span>;
 <span class="kw">use</span> <span class="ident">hydroflow::scheduled</span>::{<span class="ident">ctx::RecvCtx</span>, <span class="ident">graph::Hydroflow</span>, <span class="ident">handoff::VecHandoff</span>, <span class="ident">net::Message</span>};
+<span class="kw">use</span> <span class="ident">hydroflow::tokio::net::TcpStream</span>;
 <span class="kw">use</span> <span class="ident">hydroflow</span>::{
     <span class="ident">compiled</span>::{<span class="ident">pull::SymmetricHashJoin</span>, <span class="ident">InputBuild</span>, <span class="ident">IteratorToPusherator</span>, <span class="ident">PusheratorBuild</span>},
     <span class="ident">scheduled::graph_ext::GraphExt</span>,
@@ -234,7 +239,10 @@
     <span class="ident">df</span>.<span class="ident">add_edge</span>(<span class="ident">diagnoses</span>, <span class="ident">diagnosed_in</span>);
     <span class="ident">df</span>.<span class="ident">add_edge</span>(<span class="ident">loop_out</span>, <span class="ident">loop_in</span>);
 
-    <span class="kw">let</span> (<span class="ident">network_out</span>, <span class="ident">network_in</span>) <span class="op">=</span> <span class="ident">df</span>.<span class="ident">connect</span>(<span class="ident">opts</span>.<span class="ident">addr</span>.<span class="ident">as_str</span>()).<span class="kw">await</span>;
+    <span class="kw">let</span> <span class="ident">stream</span> <span class="op">=</span> <span class="ident">TcpStream::connect</span>(<span class="macro">format!</span>(<span class="string">&quot;localhost:{}&quot;</span>, <span class="ident">opts</span>.<span class="ident">addr</span>))
+        .<span class="kw">await</span>
+        .<span class="ident">unwrap</span>();
+    <span class="kw">let</span> (<span class="ident">network_out</span>, <span class="ident">network_in</span>) <span class="op">=</span> <span class="ident">df</span>.<span class="ident">add_tcp_stream</span>(<span class="ident">stream</span>);
 
     <span class="ident">df</span>.<span class="ident">add_edge</span>(<span class="ident">notifs_out</span>, <span class="ident">encoder_in</span>);
     <span class="ident">df</span>.<span class="ident">add_edge</span>(<span class="ident">encoder_out</span>, <span class="ident">network_out</span>);
