@@ -1,6 +1,6 @@
 window.BENCHMARK_DATA = 
 {
-  "lastUpdate": 1640663235015,
+  "lastUpdate": 1640749684663,
   "repoUrl": "https://github.com/hydro-project/hydroflow",
   "entries": {
     "Benchmark": [
@@ -5584,6 +5584,82 @@ window.BENCHMARK_DATA =
             "name": "reachability/hydroflow",
             "value": 2626898,
             "range": "± 3717",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Justin Jaffray",
+            "username": "justinj",
+            "email": "justin.jaffray@gmail.com"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "fc48b7161821ac7945792b73f1a2427e6faa434c",
+          "message": "Add a real networked test and polish the API a bit (#32)\n\nWe want to start moving towards a usable \"clustering\" API, so this is a first\r\nstep there to make networking a little simpler/cleaner, and pull some stuff out\r\nof the Hydroflow struct for now.",
+          "timestamp": "2021-12-17T01:21:51Z",
+          "url": "https://github.com/hydro-project/hydroflow/commit/fc48b7161821ac7945792b73f1a2427e6faa434c"
+        },
+        "date": 1640749684655,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "arithmetic/hydroflow/compiled",
+            "value": 357171,
+            "range": "± 13331",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/hydroflow",
+            "value": 228688408,
+            "range": "± 4711338",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/scheduled",
+            "value": 221049139,
+            "range": "± 8069776",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow",
+            "value": 9961672,
+            "range": "± 501197",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow_builder",
+            "value": 53160097,
+            "range": "± 4066816",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow",
+            "value": 63899845,
+            "range": "± 3597301",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow/compiled",
+            "value": 16992507,
+            "range": "± 767976",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/scheduled",
+            "value": 3156317,
+            "range": "± 171843",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow",
+            "value": 3121582,
+            "range": "± 140423",
             "unit": "ns/iter"
           }
         ]
