@@ -13,6 +13,7 @@ pub mod state;
 pub(crate) mod subgraph;
 pub mod util;
 
+pub mod type_list;
 mod handoff_list;
 pub use handoff_list::HandoffList;
 

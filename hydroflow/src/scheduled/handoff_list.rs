@@ -9,6 +9,7 @@ use crate::scheduled::ctx::{InputPort, OutputPort, RecvCtx, SendCtx};
 use crate::scheduled::handoff::Handoff;
 
 use super::graph::HandoffData;
+use super::type_list::TypeList;
 use super::{HandoffId, SubgraphId};
 
 /**
@@ -24,7 +25,7 @@ use super::{HandoffId, SubgraphId};
  * ```
  */
 #[sealed]
-pub trait HandoffList {
+pub trait HandoffList: TypeList {
     type InputHid;
     type InputPort;
     type RecvCtx<'a>;
