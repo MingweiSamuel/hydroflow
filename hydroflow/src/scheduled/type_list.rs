@@ -63,6 +63,35 @@ where
     }
 }
 
+
+pub trait Split<U, V>: TypeList
+where
+    U: TypeList,
+    V: TypeList,
+{
+    fn split(self) -> (U, V);
+}
+impl<X, T, U, V> Split<(X, U), V> for (X, T)
+where
+    T: Split<U, V>,
+    U: TypeList,
+    V: TypeList,
+{
+    fn split(self) -> ((X, U), V) {
+        let (x, u) = self;
+        let (t, v) = u.split();
+        ((x, t), v)
+    }
+}
+impl<T> Split<(), T> for T
+where
+    T: TypeList,
+{
+    fn split(self) -> ((), T) {
+        ((), self)
+    }
+}
+
 #[cfg(test)]
 mod test {
     use crate::{tt, tl};
@@ -74,60 +103,8 @@ mod test {
 
     type MySuffix = <MyList as SplitPrefix<MyPrefix>>::Suffix;
 
+    #[allow(dead_code)]
     const _: MySuffix = tl!(0_u32, 0_u64);
 }
 
 
-
-// pub trait TypeTree {
-//     type Flatten: TypeList;
-//     fn unflatten(flat: Self::Flatten) -> Self;
-// }
-// impl<L> TypeTree for L
-// where
-//     L: TypeTreeList,
-// {
-//     type Flatten = L::Flatten;
-//     fn unflatten(flat: Self::Flatten) -> Self {
-//         flat.unflatten()
-//     }
-// }
-// impl<X> TypeTree for (X,) {
-//     type Flatten = tt!(X);
-//     fn unflatten(flat: Self::Flatten) -> Self;
-// }
-
-// pub trait TypeTreeList: TypeList {
-//     type Flatten: TypeList;
-//     fn unflatten(flat: Self::Flatten) -> Self;
-// }
-// impl<X, T> TypeTreeList for (X, T)
-// where
-//     X: TypeTree,
-//     X::Flatten: Extend<T::Flatten>,
-//     T: TypeTreeList,
-// {
-//     type Flatten = <X::Flatten as Extend<T::Flatten>>::Output;
-//     fn unflatten(flat: Self::Flatten) -> Self {}
-// }
-// impl TypeTreeList for () {
-//     type Flatten = ();
-//     fn unflatten(flat: Self::Flatten) -> Self {
-//         flat
-//     }
-// }
-
-// #[cfg(test)]
-// mod test {
-//     use super::*;
-//     use crate::tl;
-
-//     type MyBranchA = tt!((u32,), (u64,));
-//     type MyBranchB = tt!((i32,), (i64,));
-//     type MyTree = tt!(MyBranchA, MyBranchB, (u8,));
-
-//     type MyList = <MyTree as TypeTreeList>::Flatten;
-
-//     #[allow(dead_code)]
-//     const _: MyList = tl!(0_u32, 0_u64, 0_i32, 0_i64, 0_u8);
-// }

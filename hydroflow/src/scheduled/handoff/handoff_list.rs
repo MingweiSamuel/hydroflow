@@ -26,16 +26,16 @@ use super::Handoff;
  */
 #[sealed]
 pub trait HandoffList: TypeList {
-    type InputHid;
-    type InputPort;
-    type RecvCtx<'a>;
+    type InputHid: TypeList;
+    type InputPort: TypeList;
+    type RecvCtx<'a>: TypeList;
     fn make_input(sg_id: SubgraphId) -> (Self::InputHid, Self::InputPort);
     fn make_recv<'a>(handoffs: &'a [HandoffData], input_hids: &Self::InputHid)
         -> Self::RecvCtx<'a>;
 
-    type OutputHid;
-    type OutputPort;
-    type SendCtx<'a>;
+    type OutputHid: TypeList;
+    type OutputPort: TypeList;
+    type SendCtx<'a>: TypeList;
     fn make_output(sg_id: SubgraphId) -> (Self::OutputHid, Self::OutputPort);
     fn make_send<'a>(
         handoffs: &'a [HandoffData],
