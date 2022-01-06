@@ -29,10 +29,10 @@ where
 }
 
 #[allow(type_alias_bounds)]
-type Build<'i, I, F, B>
+type Build<'a, 'i, I, F, B>
 where
     I: Push,
-= Map<B, I::Item, impl 'i + FnMut(B) -> I::Item, I::Build<'i>>;
+= Map<B, I::Item, impl 'a + FnMut(B) -> I::Item, I::Build<'a, 'i>>;
 
 impl<I, F, B> PushBase for MapPush<I, F, B>
 where
@@ -40,7 +40,7 @@ where
     F: FnMut(B) -> I::Item,
 {
     type Item = B;
-    type Build<'i> = Build<'i, I, F, B>;
+    type Build<'a, 'i> = Build<'a, 'i, I, F, B>;
 }
 impl<I, F, B> Push for MapPush<I, F, B>
 where
@@ -53,10 +53,10 @@ where
         self.push.init(output_ports)
     }
 
-    fn build<'a>(
+    fn build<'a, 'i>(
         &'a mut self,
-        input: <Self::OutputHandoffs as HandoffList>::SendCtx<'a>,
-    ) -> Self::Build<'a> {
+        input: <Self::OutputHandoffs as HandoffList>::SendCtx<'i>,
+    ) -> Self::Build<'a, 'i> {
         Map::new(|x| (self.func)(x), self.push.build(input))
     }
 }

@@ -1,6 +1,7 @@
+use super::pivot::Pivot;
 use super::{Pull, PullBase, Push, PushBase};
 
-use std::cell::Cell;
+use std::cell::{Cell, RefCell};
 use std::marker::PhantomData;
 use std::rc::Rc;
 
@@ -13,8 +14,9 @@ use crate::{tl, tt};
 #[derive(Default)]
 pub struct HydroflowBuilder {
     hydroflow: Hydroflow,
-    handoff_connectors: Vec<Box<dyn FnOnce(&mut Hydroflow)>>, // TODO(mingwei): this is a janky/unprincipled way to do this.
-                                                              // inputs: HashMap<&'static str, Box<dyn Any>>,
+    // TODO(mingwei): this is a janky/unprincipled way to do this.
+    // inputs: HashMap<&'static str, Box<dyn Any>>,
+    handoff_connectors: Vec<Box<dyn FnOnce(&mut Hydroflow)>>,
 }
 impl HydroflowBuilder {
     pub fn make_handoff<H, T>(&mut self) -> (BuilderHandoffPush<H, T>, BuilderHandoffPull<H>)
@@ -38,6 +40,31 @@ impl HydroflowBuilder {
             }
         }));
         (push, pull)
+    }
+
+    pub fn add_subgraph<I, O>(&mut self, mut pivot: Pivot<I, O>)
+    where
+        I: 'static + Pull,
+        O: 'static + Push<Item = I::Item>,
+    {
+        // TODO(mingwei): extremely jank
+        let pivot_transfer: Rc<RefCell<Option<Pivot<I, O>>>> = Default::default();
+        let pivot_send = Rc::clone(&pivot_transfer);
+
+        let (input_ports, output_ports) = self
+            .hydroflow
+            .add_subgraph::<_, I::InputHandoffs, O::OutputHandoffs>(
+                move |ctx, recv_ctx, send_ctx| {
+                    let mut pivot_borrow = pivot_transfer.borrow_mut();
+                    pivot_borrow
+                        .as_mut()
+                        .expect("Failed to set pivot_send")
+                        .run(ctx, recv_ctx, send_ctx);
+                },
+            );
+
+        pivot.init(input_ports, output_ports);
+        *pivot_send.borrow_mut() = Some(pivot);
     }
 
     pub fn build(mut self) -> Hydroflow {
@@ -96,7 +123,7 @@ where
     H: Handoff + CanReceive<T>,
 {
     type Item = T;
-    type Build<'i> = PushHandoff<'i, H, T>;
+    type Build<'a, 'i> = PushHandoff<'i, H, T>;
 }
 impl<H, T> Push for BuilderHandoffPush<H, T>
 where
@@ -110,10 +137,10 @@ where
         assert!(old_val.is_none());
     }
 
-    fn build<'a>(
+    fn build<'a, 'i>(
         &'a mut self,
-        input: <Self::OutputHandoffs as HandoffList>::SendCtx<'a>,
-    ) -> Self::Build<'a> {
+        input: <Self::OutputHandoffs as HandoffList>::SendCtx<'i>,
+    ) -> Self::Build<'a, 'i> {
         let tl!(handoff) = input;
         PushHandoff::new(handoff)
     }

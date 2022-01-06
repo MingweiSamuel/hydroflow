@@ -11,7 +11,7 @@ mod for_each_push;
 mod hydroflow_builder;
 mod map_pull;
 mod map_push;
-mod subgraph_build;
+mod pivot;
 mod tee_push;
 
 pub use chain_pull::ChainPull;
@@ -21,8 +21,7 @@ pub use for_each_push::ForEachPush;
 pub use hydroflow_builder::HydroflowBuilder;
 pub use map_pull::MapPull;
 pub use map_push::MapPush;
-pub use subgraph_build::Pivot;
-pub use subgraph_build::PivotBuild;
+pub use pivot::{Pivot, PivotBuild};
 pub use tee_push::TeePush;
 
 use crate::compiled::Pusherator;
@@ -107,7 +106,7 @@ pub trait Pull: PullBase {
 /// Helper, see [`PullBase`] for why this exists, and [`Push`] for where this is used.
 pub trait PushBase {
     type Item;
-    type Build<'i>: Pusherator<Item = Self::Item>;
+    type Build<'a, 'i>: Pusherator<Item = Self::Item>;
 }
 /// Helper trait for building the push half of a subgraph.
 ///
@@ -124,10 +123,10 @@ pub trait Push: PushBase {
 
     fn init(&mut self, output_ports: <Self::OutputHandoffs as HandoffList>::OutputPort);
 
-    fn build<'a>(
+    fn build<'a, 'i>(
         &'a mut self,
-        input: <Self::OutputHandoffs as HandoffList>::SendCtx<'a>,
-    ) -> Self::Build<'a>;
+        input: <Self::OutputHandoffs as HandoffList>::SendCtx<'i>,
+    ) -> Self::Build<'a, 'i>;
 }
 
 /// The surface API for the push half of the subgraph.

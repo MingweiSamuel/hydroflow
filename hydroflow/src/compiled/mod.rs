@@ -2,11 +2,11 @@ pub mod filter;
 pub mod flat_map;
 pub mod for_each;
 pub mod group_by;
-pub mod push_handoff;
 pub mod map;
 pub mod partition;
 pub mod pivot;
 pub mod pull;
+pub mod push_handoff;
 pub mod tee;
 
 use std::marker::PhantomData;
@@ -67,10 +67,10 @@ pub trait PusheratorBuild {
         self.build(for_each::ForEach::new(f))
     }
 
-    fn handoff<'a, H>(
+    fn handoff<H>(
         self,
-        handoff: &'a mut crate::scheduled::ctx::SendCtx<H>,
-    ) -> Self::Output<push_handoff::PushHandoff<'a, H, Self::Item>>
+        handoff: &mut crate::scheduled::ctx::SendCtx<H>,
+    ) -> Self::Output<push_handoff::PushHandoff<'_, H, Self::Item>>
     where
         Self: Sized,
         H: crate::scheduled::handoff::Handoff + crate::scheduled::handoff::CanReceive<Self::Item>,

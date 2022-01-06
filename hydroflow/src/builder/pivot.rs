@@ -30,11 +30,11 @@ where
         self.o.init(outupt_ports);
     }
 
-    pub fn run<'a>(
-        &'a mut self,
+    pub fn run(
+        &mut self,
         _context: &Context<'_>,
-        recv_ctx: <I::InputHandoffs as HandoffList>::RecvCtx<'a>,
-        send_ctx: <O::OutputHandoffs as HandoffList>::SendCtx<'a>,
+        recv_ctx: <I::InputHandoffs as HandoffList>::RecvCtx<'_>,
+        send_ctx: <O::OutputHandoffs as HandoffList>::SendCtx<'_>,
     ) {
         let mut out = self.o.build(send_ctx);
         for x in self.i.build(recv_ctx) {

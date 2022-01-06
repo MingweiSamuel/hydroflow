@@ -29,11 +29,11 @@ where
 }
 
 #[allow(type_alias_bounds)]
-type Build<'i, I, F, B, U>
+type Build<'a, 'i, I, F, B, U>
 where
     I: Push,
     U: IntoIterator<Item = I::Item>,
-= FlatMap<B, U, impl 'i + FnMut(B) -> U, I::Build<'i>>;
+= FlatMap<B, U, impl 'a + FnMut(B) -> U, I::Build<'a, 'i>>;
 
 impl<I, F, B, U> PushBase for FlatMapPush<I, F, B>
 where
@@ -42,7 +42,7 @@ where
     U: IntoIterator<Item = I::Item>,
 {
     type Item = B;
-    type Build<'i> = Build<'i, I, F, B, U>;
+    type Build<'a, 'i> = Build<'a, 'i, I, F, B, U>;
 }
 impl<I, F, B, U> Push for FlatMapPush<I, F, B>
 where
@@ -56,10 +56,10 @@ where
         self.push.init(output_ports)
     }
 
-    fn build<'a>(
+    fn build<'a, 'i>(
         &'a mut self,
-        input: <Self::OutputHandoffs as HandoffList>::SendCtx<'a>,
-    ) -> Self::Build<'a> {
+        input: <Self::OutputHandoffs as HandoffList>::SendCtx<'i>,
+    ) -> Self::Build<'a, 'i> {
         FlatMap::new(|x| (self.func)(x), self.push.build(input))
     }
 }

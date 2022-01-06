@@ -32,8 +32,6 @@ where
     }
 }
 
-
-
 pub trait SplitPrefix<U>: TypeList
 where
     U: TypeList,
@@ -44,7 +42,7 @@ where
 impl<X, T, U> SplitPrefix<(X, U)> for (X, T)
 where
     U: TypeList,
-    T: SplitPrefix<U>
+    T: SplitPrefix<U>,
 {
     type Suffix = <T as SplitPrefix<U>>::Suffix;
     fn split(self) -> ((X, U), Self::Suffix) {
@@ -62,7 +60,6 @@ where
         ((), self)
     }
 }
-
 
 pub trait Split<U, V>: TypeList
 where
@@ -94,7 +91,7 @@ where
 
 #[cfg(test)]
 mod test {
-    use crate::{tt, tl};
+    use crate::{tl, tt};
 
     use super::*;
 
@@ -106,5 +103,3 @@ mod test {
     #[allow(dead_code)]
     const _: MySuffix = tl!(0_u32, 0_u64);
 }
-
-

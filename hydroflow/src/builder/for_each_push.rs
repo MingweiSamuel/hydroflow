@@ -26,13 +26,13 @@ where
 }
 
 #[allow(type_alias_bounds)]
-type Build<'i, F, T> = ForEach<T, impl 'i + FnMut(T)>;
+type Build<'a, F, T> = ForEach<T, impl 'a + FnMut(T)>;
 impl<F, T> PushBase for ForEachPush<F, T>
 where
     F: FnMut(T),
 {
     type Item = T;
-    type Build<'i> = Build<'i, F, T>;
+    type Build<'a, 'i> = Build<'a, F, T>;
 }
 impl<F, T> Push for ForEachPush<F, T>
 where
@@ -42,10 +42,10 @@ where
 
     fn init(&mut self, _output_ports: <Self::OutputHandoffs as HandoffList>::OutputPort) {}
 
-    fn build<'a>(
+    fn build<'a, 'i>(
         &'a mut self,
-        _input: <Self::OutputHandoffs as HandoffList>::SendCtx<'a>,
-    ) -> Self::Build<'a> {
+        _input: <Self::OutputHandoffs as HandoffList>::SendCtx<'i>,
+    ) -> Self::Build<'a, 'i> {
         ForEach::new(|x| (self.func)(x))
     }
 }

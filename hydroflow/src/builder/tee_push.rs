@@ -31,7 +31,7 @@ where
     A::Item: Clone,
 {
     type Item = A::Item;
-    type Build<'i> = Tee<A::Item, A::Build<'i>, B::Build<'i>>;
+    type Build<'a, 'i> = Tee<A::Item, A::Build<'a, 'i>, B::Build<'a, 'i>>;
 }
 impl<A, B> Push for TeePush<A, B>
 where
@@ -61,10 +61,10 @@ where
         self.push_b.init(output_ports_b);
     }
 
-    fn build<'a>(
+    fn build<'a, 'i>(
         &'a mut self,
-        input: <Self::OutputHandoffs as HandoffList>::SendCtx<'a>,
-    ) -> Self::Build<'a> {
+        input: <Self::OutputHandoffs as HandoffList>::SendCtx<'i>,
+    ) -> Self::Build<'a, 'i> {
         let (input_a, input_b) = input.split();
         let iter_a = self.push_a.build(input_a);
         let iter_b = self.push_b.build(input_b);
