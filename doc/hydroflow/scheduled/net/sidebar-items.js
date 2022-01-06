@@ -1,1 +1,1 @@
-initSidebarItems({"enum":[["Message",""]]});
+initSidebarItems({"mod":[["network_vertex",""]],"struct":[["Message",""]]});
