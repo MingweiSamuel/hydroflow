@@ -1,6 +1,6 @@
 window.BENCHMARK_DATA = 
 {
-  "lastUpdate": 1641354472340,
+  "lastUpdate": 1641440906828,
   "repoUrl": "https://github.com/hydro-project/hydroflow",
   "entries": {
     "Benchmark": [
@@ -6192,6 +6192,82 @@ window.BENCHMARK_DATA =
             "name": "reachability/hydroflow",
             "value": 2702701,
             "range": "± 1846",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Justin Jaffray",
+            "username": "justinj",
+            "email": "justin.jaffray@gmail.com"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "1b5dcb5953221e0224f3fac9880650f0715915a8",
+          "message": "Add more primitives to construct more complex graphs (#34)\n\nThis commit introduces some tools for more complex topologies and add a test\r\nthat has multiple graphs coordinating. I don't really like how much boilerplate\r\nis involved in the setup of this graph but I think it's a good starting point\r\nto figure out what these abstractions should look like.",
+          "timestamp": "2022-01-06T01:16:31Z",
+          "url": "https://github.com/hydro-project/hydroflow/commit/1b5dcb5953221e0224f3fac9880650f0715915a8"
+        },
+        "date": 1641440906822,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "arithmetic/hydroflow/compiled",
+            "value": 409811,
+            "range": "± 17626",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/hydroflow",
+            "value": 206455511,
+            "range": "± 5310018",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/scheduled",
+            "value": 191696786,
+            "range": "± 6061021",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow",
+            "value": 8140710,
+            "range": "± 282079",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow_builder",
+            "value": 45125612,
+            "range": "± 2012638",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow",
+            "value": 52561301,
+            "range": "± 2209727",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow/compiled",
+            "value": 15472047,
+            "range": "± 485907",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/scheduled",
+            "value": 3118163,
+            "range": "± 70672",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow",
+            "value": 3114362,
+            "range": "± 59736",
             "unit": "ns/iter"
           }
         ]
