@@ -41,6 +41,11 @@ where
     A::OutputHandoffs: Extend<B::OutputHandoffs>,
     // The `OutputHandoffs` for chaining (merging two push branches) is just the concatenation of each of their `OutputHandoffs`.
     <A::OutputHandoffs as Extend<B::OutputHandoffs>>::Output: HandoffList,
+    // Split trait to split the concatenation back into the two halves. But for the `OutputPort` list.
+    <<A::OutputHandoffs as Extend<B::OutputHandoffs>>::Output as HandoffList>::OutputPort: Split<
+        <A::OutputHandoffs as HandoffList>::OutputPort,
+        <B::OutputHandoffs as HandoffList>::OutputPort,
+    >,
     // Split trait to split the concatenation back into the two halves. But for the `SendCtx` list rather than the original `HandoffList`.
     for<'a> <<A::OutputHandoffs as Extend<B::OutputHandoffs>>::Output as HandoffList>::SendCtx<'a>:
         Split<
@@ -51,7 +56,9 @@ where
     type OutputHandoffs = <A::OutputHandoffs as Extend<B::OutputHandoffs>>::Output;
 
     fn init(&mut self, output_ports: <Self::OutputHandoffs as HandoffList>::OutputPort) {
-        self.push.init(output_ports)
+        let (output_ports_a, output_ports_b) = output_ports.split();
+        self.push_a.init(output_ports_a);
+        self.push_b.init(output_ports_b);
     }
 
     fn build<'a>(

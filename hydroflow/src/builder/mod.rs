@@ -4,14 +4,10 @@
 //! 3. Connect up handoffs after subgraphs have been created.
 //! 4. RUN CODE. (or produce something which runs).
 
-pub mod iterator_factory;
-
 mod chain_pull;
 mod flat_map_pull;
 mod flat_map_push;
 mod for_each_push;
-mod handoff_pull;
-mod handoff_push;
 mod hydroflow_builder;
 mod map_pull;
 mod map_push;
@@ -22,12 +18,11 @@ pub use chain_pull::ChainPull;
 pub use flat_map_pull::FlatMapPull;
 pub use flat_map_push::FlatMapPush;
 pub use for_each_push::ForEachPush;
-pub use handoff_pull::HandoffPull;
-pub use handoff_push::HandoffPush;
 pub use hydroflow_builder::HydroflowBuilder;
 pub use map_pull::MapPull;
 pub use map_push::MapPush;
-pub use subgraph_build::SubgraphBuild;
+pub use subgraph_build::Pivot;
+pub use subgraph_build::PivotBuild;
 pub use tee_push::TeePush;
 
 use crate::compiled::Pusherator;
@@ -100,6 +95,13 @@ pub trait Pull: PullBase {
     // {
     //     FlatMapPull::new(self, std::convert::identity)
     // }
+
+    fn pivot(self) -> PivotBuild<Self>
+    where
+        Self: Sized,
+    {
+        PivotBuild::new(self)
+    }
 }
 
 /// Helper, see [`PullBase`] for why this exists, and [`Push`] for where this is used.
@@ -132,7 +134,7 @@ pub trait Push: PushBase {
 pub trait PushBuild {
     type Item;
 
-    type Output<O>: PushBuild
+    type Output<O>
     where
         O: Push<Item = Self::Item>;
     fn build<O>(self, input: O) -> Self::Output<O>
@@ -174,6 +176,12 @@ pub trait PushBuild {
         A::OutputHandoffs: Extend<B::OutputHandoffs>,
         // The `OutputHandoffs` for chaining (merging two push branches) is just the concatenation of each of their `OutputHandoffs`.
         <A::OutputHandoffs as Extend<B::OutputHandoffs>>::Output: HandoffList,
+        // Split trait to split the concatenation back into the two halves. But for the `OutputPort` list.
+        <<A::OutputHandoffs as Extend<B::OutputHandoffs>>::Output as HandoffList>::OutputPort:
+            Split<
+                <A::OutputHandoffs as HandoffList>::OutputPort,
+                <B::OutputHandoffs as HandoffList>::OutputPort,
+            >,
         // Split trait to split the concatenation back into the two halves. But for the `SendCtx` list rather than the original `HandoffList`.
         for<'a> <<A::OutputHandoffs as Extend<B::OutputHandoffs>>::Output as HandoffList>::SendCtx<'a>:
             Split<
@@ -184,12 +192,15 @@ pub trait PushBuild {
         self.build(tee_push::TeePush::new(a, b))
     }
 
-    fn handoff<H>(self) -> Self::Output<HandoffPush<H, Self::Item>>
+    fn handoff<H>(
+        self,
+        output_port: hydroflow_builder::BuilderHandoffPush<H, Self::Item>,
+    ) -> Self::Output<hydroflow_builder::BuilderHandoffPush<H, Self::Item>>
     where
         Self: Sized,
         H: Handoff + CanReceive<Self::Item>,
     {
-        self.build(HandoffPush::new())
+        self.build(output_port)
     }
 
     fn for_each<F>(self, func: F) -> Self::Output<ForEachPush<F, Self::Item>>
@@ -201,38 +212,38 @@ pub trait PushBuild {
     }
 }
 
-#[cfg(test)]
-mod test {
-    use super::*;
+// #[cfg(test)]
+// mod test {
+//     use super::*;
 
-    use ref_cast::RefCast;
+//     use ref_cast::RefCast;
 
-    use crate::scheduled::handoff::VecHandoff;
-    use crate::tl;
+//     use crate::scheduled::handoff::VecHandoff;
+//     use crate::tl;
 
-    #[test]
-    fn test_chain() {
-        use std::cell::RefCell;
-        use std::rc::Rc;
+//     #[test]
+//     fn test_chain() {
+//         use std::cell::RefCell;
+//         use std::rc::Rc;
 
-        type H = VecHandoff<usize>;
-        let pull_a = <HandoffPull<H>>::new().flat_map(|x| x);
-        let pull_b = <HandoffPull<H>>::new().flat_map(|x| x);
+//         type H = VecHandoff<usize>;
+//         let pull_a = <HandoffPull<H>>::new().flat_map(|x| x);
+//         let pull_b = <HandoffPull<H>>::new().flat_map(|x| x);
 
-        let mut pull = pull_a.map(|x| x * x).chain(pull_b);
+//         let mut pull = pull_a.map(|x| x * x).chain(pull_b);
 
-        let handoff_a = VecHandoff {
-            deque: Rc::new(RefCell::new([1, 2, 3, 4].into_iter().collect())),
-        };
-        let handoff_b = VecHandoff {
-            deque: Rc::new(RefCell::new([10, 20, 30, 40].into_iter().collect())),
-        };
+//         let handoff_a = VecHandoff {
+//             deque: Rc::new(RefCell::new([1, 2, 3, 4].into_iter().collect())),
+//         };
+//         let handoff_b = VecHandoff {
+//             deque: Rc::new(RefCell::new([10, 20, 30, 40].into_iter().collect())),
+//         };
 
-        let iter = pull.build(tl!(
-            RefCast::ref_cast(&handoff_a),
-            RefCast::ref_cast(&handoff_b)
-        ));
-        let output = iter.collect::<Vec<_>>();
-        assert_eq!(&[1, 4, 9, 16, 10, 20, 30, 40], &*output);
-    }
-}
+//         let iter = pull.build(tl!(
+//             RefCast::ref_cast(&handoff_a),
+//             RefCast::ref_cast(&handoff_b)
+//         ));
+//         let output = iter.collect::<Vec<_>>();
+//         assert_eq!(&[1, 4, 9, 16, 10, 20, 30, 40], &*output);
+//     }
+// }

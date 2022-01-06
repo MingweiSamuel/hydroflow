@@ -1,13 +1,13 @@
-use super::handoff_pull::HandoffPull;
 use super::{Pull, PullBase, Push, PushBase};
 
 use std::cell::Cell;
 use std::marker::PhantomData;
 use std::rc::Rc;
 
+use crate::compiled::push_handoff::PushHandoff;
 use crate::scheduled::ctx::{InputPort, OutputPort};
 use crate::scheduled::graph::Hydroflow;
-use crate::scheduled::handoff::{Handoff, HandoffList};
+use crate::scheduled::handoff::{CanReceive, Handoff, HandoffList};
 use crate::{tl, tt};
 
 #[derive(Default)]
@@ -17,9 +17,9 @@ pub struct HydroflowBuilder {
                                                               // inputs: HashMap<&'static str, Box<dyn Any>>,
 }
 impl HydroflowBuilder {
-    pub fn make_handoff<H>(&mut self) -> (BuilderHandoffPush<H>, BuilderHandoffPull<H>)
+    pub fn make_handoff<H, T>(&mut self) -> (BuilderHandoffPush<H, T>, BuilderHandoffPull<H>)
     where
-        H: Handoff,
+        H: Handoff + CanReceive<T>,
     {
         let push = BuilderHandoffPush {
             port: Default::default(),
@@ -27,7 +27,6 @@ impl HydroflowBuilder {
         };
         let pull = BuilderHandoffPull {
             port: Default::default(),
-            _phantom: PhantomData,
         };
         let push_port = Rc::clone(&push.port);
         let pull_port = Rc::clone(&pull.port);
@@ -55,7 +54,6 @@ where
     H: Handoff,
 {
     port: Rc<Cell<Option<InputPort<H>>>>,
-    _phantom: PhantomData<*const H>,
 }
 impl<H> PullBase for BuilderHandoffPull<H>
 where
@@ -86,10 +84,37 @@ where
     }
 }
 
-pub struct BuilderHandoffPush<H>
+pub struct BuilderHandoffPush<H, T>
 where
-    H: Handoff,
+    H: Handoff + CanReceive<T>,
 {
     port: Rc<Cell<Option<OutputPort<H>>>>,
-    _phantom: PhantomData<*const H>,
+    _phantom: PhantomData<fn(T)>,
+}
+impl<H, T> PushBase for BuilderHandoffPush<H, T>
+where
+    H: Handoff + CanReceive<T>,
+{
+    type Item = T;
+    type Build<'i> = PushHandoff<'i, H, T>;
+}
+impl<H, T> Push for BuilderHandoffPush<H, T>
+where
+    H: Handoff + CanReceive<T>,
+{
+    type OutputHandoffs = tt!(H);
+
+    fn init(&mut self, output_ports: <Self::OutputHandoffs as HandoffList>::OutputPort) {
+        let tl!(output_port) = output_ports;
+        let old_val = self.port.replace(Some(output_port));
+        assert!(old_val.is_none());
+    }
+
+    fn build<'a>(
+        &'a mut self,
+        input: <Self::OutputHandoffs as HandoffList>::SendCtx<'a>,
+    ) -> Self::Build<'a> {
+        let tl!(handoff) = input;
+        PushHandoff::new(handoff)
+    }
 }
