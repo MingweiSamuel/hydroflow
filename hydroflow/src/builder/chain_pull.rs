@@ -1,7 +1,7 @@
 use super::{Pull, PullBase};
 
-use crate::scheduled::type_list::{Extend, Split};
 use crate::scheduled::handoff::HandoffList;
+use crate::scheduled::type_list::{Extend, Split};
 
 pub struct ChainPull<A, B>
 where
@@ -36,6 +36,11 @@ where
     A::InputHandoffs: Extend<B::InputHandoffs>,
     // The `InputHandoffs` for chaining (merging two pull branches) is just the concatenation of each of their `InputHandoffs`.
     <A::InputHandoffs as Extend<B::InputHandoffs>>::Output: HandoffList,
+    // Split trait to split the concatenation back into the two halves. But for the `InputPort` list.
+    <<A::InputHandoffs as Extend<B::InputHandoffs>>::Output as HandoffList>::InputPort: Split<
+        <A::InputHandoffs as HandoffList>::InputPort,
+        <B::InputHandoffs as HandoffList>::InputPort,
+    >,
     // Split trait to split the concatenation back into the two halves. But for the `RecvCtx` list rather than the original `HandoffList`.
     for<'a> <<A::InputHandoffs as Extend<B::InputHandoffs>>::Output as HandoffList>::RecvCtx<'a>:
         Split<
@@ -44,6 +49,12 @@ where
         >,
 {
     type InputHandoffs = <A::InputHandoffs as Extend<B::InputHandoffs>>::Output;
+
+    fn init(&mut self, input_ports: <Self::InputHandoffs as HandoffList>::InputPort) {
+        let (input_ports_a, input_ports_b) = input_ports.split();
+        self.pull_a.init(input_ports_a);
+        self.pull_b.init(input_ports_b);
+    }
 
     fn build(
         &mut self,

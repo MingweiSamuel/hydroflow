@@ -43,7 +43,14 @@ where
 {
     type InputHandoffs = I::InputHandoffs;
 
-    fn build(&mut self, input: <Self::InputHandoffs as HandoffList>::RecvCtx<'_>) -> Self::Build<'_> {
+    fn init(&mut self, input_ports: <Self::InputHandoffs as HandoffList>::InputPort) {
+        self.pull.init(input_ports)
+    }
+
+    fn build(
+        &mut self,
+        input: <Self::InputHandoffs as HandoffList>::RecvCtx<'_>,
+    ) -> Self::Build<'_> {
         self.pull.build(input).flat_map(|x| (self.func)(x))
     }
 }
