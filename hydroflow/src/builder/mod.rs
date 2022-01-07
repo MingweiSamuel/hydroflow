@@ -16,8 +16,6 @@ mod map_pull;
 mod map_push;
 mod pivot;
 mod tee_push;
-// mod handoff_pull;
-// mod handoff_push;
 
 pub use chain_pull::ChainPull;
 pub use filter_pull::FilterPull;
@@ -31,8 +29,6 @@ pub use map_pull::MapPull;
 pub use map_push::MapPush;
 pub use pivot::{Pivot, PivotBuild};
 pub use tee_push::TeePush;
-// pub use handoff_pull::HandoffPull;
-// pub use handoff_push::HandoffPush;
 
 use std::hash::Hash;
 
