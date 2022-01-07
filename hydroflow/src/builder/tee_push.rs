@@ -1,8 +1,8 @@
 use super::{Push, PushBase};
 
 use crate::compiled::tee::Tee;
-use crate::scheduled::handoff::HandoffList;
-use crate::scheduled::type_list::{Extend, Split};
+use crate::scheduled::handoff::{HandoffList, HandoffListSplit};
+use crate::scheduled::type_list::Extend;
 
 pub struct TeePush<A, B>
 where
@@ -39,24 +39,17 @@ where
     B: Push<Item = A::Item>,
     A::Item: Clone,
     A::OutputHandoffs: Extend<B::OutputHandoffs>,
-    // The `OutputHandoffs` for chaining (merging two push branches) is just the concatenation of each of their `OutputHandoffs`.
-    <A::OutputHandoffs as Extend<B::OutputHandoffs>>::Output: HandoffList,
-    // Split trait to split the concatenation back into the two halves. But for the `OutputPort` list.
-    <<A::OutputHandoffs as Extend<B::OutputHandoffs>>::Output as HandoffList>::OutputPort: Split<
-        <A::OutputHandoffs as HandoffList>::OutputPort,
-        <B::OutputHandoffs as HandoffList>::OutputPort,
-    >,
-    // Split trait to split the concatenation back into the two halves. But for the `SendCtx` list rather than the original `HandoffList`.
-    for<'a> <<A::OutputHandoffs as Extend<B::OutputHandoffs>>::Output as HandoffList>::SendCtx<'a>:
-        Split<
-            <A::OutputHandoffs as HandoffList>::SendCtx<'a>,
-            <B::OutputHandoffs as HandoffList>::SendCtx<'a>,
-        >,
+    // Needed to un-concat the handoff lists.
+    <A::OutputHandoffs as Extend<B::OutputHandoffs>>::Output:
+        HandoffList + HandoffListSplit<A::OutputHandoffs, B::OutputHandoffs>,
 {
     type OutputHandoffs = <A::OutputHandoffs as Extend<B::OutputHandoffs>>::Output;
 
     fn init(&mut self, output_ports: <Self::OutputHandoffs as HandoffList>::OutputPort) {
-        let (output_ports_a, output_ports_b) = output_ports.split();
+        let (output_ports_a, output_ports_b) = <Self::OutputHandoffs as HandoffListSplit<
+            A::OutputHandoffs,
+            B::OutputHandoffs,
+        >>::split_output_port(output_ports);
         self.push_a.init(output_ports_a);
         self.push_b.init(output_ports_b);
     }
@@ -65,7 +58,10 @@ where
         &'a mut self,
         input: <Self::OutputHandoffs as HandoffList>::SendCtx<'i>,
     ) -> Self::Build<'a, 'i> {
-        let (input_a, input_b) = input.split();
+        let (input_a, input_b) = <Self::OutputHandoffs as HandoffListSplit<
+            A::OutputHandoffs,
+            B::OutputHandoffs,
+        >>::split_send_ctx(input);
         let iter_a = self.push_a.build(input_a);
         let iter_b = self.push_b.build(input_b);
         Tee::new(iter_a, iter_b)

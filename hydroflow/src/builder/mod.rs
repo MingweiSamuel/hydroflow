@@ -5,28 +5,40 @@
 //! 4. RUN CODE. (or produce something which runs).
 
 mod chain_pull;
+mod filter_pull;
 mod flat_map_pull;
 mod flat_map_push;
 mod for_each_push;
 mod hydroflow_builder;
+mod identity_push;
+mod join_pull;
 mod map_pull;
 mod map_push;
 mod pivot;
 mod tee_push;
+// mod handoff_pull;
+// mod handoff_push;
 
 pub use chain_pull::ChainPull;
+pub use filter_pull::FilterPull;
 pub use flat_map_pull::FlatMapPull;
 pub use flat_map_push::FlatMapPush;
 pub use for_each_push::ForEachPush;
 pub use hydroflow_builder::HydroflowBuilder;
+pub use identity_push::IdentityPushBuild;
+pub use join_pull::JoinPull;
 pub use map_pull::MapPull;
 pub use map_push::MapPush;
 pub use pivot::{Pivot, PivotBuild};
 pub use tee_push::TeePush;
+// pub use handoff_pull::HandoffPull;
+// pub use handoff_push::HandoffPush;
+
+use std::hash::Hash;
 
 use crate::compiled::Pusherator;
-use crate::scheduled::handoff::{CanReceive, Handoff, HandoffList};
-use crate::scheduled::type_list::{Extend, Split};
+use crate::scheduled::handoff::{CanReceive, Handoff, HandoffList, HandoffListSplit};
+use crate::scheduled::type_list::Extend;
 
 /// If this was directly on [`Pull`], the `Build<'i>` GAT would need an extra
 /// `where Self: 'i` bound to prevent a funny edge case when returning `Build<'i> = Self`.
@@ -61,12 +73,31 @@ pub trait Pull: PullBase {
         ChainPull::new(self, pull)
     }
 
+    fn join<I, K, VSelf, VI>(self, pull: I) -> JoinPull<Self, I, K, VSelf, VI>
+    where
+        Self: Sized + PullBase<Item = (K, VSelf)>,
+        I: Pull<Item = (K, VI)>,
+        K: 'static + Eq + Hash + Clone,
+        VSelf: 'static + Eq + Clone,
+        VI: 'static + Eq + Clone,
+    {
+        JoinPull::new(self, pull)
+    }
+
     fn map<F, B>(self, func: F) -> MapPull<Self, F>
     where
         Self: Sized,
         F: FnMut(Self::Item) -> B,
     {
         MapPull::new(self, func)
+    }
+
+    fn filter<F>(self, func: F) -> FilterPull<Self, F>
+    where
+        Self: Sized,
+        F: FnMut(&Self::Item) -> bool,
+    {
+        FilterPull::new(self, func)
     }
 
     fn flat_map<F, U>(self, func: F) -> FlatMapPull<Self, F>
@@ -173,20 +204,9 @@ pub trait PushBuild {
         B: Push<Item = Self::Item>,
         A::Item: Clone,
         A::OutputHandoffs: Extend<B::OutputHandoffs>,
-        // The `OutputHandoffs` for chaining (merging two push branches) is just the concatenation of each of their `OutputHandoffs`.
-        <A::OutputHandoffs as Extend<B::OutputHandoffs>>::Output: HandoffList,
-        // Split trait to split the concatenation back into the two halves. But for the `OutputPort` list.
-        <<A::OutputHandoffs as Extend<B::OutputHandoffs>>::Output as HandoffList>::OutputPort:
-            Split<
-                <A::OutputHandoffs as HandoffList>::OutputPort,
-                <B::OutputHandoffs as HandoffList>::OutputPort,
-            >,
-        // Split trait to split the concatenation back into the two halves. But for the `SendCtx` list rather than the original `HandoffList`.
-        for<'a> <<A::OutputHandoffs as Extend<B::OutputHandoffs>>::Output as HandoffList>::SendCtx<'a>:
-            Split<
-                <A::OutputHandoffs as HandoffList>::SendCtx<'a>,
-                <B::OutputHandoffs as HandoffList>::SendCtx<'a>,
-            >,
+        // Needed to un-concat the handoff lists.
+        <A::OutputHandoffs as Extend<B::OutputHandoffs>>::Output:
+            HandoffList + HandoffListSplit<A::OutputHandoffs, B::OutputHandoffs>,
     {
         self.build(tee_push::TeePush::new(a, b))
     }
@@ -209,6 +229,100 @@ pub trait PushBuild {
     {
         self.build(ForEachPush::new(func))
     }
+}
+
+#[test]
+fn test_covid() {
+    use crate::scheduled::handoff::VecHandoff;
+
+    type Pid = usize;
+    type Name = &'static str;
+    type Phone = &'static str;
+    type DateTime = usize;
+
+    const TRANSMISSIBLE_DURATION: usize = 14;
+
+    let mut build_ctx = HydroflowBuilder::default();
+
+    let (loop_send, loop_recv) = build_ctx.make_handoff::<VecHandoff<(Pid, DateTime)>, _>();
+    let (notifs_send, notifs_recv) = build_ctx.make_handoff::<VecHandoff<(Pid, DateTime)>, _>();
+
+    let (diagnosed_send, diagnosed) =
+        build_ctx.add_channel_input::<Option<(Pid, (DateTime, DateTime))>, VecHandoff<_>>();
+    let (contacts_send, contacts) =
+        build_ctx.add_channel_input::<Option<(Pid, Pid, DateTime)>, VecHandoff<_>>();
+    let (peoples_send, peoples) =
+        build_ctx.add_channel_input::<Option<(Pid, (Name, Phone))>, VecHandoff<_>>();
+
+    let exposed = loop_recv
+        .flat_map(std::convert::identity)
+        .map(|(pid, t)| (pid, (t, t + TRANSMISSIBLE_DURATION)))
+        .chain(diagnosed.flat_map(std::convert::identity));
+
+    build_ctx.add_subgraph(
+        contacts
+            .flat_map(std::convert::identity)
+            .flat_map(|(pid_a, pid_b, t)| [(pid_a, (pid_b, t)), (pid_b, (pid_a, t))])
+            .join(exposed)
+            .filter(|(_pid_a, (_pid_b, t_contact), (t_from, t_to))| {
+                (t_from..=t_to).contains(&t_contact)
+            })
+            .map(|(_pid_a, pid_b_t_contact, _t_from_to)| pid_b_t_contact)
+            .pivot()
+            .map(Some) // For handoff CanReceive.
+            .tee(notifs_send, loop_send),
+    );
+
+    build_ctx.add_subgraph(
+        notifs_recv
+            .flat_map(std::convert::identity)
+            .join(peoples.flat_map(std::convert::identity))
+            .pivot()
+            .for_each(|(_pid, exposure_time, (name, phone))| {
+                println!(
+                    "[{}] To {}: Possible Exposure at t = {}",
+                    name, phone, exposure_time
+                );
+            }),
+    );
+
+    let mut hydroflow = build_ctx.build();
+
+    {
+
+        peoples_send.give(Some((101, ("Mingwei S", "+1 650 555 7283"))));
+        peoples_send.give(Some((102, ("Justin J", "+1 519 555 3458"))));
+        peoples_send.give(Some((103, ("Mae M", "+1 912 555 9129"))));
+        peoples_send.flush();
+
+        contacts_send.give(Some((101, 102, 1031))); // Mingwei + Justin
+        contacts_send.give(Some((101, 201, 1027))); // Mingwei + Joe
+        contacts_send.flush();
+
+        let mae_diag_datetime = 1022;
+
+        diagnosed_send.give(Some((
+            103, // Mae
+            (
+                mae_diag_datetime,
+                mae_diag_datetime + TRANSMISSIBLE_DURATION,
+            ),
+        )));
+        diagnosed_send.flush();
+
+        hydroflow.tick();
+
+        contacts_send.give(Some((101, 103, mae_diag_datetime + 6))); // Mingwei + Mae
+        contacts_send.flush();
+
+        hydroflow.tick();
+    }
+
+    // Q: how does timely do loops
+
+    // Other options:
+    // - return tuple for chaining handoffs
+    // - grouping handoffs together?
 }
 
 // #[cfg(test)]

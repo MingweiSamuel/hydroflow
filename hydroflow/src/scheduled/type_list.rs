@@ -75,9 +75,9 @@ where
     V: TypeList,
 {
     fn split(self) -> ((X, U), V) {
-        let (x, u) = self;
-        let (t, v) = u.split();
-        ((x, t), v)
+        let (x, t) = self;
+        let (u, v) = t.split();
+        ((x, u), v)
     }
 }
 impl<T> Split<(), T> for T

@@ -1,14 +1,17 @@
 use super::pivot::Pivot;
-use super::{Pull, PullBase, Push, PushBase};
+use super::{IdentityPushBuild, Pull, PullBase, Push, PushBase};
 
 use std::cell::{Cell, RefCell};
 use std::marker::PhantomData;
 use std::rc::Rc;
+use std::sync::mpsc::SyncSender;
 
 use crate::compiled::push_handoff::PushHandoff;
 use crate::scheduled::ctx::{InputPort, OutputPort};
 use crate::scheduled::graph::Hydroflow;
+use crate::scheduled::graph_ext::GraphExt;
 use crate::scheduled::handoff::{CanReceive, Handoff, HandoffList};
+use crate::scheduled::input::Input;
 use crate::{tl, tt};
 
 #[derive(Default)]
@@ -67,12 +70,39 @@ impl HydroflowBuilder {
         *pivot_send.borrow_mut() = Some(pivot);
     }
 
+    pub fn add_channel_input<T, W>(&mut self) -> (Input<T, SyncSender<T>>, BuilderHandoffPull<W>)
+    where
+        T: 'static,
+        W: 'static + Handoff + CanReceive<T>,
+    {
+        let (input, output_port) = self.hydroflow.add_channel_input();
+
+        let pull = BuilderHandoffPull {
+            port: Default::default(),
+        };
+        let pull_port = Rc::clone(&pull.port);
+
+        self.handoff_connectors.push(Box::new(move |hydroflow| {
+            if let Some(input_port) = pull_port.take() {
+                hydroflow.add_edge(output_port, input_port);
+            } else {
+                panic!("Channel input was never connected!!"); // TODO(mingwei): more informative error messages.
+            }
+        }));
+
+        (input, pull)
+    }
+
     pub fn build(mut self) -> Hydroflow {
         for handoff_connector in self.handoff_connectors {
             // TODO(mingwei): be more principled with this.
             (handoff_connector)(&mut self.hydroflow);
         }
         self.hydroflow
+    }
+
+    pub fn start_tee<T>(&self) -> IdentityPushBuild<T> {
+        IdentityPushBuild::new()
     }
 }
 

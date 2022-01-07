@@ -142,3 +142,91 @@ impl HandoffList for () {
     ) -> Self::SendCtx<'a> {
     }
 }
+
+pub trait HandoffListSplit<A, B>: HandoffList
+where
+    A: HandoffList,
+    B: HandoffList,
+{
+    fn split_input_port(input_port: Self::InputPort) -> (A::InputPort, B::InputPort);
+
+    #[allow(clippy::needless_lifetimes)] // clippy false positive
+    fn split_recv_ctx<'a>(recv_ctx: Self::RecvCtx<'a>) -> (A::RecvCtx<'a>, B::RecvCtx<'a>);
+
+    fn split_output_port(output_port: Self::OutputPort) -> (A::OutputPort, B::OutputPort);
+
+    #[allow(clippy::needless_lifetimes)] // clippy false positive
+    fn split_send_ctx<'a>(recv_ctx: Self::SendCtx<'a>) -> (A::SendCtx<'a>, B::SendCtx<'a>);
+}
+
+impl<X, T, U, V> HandoffListSplit<(X, U), V> for (X, T)
+where
+    X: Handoff,
+    T: HandoffListSplit<U, V>,
+    U: HandoffList,
+    V: HandoffList,
+{
+    fn split_input_port(
+        input_port: Self::InputPort,
+    ) -> (<(X, U) as HandoffList>::InputPort, V::InputPort) {
+        let (x, t) = input_port;
+        let (u, v) = <T as HandoffListSplit<U, V>>::split_input_port(t);
+        ((x, u), v)
+    }
+
+    #[allow(clippy::needless_lifetimes)]
+    fn split_recv_ctx<'a>(
+        recv_ctx: Self::RecvCtx<'a>,
+    ) -> (<(X, U) as HandoffList>::RecvCtx<'a>, V::RecvCtx<'a>) {
+        let (x, t) = recv_ctx;
+        let (u, v) = <T as HandoffListSplit<U, V>>::split_recv_ctx(t);
+        ((x, u), v)
+    }
+
+    fn split_output_port(
+        output_port: Self::OutputPort,
+    ) -> (<(X, U) as HandoffList>::OutputPort, V::OutputPort) {
+        let (x, t) = output_port;
+        let (u, v) = <T as HandoffListSplit<U, V>>::split_output_port(t);
+        ((x, u), v)
+    }
+
+    #[allow(clippy::needless_lifetimes)]
+    fn split_send_ctx<'a>(
+        send_ctx: Self::SendCtx<'a>,
+    ) -> (<(X, U) as HandoffList>::SendCtx<'a>, V::SendCtx<'a>) {
+        let (x, t) = send_ctx;
+        let (u, v) = <T as HandoffListSplit<U, V>>::split_send_ctx(t);
+        ((x, u), v)
+    }
+}
+impl<T> HandoffListSplit<(), T> for T
+where
+    T: HandoffList,
+{
+    fn split_input_port(
+        input_port: Self::InputPort,
+    ) -> (<() as HandoffList>::InputPort, T::InputPort) {
+        ((), input_port)
+    }
+
+    #[allow(clippy::needless_lifetimes)]
+    fn split_recv_ctx<'a>(
+        recv_ctx: Self::RecvCtx<'a>,
+    ) -> (<() as HandoffList>::RecvCtx<'a>, T::RecvCtx<'a>) {
+        ((), recv_ctx)
+    }
+
+    fn split_output_port(
+        output_port: Self::OutputPort,
+    ) -> (<() as HandoffList>::OutputPort, T::OutputPort) {
+        ((), output_port)
+    }
+
+    #[allow(clippy::needless_lifetimes)]
+    fn split_send_ctx<'a>(
+        send_ctx: Self::SendCtx<'a>,
+    ) -> (<() as HandoffList>::SendCtx<'a>, T::SendCtx<'a>) {
+        ((), send_ctx)
+    }
+}

@@ -13,7 +13,7 @@ fn main() {
             .chain(build_ctx.make_input::<(Pid, (DateTime, DateTime))>("diagnosed_recv"));
 
         let subgraph_main = build_ctx
-            .make_input::<(Pid, DateTime)>("contacts_recv")
+            .make_input::<(Pid, Pid, DateTime)>("contacts_recv")
             .flat_map(|(pid_a, pid_b, t)| [(pid_a, (pid_b, t)), (pid_b, (pid_a, t))])
             .join(exposed, &mut build_ctx)
             .filter(|(_pid_a, (pid_b, t_contact), (t_from, t_to))| (t_from..=t_to).contains(&t_contact))
@@ -23,7 +23,6 @@ fn main() {
             .push_to(notifs_send)
 
         let subgraph_notifs = notifs_recv
-            .handoff(&mut build_ctx)
             .join(build_ctx.make_input("peoples_recv"))
             .pusherator()
             .for_each(|(_pid, (name, phone), exposure)| {
