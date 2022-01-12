@@ -1,1 +1,1 @@
-initSidebarItems({"type":[["OutboundMessage",""],["ReceiverId",""]]});
+initSidebarItems({"type":[["Address",""]]});
