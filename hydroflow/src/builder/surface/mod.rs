@@ -9,7 +9,10 @@ pub mod pull_chain;
 pub mod pull_handoff;
 pub mod pull_join;
 
+pub mod push_for_each;
 pub mod push_handoff;
+pub mod push_pivot;
+pub mod push_start;
 pub mod push_tee;
 
 use std::hash::Hash;
@@ -40,7 +43,7 @@ pub trait BaseSurface {
         flat_map::FlatMapSurface::new(self, func)
     }
 
-    fn filter<Func, Out>(self, func: Func) -> filter::FilterSurface<Self, Func>
+    fn filter<Func>(self, func: Func) -> filter::FilterSurface<Self, Func>
     where
         Self: Sized,
         Func: FnMut(&Self::ItemOut) -> bool,
@@ -78,10 +81,18 @@ pub trait PullSurface: BaseSurface {
     {
         pull_join::JoinPullSurface::new(self, other)
     }
+
+    fn pivot(self) -> push_pivot::PivotPushSurface<Self>
+    where
+        Self: Sized,
+    {
+        push_pivot::PivotPushSurface::new(self)
+    }
 }
 
 pub trait PushSurface: BaseSurface {
-    type Output<Next>: PushSurfaceReversed
+    type Output<Next>
+    // PushSurfaceReversed
     where
         Next: PushSurfaceReversed<ItemIn = Self::ItemOut>;
 
@@ -105,6 +116,18 @@ pub trait PushSurface: BaseSurface {
             HandoffList + HandoffListSplit<NextA::OutputHandoffs, Suffix = NextB::OutputHandoffs>,
     {
         let next = push_tee::TeePushSurfaceReversed::new(next_a, next_b);
+        self.reverse(next)
+    }
+
+    fn for_each<Func>(
+        self,
+        func: Func,
+    ) -> Self::Output<push_for_each::ForEachPushSurfaceReversed<Func, Self::ItemOut>>
+    where
+        Self: Sized,
+        Func: FnMut(Self::ItemOut),
+    {
+        let next = push_for_each::ForEachPushSurfaceReversed::new(func);
         self.reverse(next)
     }
 }

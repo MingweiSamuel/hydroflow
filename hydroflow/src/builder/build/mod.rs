@@ -7,6 +7,7 @@ pub mod pull_map;
 
 pub mod push_filter;
 pub mod push_flat_map;
+pub mod push_for_each;
 pub mod push_handoff;
 pub mod push_map;
 pub mod push_tee;
