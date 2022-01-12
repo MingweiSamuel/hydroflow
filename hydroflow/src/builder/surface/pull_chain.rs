@@ -1,4 +1,4 @@
-use super::PullSurface;
+use super::{BaseSurface, PullSurface};
 
 use crate::builder::build::pull_chain::ChainPullBuild;
 use crate::builder::connect::BinaryPullConnect;
@@ -23,6 +23,15 @@ where
     }
 }
 
+impl<PrevA, PrevB> BaseSurface for ChainPullSurface<PrevA, PrevB>
+where
+    PrevA: PullSurface,
+    PrevB: PullSurface<ItemOut = PrevA::ItemOut>,
+    PrevA::InputHandoffs: Extend<PrevB::InputHandoffs>,
+{
+    type ItemOut = PrevA::ItemOut;
+}
+
 impl<PrevA, PrevB> PullSurface for ChainPullSurface<PrevA, PrevB>
 where
     PrevA: PullSurface,
@@ -32,8 +41,6 @@ where
         HandoffList + HandoffListSplit<PrevA::InputHandoffs, Suffix = PrevB::InputHandoffs>,
 {
     type InputHandoffs = <PrevA::InputHandoffs as Extend<PrevB::InputHandoffs>>::Extended;
-
-    type ItemOut = PrevA::ItemOut;
 
     type Connect = BinaryPullConnect<PrevA::Connect, PrevB::Connect>;
     type Build = ChainPullBuild<PrevA::Build, PrevB::Build>;

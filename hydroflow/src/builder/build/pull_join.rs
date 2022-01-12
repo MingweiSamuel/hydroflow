@@ -6,27 +6,27 @@ use crate::compiled::pull::{JoinState, SymmetricHashJoin};
 use crate::scheduled::handoff::{HandoffList, HandoffListSplit};
 use crate::scheduled::type_list::Extend;
 
-pub struct JoinPullBuild<ItemA, ItemB, Key, ValA, ValB>
+pub struct JoinPullBuild<PrevA, PrevB, Key, ValA, ValB>
 where
-    ItemA: PullBuild<ItemOut = (Key, ValA)>,
-    ItemB: PullBuild<ItemOut = (Key, ValB)>,
+    PrevA: PullBuild<ItemOut = (Key, ValA)>,
+    PrevB: PullBuild<ItemOut = (Key, ValB)>,
     Key: 'static + Eq + Hash + Clone,
     ValA: 'static + Eq + Clone,
     ValB: 'static + Eq + Clone,
 {
-    prev_a: ItemA,
-    prev_b: ItemB,
+    prev_a: PrevA,
+    prev_b: PrevB,
     state: JoinState<Key, ValA, ValB>,
 }
-impl<ItemA, ItemB, Key, ValA, ValB> JoinPullBuild<ItemA, ItemB, Key, ValA, ValB>
+impl<PrevA, PrevB, Key, ValA, ValB> JoinPullBuild<PrevA, PrevB, Key, ValA, ValB>
 where
-    ItemA: PullBuild<ItemOut = (Key, ValA)>,
-    ItemB: PullBuild<ItemOut = (Key, ValB)>,
+    PrevA: PullBuild<ItemOut = (Key, ValA)>,
+    PrevB: PullBuild<ItemOut = (Key, ValB)>,
     Key: 'static + Eq + Hash + Clone,
     ValA: 'static + Eq + Clone,
     ValB: 'static + Eq + Clone,
 {
-    pub fn new(prev_a: ItemA, prev_b: ItemB) -> Self {
+    pub fn new(prev_a: PrevA, prev_b: PrevB) -> Self {
         Self {
             prev_a,
             prev_b,
@@ -35,10 +35,10 @@ where
     }
 }
 
-impl<ItemA, ItemB, Key, ValA, ValB> PullBuildBase for JoinPullBuild<ItemA, ItemB, Key, ValA, ValB>
+impl<PrevA, PrevB, Key, ValA, ValB> PullBuildBase for JoinPullBuild<PrevA, PrevB, Key, ValA, ValB>
 where
-    ItemA: PullBuild<ItemOut = (Key, ValA)>,
-    ItemB: PullBuild<ItemOut = (Key, ValB)>,
+    PrevA: PullBuild<ItemOut = (Key, ValA)>,
+    PrevB: PullBuild<ItemOut = (Key, ValB)>,
     Key: 'static + Eq + Hash + Clone,
     ValA: 'static + Eq + Clone,
     ValB: 'static + Eq + Clone,
@@ -47,26 +47,26 @@ where
     type Build<'slf, 'hof> = SymmetricHashJoin<
         'slf,
         Key,
-        ItemA::Build<'slf, 'hof>,
+        PrevA::Build<'slf, 'hof>,
         ValA,
-        ItemB::Build<'slf, 'hof>,
+        PrevB::Build<'slf, 'hof>,
         ValB,
     >;
 }
 
-impl<ItemA, ItemB, Key, ValA, ValB> PullBuild for JoinPullBuild<ItemA, ItemB, Key, ValA, ValB>
+impl<PrevA, PrevB, Key, ValA, ValB> PullBuild for JoinPullBuild<PrevA, PrevB, Key, ValA, ValB>
 where
-    ItemA: PullBuild<ItemOut = (Key, ValA)>,
-    ItemB: PullBuild<ItemOut = (Key, ValB)>,
+    PrevA: PullBuild<ItemOut = (Key, ValA)>,
+    PrevB: PullBuild<ItemOut = (Key, ValB)>,
     Key: 'static + Eq + Hash + Clone,
     ValA: 'static + Eq + Clone,
     ValB: 'static + Eq + Clone,
 
-    ItemA::InputHandoffs: Extend<ItemB::InputHandoffs>,
-    <ItemA::InputHandoffs as Extend<ItemB::InputHandoffs>>::Extended:
-        HandoffList + HandoffListSplit<ItemA::InputHandoffs, Suffix = ItemB::InputHandoffs>,
+    PrevA::InputHandoffs: Extend<PrevB::InputHandoffs>,
+    <PrevA::InputHandoffs as Extend<PrevB::InputHandoffs>>::Extended:
+        HandoffList + HandoffListSplit<PrevA::InputHandoffs, Suffix = PrevB::InputHandoffs>,
 {
-    type InputHandoffs = <ItemA::InputHandoffs as Extend<ItemB::InputHandoffs>>::Extended;
+    type InputHandoffs = <PrevA::InputHandoffs as Extend<PrevB::InputHandoffs>>::Extended;
 
     fn build<'slf, 'hof>(
         &'slf mut self,
