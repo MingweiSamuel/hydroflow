@@ -27,7 +27,6 @@ impl<PrevA, PrevB> BaseSurface for ChainPullSurface<PrevA, PrevB>
 where
     PrevA: PullSurface,
     PrevB: PullSurface<ItemOut = PrevA::ItemOut>,
-    PrevA::InputHandoffs: Extend<PrevB::InputHandoffs>,
 {
     type ItemOut = PrevA::ItemOut;
 }

@@ -1,12 +1,14 @@
 use super::build::{PullBuild, PushBuild};
 use super::connect::{PullConnect, PushConnect};
 
-pub mod pull_chain;
-pub mod pull_join;
-
 pub mod filter;
 pub mod flat_map;
 pub mod map;
+
+pub mod pull_chain;
+pub mod pull_join;
+
+pub mod push_tee;
 
 use crate::scheduled::handoff::HandoffList;
 
