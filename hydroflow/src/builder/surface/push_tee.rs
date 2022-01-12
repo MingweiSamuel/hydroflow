@@ -5,7 +5,7 @@ use crate::builder::connect::BinaryPushConnect;
 use crate::scheduled::handoff::{HandoffList, HandoffListSplit};
 use crate::scheduled::type_list::Extend;
 
-pub struct TeePushSurface<NextA, NextB>
+pub struct TeePushSurfaceReversed<NextA, NextB>
 where
     NextA: PushSurfaceReversed,
     NextB: PushSurfaceReversed<ItemIn = NextA::ItemIn>,
@@ -14,7 +14,7 @@ where
     next_a: NextA,
     next_b: NextB,
 }
-impl<NextA, NextB> TeePushSurface<NextA, NextB>
+impl<NextA, NextB> TeePushSurfaceReversed<NextA, NextB>
 where
     NextA: PushSurfaceReversed,
     NextB: PushSurfaceReversed<ItemIn = NextA::ItemIn>,
@@ -25,7 +25,7 @@ where
     }
 }
 
-impl<NextA, NextB> PushSurfaceReversed for TeePushSurface<NextA, NextB>
+impl<NextA, NextB> PushSurfaceReversed for TeePushSurfaceReversed<NextA, NextB>
 where
     NextA: PushSurfaceReversed,
     NextB: PushSurfaceReversed<ItemIn = NextA::ItemIn>,
