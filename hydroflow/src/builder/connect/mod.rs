@@ -1,8 +1,12 @@
-mod binary_pull;
-mod binary_push;
+mod pull_binary;
+mod pull_handoff;
+mod push_binary;
+mod push_handoff;
 
-pub use binary_pull::BinaryPullConnect;
-pub use binary_push::BinaryPushConnect;
+pub use pull_binary::BinaryPullConnect;
+pub use pull_handoff::HandoffPullConnect;
+pub use push_binary::BinaryPushConnect;
+pub use push_handoff::HandoffPushConnect;
 
 use crate::scheduled::handoff::HandoffList;
 

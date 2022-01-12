@@ -6,8 +6,10 @@ pub mod flat_map;
 pub mod map;
 
 pub mod pull_chain;
+pub mod pull_handoff;
 pub mod pull_join;
 
+pub mod push_handoff;
 pub mod push_tee;
 
 use std::hash::Hash;
