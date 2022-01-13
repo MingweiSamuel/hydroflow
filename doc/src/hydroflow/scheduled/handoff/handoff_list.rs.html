@@ -142,8 +142,6 @@
 <span id="139">139</span>
 <span id="140">140</span>
 <span id="141">141</span>
-<span id="142">142</span>
-<span id="143">143</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::cell::Cell</span>;
 <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
 <span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
@@ -157,18 +155,16 @@
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Handoff</span>;
 
-<span class="doccomment">/**
- * A variadic list of Handoff types, represented using a lisp-style tuple structure.
- *
- * This trait is sealed and not meant to be implemented or used directly. Instead tuple lists (which already implement this trait) should be used, for example:
- * ```ignore
- * type MyHandoffList = (VecHandoff&lt;usize&gt;, (VecHandoff&lt;String&gt;, (TeeingHandoff&lt;u32&gt;, ())));
- * ```
- * The [`tl!`] (tuple list) macro simplifies usage of this kind:
- * ```ignore
- * type MyHandoffList = tl!(VecHandoff&lt;usize&gt;, VecHandoff&lt;String&gt;, TeeingHandoff&lt;u32&gt;);
- * ```
- */</span>
+<span class="doccomment">/// A variadic list of Handoff types, represented using a lisp-style tuple structure.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// This trait is sealed and not meant to be implemented or used directly. Instead tuple lists (which already implement this trait) should be used, for example:</span>
+<span class="doccomment">/// ```ignore</span>
+<span class="doccomment">/// type MyHandoffList = (VecHandoff&lt;usize&gt;, (VecHandoff&lt;String&gt;, (TeeingHandoff&lt;u32&gt;, ())));</span>
+<span class="doccomment">/// ```</span>
+<span class="doccomment">/// The [`tl!`] (tuple list) macro simplifies usage of this kind:</span>
+<span class="doccomment">/// ```ignore</span>
+<span class="doccomment">/// type MyHandoffList = tl!(VecHandoff&lt;usize&gt;, VecHandoff&lt;String&gt;, TeeingHandoff&lt;u32&gt;);</span>
+<span class="doccomment">/// ```</span>
 <span class="attribute">#[<span class="ident">sealed</span>]</span>
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">HandoffList</span> {
     <span class="kw">type</span> <span class="ident">InputHid</span>;
