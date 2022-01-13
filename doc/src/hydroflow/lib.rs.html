@@ -13,11 +13,13 @@
 <span id="10">10</span>
 <span id="11">11</span>
 <span id="12">12</span>
+<span id="13">13</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">feature</span>(<span class="ident">never_type</span>)]</span>
 <span class="attribute">#![<span class="ident">feature</span>(<span class="ident">type_alias_impl_trait</span>)]</span>
 <span class="attribute">#![<span class="ident">cfg_attr</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;variadic_generics&quot;</span>, <span class="ident">feature</span>(<span class="ident">generic_associated_types</span>))]</span>
 <span class="attribute">#![<span class="ident">allow</span>(<span class="ident">clippy::let_and_return</span>)]</span>
 
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">builder</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">compiled</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">lang</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">scheduled</span>;
