@@ -1,5 +1,5 @@
 {
-  "lastUpdate": 1642045706022,
+  "lastUpdate": 1642132084395,
   "repoUrl": "https://github.com/hydro-project/hydroflow",
   "entries": {
     "Benchmark": [
@@ -6799,6 +6799,82 @@
             "name": "reachability/hydroflow",
             "value": 2943037,
             "range": "± 88838",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Justin Jaffray",
+            "username": "justinj",
+            "email": "justin.jaffray@gmail.com"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "b57b70999014c16e99eae7d9189e9d013c0ea462",
+          "message": "Switch from a bespoke format -> bincode (#40)\n\nThis commit tidies up the TCP stuff more. There's still more to be done in\r\nterms of ergonomics but I want to wait for the API change to work on that. I\r\nthink the next steps are that, and also writing a benchmark against a\r\nhand-coded server, since I think there's a lot of low-hanging fruit in terms of\r\nstuff like buffer reuse.",
+          "timestamp": "2022-01-13T19:02:12Z",
+          "url": "https://github.com/hydro-project/hydroflow/commit/b57b70999014c16e99eae7d9189e9d013c0ea462"
+        },
+        "date": 1642132084389,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "arithmetic/hydroflow/compiled",
+            "value": 374873,
+            "range": "± 2409",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/hydroflow",
+            "value": 186256870,
+            "range": "± 321683",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/scheduled",
+            "value": 173964726,
+            "range": "± 1505282",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow",
+            "value": 8408748,
+            "range": "± 29041",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow_builder",
+            "value": 43352044,
+            "range": "± 174087",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow",
+            "value": 47817161,
+            "range": "± 223095",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow/compiled",
+            "value": 14685200,
+            "range": "± 7180",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/scheduled",
+            "value": 2584157,
+            "range": "± 1941",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow",
+            "value": 2679121,
+            "range": "± 3468",
             "unit": "ns/iter"
           }
         ]
