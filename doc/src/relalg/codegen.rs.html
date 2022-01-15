@@ -124,6 +124,8 @@
 <span id="121">121</span>
 <span id="122">122</span>
 <span id="123">123</span>
+<span id="124">124</span>
+<span id="125">125</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">quote</span>::{
     <span class="ident">__private</span>::{<span class="ident">Ident</span>, <span class="ident">TokenStream</span>},
     <span class="ident">format_ident</span>, <span class="ident">quote</span>, <span class="ident">ToTokens</span>,
@@ -153,7 +155,9 @@
 
 <span class="comment">// TODO(justin): How do we make this portable/run on CI?</span>
 <span class="kw">fn</span> <span class="ident">run_rustfmt</span>(<span class="ident">s</span>: <span class="ident">String</span>) -&gt; <span class="ident">anyhow::Result</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span> {
-    <span class="prelude-val">Ok</span>(<span class="macro">cmd!</span>(<span class="string">&quot;rustfmt&quot;</span>).<span class="ident">stdin</span>(<span class="ident">s</span>).<span class="ident">read</span>()<span class="question-mark">?</span>)
+    <span class="prelude-val">Ok</span>(<span class="macro">cmd!</span>(<span class="string">&quot;rustfmt --config newline_style=Unix&quot;</span>)
+        .<span class="ident">stdin</span>(<span class="ident">s</span>)
+        .<span class="ident">read</span>()<span class="question-mark">?</span>)
 }
 
 <span class="kw">struct</span> <span class="ident">SubgraphBuilder</span> {
