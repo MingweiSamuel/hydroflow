@@ -10,6 +10,7 @@ variadic_generics = []
 
 [dependencies]
 bytes = "1.1.0"
+derive-new = "0.5"
 futures = { version = "0.3", optional = true }
 ref-cast = "1.0"
 sealed = "0.3"
