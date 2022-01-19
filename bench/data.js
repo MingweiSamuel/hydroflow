@@ -1,6 +1,6 @@
 window.BENCHMARK_DATA = 
 {
-  "lastUpdate": 1642477729784,
+  "lastUpdate": 1642564050807,
   "repoUrl": "https://github.com/hydro-project/hydroflow",
   "entries": {
     "Benchmark": [
@@ -7180,6 +7180,82 @@ window.BENCHMARK_DATA =
             "name": "reachability/hydroflow",
             "value": 2910387,
             "range": "± 114167",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Justin Jaffray",
+            "username": "justinj",
+            "email": "justin.jaffray@gmail.com"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "4ec58f4e0b1f92b42e8a79fd268e90688ae0b1b3",
+          "message": "Rewrite echo server using the surface API (#43)\n\n* Rewrite echo server using the surface API\r\n\r\nSort of minimal use of it so far since the logic here is pretty simple, but\r\nshould provide a foundation for things like address interning.\r\n\r\nWasn't sure if the wrap_{input,output} stuff aligns with your vision? LMK if\r\nthere's a cleaner/existing way to do that?\r\n\r\n* More refactoring of echo server",
+          "timestamp": "2022-01-18T17:28:12Z",
+          "url": "https://github.com/hydro-project/hydroflow/commit/4ec58f4e0b1f92b42e8a79fd268e90688ae0b1b3"
+        },
+        "date": 1642564050799,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "arithmetic/hydroflow/compiled",
+            "value": 348133,
+            "range": "± 17757",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/hydroflow",
+            "value": 186580596,
+            "range": "± 5388144",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/scheduled",
+            "value": 210812460,
+            "range": "± 10969501",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow",
+            "value": 10502737,
+            "range": "± 455509",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow_builder",
+            "value": 49231837,
+            "range": "± 1315331",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow",
+            "value": 54257550,
+            "range": "± 1613204",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow/compiled",
+            "value": 16495499,
+            "range": "± 605630",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/scheduled",
+            "value": 2914729,
+            "range": "± 179439",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow",
+            "value": 3062278,
+            "range": "± 117268",
             "unit": "ns/iter"
           }
         ]
