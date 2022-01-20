@@ -1,6 +1,6 @@
 window.BENCHMARK_DATA = 
 {
-  "lastUpdate": 1642564050807,
+  "lastUpdate": 1642650396245,
   "repoUrl": "https://github.com/hydro-project/hydroflow",
   "entries": {
     "Benchmark": [
@@ -7256,6 +7256,82 @@ window.BENCHMARK_DATA =
             "name": "reachability/hydroflow",
             "value": 3062278,
             "range": "± 117268",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Justin Jaffray",
+            "username": "justinj",
+            "email": "justin.jaffray@gmail.com"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "480f203898652ed33018da8a6f6e42414b60a5e8",
+          "message": "Add partition operator to surface API (#48)",
+          "timestamp": "2022-01-20T00:27:36Z",
+          "url": "https://github.com/hydro-project/hydroflow/commit/480f203898652ed33018da8a6f6e42414b60a5e8"
+        },
+        "date": 1642650396238,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "arithmetic/hydroflow/compiled",
+            "value": 371001,
+            "range": "± 2465",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/hydroflow",
+            "value": 188417837,
+            "range": "± 585279",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/scheduled",
+            "value": 178338378,
+            "range": "± 2821599",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow",
+            "value": 8426148,
+            "range": "± 27376",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow_builder",
+            "value": 44384860,
+            "range": "± 397813",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow",
+            "value": 48261244,
+            "range": "± 283313",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow/compiled",
+            "value": 14683383,
+            "range": "± 9813",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/scheduled",
+            "value": 2630651,
+            "range": "± 4688",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow",
+            "value": 2693720,
+            "range": "± 3160",
             "unit": "ns/iter"
           }
         ]
