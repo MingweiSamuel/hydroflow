@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["filter",""],["flatten",""],["for_each",""],["group_by",""],["map",""],["partition",""],["pivot",""],["pull",""],["push_handoff",""],["tee",""]],"struct":[["InputBuild",""]],"trait":[["IteratorToPusherator",""],["Pusherator",""],["PusheratorBuild",""]]});
+initSidebarItems({"mod":[["filter",""],["filter_map",""],["flatten",""],["for_each",""],["group_by",""],["map",""],["partition",""],["pivot",""],["pull",""],["push_handoff",""],["tee",""]],"struct":[["InputBuild",""]],"trait":[["IteratorToPusherator",""],["Pusherator",""],["PusheratorBuild",""]]});
