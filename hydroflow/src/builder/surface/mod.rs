@@ -208,3 +208,14 @@ pub trait PushSurfaceReversed {
 
     fn into_parts(self) -> (Self::Connect, Self::Build);
 }
+
+// #[cfg(test)]
+// pub mod test_macro {
+//     use super::{BaseSurface, PullSurface, PushSurface, PushSurfaceReversed};
+
+//     hydroflow_macro::surface_unary! {
+//         fn filter_map<B, F>(self, f: F) -> FilterMap<Self, F>
+//         where
+//             F: FnMut(Self::Item) -> Option<B>;
+//     }
+// }
