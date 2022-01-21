@@ -1,6 +1,6 @@
 window.BENCHMARK_DATA = 
 {
-  "lastUpdate": 1642650396245,
+  "lastUpdate": 1642736808090,
   "repoUrl": "https://github.com/hydro-project/hydroflow",
   "entries": {
     "Benchmark": [
@@ -7332,6 +7332,82 @@ window.BENCHMARK_DATA =
             "name": "reachability/hydroflow",
             "value": 2693720,
             "range": "± 3160",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Joe Hellerstein",
+            "username": "jhellerstein",
+            "email": "jmh@berkeley.edu"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "89fc4cce133f4539e44dde12b919a0019ba6e925",
+          "message": "chat example (#46)\n\n* working toward chat\r\n\r\n* simple chat working\r\n\r\n* rebase working toward chat\r\n\r\n* msgs sent to server\r\n\r\n* simple chat working\r\n\r\n* finish merge\r\n\r\n* wip chat\r\n\r\n* chat v0.0\r\n\r\n* unused imports\r\n\r\n* clean up chat\r\n\r\n* make clippy happy",
+          "timestamp": "2022-01-21T03:04:08Z",
+          "url": "https://github.com/hydro-project/hydroflow/commit/89fc4cce133f4539e44dde12b919a0019ba6e925"
+        },
+        "date": 1642736808069,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "arithmetic/hydroflow/compiled",
+            "value": 375812,
+            "range": "± 3027",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/hydroflow",
+            "value": 200252153,
+            "range": "± 760226",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/scheduled",
+            "value": 189637074,
+            "range": "± 2964526",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow",
+            "value": 9562651,
+            "range": "± 24505",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow_builder",
+            "value": 43229711,
+            "range": "± 143337",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow",
+            "value": 48301016,
+            "range": "± 495447",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow/compiled",
+            "value": 14692466,
+            "range": "± 5751",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/scheduled",
+            "value": 2599556,
+            "range": "± 3340",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow",
+            "value": 2721125,
+            "range": "± 2429",
             "unit": "ns/iter"
           }
         ]
