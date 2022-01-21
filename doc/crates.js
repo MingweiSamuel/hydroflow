@@ -1,1 +1,1 @@
-window.ALL_CRATES = ["covid_tracing","covid_tracing_dist","hydroflow","relalg"];
+window.ALL_CRATES = ["chat","covid_tracing","covid_tracing_dist","hydroflow","relalg"];

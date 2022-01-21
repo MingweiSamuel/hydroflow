@@ -275,6 +275,7 @@
 <span id="269">269</span>
 <span id="270">270</span>
 <span id="271">271</span>
+<span id="272">272</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">core::task</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">pin::Pin</span>, <span class="ident">sync::mpsc::SyncSender</span>, <span class="ident">task::Poll</span>};
 
@@ -373,6 +374,7 @@
 
     <span class="doccomment">/**
      * Adds an &quot;input&quot; operator, returning a handle to insert data into it.
+     * TODO(justin): make this thing work better
      */</span>
     <span class="kw">fn</span> <span class="ident">add_input</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">W</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; (<span class="ident">Input</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident"><span class="kw">super</span>::input::Buffer</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">OutputPort</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span>)
     <span class="kw">where</span>
@@ -547,5 +549,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (5e57faa78 2022-01-19)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (777bb86bc 2022-01-20)" ></div>
 </body></html>

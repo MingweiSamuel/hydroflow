@@ -1,3 +1,4 @@
 (function() {var implementors = {};
+implementors["chat"] = [{"text":"impl <a class=\"trait\" href=\"https://docs.rs/clap/3.0.0-beta.5/clap/derive/trait.IntoApp.html\" title=\"trait clap::derive::IntoApp\">IntoApp</a> for <a class=\"struct\" href=\"chat/struct.Opts.html\" title=\"struct chat::Opts\">Opts</a>","synthetic":false,"types":["chat::Opts"]}];
 implementors["covid_tracing_dist"] = [{"text":"impl <a class=\"trait\" href=\"https://docs.rs/clap/3.0.0-beta.5/clap/derive/trait.IntoApp.html\" title=\"trait clap::derive::IntoApp\">IntoApp</a> for <a class=\"struct\" href=\"covid_tracing_dist/struct.Opts.html\" title=\"struct covid_tracing_dist::Opts\">Opts</a>","synthetic":false,"types":["covid_tracing_dist::Opts"]}];
 if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()
