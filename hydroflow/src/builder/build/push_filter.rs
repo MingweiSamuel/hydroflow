@@ -47,6 +47,7 @@ where
         &'slf mut self,
         handoffs: <Self::OutputHandoffs as HandoffList>::SendCtx<'hof>,
     ) -> Self::Build<'slf, 'hof> {
-        Filter::new(|x| (self.func)(x), self.next.build(handoffs))
+        let Self { next, func } = self;
+        Filter::new(|x| (func)(x), next.build(handoffs))
     }
 }

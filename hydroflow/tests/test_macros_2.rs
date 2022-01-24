@@ -9,163 +9,198 @@ use hydroflow::builder::build::{PullBuild, PullBuildBase, PushBuild, PushBuildBa
 use hydroflow::builder::surface::{BaseSurface, PullSurface, PushSurface, PushSurfaceReversed};
 use hydroflow::scheduled::handoff::HandoffList;
 use hydroflow::compiled::Pusherator;
-pub struct FilterMapSurface<Prev, F>
+pub struct FilterSurface<Prev, P>
 where
     Prev: BaseSurface,
 {
     prev: Prev,
-    f: F,
+    predicate: P,
 }
-impl<Prev, B, F> FilterMapSurface<Prev, F>
+impl<Prev, P> FilterSurface<Prev, P>
 where
     Prev: BaseSurface,
-    F: FnMut(Prev::ItemOut) -> Option<B>,
+    P: FnMut(&Prev::ItemOut) -> bool,
 {
-    pub fn new(prev: Prev, f: F) -> Self {
-        Self { prev, f }
+    pub fn new(prev: Prev, predicate: P) -> Self {
+        Self { prev, predicate }
     }
 }
-impl<Prev, B, F> BaseSurface for FilterMapSurface<Prev, F>
+impl<Prev, P> BaseSurface for FilterSurface<Prev, P>
 where
     Prev: BaseSurface,
-    F: FnMut(Prev::ItemOut) -> Option<B>,
+    P: FnMut(&Prev::ItemOut) -> bool,
 {
-    type ItemOut = B;
+    type ItemOut = Prev::ItemOut;
 }
-impl<Prev, B, F> PullSurface for FilterMapSurface<Prev, F>
+impl<Prev, P> PullSurface for FilterSurface<Prev, P>
 where
     Prev: PullSurface,
-    F: FnMut(Prev::ItemOut) -> Option<B>,
+    P: FnMut(&Prev::ItemOut) -> bool,
 {
     type InputHandoffs = Prev::InputHandoffs;
     type Connect = Prev::Connect;
-    type Build = FilterMapPullBuild<Prev::Build, F>;
+    type Build = FilterPullBuild<Prev::Build, P>;
     fn into_parts(self) -> (Self::Connect, Self::Build) {
-        let Self { prev, f } = self;
+        let Self { prev, predicate } = self;
         let (connect, build) = prev.into_parts();
-        let build = FilterMapPullBuild::new(build, f);
+        let build = FilterPullBuild::new(build, predicate);
         (connect, build)
     }
 }
-impl<Prev, B, F> PushSurface for FilterMapSurface<Prev, F>
+impl<Prev, P> PushSurface for FilterSurface<Prev, P>
 where
     Prev: PushSurface,
-    F: FnMut(Prev::ItemOut) -> Option<B>,
+    P: FnMut(&Prev::ItemOut) -> bool,
 {
     type Output<Next>
     where
         Next: PushSurfaceReversed<ItemIn = Self::ItemOut>,
-    = Prev::Output<FilterMapPushSurfaceReversed<Next, F, Prev::ItemOut>>;
+    = Prev::Output<FilterPushSurfaceReversed<Next, P>>;
     fn reverse<Next>(self, next: Next) -> Self::Output<Next>
     where
         Next: PushSurfaceReversed<ItemIn = Self::ItemOut>,
     {
-        let Self { prev, f } = self;
-        prev.reverse(FilterMapPushSurfaceReversed::new(next, f))
+        let Self { prev, predicate } = self;
+        prev.reverse(FilterPushSurfaceReversed::new(next, predicate))
     }
 }
-pub struct FilterMapPushSurfaceReversed<Next, F, ItemIn>
+pub struct FilterPullBuild<Prev, P>
+where
+    Prev: PullBuild,
+{
+    prev: Prev,
+    predicate: P,
+}
+impl<Prev, P> FilterPullBuild<Prev, P>
+where
+    Prev: PullBuild,
+    P: FnMut(&Prev::ItemOut) -> bool,
+{
+    pub fn new(prev: Prev, predicate: P) -> Self {
+        Self { prev, predicate }
+    }
+}
+#[allow(type_alias_bounds)]
+type FilterPullBuildOutput<'slf, 'hof, Prev, P>
+where
+    Prev: PullBuild,
+    P: FnMut(&Prev::ItemOut) -> bool,
+= impl Iterator<Item = Prev::ItemOut>;
+impl<Prev, P> PullBuildBase for FilterPullBuild<Prev, P>
+where
+    Prev: PullBuild,
+    P: FnMut(&Prev::ItemOut) -> bool,
+{
+    type ItemOut = Prev::ItemOut;
+    type Build<'slf, 'hof> = FilterPullBuildOutput<'slf, 'hof, Prev, P>;
+}
+impl<Prev, P> PullBuild for FilterPullBuild<Prev, P>
+where
+    Prev: PullBuild,
+    P: FnMut(&Prev::ItemOut) -> bool,
+{
+    type InputHandoffs = Prev::InputHandoffs;
+    fn build<'slf, 'hof>(
+        &'slf mut self,
+        handoffs: <Self::InputHandoffs as HandoffList>::RecvCtx<'hof>,
+    ) -> Self::Build<'slf, 'hof> {
+        let Self { prev, predicate } = self;
+        prev.build(handoffs).filter(predicate)
+    }
+}
+pub struct FilterPushSurfaceReversed<Next, P>
 where
     Next: PushSurfaceReversed,
-    F: FnMut(ItemIn) -> Option<Next::ItemIn>,
+    P: FnMut(&Next::ItemIn) -> bool,
 {
     next: Next,
-    f: F,
-    _phantom: std::marker::PhantomData<fn(ItemIn)>,
+    predicate: P,
+    _phantom: std::marker::PhantomData<fn()>,
 }
-impl<Next, F, ItemIn> FilterMapPushSurfaceReversed<Next, F, ItemIn>
+impl<Next, P> FilterPushSurfaceReversed<Next, P>
 where
     Next: PushSurfaceReversed,
-    F: FnMut(ItemIn) -> Option<Next::ItemIn>,
+    P: FnMut(&Next::ItemIn) -> bool,
 {
-    pub fn new(next: Next, f: F) -> Self {
+    pub fn new(next: Next, predicate: P) -> Self {
         Self {
             next,
-            f,
+            predicate,
             _phantom: std::marker::PhantomData,
         }
     }
 }
-impl<Next, F, ItemIn> PushSurfaceReversed for FilterMapPushSurfaceReversed<Next, F, ItemIn>
+impl<Next, P> PushSurfaceReversed for FilterPushSurfaceReversed<Next, P>
 where
     Next: PushSurfaceReversed,
-    F: FnMut(ItemIn) -> Option<Next::ItemIn>,
+    P: FnMut(&Next::ItemIn) -> bool,
 {
     type OutputHandoffs = Next::OutputHandoffs;
-    type ItemIn = ItemIn;
+    type ItemIn = Next::ItemIn;
     type Connect = Next::Connect;
-    type Build = FilterMapPushBuild<Next::Build, F, ItemIn>;
+    type Build = FilterPushBuild<Next::Build, P>;
     fn into_parts(self) -> (Self::Connect, Self::Build) {
-        let Self { next, f, _phantom } = self;
+        let Self {
+            next,
+            predicate,
+            _phantom,
+        } = self;
         let (connect, build) = next.into_parts();
-        let build = FilterMapPushBuild::new(build, f);
+        let build = FilterPushBuild::new(build, predicate);
         (connect, build)
     }
 }
-pub struct FilterMapPushBuild<Next, F, ItemIn>
+pub struct FilterPushBuild<Next, P>
 where
     Next: PushBuild,
-    F: FnMut(ItemIn) -> Option<Next::ItemIn>,
+    P: FnMut(&Next::ItemIn) -> bool,
 {
     next: Next,
-    f: F,
-    _phantom: std::marker::PhantomData<fn(ItemIn)>,
+    predicate: P,
+    _phantom: std::marker::PhantomData<fn()>,
 }
-impl<Next, F, ItemIn> FilterMapPushBuild<Next, F, ItemIn>
+impl<Next, P> FilterPushBuild<Next, P>
 where
     Next: PushBuild,
-    F: FnMut(ItemIn) -> Option<Next::ItemIn>,
+    P: FnMut(&Next::ItemIn) -> bool,
 {
-    pub fn new(next: Next, f: F) -> Self {
+    pub fn new(next: Next, predicate: P) -> Self {
         Self {
             next,
-            f,
+            predicate,
             _phantom: std::marker::PhantomData,
         }
     }
 }
 #[allow(type_alias_bounds)]
-type FilterMapPushBuildImpl<'slf, 'hof, Next, F, ItemIn>
+type FilterPushBuildOutput<'slf, 'hof, Next, P>
 where
     Next: PushBuild,
-= impl Pusherator<Item = ItemIn>;
-impl<Next, F, ItemIn> PushBuildBase for FilterMapPushBuild<Next, F, ItemIn>
+    P: FnMut(&Next::ItemIn) -> bool,
+= impl Pusherator<Item = Next::ItemIn>;
+impl<Next, P> PushBuildBase for FilterPushBuild<Next, P>
 where
     Next: PushBuild,
-    F: FnMut(ItemIn) -> Option<Next::ItemIn>,
+    P: FnMut(&Next::ItemIn) -> bool,
 {
-    type ItemIn = ItemIn;
-    type Build<'slf, 'hof> = FilterMapPushBuildImpl<'slf, 'hof, Next, F, ItemIn>;
+    type ItemIn = Next::ItemIn;
+    type Build<'slf, 'hof> = FilterPushBuildOutput<'slf, 'hof, Next, P>;
 }
-impl<Next, F, ItemIn> PushBuild for FilterMapPushBuild<Next, F, ItemIn>
+impl<Next, P> PushBuild for FilterPushBuild<Next, P>
 where
     Next: PushBuild,
-    F: FnMut(ItemIn) -> Option<Next::ItemIn>,
+    P: FnMut(&Next::ItemIn) -> bool,
 {
     type OutputHandoffs = Next::OutputHandoffs;
     fn build<'slf, 'hof>(
         &'slf mut self,
         handoffs: <Self::OutputHandoffs as HandoffList>::SendCtx<'hof>,
     ) -> Self::Build<'slf, 'hof> {
-        hydroflow::compiled::filter_map::FilterMap::new(
-            |x| (self.f)(x),
-            self.next.build(handoffs),
-        )
-    }
-}
-pub struct FilterMapPullBuild<Prev, F>
-where
-    Prev: PullBuild,
-{
-    prev: Prev,
-    f: F,
-}
-impl<Prev, B, F> FilterMapPullBuild<Prev, F>
-where
-    Prev: PullBuild,
-    F: FnMut(Prev::ItemOut) -> Option<B>,
-{
-    pub fn new(prev: Prev, f: F) -> Self {
-        Self { prev, f }
+        let Self {
+            next,
+            predicate,
+            _phantom,
+        } = self;
+        hydroflow::compiled::filter::Filter::new(predicate, next.build(handoffs))
     }
 }
