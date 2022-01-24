@@ -6,12 +6,29 @@ use hydroflow::builder::surface::{BaseSurface, PullSurface, PushSurface, PushSur
 use hydroflow::scheduled::handoff::HandoffList;
 use hydroflow::compiled::Pusherator;
 
-hydroflow_macro::surface_unary! { Prev::ItemOut =>
-    fn filter<P>(self, predicate: P) -> Filter<Self, P>
+hydroflow_macro::surface_unary! {
+    <Self::Item as IntoIterator>::Item =>
+    fn flatten(self) -> Flatten<Self>
     where
-        P: FnMut(&Self::Item) -> bool;
+        Self::Item: IntoIterator;
 }
-// hydroflow_macro::surface_unary! { B =>
+
+// hydroflow_macro::surface_unary! {
+//     B =>
+//     fn map<B, F>(self, f: F) -> Map<Self, F>
+//     where
+//         F: FnMut(Self::Item) -> B;
+// }
+
+// hydroflow_macro::surface_unary! {
+//     Prev::ItemOut =>
+//     fn filter<P>(self, predicate: P) -> Filter<Self, P>
+//     where
+//         P: FnMut(&Self::Item) -> bool;
+// }
+
+// hydroflow_macro::surface_unary! {
+//     B =>
 //     fn filter_map<B, F>(self, f: F) -> FilterMap<Self, F>
 //     where
 //         F: FnMut(Self::Item) -> Option<B>;

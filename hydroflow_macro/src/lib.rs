@@ -7,9 +7,9 @@ use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
 use syn::spanned::Spanned;
 use syn::{
-    parse_macro_input, parse_quote, parse_quote_spanned, AngleBracketedGenericArguments, FnArg,
-    GenericArgument, GenericParam, Pat, PatType, Path, PathArguments, PathSegment, ReturnType,
-    Token, TraitBound, TraitItemMethod, Type, TypePath, WherePredicate,
+    parse_macro_input, parse_quote, parse_quote_spanned, AngleBracketedGenericArguments, Expr,
+    FnArg, GenericArgument, GenericParam, Pat, PatType, Path, PathArguments, PathSegment,
+    ReturnType, Token, TraitBound, TraitItemMethod, Type, TypePath, TypeReference, WherePredicate,
 };
 
 #[proc_macro]
@@ -63,17 +63,134 @@ impl Fold for SelfToPrev {
     }
 }
 
-#[derive(Default)]
-pub(crate) struct ExtractWhereClauseFnInputs {
-    count: usize,
+pub(crate) struct ExtractWhereClauseFnInputs<'a> {
+    return_type: &'a Type,
     pub old_input_types: Punctuated<Type, syn::token::Comma>,
     pub new_generic_params: Punctuated<Ident, syn::token::Comma>,
     pub item_in_generic_param: Option<Ident>,
 }
-impl Fold for ExtractWhereClauseFnInputs {
-    fn fold_trait_bound(&mut self, trait_bound: TraitBound) -> TraitBound {
-        let prev_item: Type = parse_quote! { Prev::ItemOut };
+impl<'a> ExtractWhereClauseFnInputs<'a> {
+    pub fn new(return_type: &'a Type) -> Self {
+        let (old_input_types, new_generic_params, item_in_generic_param) = Default::default();
+        Self {
+            return_type,
+            old_input_types,
+            new_generic_params,
+            item_in_generic_param,
+        }
+    }
+}
+impl<'a> Fold for ExtractWhereClauseFnInputs<'a> {
+    // fn fold_type(&mut self, mut ty: Type) -> Type {
+    //     let prev_item_out: Type = parse_quote! { Prev::ItemOut };
+    //     if 1 == self.in_fn_input % 2 {
+    //         self.in_fn_input += 1;
+    //         ty = syn::fold::fold_type(self, ty);
+    //         self.in_fn_input -= 1;
 
+    //         let mut ident_str = "ItemIn".to_owned();
+    //         if 0 < self.count {
+    //             ident_str.push_str(&*self.count.to_string());
+    //         }
+    //         let ident = Ident::new(&*ident_str, ty.span());
+
+    //         let mut segments = Punctuated::new();
+    //         segments.push(PathSegment::from(ident.clone()));
+
+    //         self.old_input_types.push(ty.clone());
+
+    //         println!(
+    //             "{} := {} == {}",
+    //             prev_item_out == ty,
+    //             prev_item_out.to_token_stream(),
+    //             ty.to_token_stream()
+    //         );
+    //         if prev_item_out == ty {
+    //             self.item_in_generic_param = Some(ident.clone());
+    //         }
+
+    //         ty = Type::Path(TypePath {
+    //             qself: None,
+    //             path: Path {
+    //                 leading_colon: None,
+    //                 segments,
+    //             },
+    //         });
+
+    //         self.new_generic_params.push(ident);
+    //         self.count += 1;
+    //     }
+    //     else {
+    //         ty = syn::fold::fold_type(self, ty);
+    //     }
+    //     ty
+
+    //     // if 0 < self.in_fn_args {
+    //     //     if type_path.qself.is_none() && type_path.path.leading_colon.is_none() && 1 == type_path.path.segments.len() {
+    //     //         if let PathSegment {
+    //     //             ident: _,
+    //     //             arguments: PathArguments::Parenthesized(fn_args),
+    //     //         } = type_path.path.segments.last_mut().unwrap()
+    //     //         {
+    //     //             let prev_item_out: Type = parse_quote! { Prev::ItemOut };
+
+    //     //             for input_arg in fn_args.inputs.iter_mut() {
+    //     //                 let mut ident_str = "ItemIn".to_owned();
+    //     //                 if 0 < self.count {
+    //     //                     ident_str.push_str(&*self.count.to_string());
+    //     //                 }
+    //     //                 let ident = Ident::new(&*ident_str, input_arg.span());
+
+    //     //                 let mut segments = Punctuated::new();
+    //     //                 segments.push(PathSegment::from(ident.clone()));
+
+    //     //                 self.old_input_types.push(input_arg.clone());
+
+    //     //                 println!(
+    //     //                     "{} := {} == {}",
+    //     //                     &prev_item_out == input_arg,
+    //     //                     prev_item_out.to_token_stream(),
+    //     //                     input_arg.to_token_stream()
+    //     //                 );
+    //     //                 if &prev_item_out == input_arg {
+    //     //                     self.item_in_generic_param = Some(ident.clone());
+    //     //                 }
+
+    //     //                 *input_arg = Type::Path(TypePath {
+    //     //                     qself: None,
+    //     //                     path: Path {
+    //     //                         leading_colon: None,
+    //     //                         segments,
+    //     //                     },
+    //     //                 });
+
+    //     //                 self.new_generic_params.push(ident);
+    //     //                 self.count += 1;
+    //     //             }
+    //     //         }
+    //     //     }
+    //     // }
+    //     // type_path
+    // }
+
+    // fn fold_parenthesized_generic_arguments(
+    //     &mut self,
+    //     node: ParenthesizedGenericArguments,
+    // ) -> ParenthesizedGenericArguments {
+    //     let paren_token = node.paren_token;
+    //     self.in_fn_input += 1;
+    //     let inputs = node.inputs.into_iter().map(|it| self.fold_type(it)).collect();
+    //     self.in_fn_input -= 1;
+    //     let output = self.fold_return_type(node.output);
+
+    //     ParenthesizedGenericArguments {
+    //         paren_token,
+    //         inputs,
+    //         output,
+    //     }
+    // }
+
+    fn fold_trait_bound(&mut self, trait_bound: TraitBound) -> TraitBound {
         let mut trait_bound = syn::fold::fold_trait_bound(self, trait_bound);
         if trait_bound.path.leading_colon.is_none() && 1 == trait_bound.path.segments.len() {
             if let PathSegment {
@@ -81,28 +198,48 @@ impl Fold for ExtractWhereClauseFnInputs {
                 arguments: PathArguments::Parenthesized(fn_args),
             } = trait_bound.path.segments.last_mut().unwrap()
             {
-                for input_arg in fn_args.inputs.iter_mut() {
-                    let mut ident_str = "ItemIn".to_owned();
-                    if 0 < self.count {
-                        ident_str.push_str(&*self.count.to_string());
-                    }
-                    let ident = Ident::new(&*ident_str, input_arg.span());
+                let prev_item_out: Type = parse_quote! { Prev::ItemOut };
 
-                    let mut segments = Punctuated::new();
-                    segments.push(PathSegment::from(ident.clone()));
+                for mut input_arg in fn_args.inputs.iter_mut() {
+                    if let Type::Reference(TypeReference {
+                        and_token: _,
+                        lifetime: _,
+                        mutability: _,
+                        elem,
+                    }) = input_arg
+                    {
+                        input_arg = &mut *elem;
+                    }
+
+                    // If the return type is the arg, we can use Next::ItemIn without extra generic param.
+                    if self.return_type == input_arg {
+                        *input_arg = parse_quote! { Next::ItemIn };
+                        continue;
+                    }
+
+                    let ident = {
+                        let mut ident_str = "ItemIn".to_owned();
+                        let count = self.new_generic_params.len();
+                        if 0 < count {
+                            ident_str.push_str(&*count.to_string());
+                        }
+                        Ident::new(&*ident_str, input_arg.span())
+                    };
 
                     self.old_input_types.push(input_arg.clone());
 
                     println!(
                         "{} := {} == {}",
-                        &prev_item == input_arg,
-                        prev_item.to_token_stream(),
+                        &prev_item_out == input_arg,
+                        prev_item_out.to_token_stream(),
                         input_arg.to_token_stream()
                     );
-                    if &prev_item == input_arg {
+                    if &prev_item_out == input_arg {
                         self.item_in_generic_param = Some(ident.clone());
                     }
 
+                    let mut segments = Punctuated::new();
+                    segments.push(PathSegment::from(ident.clone()));
                     *input_arg = Type::Path(TypePath {
                         qself: None,
                         path: Path {
@@ -112,7 +249,6 @@ impl Fold for ExtractWhereClauseFnInputs {
                     });
 
                     self.new_generic_params.push(ident);
-                    self.count += 1;
                 }
             }
         }
@@ -158,7 +294,6 @@ impl<'a> Fold for OutputTypeToNextItem<'a> {
 
 #[proc_macro]
 pub fn surface_unary(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let type_self: Type = parse_quote! { Self };
     let generic_arg_self: GenericArgument = parse_quote! { Self };
     /*
     fn filter_map<B, F>(self, f: F) -> FilterMap<Self, F>
@@ -170,6 +305,7 @@ pub fn surface_unary(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
     let input = parse_macro_input!(input as UnaryInput);
     let output_type = input.output;
     let input_method = input.body;
+    let input_method_ident = &input_method.sig.ident;
 
     if let Some(body) = input_method.default {
         body.span().unwrap().error("Body must be omitted.").emit();
@@ -214,9 +350,9 @@ pub fn surface_unary(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
     //     .args;
     let base_generic_args: Punctuated<GenericArgument, Token![,]> = return_generic_args
         .args
-        .clone()
-        .into_iter()
-        .filter(|generic_arg| &generic_arg_self != generic_arg)
+        .iter()
+        .filter(|&generic_arg| &generic_arg_self != generic_arg)
+        .cloned()
         .collect();
 
     let base_args: Punctuated<PatType, Token![,]> = input_method
@@ -240,6 +376,23 @@ pub fn surface_unary(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
                     .error("Unexpected argument pattern.")
                     .emit();
                 None
+            }
+        })
+        .collect();
+
+    let type_f: Type = parse_quote! { F };
+    let base_args_forwarded: Punctuated<Expr, Token![,]> = base_args
+        .iter()
+        .map(|pat_type| {
+            let pat = &pat_type.pat;
+            if &type_f == &*pat_type.ty {
+                // TODO(mingwei): this is a basic hack to check if this looks like `f: F`, in which case we use a fn closure.
+                let expr: Expr = parse_quote! {
+                    |x| (#pat)(x)
+                };
+                expr
+            } else {
+                parse_quote! { #pat }
             }
         })
         .collect();
@@ -272,7 +425,7 @@ pub fn surface_unary(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
         .map(|where_clause| SelfToPrev.fold_where_clause(where_clause))
         .map(|where_clause| where_clause.predicates);
 
-    let mut where_clause_fn_input_extractor = ExtractWhereClauseFnInputs::default();
+    let mut where_clause_fn_input_extractor = ExtractWhereClauseFnInputs::new(&output_type);
     let fn_input_where_clause_predicates =
         impl_where_clause_predicates.as_ref().map(|predicates| {
             predicates
@@ -301,18 +454,23 @@ pub fn surface_unary(input: proc_macro::TokenStream) -> proc_macro::TokenStream 
     );
     let quote_pull = quote_pull(
         &idents,
+        input_method_ident,
+        &output_type,
         &base_generic_args,
         &base_args,
         &base_arg_idents,
+        &base_args_forwarded,
         &impl_generic_params,
         &impl_where_clause_predicates,
     );
     let quote_push = quote_push(
         &idents,
+        input_method_ident,
         &output_type,
         &base_generic_args,
         &base_args,
         &base_arg_idents,
+        &base_args_forwarded,
         &fn_input_new_generic_params,
         fn_input_item_in,
         fn_input_where_clause_predicates,
@@ -342,9 +500,10 @@ pub(crate) fn quote_surface(
         ident_base: _,
         ident_surface,
         ident_pull_build,
+        ident_pull_build_output: _,
         ident_push_surface_reversed,
         ident_push_build: _,
-        ident_push_build_impl: _,
+        ident_push_build_output: _,
     } = idents;
 
     let pull_build_generic_args = SelfTo(parse_quote!(Prev::Build))
@@ -418,13 +577,17 @@ pub(crate) fn quote_surface(
 
 pub(crate) fn quote_pull(
     idents: &Idents,
+    input_method_ident: &Ident,
+    output_type: &Type,
     base_generic_args: &Punctuated<syn::GenericArgument, Token![,]>,
     base_args: &Punctuated<PatType, Token![,]>,
     base_arg_idents: &Punctuated<Ident, Token![,]>,
+    base_args_forwarded: &Punctuated<Expr, Token![,]>,
     impl_generic_params: &Punctuated<Ident, Token![,]>,
     impl_where_clause_predicates: &Option<Punctuated<syn::WherePredicate, Token![,]>>,
 ) -> TokenStream {
     let ident_pull_build = &idents.ident_pull_build;
+    let ident_pull_build_output = &idents.ident_pull_build_output;
 
     quote! {
         pub struct #ident_pull_build < Prev, #base_generic_args >
@@ -445,44 +608,48 @@ pub(crate) fn quote_pull(
             }
         }
 
-        // #[allow(type_alias_bounds)]
-        // type PullBuildImpl<'slf, 'hof, Prev, Func, Out>
-        // where
-        //     Prev: PullBuild,
-        // = std::iter::FilterMap<Prev::Build<'slf, 'hof>, impl FnMut(Prev::ItemOut) -> Option<Out>>;
+        #[allow(type_alias_bounds)]
+        type #ident_pull_build_output <'slf, 'hof, #impl_generic_params >
+        where
+            Prev: PullBuild,
+            #impl_where_clause_predicates
+        = impl Iterator<Item = #output_type >;
 
-        // impl<Prev, Func, Out> PullBuildBase for FilterMapPullBuild<Prev, Func>
-        // where
-        //     Prev: PullBuild,
-        //     Func: FnMut(Prev::ItemOut) -> Option<Out>,
-        // {
-        //     type ItemOut = Out;
-        //     type Build<'slf, 'hof> = PullBuildImpl<'slf, 'hof, Prev, Func, Out>;
-        // }
+        impl< #impl_generic_params > PullBuildBase for #ident_pull_build < Prev, #base_generic_args >
+        where
+            Prev: PullBuild,
+            #impl_where_clause_predicates
+        {
+            type ItemOut = #output_type ;
+            type Build<'slf, 'hof> = #ident_pull_build_output <'slf, 'hof, #impl_generic_params >;
+        }
 
-        // impl<Prev, Func, Out> PullBuild for FilterMapPullBuild<Prev, Func>
-        // where
-        //     Prev: PullBuild,
-        //     Func: FnMut(Prev::ItemOut) -> Option<Out>,
-        // {
-        //     type InputHandoffs = Prev::InputHandoffs;
+        impl< #impl_generic_params > PullBuild for #ident_pull_build < Prev, #base_generic_args >
+        where
+            Prev: PullBuild,
+            #impl_where_clause_predicates
+        {
+            type InputHandoffs = Prev::InputHandoffs;
 
-        //     fn build<'slf, 'hof>(
-        //         &'slf mut self,
-        //         handoffs: <Self::InputHandoffs as HandoffList>::RecvCtx<'hof>,
-        //     ) -> Self::Build<'slf, 'hof> {
-        //         self.prev.build(handoffs).filter_map(|x| (self.func)(x))
-        //     }
-        // }
+            fn build<'slf, 'hof>(
+                &'slf mut self,
+                handoffs: <Self::InputHandoffs as HandoffList>::RecvCtx<'hof>,
+            ) -> Self::Build<'slf, 'hof> {
+                let Self { prev, #base_arg_idents } = self;
+                prev.build(handoffs). #input_method_ident ( #base_args_forwarded )
+            }
+        }
     }
 }
 
 pub(crate) fn quote_push(
     idents: &Idents,
+    input_method_ident: &Ident,
     output_type: &Type,
     base_generic_args: &Punctuated<syn::GenericArgument, Token![,]>,
     base_args: &Punctuated<PatType, Token![,]>,
     base_arg_idents: &Punctuated<Ident, Token![,]>,
+    base_args_forwarded: &Punctuated<Expr, Token![,]>,
     fn_input_new_generic_params: &Punctuated<Ident, Token![,]>,
     fn_input_item_in: Option<Ident>,
     fn_input_where_clause_predicates: Option<Punctuated<WherePredicate, Token![,]>>,
@@ -491,9 +658,10 @@ pub(crate) fn quote_push(
         ident_base,
         ident_surface: _,
         ident_pull_build: _,
+        ident_pull_build_output: _,
         ident_push_surface_reversed,
         ident_push_build,
-        ident_push_build_impl,
+        ident_push_build_output,
     } = &idents;
 
     let updated_where_clause_predicates: Punctuated<WherePredicate, Token![,]> =
@@ -512,7 +680,10 @@ pub(crate) fn quote_push(
                 path: ident.into(),
             })
         })
-        .unwrap_or_else(|| parse_quote! { Next::ItemIn });
+        .unwrap_or_else(|| {
+            println!("fn_input_item_in was None");
+            parse_quote! { Next::ItemIn }
+        });
 
     quote! {
         pub struct #ident_push_surface_reversed <Next, #base_generic_args , #fn_input_new_generic_params >
@@ -559,7 +730,7 @@ pub(crate) fn quote_push(
             }
         }
 
-        pub struct #ident_push_build <Next, #base_generic_args , #fn_input_new_generic_params > // TODO
+        pub struct #ident_push_build <Next, #base_generic_args , #fn_input_new_generic_params >
         where
             Next: PushBuild,
             #updated_where_clause_predicates
@@ -568,7 +739,7 @@ pub(crate) fn quote_push(
             #base_args,
             _phantom: std::marker::PhantomData<fn( #fn_input_new_generic_params )>,
         }
-        impl<Next, #base_generic_args , #fn_input_new_generic_params > FilterMapPushBuild<Next, #base_generic_args , #fn_input_new_generic_params >
+        impl<Next, #base_generic_args , #fn_input_new_generic_params > #ident_push_build <Next, #base_generic_args , #fn_input_new_generic_params >
         where
             Next: PushBuild,
             #updated_where_clause_predicates
@@ -583,9 +754,10 @@ pub(crate) fn quote_push(
         }
 
         #[allow(type_alias_bounds)]
-        type #ident_push_build_impl <'slf, 'hof, Next, #base_generic_args , #fn_input_new_generic_params >
+        type #ident_push_build_output <'slf, 'hof, Next, #base_generic_args , #fn_input_new_generic_params >
         where
             Next: PushBuild,
+            #updated_where_clause_predicates
         = impl Pusherator<Item = #item_in >;
 
         impl<Next, #base_generic_args , #fn_input_new_generic_params > PushBuildBase for #ident_push_build <Next, #base_generic_args , #fn_input_new_generic_params >
@@ -594,7 +766,7 @@ pub(crate) fn quote_push(
             #updated_where_clause_predicates
         {
             type ItemIn = #item_in;
-            type Build<'slf, 'hof> = #ident_push_build_impl <'slf, 'hof, Next, #base_generic_args , #fn_input_new_generic_params >;
+            type Build<'slf, 'hof> = #ident_push_build_output <'slf, 'hof, Next, #base_generic_args , #fn_input_new_generic_params >;
         }
 
         impl<Next, #base_generic_args , #fn_input_new_generic_params > PushBuild for #ident_push_build <Next, #base_generic_args , #fn_input_new_generic_params >
@@ -608,8 +780,9 @@ pub(crate) fn quote_push(
                 &'slf mut self,
                 handoffs: <Self::OutputHandoffs as HandoffList>::SendCtx<'hof>,
             ) -> Self::Build<'slf, 'hof> {
-                hydroflow::compiled::filter_map:: // TODO!!!
-                #ident_base ::new(|x| (self.f)(x), self.next.build(handoffs)) // TODO!!!
+                let Self { next, #base_arg_idents , _phantom } = self;
+                hydroflow::compiled:: #input_method_ident
+                    :: #ident_base ::new( #base_args_forwarded , next.build(handoffs))
             }
         }
     }
@@ -618,25 +791,35 @@ pub(crate) fn quote_push(
 pub(crate) struct Idents {
     pub ident_base: Ident,
     pub ident_surface: Ident,
+
     pub ident_pull_build: Ident,
+    pub ident_pull_build_output: Ident,
+
     pub ident_push_surface_reversed: Ident,
     pub ident_push_build: Ident,
-    pub ident_push_build_impl: Ident,
+    pub ident_push_build_output: Ident,
 }
 impl Idents {
     pub fn from_base(ident_base: Ident) -> Self {
         let ident_surface = format_ident!("{}Surface", ident_base);
+
         let ident_pull_build = format_ident!("{}PullBuild", ident_base);
+        let ident_pull_build_output = format_ident!("{}PullBuildOutput", ident_base);
+
         let ident_push_surface_reversed = format_ident!("{}PushSurfaceReversed", ident_base);
         let ident_push_build = format_ident!("{}PushBuild", ident_base);
-        let ident_push_build_impl = format_ident!("{}PushBuildImpl", ident_base);
+        let ident_push_build_output = format_ident!("{}PushBuildOutput", ident_base);
+
         Self {
             ident_base,
             ident_surface,
+
             ident_pull_build,
+            ident_pull_build_output,
+
             ident_push_surface_reversed,
             ident_push_build,
-            ident_push_build_impl,
+            ident_push_build_output,
         }
     }
 }
