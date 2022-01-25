@@ -25,7 +25,8 @@ where
 type PushBuildImpl<'slf, 'hof, Next, Func>
 where
     Next: PushBuild,
-= Filter<Next::ItemIn, impl FnMut(&Next::ItemIn) -> bool, Next::Build<'slf, 'hof>>;
+    Func: FnMut(&Next::ItemIn) -> bool,
+= impl crate::compiled::Pusherator<Item = Next::ItemIn>;
 
 impl<Next, Func> PushBuildBase for FilterPushBuild<Next, Func>
 where
@@ -48,6 +49,6 @@ where
         handoffs: <Self::OutputHandoffs as HandoffList>::SendCtx<'hof>,
     ) -> Self::Build<'slf, 'hof> {
         let Self { next, func } = self;
-        Filter::new(|x| (func)(x), next.build(handoffs))
+        Filter::new(func, next.build(handoffs))
     }
 }
