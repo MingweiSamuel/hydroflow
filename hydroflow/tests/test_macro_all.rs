@@ -13,6 +13,13 @@ use hydroflow::compiled::Pusherator;
 //         F: FnMut(&Self::Item);
 // }
 
+// hydroflow_macro::surface_unary! {
+//     Prev::ItemOut =>
+//     fn tee<Other>(self, other: Other) -> Tee<Self>
+//     where
+//         Other: PushBuild<ItemIn = Prev::ItemOut>;
+// }
+
 hydroflow_macro::surface_unary! {
     <Prev::ItemOut as IntoIterator>::Item =>
     fn flatten(self) -> Flatten<Self>

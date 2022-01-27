@@ -5,12 +5,6 @@ use std::marker::PhantomData;
 use crate::builder::build::pull_filter_map::FilterMapPullBuild;
 use crate::builder::build::push_filter_map::FilterMapPushBuild;
 
-something! {
-    fn filter_map<B, F>(self, f: F) -> FilterMap<Self, F>
-    where
-        F: FnMut(Self::Item) -> Option<B>;
-};
-
 pub struct FilterMapSurface<Prev, Func> //FUNC
 where
     Prev: BaseSurface,
