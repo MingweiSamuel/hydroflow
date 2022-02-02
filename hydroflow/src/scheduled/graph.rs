@@ -87,7 +87,7 @@ impl Hydroflow {
             sg_data.subgraph.run(context);
             for handoff_id in sg_data.succs.iter().copied() {
                 let handoff = self.handoffs.get(handoff_id).unwrap(/* TODO(mingwei) */);
-                let succ_id = handoff.succ;
+                let succ_id = handoff.succ.expect("Handoff successor not connected.");
                 if self.ready_queue.contains(&succ_id) {
                     // TODO(mingwei): Slow? O(N)
                     continue;
@@ -270,11 +270,21 @@ impl Hydroflow {
         // Create and insert handoff.
         let handoff = H::default();
         self.handoffs
-            .push(HandoffData::new(handoff, pred_id, succ_id));
+            .push(HandoffData::new(handoff, Some(pred_id), Some(succ_id)));
 
         // Add successor & predecessor.
         self.subgraphs[pred_id].succs.push(handoff_id);
         self.subgraphs[succ_id].preds.push(handoff_id);
+
+        handoff_id
+    }
+
+    pub fn make_handoff<H: Handoff>(&mut self) -> HandoffId {
+        let handoff_id: HandoffId = self.handoffs.len();
+
+        // Create and insert handoff.
+        let handoff = H::default();
+        self.handoffs.push(HandoffData::new(handoff, None, None));
 
         handoff_id
     }
@@ -305,11 +315,15 @@ impl Hydroflow {
 pub struct HandoffData {
     pub handoff: Box<dyn HandoffMeta>,
     #[allow(dead_code)] // TODO(mingwei)
-    pred: SubgraphId,
-    succ: SubgraphId,
+    pred: Option<SubgraphId>,
+    succ: Option<SubgraphId>,
 }
 impl HandoffData {
-    pub fn new(handoff: impl 'static + HandoffMeta, pred: SubgraphId, succ: SubgraphId) -> Self {
+    pub fn new(
+        handoff: impl 'static + HandoffMeta,
+        pred: Option<SubgraphId>,
+        succ: Option<SubgraphId>,
+    ) -> Self {
         Self {
             handoff: Box::new(handoff),
             pred,
