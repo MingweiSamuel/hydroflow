@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["BinaryPullConnect",""],["BinaryPushConnect",""],["HandoffPullConnect",""],["HandoffPushConnect",""],["NullPushConnect",""]],"trait":[["PullConnect",""],["PushConnect",""]]});
+initSidebarItems({"struct":[["BinaryPullConnect",""],["BinaryPushConnect",""],["HandoffPullConnect",""],["HandoffPushConnect",""],["NullPullConnect",""],["NullPushConnect",""]],"trait":[["PullConnect",""],["PushConnect",""]]});

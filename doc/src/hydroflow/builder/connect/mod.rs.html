@@ -28,16 +28,20 @@
 <span id="23">23</span>
 <span id="24">24</span>
 <span id="25">25</span>
+<span id="26">26</span>
+<span id="27">27</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Internal &quot;connects&quot; which connect input/output ports to implement the Surface API. For more info see [super].</span>
 
 <span class="kw">mod</span> <span class="ident">pull_binary</span>;
 <span class="kw">mod</span> <span class="ident">pull_handoff</span>;
+<span class="kw">mod</span> <span class="ident">pull_null</span>;
 <span class="kw">mod</span> <span class="ident">push_binary</span>;
 <span class="kw">mod</span> <span class="ident">push_handoff</span>;
 <span class="kw">mod</span> <span class="ident">push_null</span>;
 
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pull_binary::BinaryPullConnect</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pull_handoff::HandoffPullConnect</span>;
+<span class="kw">pub</span> <span class="kw">use</span> <span class="ident">pull_null::NullPullConnect</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">push_binary::BinaryPushConnect</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">push_handoff::HandoffPushConnect</span>;
 <span class="kw">pub</span> <span class="kw">use</span> <span class="ident">push_null::NullPushConnect</span>;

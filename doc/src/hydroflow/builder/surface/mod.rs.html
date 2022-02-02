@@ -234,6 +234,12 @@
 <span id="229">229</span>
 <span id="230">230</span>
 <span id="231">231</span>
+<span id="232">232</span>
+<span id="233">233</span>
+<span id="234">234</span>
+<span id="235">235</span>
+<span id="236">236</span>
+<span id="237">237</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Structs used to create the user-facing Surface API.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Main user-facing traits are [`BaseSurface`], [`PullSurface`], and</span>
@@ -263,6 +269,7 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pull_chain</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pull_cross_join</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pull_handoff</span>;
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pull_iter</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pull_join</span>;
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">push_for_each</span>;
@@ -271,6 +278,8 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">push_pivot</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">push_start</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">push_tee</span>;
+
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">exchange</span>;
 
 <span class="kw">use</span> <span class="ident">std::hash::Hash</span>;
 
@@ -364,6 +373,9 @@
         <span class="ident">Key</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span> <span class="op">+</span> <span class="ident">Clone</span>,
         <span class="ident">ValSelf</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Clone</span>,
         <span class="ident">ValOther</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Clone</span>,
+        <span class="ident"><span class="self">Self</span>::InputHandoffs</span>: <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">Other::InputHandoffs</span><span class="op">&gt;</span>,
+        <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::InputHandoffs</span> <span class="kw">as</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">Other::InputHandoffs</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Extended</span>:
+            <span class="ident">HandoffList</span> <span class="op">+</span> <span class="ident">HandoffListSplit</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::InputHandoffs</span>, <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">Other::InputHandoffs</span><span class="op">&gt;</span>,
     {
         <span class="ident">pull_join::JoinPullSurface::new</span>(<span class="self">self</span>, <span class="ident">other</span>)
     }
