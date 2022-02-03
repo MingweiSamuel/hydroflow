@@ -1,1 +1,1 @@
-initSidebarItems({"trait":[["Exchange",""]],"type":[["ExchangeSurface",""],["NetworkOut",""]]});
+initSidebarItems({"trait":[["Exchange",""]],"type":[["BroadcastSurface",""],["ExchangeSurface",""],["NetworkOut",""]]});
