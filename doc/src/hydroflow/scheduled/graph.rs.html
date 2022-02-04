@@ -335,30 +335,16 @@
 <span id="330">330</span>
 <span id="331">331</span>
 <span id="332">332</span>
-<span id="333">333</span>
-<span id="334">334</span>
-<span id="335">335</span>
-<span id="336">336</span>
-<span id="337">337</span>
-<span id="338">338</span>
-<span id="339">339</span>
-<span id="340">340</span>
-<span id="341">341</span>
-<span id="342">342</span>
-<span id="343">343</span>
-<span id="344">344</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::any::Any</span>;
-<span class="kw">use</span> <span class="ident">std::cell::Cell</span>;
 <span class="kw">use</span> <span class="ident">std::collections::VecDeque</span>;
 <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
-<span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
 <span class="kw">use</span> <span class="ident">std::sync::mpsc</span>::{<span class="self">self</span>, <span class="ident">Receiver</span>, <span class="ident">RecvError</span>, <span class="ident">SyncSender</span>};
 
 <span class="kw">use</span> <span class="ident">ref_cast::RefCast</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::context::Context</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::ctx</span>::{<span class="ident">InputPort</span>, <span class="ident">OutputPort</span>, <span class="ident">RecvCtx</span>, <span class="ident">SendCtx</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::handoff</span>::{<span class="ident">Handoff</span>, <span class="ident">HandoffList</span>, <span class="ident">HandoffMeta</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::handoff</span>::{<span class="ident">Handoff</span>, <span class="ident">HandoffMeta</span>, <span class="ident">RecvPortList</span>, <span class="ident">SendPortList</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::port</span>::{<span class="ident">InputPort</span>, <span class="ident">OutputPort</span>, <span class="ident">RecvCtx</span>, <span class="ident">SendCtx</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::reactor::Reactor</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::state::StateHandle</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;variadic_generics&quot;</span>)]</span>
@@ -434,15 +420,16 @@
                 <span class="ident">event_queue_send</span>: <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">event_queue_send</span>,
             };
             <span class="ident">sg_data</span>.<span class="ident">subgraph</span>.<span class="ident">run</span>(<span class="ident">context</span>);
-            <span class="kw">for</span> <span class="ident">handoff_id</span> <span class="kw">in</span> <span class="ident">sg_data</span>.<span class="ident">succs</span>.<span class="ident">iter</span>().<span class="ident">copied</span>() {
+            <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">handoff_id</span> <span class="kw">in</span> <span class="ident">sg_data</span>.<span class="ident">succs</span>.<span class="ident">iter</span>() {
                 <span class="kw">let</span> <span class="ident">handoff</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">handoffs</span>.<span class="ident">get</span>(<span class="ident">handoff_id</span>).<span class="ident">unwrap</span>(<span class="comment">/* TODO(mingwei) */</span>);
-                <span class="kw">let</span> <span class="ident">succ_id</span> <span class="op">=</span> <span class="ident">handoff</span>.<span class="ident">succ</span>;
-                <span class="kw">if</span> <span class="self">self</span>.<span class="ident">ready_queue</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">succ_id</span>) {
-                    <span class="comment">// TODO(mingwei): Slow? O(N)</span>
-                    <span class="kw">continue</span>;
-                }
-                <span class="kw">if</span> <span class="op">!</span><span class="ident">handoff</span>.<span class="ident">handoff</span>.<span class="ident">is_bottom</span>() {
-                    <span class="self">self</span>.<span class="ident">ready_queue</span>.<span class="ident">push_back</span>(<span class="ident">succ_id</span>);
+                <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">succ_id</span> <span class="kw">in</span> <span class="ident">handoff</span>.<span class="ident">succs</span>.<span class="ident">iter</span>() {
+                    <span class="kw">if</span> <span class="self">self</span>.<span class="ident">ready_queue</span>.<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">succ_id</span>) {
+                        <span class="comment">// TODO(mingwei): Slow? O(N)</span>
+                        <span class="kw">continue</span>;
+                    }
+                    <span class="kw">if</span> <span class="op">!</span><span class="ident">handoff</span>.<span class="ident">handoff</span>.<span class="ident">is_bottom</span>() {
+                        <span class="self">self</span>.<span class="ident">ready_queue</span>.<span class="ident">push_back</span>(<span class="ident">succ_id</span>);
+                    }
                 }
             }
 
@@ -488,82 +475,66 @@
         <span class="self">self</span>.<span class="ident">ready_queue</span>.<span class="ident">extend</span>(<span class="number">0</span>..<span class="self">self</span>.<span class="ident">subgraphs</span>.<span class="ident">len</span>());
     }
 
-    <span class="doccomment">/**
-     * Adds a new compiled subgraph with the specified inputs and outputs.
-     *
-     * See [HandoffList] for how to specify inputs and outputs.
-     */</span>
-    <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;variadic_generics&quot;</span>)]</span>
-    <span class="attribute">#[<span class="ident">must_use</span>]</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_subgraph</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">R</span>, <span class="ident">W</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="kw-2">mut</span> <span class="ident">subgraph</span>: <span class="ident">F</span>) -&gt; (<span class="ident">R::InputPort</span>, <span class="ident">W::OutputPort</span>)
+    <span class="doccomment">/// Adds a new compiled subgraph with the specified inputs and outputs.</span>
+    <span class="doccomment">///</span>
+    <span class="doccomment">/// TODO(mingwei): add example in doc.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_subgraph</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">W</span>, <span class="ident">F</span><span class="op">&gt;</span>(
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
+        <span class="ident">recv_ports</span>: <span class="ident">R</span>,
+        <span class="ident">send_ports</span>: <span class="ident">W</span>,
+        <span class="kw-2">mut</span> <span class="ident">subgraph</span>: <span class="ident">F</span>,
+    ) -&gt; <span class="ident">SubgraphId</span>
     <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">Context</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">R::RecvCtx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">W::SendCtx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>),
-        <span class="ident">R</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">HandoffList</span>,
-        <span class="ident">W</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">HandoffList</span>,
+        <span class="ident">R</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">RecvPortList</span>,
+        <span class="ident">W</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">SendPortList</span>,
+        <span class="ident">F</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">Context</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">R::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">W::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>),
     {
-        <span class="comment">// TODO(justin): make this less sketchy, we just know we&#39;re the only person who will append here.</span>
         <span class="kw">let</span> <span class="ident">sg_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">subgraphs</span>.<span class="ident">len</span>();
 
-        <span class="kw">let</span> (<span class="ident">input_hids</span>, <span class="ident">input_ports</span>) <span class="op">=</span> <span class="ident">R::make_input</span>(<span class="ident">sg_id</span>);
-        <span class="kw">let</span> (<span class="ident">output_hids</span>, <span class="ident">output_ports</span>) <span class="op">=</span> <span class="ident">W::make_output</span>(<span class="ident">sg_id</span>);
+        <span class="kw">let</span> (<span class="kw-2">mut</span> <span class="ident">subgraph_preds</span>, <span class="kw-2">mut</span> <span class="ident">subgraph_succs</span>) <span class="op">=</span> <span class="ident">Default::default</span>();
+        <span class="ident">recv_ports</span>.<span class="ident">set_graph_meta</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">handoffs</span>, <span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(<span class="ident">sg_id</span>), <span class="kw-2">&amp;mut</span> <span class="ident">subgraph_preds</span>);
+        <span class="ident">send_ports</span>.<span class="ident">set_graph_meta</span>(<span class="kw-2">&amp;mut</span> <span class="kw-2">*</span><span class="self">self</span>.<span class="ident">handoffs</span>, <span class="prelude-val">Some</span>(<span class="ident">sg_id</span>), <span class="prelude-val">None</span>, <span class="kw-2">&amp;mut</span> <span class="ident">subgraph_succs</span>);
 
         <span class="kw">let</span> <span class="ident">subgraph</span> <span class="op">=</span> <span class="kw">move</span> <span class="op">|</span><span class="ident">context</span>: <span class="ident">Context</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">recv</span> <span class="op">=</span> <span class="ident">R::make_recv</span>(<span class="ident">context</span>.<span class="ident">handoffs</span>, <span class="kw-2">&amp;</span><span class="ident">input_hids</span>);
-            <span class="kw">let</span> <span class="ident">send</span> <span class="op">=</span> <span class="ident">W::make_send</span>(<span class="ident">context</span>.<span class="ident">handoffs</span>, <span class="kw-2">&amp;</span><span class="ident">output_hids</span>);
+            <span class="kw">let</span> <span class="ident">recv</span> <span class="op">=</span> <span class="ident">recv_ports</span>.<span class="ident">make_ctx</span>(<span class="ident">context</span>.<span class="ident">handoffs</span>);
+            <span class="kw">let</span> <span class="ident">send</span> <span class="op">=</span> <span class="ident">send_ports</span>.<span class="ident">make_ctx</span>(<span class="ident">context</span>.<span class="ident">handoffs</span>);
             (<span class="ident">subgraph</span>)(<span class="kw-2">&amp;</span><span class="ident">context</span>, <span class="ident">recv</span>, <span class="ident">send</span>);
         };
-        <span class="self">self</span>.<span class="ident">subgraphs</span>.<span class="ident">push</span>(<span class="ident">SubgraphData::new</span>(<span class="ident">subgraph</span>));
+        <span class="self">self</span>.<span class="ident">subgraphs</span>
+            .<span class="ident">push</span>(<span class="ident">SubgraphData::new</span>(<span class="ident">subgraph</span>, <span class="ident">subgraph_preds</span>, <span class="ident">subgraph_succs</span>));
         <span class="self">self</span>.<span class="ident">ready_queue</span>.<span class="ident">push_back</span>(<span class="ident">sg_id</span>);
 
-        (<span class="ident">input_ports</span>, <span class="ident">output_ports</span>)
+        <span class="ident">sg_id</span>
     }
 
-    <span class="doccomment">/**
-     * Adds a new compiled subraph with a variable number of inputs and outputs.
-     */</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_n_in_m_out</span><span class="op">&lt;</span><span class="ident">F</span>, <span class="ident">R</span>, <span class="ident">W</span><span class="op">&gt;</span>(
+    <span class="doccomment">/// Adds a new compiled subraph with a variable number of inputs and outputs of the same respective handoff types.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_subgraph_n_m</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">W</span>, <span class="ident">F</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">n</span>: <span class="ident">usize</span>,
-        <span class="ident">m</span>: <span class="ident">usize</span>,
-        <span class="ident">f</span>: <span class="ident">F</span>,
-    ) -&gt; (<span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">InputPort</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">OutputPort</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span><span class="op">&gt;</span>)
+        <span class="ident">recv_ports</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">OutputPort</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">send_ports</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">InputPort</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="kw-2">mut</span> <span class="ident">subgraph</span>: <span class="ident">F</span>,
+    ) -&gt; <span class="ident">SubgraphId</span>
     <span class="kw">where</span>
-        <span class="ident">F</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">RecvCtx</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>], <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">SendCtx</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span>]),
         <span class="ident">R</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Handoff</span>,
         <span class="ident">W</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Handoff</span>,
+        <span class="ident">F</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">Context</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">RecvCtx</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span>], <span class="kw-2">&amp;</span>[<span class="kw-2">&amp;</span><span class="ident">SendCtx</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span>]),
     {
-        <span class="comment">// TODO(justin): is there a nice way to encapsulate the below?</span>
         <span class="kw">let</span> <span class="ident">sg_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">subgraphs</span>.<span class="ident">len</span>();
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">input_hids</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="ident">input_hids</span>.<span class="ident">resize_with</span>(<span class="ident">n</span>, <span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">HandoffId</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::default</span>);
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">output_hids</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-        <span class="ident">output_hids</span>.<span class="ident">resize_with</span>(<span class="ident">m</span>, <span class="op">&lt;</span><span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">HandoffId</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::default</span>);
+        <span class="kw">let</span> <span class="ident">subgraph_preds</span> <span class="op">=</span> <span class="ident">recv_ports</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">port</span><span class="op">|</span> <span class="ident">port</span>.<span class="ident">handoff_id</span>).<span class="ident">collect</span>();
+        <span class="kw">let</span> <span class="ident">subgraph_succs</span> <span class="op">=</span> <span class="ident">send_ports</span>.<span class="ident">iter</span>().<span class="ident">map</span>(<span class="op">|</span><span class="ident">port</span><span class="op">|</span> <span class="ident">port</span>.<span class="ident">handoff_id</span>).<span class="ident">collect</span>();
 
-        <span class="kw">let</span> <span class="ident">input_ports</span> <span class="op">=</span> <span class="ident">input_hids</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">cloned</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">handoff_id</span><span class="op">|</span> <span class="ident">InputPort</span> {
-                <span class="ident">sg_id</span>,
-                <span class="ident">handoff_id</span>,
-                <span class="ident">_phantom</span>: <span class="ident">PhantomData</span>,
-            })
-            .<span class="ident">collect</span>();
-        <span class="kw">let</span> <span class="ident">output_ports</span> <span class="op">=</span> <span class="ident">output_hids</span>
-            .<span class="ident">iter</span>()
-            .<span class="ident">cloned</span>()
-            .<span class="ident">map</span>(<span class="op">|</span><span class="ident">handoff_id</span><span class="op">|</span> <span class="ident">OutputPort</span> {
-                <span class="ident">sg_id</span>,
-                <span class="ident">handoff_id</span>,
-                <span class="ident">_phantom</span>: <span class="ident">PhantomData</span>,
-            })
-            .<span class="ident">collect</span>();
+        <span class="kw">for</span> <span class="ident">recv_port</span> <span class="kw">in</span> <span class="ident">recv_ports</span>.<span class="ident">iter</span>() {
+            <span class="self">self</span>.<span class="ident">handoffs</span>[<span class="ident">recv_port</span>.<span class="ident">handoff_id</span>].<span class="ident">succs</span>.<span class="ident">push</span>(<span class="ident">sg_id</span>);
+        }
+        <span class="kw">for</span> <span class="ident">send_port</span> <span class="kw">in</span> <span class="ident">send_ports</span>.<span class="ident">iter</span>() {
+            <span class="self">self</span>.<span class="ident">handoffs</span>[<span class="ident">send_port</span>.<span class="ident">handoff_id</span>].<span class="ident">preds</span>.<span class="ident">push</span>(<span class="ident">sg_id</span>);
+        }
 
-        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">f</span> <span class="op">=</span> <span class="ident">f</span>;
         <span class="kw">let</span> <span class="ident">subgraph</span> <span class="op">=</span> <span class="kw">move</span> <span class="op">|</span><span class="ident">context</span>: <span class="ident">Context</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="ident">recvs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">RecvCtx</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">input_hids</span>
+            <span class="kw">let</span> <span class="ident">recvs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">RecvCtx</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">recv_ports</span>
                 .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">hid</span><span class="op">|</span> <span class="ident">hid</span>.<span class="ident">get</span>().<span class="ident">expect</span>(<span class="string">&quot;Attempted to use unattached handoff.&quot;</span>))
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">hid</span><span class="op">|</span> <span class="ident">hid</span>.<span class="ident">handoff_id</span>)
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">hid</span><span class="op">|</span> <span class="ident">context</span>.<span class="ident">handoffs</span>.<span class="ident">get</span>(<span class="ident">hid</span>).<span class="ident">unwrap</span>())
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">h_data</span><span class="op">|</span> {
                     <span class="ident">h_data</span>
@@ -575,9 +546,9 @@
                 .<span class="ident">map</span>(<span class="ident">RefCast::ref_cast</span>)
                 .<span class="ident">collect</span>();
 
-            <span class="kw">let</span> <span class="ident">sends</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">SendCtx</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">output_hids</span>
+            <span class="kw">let</span> <span class="ident">sends</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">SendCtx</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">send_ports</span>
                 .<span class="ident">iter</span>()
-                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">hid</span><span class="op">|</span> <span class="ident">hid</span>.<span class="ident">get</span>().<span class="ident">expect</span>(<span class="string">&quot;Attempted to use unattached handoff.&quot;</span>))
+                .<span class="ident">map</span>(<span class="op">|</span><span class="ident">hid</span><span class="op">|</span> <span class="ident">hid</span>.<span class="ident">handoff_id</span>)
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">hid</span><span class="op">|</span> <span class="ident">context</span>.<span class="ident">handoffs</span>.<span class="ident">get</span>(<span class="ident">hid</span>).<span class="ident">unwrap</span>())
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">h_data</span><span class="op">|</span> {
                     <span class="ident">h_data</span>
@@ -589,43 +560,35 @@
                 .<span class="ident">map</span>(<span class="ident">RefCast::ref_cast</span>)
                 .<span class="ident">collect</span>();
 
-            <span class="comment">// self.handoffs.</span>
-            <span class="ident">f</span>(<span class="kw-2">&amp;</span><span class="ident">recvs</span>, <span class="kw-2">&amp;</span><span class="ident">sends</span>)
+            (<span class="ident">subgraph</span>)(<span class="kw-2">&amp;</span><span class="ident">context</span>, <span class="kw-2">&amp;</span><span class="ident">recvs</span>, <span class="kw-2">&amp;</span><span class="ident">sends</span>)
         };
-        <span class="self">self</span>.<span class="ident">subgraphs</span>.<span class="ident">push</span>(<span class="ident">SubgraphData::new</span>(<span class="ident">subgraph</span>));
+        <span class="self">self</span>.<span class="ident">subgraphs</span>
+            .<span class="ident">push</span>(<span class="ident">SubgraphData::new</span>(<span class="ident">subgraph</span>, <span class="ident">subgraph_preds</span>, <span class="ident">subgraph_succs</span>));
         <span class="self">self</span>.<span class="ident">ready_queue</span>.<span class="ident">push_back</span>(<span class="ident">sg_id</span>);
 
-        (<span class="ident">input_ports</span>, <span class="ident">output_ports</span>)
+        <span class="ident">sg_id</span>
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_edge</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">output_port</span>: <span class="ident">OutputPort</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>, <span class="ident">input_port</span>: <span class="ident">InputPort</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>)
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_edge</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; (<span class="ident">InputPort</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>, <span class="ident">OutputPort</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>)
     <span class="kw">where</span>
         <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Handoff</span>,
     {
-        <span class="kw">let</span> <span class="ident">handoff_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">add_handoff</span>::<span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>(<span class="ident">output_port</span>.<span class="ident">sg_id</span>, <span class="ident">input_port</span>.<span class="ident">sg_id</span>);
-
-        <span class="comment">// Send handoff_ids.</span>
-        <span class="ident">input_port</span>.<span class="ident">handoff_id</span>.<span class="ident">set</span>(<span class="prelude-val">Some</span>(<span class="ident">handoff_id</span>));
-        <span class="ident">output_port</span>.<span class="ident">handoff_id</span>.<span class="ident">set</span>(<span class="prelude-val">Some</span>(<span class="ident">handoff_id</span>));
-    }
-
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_handoff</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Handoff</span><span class="op">&gt;</span>(
-        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">pred_id</span>: <span class="ident">SubgraphId</span>,
-        <span class="ident">succ_id</span>: <span class="ident">SubgraphId</span>,
-    ) -&gt; <span class="ident">HandoffId</span> {
         <span class="kw">let</span> <span class="ident">handoff_id</span>: <span class="ident">HandoffId</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">handoffs</span>.<span class="ident">len</span>();
 
         <span class="comment">// Create and insert handoff.</span>
         <span class="kw">let</span> <span class="ident">handoff</span> <span class="op">=</span> <span class="ident">H::default</span>();
-        <span class="self">self</span>.<span class="ident">handoffs</span>
-            .<span class="ident">push</span>(<span class="ident">HandoffData::new</span>(<span class="ident">handoff</span>, <span class="ident">pred_id</span>, <span class="ident">succ_id</span>));
+        <span class="self">self</span>.<span class="ident">handoffs</span>.<span class="ident">push</span>(<span class="ident">HandoffData::new</span>(<span class="ident">handoff</span>));
 
-        <span class="comment">// Add successor &amp; predecessor.</span>
-        <span class="self">self</span>.<span class="ident">subgraphs</span>[<span class="ident">pred_id</span>].<span class="ident">succs</span>.<span class="ident">push</span>(<span class="ident">handoff_id</span>);
-        <span class="self">self</span>.<span class="ident">subgraphs</span>[<span class="ident">succ_id</span>].<span class="ident">preds</span>.<span class="ident">push</span>(<span class="ident">handoff_id</span>);
-
-        <span class="ident">handoff_id</span>
+        <span class="comment">// Make ports.</span>
+        <span class="kw">let</span> <span class="ident">input_port</span> <span class="op">=</span> <span class="ident">InputPort</span> {
+            <span class="ident">handoff_id</span>,
+            <span class="ident">_marker</span>: <span class="ident">PhantomData</span>,
+        };
+        <span class="kw">let</span> <span class="ident">output_port</span> <span class="op">=</span> <span class="ident">OutputPort</span> {
+            <span class="ident">handoff_id</span>,
+            <span class="ident">_marker</span>: <span class="ident">PhantomData</span>,
+        };
+        (<span class="ident">input_port</span>, <span class="ident">output_port</span>)
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_state</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">state</span>: <span class="ident">T</span>) -&gt; <span class="ident">StateHandle</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
@@ -652,17 +615,25 @@
  * NOT PART OF PUBLIC API.
  */</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HandoffData</span> {
-    <span class="kw">pub</span> <span class="ident">handoff</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">HandoffMeta</span><span class="op">&gt;</span>,
-    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span> <span class="comment">// TODO(mingwei)</span>
-    <span class="ident">pred</span>: <span class="ident">SubgraphId</span>,
-    <span class="ident">succ</span>: <span class="ident">SubgraphId</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">handoff</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">HandoffMeta</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">preds</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SubgraphId</span><span class="op">&gt;</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">succs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SubgraphId</span><span class="op">&gt;</span>,
+}
+<span class="kw">impl</span> <span class="ident">std::fmt::Debug</span> <span class="kw">for</span> <span class="ident">HandoffData</span> {
+    <span class="kw">fn</span> <span class="ident">fmt</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">f</span>: <span class="kw-2">&amp;mut</span> <span class="ident">std::fmt::Formatter</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>) -&gt; <span class="prelude-ty">Result</span><span class="op">&lt;</span>(), <span class="ident">std::fmt::Error</span><span class="op">&gt;</span> {
+        <span class="ident">f</span>.<span class="ident">debug_struct</span>(<span class="string">&quot;HandoffData&quot;</span>)
+            .<span class="ident">field</span>(<span class="string">&quot;preds&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">preds</span>)
+            .<span class="ident">field</span>(<span class="string">&quot;succs&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">succs</span>)
+            .<span class="ident">finish_non_exhaustive</span>()
+    }
 }
 <span class="kw">impl</span> <span class="ident">HandoffData</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">handoff</span>: <span class="kw">impl</span> <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">HandoffMeta</span>, <span class="ident">pred</span>: <span class="ident">SubgraphId</span>, <span class="ident">succ</span>: <span class="ident">SubgraphId</span>) -&gt; <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">handoff</span>: <span class="kw">impl</span> <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">HandoffMeta</span>) -&gt; <span class="self">Self</span> {
+        <span class="kw">let</span> (<span class="ident">preds</span>, <span class="ident">succs</span>) <span class="op">=</span> <span class="ident">Default::default</span>();
         <span class="self">Self</span> {
             <span class="ident">handoff</span>: <span class="ident">Box::new</span>(<span class="ident">handoff</span>),
-            <span class="ident">pred</span>,
-            <span class="ident">succ</span>,
+            <span class="ident">preds</span>,
+            <span class="ident">succs</span>,
         }
     }
 }
@@ -673,16 +644,21 @@
  */</span>
 <span class="kw">struct</span> <span class="ident">SubgraphData</span> {
     <span class="ident">subgraph</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Subgraph</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">dead_code</span>)]</span>
     <span class="ident">preds</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">HandoffId</span><span class="op">&gt;</span>,
     <span class="ident">succs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">HandoffId</span><span class="op">&gt;</span>,
     <span class="ident">scheduled</span>: <span class="ident">bool</span>,
 }
 <span class="kw">impl</span> <span class="ident">SubgraphData</span> {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">subgraph</span>: <span class="kw">impl</span> <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Subgraph</span>) -&gt; <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(
+        <span class="ident">subgraph</span>: <span class="kw">impl</span> <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Subgraph</span>,
+        <span class="ident">preds</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">HandoffId</span><span class="op">&gt;</span>,
+        <span class="ident">succs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">HandoffId</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> {
             <span class="ident">subgraph</span>: <span class="ident">Box::new</span>(<span class="ident">subgraph</span>),
-            <span class="ident">preds</span>: <span class="ident">Default::default</span>(),
-            <span class="ident">succs</span>: <span class="ident">Default::default</span>(),
+            <span class="ident">preds</span>,
+            <span class="ident">succs</span>,
             <span class="ident">scheduled</span>: <span class="bool-val">true</span>,
         }
     }
@@ -692,5 +668,5 @@
     <span class="kw">pub</span> <span class="ident">state</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Any</span><span class="op">&gt;</span>,
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (27f5d830e 2022-02-02)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (4e8fb743c 2022-02-03)" ></div>
 </body></html>

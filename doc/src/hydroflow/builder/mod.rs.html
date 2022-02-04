@@ -276,17 +276,6 @@
 <span id="271">271</span>
 <span id="272">272</span>
 <span id="273">273</span>
-<span id="274">274</span>
-<span id="275">275</span>
-<span id="276">276</span>
-<span id="277">277</span>
-<span id="278">278</span>
-<span id="279">279</span>
-<span id="280">280</span>
-<span id="281">281</span>
-<span id="282">282</span>
-<span id="283">283</span>
-<span id="284">284</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Hydroflow&#39;s Surface API.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ## Internal Documentation</span>
@@ -301,13 +290,14 @@
 <span class="doccomment">//! ```text</span>
 <span class="doccomment">//!               (A) Surface API</span>
 <span class="doccomment">//!         (B) (Push Surface Reversed*)</span>
-<span class="doccomment">//!                  /            \</span>
-<span class="doccomment">//!                 /              \</span>
-<span class="doccomment">//!        (C) Connector   (D) Subgraph Builder</span>
-<span class="doccomment">//!                                  |</span>
-<span class="doccomment">//!                       (E) Iterator/Pusherator</span>
+<span class="doccomment">//!                      |</span>
+<span class="doccomment">//!            (D) Subgraph Builder</span>
+<span class="doccomment">//!                      |</span>
+<span class="doccomment">//!           (E) Iterator/Pusherator</span>
 <span class="doccomment">//! ```</span>
 <span class="doccomment">//! &lt;sup&gt;*Only used with `Push` to reverse the ownership direction.&lt;/sup&gt;</span>
+<span class="doccomment">//!</span>
+<span class="doccomment">//! (Note (C) used to be `Connectors` but they&#39;re no longer needed)</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ### Layer Descriptions</span>
 <span class="doccomment">//! &lt;table&gt;</span>
@@ -336,16 +326,6 @@
 <span class="doccomment">//!     &lt;td&gt;&lt;code&gt;PushSurfaceReversed&lt;/code&gt;&lt;/td&gt;</span>
 <span class="doccomment">//! &lt;/tr&gt;</span>
 <span class="doccomment">//! &lt;tr&gt;</span>
-<span class="doccomment">//!     &lt;td&gt;(C) Connectors&lt;/td&gt;</span>
-<span class="doccomment">//!     &lt;td&gt;</span>
-<span class="doccomment">//!         &amp;bull; Connects &lt;code&gt;OutputPort&lt;/code&gt;s and &lt;code&gt;InputPort&lt;/code&gt;s, splits type lists in order to do so.&lt;br&gt;</span>
-<span class="doccomment">//!         &amp;bull; Does not go to any lower layers.&lt;br&gt;</span>
-<span class="doccomment">//!         &amp;bull; Uses the input/output &lt;code&gt;HandoffList&lt;/code&gt; variadic type.</span>
-<span class="doccomment">//!     &lt;/td&gt;</span>
-<span class="doccomment">//!     &lt;td&gt;&lt;code&gt;PullConnect&lt;/code&gt;&lt;/td&gt;</span>
-<span class="doccomment">//!     &lt;td&gt;&lt;code&gt;PushConnect&lt;/code&gt;&lt;/td&gt;</span>
-<span class="doccomment">//! &lt;/tr&gt;</span>
-<span class="doccomment">//! &lt;tr&gt;</span>
 <span class="doccomment">//!     &lt;td&gt;(D) Subgraph Builders&lt;/td&gt;</span>
 <span class="doccomment">//!     &lt;td&gt;</span>
 <span class="doccomment">//!         &amp;bull; On each subgraph invocation, constructs the (E) iterators and pivot which will be run.&lt;br&gt;</span>
@@ -370,13 +350,11 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//! The layers are used in [HydroflowBuilder::add_subgraph]. The method</span>
 <span class="doccomment">//! receives a pivot with `PullSurface` and `PushSurfaceReversed` halves. Then</span>
-<span class="doccomment">//! `into_parts()` splits them into the build half and the connector half.</span>
-<span class="doccomment">//! The build half is used to create the subgraph which gives back</span>
-<span class="doccomment">//! input/output ports. Then the connector half is used to connect up those</span>
-<span class="doccomment">//! ports.</span>
+<span class="doccomment">//! `into_parts()` splits them into the ports half and the build half. Those</span>
+<span class="doccomment">//! are then both sent to [Hydroflow::add_subgraph()](crate::scheduled::graph::Hydroflow::add_subgraph)</span>
+<span class="doccomment">//! to create a subgraph.</span>
 
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">build</span>;
-<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">connect</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">surface</span>;
 
 <span class="kw">mod</span> <span class="ident">hydroflow_builder</span>;
@@ -494,8 +472,8 @@
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">builder</span> <span class="op">=</span> <span class="ident">HydroflowBuilder::default</span>();
 
-    <span class="kw">let</span> (<span class="ident">loop_send</span>, <span class="ident">loop_recv</span>) <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">make_handoff</span>::<span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span>();
-    <span class="kw">let</span> (<span class="ident">notifs_send</span>, <span class="ident">notifs_recv</span>) <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">make_handoff</span>::<span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span>();
+    <span class="kw">let</span> (<span class="ident">loop_send</span>, <span class="ident">loop_recv</span>) <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">make_edge</span>::<span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span>();
+    <span class="kw">let</span> (<span class="ident">notifs_send</span>, <span class="ident">notifs_recv</span>) <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">make_edge</span>::<span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">&gt;</span>, <span class="kw">_</span><span class="op">&gt;</span>();
 
     <span class="kw">let</span> (<span class="ident">diagnosed_send</span>, <span class="ident">diagnosed</span>) <span class="op">=</span>
         <span class="ident">builder</span>.<span class="ident">add_channel_input</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">Pid</span>, (<span class="ident">DateTime</span>, <span class="ident">DateTime</span>))<span class="op">&gt;</span>, <span class="ident">VecHandoff</span><span class="op">&lt;</span><span class="kw">_</span><span class="op">&gt;</span><span class="op">&gt;</span>();
@@ -572,5 +550,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (27f5d830e 2022-02-02)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (4e8fb743c 2022-02-03)" ></div>
 </body></html>

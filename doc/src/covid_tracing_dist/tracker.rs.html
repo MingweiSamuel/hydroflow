@@ -109,44 +109,32 @@
 <span id="104">104</span>
 <span id="105">105</span>
 <span id="106">106</span>
-<span id="107">107</span>
-<span id="108">108</span>
-<span id="109">109</span>
-<span id="110">110</span>
-<span id="111">111</span>
-<span id="112">112</span>
-<span id="113">113</span>
-<span id="114">114</span>
-<span id="115">115</span>
-<span id="116">116</span>
-<span id="117">117</span>
-<span id="118">118</span>
-<span id="119">119</span>
-<span id="120">120</span>
-<span id="121">121</span>
-<span id="122">122</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Decode</span>, <span class="ident">Encode</span>, <span class="ident">Opts</span>, <span class="ident">CONTACTS_ADDR</span>, <span class="ident">DIAGNOSES_ADDR</span>};
 
 <span class="kw">use</span> <span class="ident">hydroflow::lang::collections::Iter</span>;
-<span class="kw">use</span> <span class="ident">hydroflow::scheduled</span>::{<span class="ident">ctx::RecvCtx</span>, <span class="ident">graph::Hydroflow</span>, <span class="ident">handoff::VecHandoff</span>, <span class="ident">net::Message</span>};
+<span class="kw">use</span> <span class="ident">hydroflow::scheduled</span>::{<span class="ident">graph::Hydroflow</span>, <span class="ident">handoff::VecHandoff</span>, <span class="ident">net::Message</span>};
 <span class="kw">use</span> <span class="ident">hydroflow::tokio::net::TcpStream</span>;
 <span class="kw">use</span> <span class="ident">hydroflow</span>::{
     <span class="ident">compiled</span>::{<span class="ident">pull::SymmetricHashJoin</span>, <span class="ident">InputBuild</span>, <span class="ident">IteratorToPusherator</span>, <span class="ident">PusheratorBuild</span>},
     <span class="ident">scheduled::graph_ext::GraphExt</span>,
-    <span class="ident">tl</span>, <span class="ident">tt</span>,
+    <span class="ident">tl</span>,
 };
 
 <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">run_tracker</span>(<span class="ident">opts</span>: <span class="ident">Opts</span>) {
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">df</span> <span class="op">=</span> <span class="ident">Hydroflow::new</span>();
 
-    <span class="kw">type</span> <span class="ident">MultiplexIn</span> <span class="op">=</span> <span class="macro">tt!</span>(<span class="ident">VecHandoff</span>::<span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span>);
-    <span class="kw">type</span> <span class="ident">MultiplexOut</span> <span class="op">=</span> <span class="macro">tt!</span>(
-        <span class="ident">VecHandoff</span>::<span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">String</span>, <span class="ident">usize</span>)<span class="op">&gt;</span>,
-        <span class="ident">VecHandoff</span>::<span class="op">&lt;</span>(<span class="ident">String</span>, (<span class="ident">usize</span>, <span class="ident">usize</span>))<span class="op">&gt;</span>,
-    );
+    <span class="kw">let</span> <span class="ident">stream</span> <span class="op">=</span> <span class="ident">TcpStream::connect</span>(<span class="ident">opts</span>.<span class="ident">addr</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
+    <span class="kw">let</span> (<span class="ident">network_out</span>, <span class="ident">network_in</span>) <span class="op">=</span> <span class="ident">df</span>.<span class="ident">add_tcp_stream</span>(<span class="ident">stream</span>);
 
-    <span class="kw">let</span> (<span class="macro">tl!</span>(<span class="ident">demux_in</span>), <span class="macro">tl!</span>(<span class="ident">contacts</span>, <span class="ident">diagnoses</span>)) <span class="op">=</span> <span class="ident">df</span>
-        .<span class="ident">add_subgraph</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">MultiplexIn</span>, <span class="ident">MultiplexOut</span><span class="op">&gt;</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">_ctx</span>, <span class="macro">tl!</span>(<span class="ident">recv</span>), <span class="macro">tl!</span>(<span class="ident">send1</span>, <span class="ident">send2</span>)<span class="op">|</span> {
+    <span class="kw">let</span> (<span class="ident">contacts</span>, <span class="ident">contacts_in</span>) <span class="op">=</span> <span class="ident">df</span>.<span class="ident">make_edge</span>::<span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">String</span>, <span class="ident">usize</span>)<span class="op">&gt;</span><span class="op">&gt;</span>();
+    <span class="kw">let</span> (<span class="ident">diagnoses</span>, <span class="ident">diagnosed_in</span>) <span class="op">=</span> <span class="ident">df</span>.<span class="ident">make_edge</span>::<span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="ident">String</span>, (<span class="ident">usize</span>, <span class="ident">usize</span>))<span class="op">&gt;</span><span class="op">&gt;</span>();
+    <span class="kw">let</span> (<span class="ident">loop_out</span>, <span class="ident">loop_in</span>) <span class="op">=</span> <span class="ident">df</span>.<span class="ident">make_edge</span>::<span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">&gt;</span><span class="op">&gt;</span>();
+    <span class="kw">let</span> (<span class="ident">notifs_out</span>, <span class="ident">encoder_in</span>) <span class="op">=</span> <span class="ident">df</span>.<span class="ident">make_edge</span>::<span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">&gt;</span><span class="op">&gt;</span>();
+
+    <span class="ident">df</span>.<span class="ident">add_subgraph</span>(
+        <span class="macro">tl!</span>(<span class="ident">network_in</span>),
+        <span class="macro">tl!</span>(<span class="ident">contacts</span>, <span class="ident">diagnoses</span>),
+        <span class="kw">move</span> <span class="op">|</span><span class="ident">_ctx</span>, <span class="macro">tl!</span>(<span class="ident">recv</span>), <span class="macro">tl!</span>(<span class="ident">send1</span>, <span class="ident">send2</span>)<span class="op">|</span> {
             <span class="kw">for</span> <span class="ident">message</span> <span class="kw">in</span> <span class="ident">recv</span>.<span class="ident">take_inner</span>() {
                 <span class="kw">let</span> <span class="ident">Message</span> { <span class="ident">address</span>, <span class="ident">batch</span> } <span class="op">=</span> <span class="ident">message</span>;
                 <span class="kw">match</span> <span class="ident">address</span> {
@@ -163,90 +151,70 @@
                     <span class="kw">_</span> =&gt; <span class="macro">panic!</span>(<span class="string">&quot;invalid port&quot;</span>),
                 }
             }
-        });
+        },
+    );
 
     <span class="kw">type</span> <span class="ident">Pid</span> <span class="op">=</span> <span class="ident">String</span>;
     <span class="kw">type</span> <span class="ident">DateTime</span> <span class="op">=</span> <span class="ident">usize</span>;
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">exposed_contacts</span> <span class="op">=</span> <span class="ident">Default::default</span>();
-    <span class="kw">type</span> <span class="ident">MainIn</span> <span class="op">=</span> <span class="macro">tt!</span>(
-        <span class="ident">VecHandoff</span>::<span class="op">&lt;</span>(<span class="ident">Pid</span>, <span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">&gt;</span>,
-        <span class="ident">VecHandoff</span>::<span class="op">&lt;</span>(<span class="ident">Pid</span>, (<span class="ident">DateTime</span>, <span class="ident">DateTime</span>))<span class="op">&gt;</span>,
-        <span class="ident">VecHandoff</span>::<span class="op">&lt;</span>(<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">&gt;</span>
+    <span class="ident">df</span>.<span class="ident">add_subgraph</span>(
+        <span class="macro">tl!</span>(<span class="ident">contacts_in</span>, <span class="ident">diagnosed_in</span>, <span class="ident">loop_in</span>),
+        <span class="macro">tl!</span>(<span class="ident">notifs_out</span>, <span class="ident">loop_out</span>),
+        <span class="kw">move</span> <span class="op">|</span><span class="ident">_ctx</span>, <span class="macro">tl!</span>(<span class="ident">contacts_recv</span>, <span class="ident">diagnosed_recv</span>, <span class="ident">loop_recv</span>), <span class="macro">tl!</span>(<span class="ident">notifs_send</span>, <span class="ident">loop_send</span>)<span class="op">|</span> {
+            <span class="kw">let</span> <span class="ident">looped</span> <span class="op">=</span> <span class="ident">loop_recv</span>
+                .<span class="ident">take_inner</span>()
+                .<span class="ident">into_iter</span>()
+                .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">pid</span>, <span class="ident">t</span>)<span class="op">|</span> (<span class="ident">pid</span>, (<span class="ident">t</span>, <span class="ident">t</span> <span class="op">+</span> <span class="number">14</span>)));
+
+            <span class="kw">let</span> <span class="ident">exposed</span> <span class="op">=</span> <span class="ident">diagnosed_recv</span>.<span class="ident">take_inner</span>().<span class="ident">into_iter</span>().<span class="ident">chain</span>(<span class="ident">looped</span>);
+
+            <span class="kw">let</span> <span class="ident">contacts</span> <span class="op">=</span> <span class="ident">contacts_recv</span>
+                .<span class="ident">take_inner</span>()
+                .<span class="ident">into_iter</span>()
+                .<span class="ident">flat_map</span>(<span class="op">|</span>(<span class="ident">pid_a</span>, <span class="ident">pid_b</span>, <span class="ident">t</span>)<span class="op">|</span> {
+                    <span class="macro">vec!</span>[(<span class="ident">pid_a</span>.<span class="ident">clone</span>(), (<span class="ident">pid_b</span>.<span class="ident">clone</span>(), <span class="ident">t</span>)), (<span class="ident">pid_b</span>, (<span class="ident">pid_a</span>, <span class="ident">t</span>))]
+                });
+
+            <span class="kw">let</span> <span class="ident">join_exposed_contacts</span> <span class="op">=</span>
+                <span class="ident">SymmetricHashJoin::new</span>(<span class="ident">exposed</span>, <span class="ident">contacts</span>, <span class="kw-2">&amp;mut</span> <span class="ident">exposed_contacts</span>);
+            <span class="kw">let</span> <span class="ident">new_exposed</span> <span class="op">=</span>
+                <span class="ident">join_exposed_contacts</span>.<span class="ident">filter_map</span>(<span class="op">|</span>(<span class="ident">_pid_a</span>, (<span class="ident">t_from</span>, <span class="ident">t_to</span>), (<span class="ident">pid_b</span>, <span class="ident">t_contact</span>))<span class="op">|</span> {
+                    <span class="kw">if</span> <span class="ident">t_from</span> <span class="op">&lt;</span> <span class="ident">t_contact</span> <span class="op">&amp;&amp;</span> <span class="ident">t_contact</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">t_to</span> {
+                        <span class="prelude-val">Some</span>((<span class="ident">pid_b</span>, <span class="ident">t_contact</span>))
+                    } <span class="kw">else</span> {
+                        <span class="prelude-val">None</span>
+                    }
+                });
+
+            <span class="kw">let</span> <span class="ident">pivot</span> <span class="op">=</span> <span class="ident">new_exposed</span>
+                .<span class="ident">pusherator</span>()
+                .<span class="ident">tee</span>(
+                    <span class="ident">InputBuild::new</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">exposed_person</span>: (<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">|</span> {
+                        <span class="comment">// Notif push.</span>
+                        <span class="ident">notifs_send</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>(<span class="ident">exposed_person</span>));
+                    }),
+                )
+                .<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">exposed_person</span>: (<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">|</span> {
+                    <span class="comment">// Loop push.</span>
+                    <span class="ident">loop_send</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>(<span class="ident">exposed_person</span>));
+                });
+
+            <span class="ident">pivot</span>.<span class="ident">run</span>();
+        },
     );
-    <span class="kw">type</span> <span class="ident">MainOut</span> <span class="op">=</span> <span class="macro">tt!</span>(<span class="ident">VecHandoff</span>::<span class="op">&lt;</span>(<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">&gt;</span>, <span class="ident">VecHandoff</span>::<span class="op">&lt;</span>(<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">&gt;</span>);
-    <span class="kw">let</span> (<span class="macro">tl!</span>(<span class="ident">contacts_in</span>, <span class="ident">diagnosed_in</span>, <span class="ident">loop_in</span>), <span class="macro">tl!</span>(<span class="ident">notifs_out</span>, <span class="ident">loop_out</span>)) <span class="op">=</span> <span class="ident">df</span>
-        .<span class="ident">add_subgraph</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">MainIn</span>, <span class="ident">MainOut</span><span class="op">&gt;</span>(
-            <span class="kw">move</span> <span class="op">|</span><span class="ident">_ctx</span>,
-                  <span class="macro">tl!</span>(<span class="ident">contacts_recv</span>, <span class="ident">diagnosed_recv</span>, <span class="ident">loop_recv</span>),
-                  <span class="macro">tl!</span>(<span class="ident">notifs_send</span>, <span class="ident">loop_send</span>)<span class="op">|</span> {
-                <span class="kw">let</span> <span class="ident">looped</span> <span class="op">=</span> <span class="ident">loop_recv</span>
-                    .<span class="ident">take_inner</span>()
-                    .<span class="ident">into_iter</span>()
-                    .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">pid</span>, <span class="ident">t</span>)<span class="op">|</span> (<span class="ident">pid</span>, (<span class="ident">t</span>, <span class="ident">t</span> <span class="op">+</span> <span class="number">14</span>)));
 
-                <span class="kw">let</span> <span class="ident">exposed</span> <span class="op">=</span> <span class="ident">diagnosed_recv</span>.<span class="ident">take_inner</span>().<span class="ident">into_iter</span>().<span class="ident">chain</span>(<span class="ident">looped</span>);
-
-                <span class="kw">let</span> <span class="ident">contacts</span> <span class="op">=</span>
-                    <span class="ident">contacts_recv</span>
-                        .<span class="ident">take_inner</span>()
-                        .<span class="ident">into_iter</span>()
-                        .<span class="ident">flat_map</span>(<span class="op">|</span>(<span class="ident">pid_a</span>, <span class="ident">pid_b</span>, <span class="ident">t</span>)<span class="op">|</span> {
-                            <span class="macro">vec!</span>[(<span class="ident">pid_a</span>.<span class="ident">clone</span>(), (<span class="ident">pid_b</span>.<span class="ident">clone</span>(), <span class="ident">t</span>)), (<span class="ident">pid_b</span>, (<span class="ident">pid_a</span>, <span class="ident">t</span>))]
-                        });
-
-                <span class="kw">let</span> <span class="ident">join_exposed_contacts</span> <span class="op">=</span>
-                    <span class="ident">SymmetricHashJoin::new</span>(<span class="ident">exposed</span>, <span class="ident">contacts</span>, <span class="kw-2">&amp;mut</span> <span class="ident">exposed_contacts</span>);
-                <span class="kw">let</span> <span class="ident">new_exposed</span> <span class="op">=</span> <span class="ident">join_exposed_contacts</span>.<span class="ident">filter_map</span>(
-                    <span class="op">|</span>(<span class="ident">_pid_a</span>, (<span class="ident">t_from</span>, <span class="ident">t_to</span>), (<span class="ident">pid_b</span>, <span class="ident">t_contact</span>))<span class="op">|</span> {
-                        <span class="kw">if</span> <span class="ident">t_from</span> <span class="op">&lt;</span> <span class="ident">t_contact</span> <span class="op">&amp;&amp;</span> <span class="ident">t_contact</span> <span class="op">&lt;</span><span class="op">=</span> <span class="ident">t_to</span> {
-                            <span class="prelude-val">Some</span>((<span class="ident">pid_b</span>, <span class="ident">t_contact</span>))
-                        } <span class="kw">else</span> {
-                            <span class="prelude-val">None</span>
-                        }
-                    },
-                );
-
-                <span class="kw">let</span> <span class="ident">pivot</span> <span class="op">=</span> <span class="ident">new_exposed</span>
-                    .<span class="ident">pusherator</span>()
-                    .<span class="ident">tee</span>(
-                        <span class="ident">InputBuild::new</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">exposed_person</span>: (<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">|</span> {
-                            <span class="comment">// Notif push.</span>
-                            <span class="ident">notifs_send</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>(<span class="ident">exposed_person</span>));
-                        }),
-                    )
-                    .<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">exposed_person</span>: (<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">|</span> {
-                        <span class="comment">// Loop push.</span>
-                        <span class="ident">loop_send</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>(<span class="ident">exposed_person</span>));
-                    });
-
-                <span class="ident">pivot</span>.<span class="ident">run</span>();
-            },
-        );
-
-    <span class="kw">let</span> (<span class="ident">encoder_in</span>, <span class="ident">encoder_out</span>) <span class="op">=</span>
-        <span class="ident">df</span>.<span class="ident">add_inout</span>(<span class="op">|</span><span class="ident">_ctx</span>, <span class="ident">recv</span>: <span class="kw-2">&amp;</span><span class="ident">RecvCtx</span><span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">usize</span>)<span class="op">&gt;</span><span class="op">&gt;</span>, <span class="ident">send</span><span class="op">|</span> {
-            <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buf</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
-            <span class="ident">recv</span>.<span class="ident">take_inner</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">buf</span>);
-            <span class="ident">send</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>(<span class="ident">Message</span> {
-                <span class="ident">address</span>: <span class="number">0</span>,
-                <span class="ident">batch</span>: <span class="ident">buf</span>.<span class="ident">into</span>(),
-            }));
-        });
-
-    <span class="ident">df</span>.<span class="ident">add_edge</span>(<span class="ident">contacts</span>, <span class="ident">contacts_in</span>);
-    <span class="ident">df</span>.<span class="ident">add_edge</span>(<span class="ident">diagnoses</span>, <span class="ident">diagnosed_in</span>);
-    <span class="ident">df</span>.<span class="ident">add_edge</span>(<span class="ident">loop_out</span>, <span class="ident">loop_in</span>);
-
-    <span class="kw">let</span> <span class="ident">stream</span> <span class="op">=</span> <span class="ident">TcpStream::connect</span>(<span class="ident">opts</span>.<span class="ident">addr</span>).<span class="kw">await</span>.<span class="ident">unwrap</span>();
-    <span class="kw">let</span> (<span class="ident">network_out</span>, <span class="ident">network_in</span>) <span class="op">=</span> <span class="ident">df</span>.<span class="ident">add_tcp_stream</span>(<span class="ident">stream</span>);
-
-    <span class="ident">df</span>.<span class="ident">add_edge</span>(<span class="ident">notifs_out</span>, <span class="ident">encoder_in</span>);
-    <span class="ident">df</span>.<span class="ident">add_edge</span>(<span class="ident">encoder_out</span>, <span class="ident">network_out</span>);
-    <span class="ident">df</span>.<span class="ident">add_edge</span>(<span class="ident">network_in</span>, <span class="ident">demux_in</span>);
+    <span class="ident">df</span>.<span class="ident">add_subgraph_in_out</span>(<span class="ident">encoder_in</span>, <span class="ident">network_out</span>, <span class="op">|</span><span class="ident">_ctx</span>, <span class="ident">recv</span>, <span class="ident">send</span><span class="op">|</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buf</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
+        <span class="ident">recv</span>.<span class="ident">take_inner</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">buf</span>);
+        <span class="ident">send</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>(<span class="ident">Message</span> {
+            <span class="ident">address</span>: <span class="number">0</span>,
+            <span class="ident">batch</span>: <span class="ident">buf</span>.<span class="ident">into</span>(),
+        }));
+    });
 
     <span class="ident">df</span>.<span class="ident">run_async</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing_dist" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (27f5d830e 2022-02-02)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing_dist" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (4e8fb743c 2022-02-03)" ></div>
 </body></html>

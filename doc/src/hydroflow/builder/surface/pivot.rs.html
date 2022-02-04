@@ -36,6 +36,9 @@
 <span id="31">31</span>
 <span id="32">32</span>
 <span id="33">33</span>
+<span id="34">34</span>
+<span id="35">35</span>
+<span id="36">36</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">PullSurface</span>, <span class="ident">PushSurfaceReversed</span>};
 
 <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">type_alias_bounds</span>)]</span>
@@ -43,7 +46,10 @@
 <span class="kw">where</span>
     <span class="ident">Pull</span>: <span class="ident">PullSurface</span>,
     <span class="ident">Push</span>: <span class="ident">PushSurfaceReversed</span><span class="op">&lt;</span><span class="ident">ItemIn</span> <span class="op">=</span> <span class="ident">Pull::ItemOut</span><span class="op">&gt;</span>,
-<span class="op">=</span> ((<span class="ident">Pull::Connect</span>, <span class="ident">Push::Connect</span>), (<span class="ident">Pull::Build</span>, <span class="ident">Push::Build</span>));
+<span class="op">=</span> (
+    (<span class="ident">Pull::InputHandoffs</span>, <span class="ident">Push::OutputHandoffs</span>),
+    (<span class="ident">Pull::Build</span>, <span class="ident">Push::Build</span>),
+);
 
 <span class="doccomment">/// The combination of both Pull and Push surface halves.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PivotSurface</span><span class="op">&lt;</span><span class="ident">Pull</span>, <span class="ident">Push</span><span class="op">&gt;</span>
@@ -70,5 +76,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (27f5d830e 2022-02-02)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (4e8fb743c 2022-02-03)" ></div>
 </body></html>

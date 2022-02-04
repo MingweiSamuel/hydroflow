@@ -86,7 +86,6 @@
 <span id="81">81</span>
 <span id="82">82</span>
 <span id="83">83</span>
-<span id="84">84</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::Opts</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::protocol</span>::{<span class="ident">ChatMessage</span>, <span class="ident">MemberRequest</span>, <span class="ident">MemberResponse</span>};
@@ -130,8 +129,7 @@
 
     <span class="comment">// 2. feed new members into the join</span>
     <span class="comment">// But first, we need a buffer to turn push into pull for cross_join.</span>
-    <span class="kw">let</span> (<span class="ident">memberships_push</span>, <span class="ident">memberships_pull</span>) <span class="op">=</span>
-        <span class="ident">hf</span>.<span class="ident">make_handoff</span>::<span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>();
+    <span class="kw">let</span> (<span class="ident">memberships_push</span>, <span class="ident">memberships_pull</span>) <span class="op">=</span> <span class="ident">hf</span>.<span class="ident">make_edge</span>::<span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span>, <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">String</span><span class="op">&gt;</span><span class="op">&gt;</span>();
     <span class="comment">// and now the other start_tee</span>
     <span class="kw">let</span> <span class="ident">member_join_input</span> <span class="op">=</span> <span class="ident">hf</span>
         .<span class="ident">start_tee</span>()
@@ -172,5 +170,5 @@
     <span class="ident">hf</span>.<span class="ident">run_async</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="chat" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (27f5d830e 2022-02-02)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="chat" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (4e8fb743c 2022-02-03)" ></div>
 </body></html>

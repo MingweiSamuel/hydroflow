@@ -4,7 +4,7 @@
     </nav>
     <nav class="sidebar"><a class="sidebar-logo" href="../../hydroflow/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"><a href="#">Module builder</a></h2><div class="sidebar-elems"><div class="block items"><ul><li><a href="#modules">Modules</a></li><li><a href="#structs">Structs</a></li></ul></div><div id="sidebar-vars" data-name="builder" data-ty="mod" data-relpath="./"></div><script defer src="./sidebar-items.js"></script></div></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../hydroflow/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="main-heading">
-    <h1 class="fqn"><span class="in-band">Module <a href="../index.html">hydroflow</a>::<wbr><a class="mod" href="#">builder</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../../src/hydroflow/builder/mod.rs.html#1-284">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Hydroflow’s Surface API.</p>
+    <h1 class="fqn"><span class="in-band">Module <a href="../index.html">hydroflow</a>::<wbr><a class="mod" href="#">builder</a><button id="copy-path" onclick="copy_path(this)" title="Copy item path to clipboard"><img src="../../clipboard.svg" width="19" height="18" alt="Copy item path"></button></span></h1><span class="out-of-band"><a class="srclink" href="../../src/hydroflow/builder/mod.rs.html#1-273">source</a> · <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">[<span class="inner">&#x2212;</span>]</a></span></div><details class="rustdoc-toggle top-doc" open><summary class="hideme"><span>Expand description</span></summary><div class="docblock"><p>Hydroflow’s Surface API.</p>
 <h3 id="internal-documentation" class="section-header"><a href="#internal-documentation">Internal Documentation</a></h3>
 <p>Due to the limitations of type-level programming in Rust, this code is
 “baklava” code containing lot of layers. Each layer does one thing, then
@@ -13,12 +13,12 @@ does and is named. Layers are listed starting from the highest
 (user-facing API) layer and ending with the lowest (code-running) layer.</p>
 <h4 id="layer-structure" class="section-header"><a href="#layer-structure">Layer Structure</a></h4><div class="example-wrap"><pre class="language-text"><code>              (A) Surface API
         (B) (Push Surface Reversed*)
-                 /            \
-                /              \
-       (C) Connector   (D) Subgraph Builder
-                                 |
-                      (E) Iterator/Pusherator</code></pre></div>
+                     |
+           (D) Subgraph Builder
+                     |
+          (E) Iterator/Pusherator</code></pre></div>
 <p><sup>*Only used with <code>Push</code> to reverse the ownership direction.</sup></p>
+<p>(Note (C) used to be <code>Connectors</code> but they’re no longer needed)</p>
 <h4 id="layer-descriptions" class="section-header"><a href="#layer-descriptions">Layer Descriptions</a></h4><table>
 <tr>
     <th rowspan="2">Layer</th>
@@ -45,16 +45,6 @@ does and is named. Layers are listed starting from the highest
     <td><code>PushSurfaceReversed</code></td>
 </tr>
 <tr>
-    <td>(C) Connectors</td>
-    <td>
-        &bull; Connects <code>OutputPort</code>s and <code>InputPort</code>s, splits type lists in order to do so.<br>
-        &bull; Does not go to any lower layers.<br>
-        &bull; Uses the input/output <code>HandoffList</code> variadic type.
-    </td>
-    <td><code>PullConnect</code></td>
-    <td><code>PushConnect</code></td>
-</tr>
-<tr>
     <td>(D) Subgraph Builders</td>
     <td>
         &bull; On each subgraph invocation, constructs the (E) iterators and pivot which will be run.<br>
@@ -77,16 +67,14 @@ does and is named. Layers are listed starting from the highest
 <h4 id="how-the-code-actually-runs" class="section-header"><a href="#how-the-code-actually-runs">How the code actually runs</a></h4>
 <p>The layers are used in <a href="prelude/struct.HydroflowBuilder.html#method.add_subgraph" title="HydroflowBuilder::add_subgraph">HydroflowBuilder::add_subgraph</a>. The method
 receives a pivot with <code>PullSurface</code> and <code>PushSurfaceReversed</code> halves. Then
-<code>into_parts()</code> splits them into the build half and the connector half.
-The build half is used to create the subgraph which gives back
-input/output ports. Then the connector half is used to connect up those
-ports.</p>
+<code>into_parts()</code> splits them into the ports half and the build half. Those
+are then both sent to <a href="../scheduled/graph/struct.Hydroflow.html#method.add_subgraph">Hydroflow::add_subgraph()</a>
+to create a subgraph.</p>
 </div></details><h2 id="modules" class="small-section-header"><a href="#modules">Modules</a></h2>
 <div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="mod" href="build/index.html" title="hydroflow::builder::build mod">build</a></div><div class="item-right docblock-short"><p>Internal “subgraph builders” to implement the Surface API. For more info see <a href="index.html" title="super">super</a>.</p>
-</div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="connect/index.html" title="hydroflow::builder::connect mod">connect</a></div><div class="item-right docblock-short"><p>Internal “connects” which connect input/output ports to implement the Surface API. For more info see <a href="index.html" title="super">super</a>.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="prelude/index.html" title="hydroflow::builder::prelude mod">prelude</a></div><div class="item-right docblock-short"><p>Prelude to quick-import items needed for using the Surface API.</p>
 </div></div><div class="item-row"><div class="item-left module-item"><a class="mod" href="surface/index.html" title="hydroflow::builder::surface mod">surface</a></div><div class="item-right docblock-short"><p>Structs used to create the user-facing Surface API.</p>
 </div></div></div><h2 id="structs" class="small-section-header"><a href="#structs">Structs</a></h2>
 <div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="struct" href="struct.HydroflowBuilder.html" title="hydroflow::builder::HydroflowBuilder struct">HydroflowBuilder</a></div><div class="item-right docblock-short"><p>The user-facing entry point for the Surface API.</p>
-</div></div></div></section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (27f5d830e 2022-02-02)" ></div>
+</div></div></div></section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (4e8fb743c 2022-02-03)" ></div>
 </body></html>

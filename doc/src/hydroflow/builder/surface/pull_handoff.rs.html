@@ -44,37 +44,25 @@
 <span id="39">39</span>
 <span id="40">40</span>
 <span id="41">41</span>
-<span id="42">42</span>
-<span id="43">43</span>
-<span id="44">44</span>
-<span id="45">45</span>
-<span id="46">46</span>
-<span id="47">47</span>
-<span id="48">48</span>
-<span id="49">49</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">BaseSurface</span>, <span class="ident">PullSurface</span>};
 
-<span class="kw">use</span> <span class="ident">std::cell::Cell</span>;
-<span class="kw">use</span> <span class="ident">std::rc::Rc</span>;
-
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder::build::pull_handoff::HandoffPullBuild</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder::connect::HandoffPullConnect</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::ctx::InputPort</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::handoff::Handoff</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::tt</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::port::OutputPort</span>;
+<span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">tl</span>, <span class="ident">tt</span>};
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">HandoffPullSurface</span><span class="op">&lt;</span><span class="ident">Hof</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">Hof</span>: <span class="ident">Handoff</span>,
 {
-    <span class="ident">port</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">InputPort</span><span class="op">&lt;</span><span class="ident">Hof</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+    <span class="ident">port</span>: <span class="ident">OutputPort</span><span class="op">&lt;</span><span class="ident">Hof</span><span class="op">&gt;</span>,
 }
 
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Hof</span><span class="op">&gt;</span> <span class="ident">HandoffPullSurface</span><span class="op">&lt;</span><span class="ident">Hof</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">Hof</span>: <span class="ident">Handoff</span>,
 {
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">port</span>: <span class="ident">Rc</span><span class="op">&lt;</span><span class="ident">Cell</span><span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">InputPort</span><span class="op">&lt;</span><span class="ident">Hof</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">port</span>: <span class="ident">OutputPort</span><span class="op">&lt;</span><span class="ident">Hof</span><span class="op">&gt;</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">port</span> }
     }
 }
@@ -90,17 +78,13 @@
 <span class="kw">where</span>
     <span class="ident">Hof</span>: <span class="ident">Handoff</span>,
 {
-    <span class="kw">type</span> <span class="ident">InputHandoffs</span> <span class="op">=</span> <span class="macro">tt!</span>(<span class="ident">Hof</span>);
-
-    <span class="kw">type</span> <span class="ident">Connect</span> <span class="op">=</span> <span class="ident">HandoffPullConnect</span><span class="op">&lt;</span><span class="ident">Hof</span><span class="op">&gt;</span>;
+    <span class="kw">type</span> <span class="ident">InputHandoffs</span> <span class="op">=</span> <span class="macro">tt!</span>(<span class="ident">OutputPort</span><span class="op">&lt;</span><span class="ident">Hof</span><span class="op">&gt;</span>);
     <span class="kw">type</span> <span class="ident">Build</span> <span class="op">=</span> <span class="ident">HandoffPullBuild</span><span class="op">&lt;</span><span class="ident">Hof</span><span class="op">&gt;</span>;
 
-    <span class="kw">fn</span> <span class="ident">into_parts</span>(<span class="self">self</span>) -&gt; (<span class="ident"><span class="self">Self</span>::Connect</span>, <span class="ident"><span class="self">Self</span>::Build</span>) {
-        <span class="kw">let</span> <span class="ident">connect</span> <span class="op">=</span> <span class="ident">HandoffPullConnect::new</span>(<span class="self">self</span>.<span class="ident">port</span>);
-        <span class="kw">let</span> <span class="ident">build</span> <span class="op">=</span> <span class="ident">HandoffPullBuild::new</span>();
-        (<span class="ident">connect</span>, <span class="ident">build</span>)
+    <span class="kw">fn</span> <span class="ident">into_parts</span>(<span class="self">self</span>) -&gt; (<span class="ident"><span class="self">Self</span>::InputHandoffs</span>, <span class="ident"><span class="self">Self</span>::Build</span>) {
+        (<span class="macro">tl!</span>(<span class="self">self</span>.<span class="ident">port</span>), <span class="ident">HandoffPullBuild::new</span>())
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (27f5d830e 2022-02-02)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (4e8fb743c 2022-02-03)" ></div>
 </body></html>

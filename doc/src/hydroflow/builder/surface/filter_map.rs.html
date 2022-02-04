@@ -107,10 +107,6 @@
 <span id="102">102</span>
 <span id="103">103</span>
 <span id="104">104</span>
-<span id="105">105</span>
-<span id="106">106</span>
-<span id="107">107</span>
-<span id="108">108</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">BaseSurface</span>, <span class="ident">PullSurface</span>, <span class="ident">PushSurface</span>, <span class="ident">PushSurfaceReversed</span>};
 
 <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
@@ -149,11 +145,9 @@
     <span class="ident">Func</span>: <span class="ident">FnMut</span>(<span class="ident">Prev::ItemOut</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Out</span><span class="op">&gt;</span>,
 {
     <span class="kw">type</span> <span class="ident">InputHandoffs</span> <span class="op">=</span> <span class="ident">Prev::InputHandoffs</span>;
-
-    <span class="kw">type</span> <span class="ident">Connect</span> <span class="op">=</span> <span class="ident">Prev::Connect</span>;
     <span class="kw">type</span> <span class="ident">Build</span> <span class="op">=</span> <span class="ident">FilterMapPullBuild</span><span class="op">&lt;</span><span class="ident">Prev::Build</span>, <span class="ident">Func</span><span class="op">&gt;</span>;
 
-    <span class="kw">fn</span> <span class="ident">into_parts</span>(<span class="self">self</span>) -&gt; (<span class="ident"><span class="self">Self</span>::Connect</span>, <span class="ident"><span class="self">Self</span>::Build</span>) {
+    <span class="kw">fn</span> <span class="ident">into_parts</span>(<span class="self">self</span>) -&gt; (<span class="ident"><span class="self">Self</span>::InputHandoffs</span>, <span class="ident"><span class="self">Self</span>::Build</span>) {
         <span class="kw">let</span> (<span class="ident">connect</span>, <span class="ident">build</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">prev</span>.<span class="ident">into_parts</span>();
         <span class="kw">let</span> <span class="ident">build</span> <span class="op">=</span> <span class="ident">FilterMapPullBuild::new</span>(<span class="ident">build</span>, <span class="self">self</span>.<span class="ident">func</span>);
         (<span class="ident">connect</span>, <span class="ident">build</span>)
@@ -206,19 +200,17 @@
     <span class="ident">Next</span>: <span class="ident">PushSurfaceReversed</span>,
     <span class="ident">Func</span>: <span class="ident">FnMut</span>(<span class="ident">In</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Next::ItemIn</span><span class="op">&gt;</span>,
 {
-    <span class="kw">type</span> <span class="ident">OutputHandoffs</span> <span class="op">=</span> <span class="ident">Next::OutputHandoffs</span>;
-
     <span class="kw">type</span> <span class="ident">ItemIn</span> <span class="op">=</span> <span class="ident">In</span>;
 
-    <span class="kw">type</span> <span class="ident">Connect</span> <span class="op">=</span> <span class="ident">Next::Connect</span>;
+    <span class="kw">type</span> <span class="ident">OutputHandoffs</span> <span class="op">=</span> <span class="ident">Next::OutputHandoffs</span>;
     <span class="kw">type</span> <span class="ident">Build</span> <span class="op">=</span> <span class="ident">FilterMapPushBuild</span><span class="op">&lt;</span><span class="ident">Next::Build</span>, <span class="ident">Func</span>, <span class="ident">In</span><span class="op">&gt;</span>;
 
-    <span class="kw">fn</span> <span class="ident">into_parts</span>(<span class="self">self</span>) -&gt; (<span class="ident"><span class="self">Self</span>::Connect</span>, <span class="ident"><span class="self">Self</span>::Build</span>) {
+    <span class="kw">fn</span> <span class="ident">into_parts</span>(<span class="self">self</span>) -&gt; (<span class="ident"><span class="self">Self</span>::OutputHandoffs</span>, <span class="ident"><span class="self">Self</span>::Build</span>) {
         <span class="kw">let</span> (<span class="ident">connect</span>, <span class="ident">build</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">next</span>.<span class="ident">into_parts</span>();
         <span class="kw">let</span> <span class="ident">build</span> <span class="op">=</span> <span class="ident">FilterMapPushBuild::new</span>(<span class="ident">build</span>, <span class="self">self</span>.<span class="ident">func</span>);
         (<span class="ident">connect</span>, <span class="ident">build</span>)
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (27f5d830e 2022-02-02)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (4e8fb743c 2022-02-03)" ></div>
 </body></html>

@@ -41,19 +41,11 @@
 <span id="36">36</span>
 <span id="37">37</span>
 <span id="38">38</span>
-<span id="39">39</span>
-<span id="40">40</span>
-<span id="41">41</span>
-<span id="42">42</span>
-<span id="43">43</span>
-<span id="44">44</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::PushSurfaceReversed</span>;
 
 <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder::build::push_for_each::ForEachPushBuild</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder::connect::NullPushConnect</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::tt</span>;
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">ForEachPushSurfaceReversed</span><span class="op">&lt;</span><span class="ident">Func</span>, <span class="ident">In</span><span class="op">&gt;</span>
 <span class="kw">where</span>
@@ -78,19 +70,15 @@
 <span class="kw">where</span>
     <span class="ident">Func</span>: <span class="ident">FnMut</span>(<span class="ident">In</span>),
 {
-    <span class="kw">type</span> <span class="ident">OutputHandoffs</span> <span class="op">=</span> <span class="macro">tt!</span>();
-
     <span class="kw">type</span> <span class="ident">ItemIn</span> <span class="op">=</span> <span class="ident">In</span>;
 
-    <span class="kw">type</span> <span class="ident">Connect</span> <span class="op">=</span> <span class="ident">NullPushConnect</span>;
+    <span class="kw">type</span> <span class="ident">OutputHandoffs</span> <span class="op">=</span> ();
     <span class="kw">type</span> <span class="ident">Build</span> <span class="op">=</span> <span class="ident">ForEachPushBuild</span><span class="op">&lt;</span><span class="ident">Func</span>, <span class="ident">In</span><span class="op">&gt;</span>;
 
-    <span class="kw">fn</span> <span class="ident">into_parts</span>(<span class="self">self</span>) -&gt; (<span class="ident"><span class="self">Self</span>::Connect</span>, <span class="ident"><span class="self">Self</span>::Build</span>) {
-        <span class="kw">let</span> <span class="ident">connect</span> <span class="op">=</span> <span class="ident">NullPushConnect::new</span>();
-        <span class="kw">let</span> <span class="ident">build</span> <span class="op">=</span> <span class="ident">ForEachPushBuild::new</span>(<span class="self">self</span>.<span class="ident">func</span>);
-        (<span class="ident">connect</span>, <span class="ident">build</span>)
+    <span class="kw">fn</span> <span class="ident">into_parts</span>(<span class="self">self</span>) -&gt; (<span class="ident"><span class="self">Self</span>::OutputHandoffs</span>, <span class="ident"><span class="self">Self</span>::Build</span>) {
+        ((), <span class="ident">ForEachPushBuild::new</span>(<span class="self">self</span>.<span class="ident">func</span>))
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (27f5d830e 2022-02-02)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (4e8fb743c 2022-02-03)" ></div>
 </body></html>
