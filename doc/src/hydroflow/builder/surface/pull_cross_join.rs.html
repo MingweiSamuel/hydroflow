@@ -75,10 +75,12 @@
 <span id="70">70</span>
 <span id="71">71</span>
 <span id="72">72</span>
+<span id="73">73</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">BaseSurface</span>, <span class="ident">PullSurface</span>};
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::builder::build::pull_cross_join::CrossJoinPullBuild</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::handoff::handoff_list</span>::{<span class="ident">BasePortListSplit</span>, <span class="ident">RecvPortList</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::handoff::handoff_list</span>::{<span class="ident">PortList</span>, <span class="ident">PortListSplit</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::port::RECV</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::type_list::Extend</span>;
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">CrossJoinPullSurface</span><span class="op">&lt;</span><span class="ident">PrevA</span>, <span class="ident">PrevB</span><span class="op">&gt;</span>
@@ -89,8 +91,8 @@
     <span class="ident">PrevB::ItemOut</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Clone</span>,
 
     <span class="ident">PrevA::InputHandoffs</span>: <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">PrevB::InputHandoffs</span><span class="op">&gt;</span>,
-    <span class="op">&lt;</span><span class="ident">PrevA::InputHandoffs</span> <span class="kw">as</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">PrevB::InputHandoffs</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Extended</span>: <span class="ident">RecvPortList</span>
-        <span class="op">+</span> <span class="ident">BasePortListSplit</span><span class="op">&lt;</span><span class="ident">PrevA::InputHandoffs</span>, <span class="bool-val">false</span>, <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">PrevB::InputHandoffs</span><span class="op">&gt;</span>,
+    <span class="op">&lt;</span><span class="ident">PrevA::InputHandoffs</span> <span class="kw">as</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">PrevB::InputHandoffs</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Extended</span>:
+        <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">RECV</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">PortListSplit</span><span class="op">&lt;</span><span class="ident">RECV</span>, <span class="ident">PrevA::InputHandoffs</span>, <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">PrevB::InputHandoffs</span><span class="op">&gt;</span>,
 {
     <span class="ident">prev_a</span>: <span class="ident">PrevA</span>,
     <span class="ident">prev_b</span>: <span class="ident">PrevB</span>,
@@ -103,8 +105,8 @@
     <span class="ident">PrevB::ItemOut</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Clone</span>,
 
     <span class="ident">PrevA::InputHandoffs</span>: <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">PrevB::InputHandoffs</span><span class="op">&gt;</span>,
-    <span class="op">&lt;</span><span class="ident">PrevA::InputHandoffs</span> <span class="kw">as</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">PrevB::InputHandoffs</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Extended</span>: <span class="ident">RecvPortList</span>
-        <span class="op">+</span> <span class="ident">BasePortListSplit</span><span class="op">&lt;</span><span class="ident">PrevA::InputHandoffs</span>, <span class="bool-val">false</span>, <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">PrevB::InputHandoffs</span><span class="op">&gt;</span>,
+    <span class="op">&lt;</span><span class="ident">PrevA::InputHandoffs</span> <span class="kw">as</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">PrevB::InputHandoffs</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Extended</span>:
+        <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">RECV</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">PortListSplit</span><span class="op">&lt;</span><span class="ident">RECV</span>, <span class="ident">PrevA::InputHandoffs</span>, <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">PrevB::InputHandoffs</span><span class="op">&gt;</span>,
 {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>(<span class="ident">prev_a</span>: <span class="ident">PrevA</span>, <span class="ident">prev_b</span>: <span class="ident">PrevB</span>) -&gt; <span class="self">Self</span> {
         <span class="self">Self</span> { <span class="ident">prev_a</span>, <span class="ident">prev_b</span> }
@@ -119,8 +121,8 @@
     <span class="ident">PrevB::ItemOut</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Clone</span>,
 
     <span class="ident">PrevA::InputHandoffs</span>: <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">PrevB::InputHandoffs</span><span class="op">&gt;</span>,
-    <span class="op">&lt;</span><span class="ident">PrevA::InputHandoffs</span> <span class="kw">as</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">PrevB::InputHandoffs</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Extended</span>: <span class="ident">RecvPortList</span>
-        <span class="op">+</span> <span class="ident">BasePortListSplit</span><span class="op">&lt;</span><span class="ident">PrevA::InputHandoffs</span>, <span class="bool-val">false</span>, <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">PrevB::InputHandoffs</span><span class="op">&gt;</span>,
+    <span class="op">&lt;</span><span class="ident">PrevA::InputHandoffs</span> <span class="kw">as</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">PrevB::InputHandoffs</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Extended</span>:
+        <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">RECV</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">PortListSplit</span><span class="op">&lt;</span><span class="ident">RECV</span>, <span class="ident">PrevA::InputHandoffs</span>, <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">PrevB::InputHandoffs</span><span class="op">&gt;</span>,
 {
     <span class="kw">type</span> <span class="ident">ItemOut</span> <span class="op">=</span> (<span class="ident">PrevA::ItemOut</span>, <span class="ident">PrevB::ItemOut</span>);
 }
@@ -133,8 +135,8 @@
     <span class="ident">PrevB::ItemOut</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Clone</span>,
 
     <span class="ident">PrevA::InputHandoffs</span>: <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">PrevB::InputHandoffs</span><span class="op">&gt;</span>,
-    <span class="op">&lt;</span><span class="ident">PrevA::InputHandoffs</span> <span class="kw">as</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">PrevB::InputHandoffs</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Extended</span>: <span class="ident">RecvPortList</span>
-        <span class="op">+</span> <span class="ident">BasePortListSplit</span><span class="op">&lt;</span><span class="ident">PrevA::InputHandoffs</span>, <span class="bool-val">false</span>, <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">PrevB::InputHandoffs</span><span class="op">&gt;</span>,
+    <span class="op">&lt;</span><span class="ident">PrevA::InputHandoffs</span> <span class="kw">as</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">PrevB::InputHandoffs</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Extended</span>:
+        <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">RECV</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">PortListSplit</span><span class="op">&lt;</span><span class="ident">RECV</span>, <span class="ident">PrevA::InputHandoffs</span>, <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">PrevB::InputHandoffs</span><span class="op">&gt;</span>,
 {
     <span class="kw">type</span> <span class="ident">InputHandoffs</span> <span class="op">=</span> <span class="op">&lt;</span><span class="ident">PrevA::InputHandoffs</span> <span class="kw">as</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">PrevB::InputHandoffs</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Extended</span>;
     <span class="kw">type</span> <span class="ident">Build</span> <span class="op">=</span> <span class="ident">CrossJoinPullBuild</span><span class="op">&lt;</span><span class="ident">PrevA::Build</span>, <span class="ident">PrevB::Build</span><span class="op">&gt;</span>;

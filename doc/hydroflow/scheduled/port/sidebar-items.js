@@ -1,1 +1,1 @@
-initSidebarItems({"struct":[["BaseCtx",""],["BasePort",""]],"type":[["InputPort",""],["OutputPort",""],["RecvCtx",""],["SendCtx",""]]});
+initSidebarItems({"enum":[["RECV","An uninstantiable type used to tag port [`Polarity`] as receive."],["SEND","An uninstantiable type used to tag port [`Polarity`] as send."]],"struct":[["Port",""],["PortCtx",""]],"trait":[["Polarity","An empty trait used to denote [`Polarity`]: either send or receive."]],"type":[["InputPort",""],["OutputPort",""],["RecvCtx",""],["SendCtx",""]]});

@@ -55,10 +55,12 @@
 <span id="50">50</span>
 <span id="51">51</span>
 <span id="52">52</span>
+<span id="53">53</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">PushBuild</span>, <span class="ident">PushBuildBase</span>};
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::compiled::filter::Filter</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::handoff::handoff_list::BasePortList</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::handoff::handoff_list::PortList</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::port::SEND</span>;
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">FilterPushBuild</span><span class="op">&lt;</span><span class="ident">Next</span>, <span class="ident">Func</span><span class="op">&gt;</span>
 <span class="kw">where</span>
@@ -102,7 +104,7 @@
 
     <span class="kw">fn</span> <span class="ident">build</span><span class="op">&lt;</span><span class="lifetime">&#39;slf</span>, <span class="lifetime">&#39;hof</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;slf</span> <span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">handoffs</span>: <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::OutputHandoffs</span> <span class="kw">as</span> <span class="ident">BasePortList</span><span class="op">&lt;</span><span class="bool-val">true</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;hof</span><span class="op">&gt;</span>,
+        <span class="ident">handoffs</span>: <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::OutputHandoffs</span> <span class="kw">as</span> <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">SEND</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;hof</span><span class="op">&gt;</span>,
     ) -&gt; <span class="ident"><span class="self">Self</span>::Build</span><span class="op">&lt;</span><span class="lifetime">&#39;slf</span>, <span class="lifetime">&#39;hof</span><span class="op">&gt;</span> {
         <span class="ident">Filter::new</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> (<span class="self">self</span>.<span class="ident">func</span>)(<span class="ident">x</span>), <span class="self">self</span>.<span class="ident">next</span>.<span class="ident">build</span>(<span class="ident">handoffs</span>))
     }

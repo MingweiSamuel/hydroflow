@@ -244,6 +244,7 @@
 <span id="239">239</span>
 <span id="240">240</span>
 <span id="241">241</span>
+<span id="242">242</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Structs used to create the user-facing Surface API.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Main user-facing traits are [`BaseSurface`], [`PullSurface`], and</span>
@@ -286,7 +287,8 @@
 
 <span class="kw">use</span> <span class="ident">std::hash::Hash</span>;
 
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::handoff::handoff_list</span>::{<span class="ident">BasePortListSplit</span>, <span class="ident">RecvPortList</span>, <span class="ident">SendPortList</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::handoff::handoff_list</span>::{<span class="ident">PortList</span>, <span class="ident">PortListSplit</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::port</span>::{<span class="ident">RECV</span>, <span class="ident">SEND</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::type_list::Extend</span>;
 
 <span class="doccomment">/// Common trait shared between push and pull surface APIs.</span>
@@ -351,7 +353,7 @@
 <span class="kw">pub</span> <span class="kw">type</span> <span class="ident">InspectMapFunc</span><span class="op">&lt;</span><span class="ident">Prev</span>: <span class="ident">BaseSurface</span>, <span class="ident">Func</span><span class="op">&gt;</span> <span class="op">=</span> <span class="kw">impl</span> <span class="ident">FnMut</span>(<span class="ident">Prev::ItemOut</span>) -&gt; <span class="ident">Prev::ItemOut</span>;
 
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">PullSurface</span>: <span class="ident">BaseSurface</span> {
-    <span class="kw">type</span> <span class="ident">InputHandoffs</span>: <span class="ident">RecvPortList</span>;
+    <span class="kw">type</span> <span class="ident">InputHandoffs</span>: <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">RECV</span><span class="op">&gt;</span>;
     <span class="kw">type</span> <span class="ident">Build</span>: <span class="ident">PullBuild</span><span class="op">&lt;</span><span class="ident">InputHandoffs</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::InputHandoffs</span>, <span class="ident">ItemOut</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::ItemOut</span><span class="op">&gt;</span>;
 
     <span class="kw">fn</span> <span class="ident">into_parts</span>(<span class="self">self</span>) -&gt; (<span class="ident"><span class="self">Self</span>::InputHandoffs</span>, <span class="ident"><span class="self">Self</span>::Build</span>);
@@ -362,8 +364,8 @@
         <span class="ident">Other</span>: <span class="ident">PullSurface</span><span class="op">&lt;</span><span class="ident">ItemOut</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::ItemOut</span><span class="op">&gt;</span>,
 
         <span class="ident"><span class="self">Self</span>::InputHandoffs</span>: <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">Other::InputHandoffs</span><span class="op">&gt;</span>,
-        <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::InputHandoffs</span> <span class="kw">as</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">Other::InputHandoffs</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Extended</span>: <span class="ident">RecvPortList</span>
-            <span class="op">+</span> <span class="ident">BasePortListSplit</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::InputHandoffs</span>, <span class="bool-val">false</span>, <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">Other::InputHandoffs</span><span class="op">&gt;</span>,
+        <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::InputHandoffs</span> <span class="kw">as</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">Other::InputHandoffs</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Extended</span>: <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">RECV</span><span class="op">&gt;</span>
+            <span class="op">+</span> <span class="ident">PortListSplit</span><span class="op">&lt;</span><span class="ident">RECV</span>, <span class="ident"><span class="self">Self</span>::InputHandoffs</span>, <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">Other::InputHandoffs</span><span class="op">&gt;</span>,
     {
         <span class="ident">pull_chain::ChainPullSurface::new</span>(<span class="self">self</span>, <span class="ident">other</span>)
     }
@@ -380,8 +382,8 @@
         <span class="ident">ValOther</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Clone</span>,
 
         <span class="ident"><span class="self">Self</span>::InputHandoffs</span>: <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">Other::InputHandoffs</span><span class="op">&gt;</span>,
-        <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::InputHandoffs</span> <span class="kw">as</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">Other::InputHandoffs</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Extended</span>: <span class="ident">RecvPortList</span>
-            <span class="op">+</span> <span class="ident">BasePortListSplit</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::InputHandoffs</span>, <span class="bool-val">false</span>, <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">Other::InputHandoffs</span><span class="op">&gt;</span>,
+        <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::InputHandoffs</span> <span class="kw">as</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">Other::InputHandoffs</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Extended</span>: <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">RECV</span><span class="op">&gt;</span>
+            <span class="op">+</span> <span class="ident">PortListSplit</span><span class="op">&lt;</span><span class="ident">RECV</span>, <span class="ident"><span class="self">Self</span>::InputHandoffs</span>, <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">Other::InputHandoffs</span><span class="op">&gt;</span>,
     {
         <span class="ident">pull_join::JoinPullSurface::new</span>(<span class="self">self</span>, <span class="ident">other</span>)
     }
@@ -394,8 +396,8 @@
         <span class="ident">Other::ItemOut</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Clone</span>,
 
         <span class="ident"><span class="self">Self</span>::InputHandoffs</span>: <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">Other::InputHandoffs</span><span class="op">&gt;</span>,
-        <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::InputHandoffs</span> <span class="kw">as</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">Other::InputHandoffs</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Extended</span>: <span class="ident">RecvPortList</span>
-            <span class="op">+</span> <span class="ident">BasePortListSplit</span><span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::InputHandoffs</span>, <span class="bool-val">false</span>, <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">Other::InputHandoffs</span><span class="op">&gt;</span>,
+        <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::InputHandoffs</span> <span class="kw">as</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">Other::InputHandoffs</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Extended</span>: <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">RECV</span><span class="op">&gt;</span>
+            <span class="op">+</span> <span class="ident">PortListSplit</span><span class="op">&lt;</span><span class="ident">RECV</span>, <span class="ident"><span class="self">Self</span>::InputHandoffs</span>, <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">Other::InputHandoffs</span><span class="op">&gt;</span>,
     {
         <span class="ident">pull_cross_join::CrossJoinPullSurface::new</span>(<span class="self">self</span>, <span class="ident">other</span>)
     }
@@ -431,8 +433,8 @@
         <span class="ident">NextB</span>: <span class="ident">PushSurfaceReversed</span><span class="op">&lt;</span><span class="ident">ItemIn</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::ItemOut</span><span class="op">&gt;</span>,
 
         <span class="ident">NextA::OutputHandoffs</span>: <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">NextB::OutputHandoffs</span><span class="op">&gt;</span>,
-        <span class="op">&lt;</span><span class="ident">NextA::OutputHandoffs</span> <span class="kw">as</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">NextB::OutputHandoffs</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Extended</span>: <span class="ident">SendPortList</span>
-            <span class="op">+</span> <span class="ident">BasePortListSplit</span><span class="op">&lt;</span><span class="ident">NextA::OutputHandoffs</span>, <span class="bool-val">true</span>, <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">NextB::OutputHandoffs</span><span class="op">&gt;</span>,
+        <span class="op">&lt;</span><span class="ident">NextA::OutputHandoffs</span> <span class="kw">as</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">NextB::OutputHandoffs</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Extended</span>: <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">SEND</span><span class="op">&gt;</span>
+            <span class="op">+</span> <span class="ident">PortListSplit</span><span class="op">&lt;</span><span class="ident">SEND</span>, <span class="ident">NextA::OutputHandoffs</span>, <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">NextB::OutputHandoffs</span><span class="op">&gt;</span>,
     {
         <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">push_tee::TeePushSurfaceReversed::new</span>(<span class="ident">next_a</span>, <span class="ident">next_b</span>);
         <span class="self">self</span>.<span class="ident">reverse</span>(<span class="ident">next</span>)
@@ -463,8 +465,8 @@
         <span class="ident">NextB</span>: <span class="ident">PushSurfaceReversed</span><span class="op">&lt;</span><span class="ident">ItemIn</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::ItemOut</span><span class="op">&gt;</span>,
 
         <span class="ident">NextA::OutputHandoffs</span>: <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">NextB::OutputHandoffs</span><span class="op">&gt;</span>,
-        <span class="op">&lt;</span><span class="ident">NextA::OutputHandoffs</span> <span class="kw">as</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">NextB::OutputHandoffs</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Extended</span>: <span class="ident">SendPortList</span>
-            <span class="op">+</span> <span class="ident">BasePortListSplit</span><span class="op">&lt;</span><span class="ident">NextA::OutputHandoffs</span>, <span class="bool-val">true</span>, <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">NextB::OutputHandoffs</span><span class="op">&gt;</span>,
+        <span class="op">&lt;</span><span class="ident">NextA::OutputHandoffs</span> <span class="kw">as</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">NextB::OutputHandoffs</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Extended</span>: <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">SEND</span><span class="op">&gt;</span>
+            <span class="op">+</span> <span class="ident">PortListSplit</span><span class="op">&lt;</span><span class="ident">SEND</span>, <span class="ident">NextA::OutputHandoffs</span>, <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">NextB::OutputHandoffs</span><span class="op">&gt;</span>,
     {
         <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">push_partition::PartitionPushSurfaceReversed::new</span>(<span class="ident">func</span>, <span class="ident">next_a</span>, <span class="ident">next_b</span>);
         <span class="self">self</span>.<span class="ident">reverse</span>(<span class="ident">next</span>)
@@ -480,7 +482,7 @@
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">PushSurfaceReversed</span> {
     <span class="kw">type</span> <span class="ident">ItemIn</span>;
 
-    <span class="kw">type</span> <span class="ident">OutputHandoffs</span>: <span class="ident">SendPortList</span>;
+    <span class="kw">type</span> <span class="ident">OutputHandoffs</span>: <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">SEND</span><span class="op">&gt;</span>;
     <span class="kw">type</span> <span class="ident">Build</span>: <span class="ident">PushBuild</span><span class="op">&lt;</span><span class="ident">OutputHandoffs</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::OutputHandoffs</span>, <span class="ident">ItemIn</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::ItemIn</span><span class="op">&gt;</span>;
 
     <span class="kw">fn</span> <span class="ident">into_parts</span>(<span class="self">self</span>) -&gt; (<span class="ident"><span class="self">Self</span>::OutputHandoffs</span>, <span class="ident"><span class="self">Self</span>::Build</span>);

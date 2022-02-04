@@ -160,30 +160,21 @@
 <span id="155">155</span>
 <span id="156">156</span>
 <span id="157">157</span>
-<span id="158">158</span>
-<span id="159">159</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">ref_cast::RefCast</span>;
 <span class="kw">use</span> <span class="ident">sealed::sealed</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::graph::HandoffData</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::port</span>::{<span class="ident">BaseCtx</span>, <span class="ident">BasePort</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::port</span>::{<span class="ident">Polarity</span>, <span class="ident">Port</span>, <span class="ident">PortCtx</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::type_list::TypeList</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled</span>::{<span class="ident">HandoffId</span>, <span class="ident">SubgraphId</span>};
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::Handoff</span>;
 
 <span class="attribute">#[<span class="ident">sealed</span>]</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">SendPortList</span>: <span class="ident">BasePortList</span><span class="op">&lt;</span><span class="bool-val">true</span><span class="op">&gt;</span> {}
-<span class="attribute">#[<span class="ident">sealed</span>]</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">BasePortList</span><span class="op">&lt;</span><span class="bool-val">true</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">SendPortList</span> <span class="kw">for</span> <span class="ident">T</span> {}
-
-<span class="attribute">#[<span class="ident">sealed</span>]</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">RecvPortList</span>: <span class="ident">BasePortList</span><span class="op">&lt;</span><span class="bool-val">false</span><span class="op">&gt;</span> {}
-<span class="attribute">#[<span class="ident">sealed</span>]</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>: <span class="ident">BasePortList</span><span class="op">&lt;</span><span class="bool-val">false</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="ident">RecvPortList</span> <span class="kw">for</span> <span class="ident">T</span> {}
-
-<span class="attribute">#[<span class="ident">sealed</span>]</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">BasePortList</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">S</span>: <span class="ident">bool</span><span class="op">&gt;</span>: <span class="ident">TypeList</span> {
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>: <span class="ident">TypeList</span>
+<span class="kw">where</span>
+    <span class="ident">S</span>: <span class="ident">Polarity</span>,
+{
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::ptr_arg</span>)]</span>
     <span class="kw">fn</span> <span class="ident">set_graph_meta</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -197,10 +188,11 @@
     <span class="kw">fn</span> <span class="ident">make_ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">handoffs</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">HandoffData</span>]) -&gt; <span class="ident"><span class="self">Self</span>::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>;
 }
 <span class="attribute">#[<span class="ident">sealed</span>]</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Rest</span>, <span class="ident">H</span>, <span class="kw">const</span> <span class="ident">S</span>: <span class="ident">bool</span><span class="op">&gt;</span> <span class="ident">BasePortList</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="kw">for</span> (<span class="ident">BasePort</span><span class="op">&lt;</span><span class="ident">H</span>, <span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">Rest</span>)
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">Rest</span>, <span class="ident">H</span><span class="op">&gt;</span> <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="kw">for</span> (<span class="ident">Port</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">H</span><span class="op">&gt;</span>, <span class="ident">Rest</span>)
 <span class="kw">where</span>
+    <span class="ident">S</span>: <span class="ident">Polarity</span>,
     <span class="ident">H</span>: <span class="ident">Handoff</span>,
-    <span class="ident">Rest</span>: <span class="ident">BasePortList</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">Rest</span>: <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
 {
     <span class="kw">fn</span> <span class="ident">set_graph_meta</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
@@ -223,7 +215,7 @@
         <span class="ident">rest</span>.<span class="ident">set_graph_meta</span>(<span class="ident">handoffs</span>, <span class="ident">pred</span>, <span class="ident">succ</span>, <span class="ident">out_handoff_ids</span>);
     }
 
-    <span class="kw">type</span> <span class="ident">Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">BaseCtx</span><span class="op">&lt;</span><span class="ident">H</span>, <span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">Rest::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>);
+    <span class="kw">type</span> <span class="ident">Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> <span class="op">=</span> (<span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="ident">PortCtx</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">H</span><span class="op">&gt;</span>, <span class="ident">Rest::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>);
     <span class="kw">fn</span> <span class="ident">make_ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">handoffs</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> [<span class="ident">HandoffData</span>]) -&gt; <span class="ident"><span class="self">Self</span>::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span> {
         <span class="kw">let</span> (<span class="ident">this</span>, <span class="ident">rest</span>) <span class="op">=</span> <span class="self">self</span>;
         <span class="kw">let</span> <span class="ident">handoff</span> <span class="op">=</span> <span class="ident">handoffs</span>
@@ -240,7 +232,10 @@
     }
 }
 <span class="attribute">#[<span class="ident">sealed</span>]</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="kw">const</span> <span class="ident">S</span>: <span class="ident">bool</span><span class="op">&gt;</span> <span class="ident">BasePortList</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="kw">for</span> () {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span> <span class="kw">for</span> ()
+<span class="kw">where</span>
+    <span class="ident">S</span>: <span class="ident">Polarity</span>,
+{
     <span class="kw">fn</span> <span class="ident">set_graph_meta</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         <span class="ident">_handoffs</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a</span> <span class="kw-2">mut</span> [<span class="ident">HandoffData</span>],
@@ -255,23 +250,23 @@
 }
 
 <span class="attribute">#[<span class="ident">sealed</span>]</span>
-<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">BasePortListSplit</span><span class="op">&lt;</span><span class="ident">A</span>, <span class="kw">const</span> <span class="ident">S</span>: <span class="ident">bool</span><span class="op">&gt;</span>: <span class="ident">BasePortList</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">PortListSplit</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">A</span><span class="op">&gt;</span>: <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">A</span>: <span class="ident">BasePortList</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">S</span>: <span class="ident">Polarity</span>,
+    <span class="ident">A</span>: <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
 {
-    <span class="kw">type</span> <span class="ident">Suffix</span>: <span class="ident">BasePortList</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>;
+    <span class="kw">type</span> <span class="ident">Suffix</span>: <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>;
 
     <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::needless_lifetimes</span>)]</span>
-    <span class="kw">fn</span> <span class="ident">split_ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
-        <span class="ident">ctx</span>: <span class="ident"><span class="self">Self</span>::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
-    ) -&gt; (<span class="ident">A::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Suffix</span> <span class="kw">as</span> <span class="ident">BasePortList</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>);
+    <span class="kw">fn</span> <span class="ident">split_ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(<span class="ident">ctx</span>: <span class="ident"><span class="self">Self</span>::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>) -&gt; (<span class="ident">A::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>, <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Suffix</span> <span class="kw">as</span> <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>);
 }
 <span class="attribute">#[<span class="ident">sealed</span>]</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">H</span>, <span class="ident">T</span>, <span class="ident">U</span>, <span class="kw">const</span> <span class="ident">S</span>: <span class="ident">bool</span><span class="op">&gt;</span> <span class="ident">BasePortListSplit</span><span class="op">&lt;</span>(<span class="ident">BasePort</span><span class="op">&lt;</span><span class="ident">H</span>, <span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">U</span>), <span class="ident">S</span><span class="op">&gt;</span> <span class="kw">for</span> (<span class="ident">BasePort</span><span class="op">&lt;</span><span class="ident">H</span>, <span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">T</span>)
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">H</span>, <span class="ident">T</span>, <span class="ident">U</span><span class="op">&gt;</span> <span class="ident">PortListSplit</span><span class="op">&lt;</span><span class="ident">S</span>, (<span class="ident">Port</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">H</span><span class="op">&gt;</span>, <span class="ident">U</span>)<span class="op">&gt;</span> <span class="kw">for</span> (<span class="ident">Port</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">H</span><span class="op">&gt;</span>, <span class="ident">T</span>)
 <span class="kw">where</span>
+    <span class="ident">S</span>: <span class="ident">Polarity</span>,
     <span class="ident">H</span>: <span class="ident">Handoff</span>,
-    <span class="ident">T</span>: <span class="ident">BasePortListSplit</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">S</span><span class="op">&gt;</span>,
-    <span class="ident">U</span>: <span class="ident">BasePortList</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">T</span>: <span class="ident">PortListSplit</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">U</span><span class="op">&gt;</span>,
+    <span class="ident">U</span>: <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
 {
     <span class="kw">type</span> <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">T::Suffix</span>;
 
@@ -279,18 +274,19 @@
     <span class="kw">fn</span> <span class="ident">split_ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>(
         <span class="ident">ctx</span>: <span class="ident"><span class="self">Self</span>::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
     ) -&gt; (
-        <span class="op">&lt;</span>(<span class="ident">BasePort</span><span class="op">&lt;</span><span class="ident">H</span>, <span class="ident">S</span><span class="op">&gt;</span>, <span class="ident">U</span>) <span class="kw">as</span> <span class="ident">BasePortList</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
-        <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Suffix</span> <span class="kw">as</span> <span class="ident">BasePortList</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+        <span class="op">&lt;</span>(<span class="ident">Port</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">H</span><span class="op">&gt;</span>, <span class="ident">U</span>) <span class="kw">as</span> <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
+        <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::Suffix</span> <span class="kw">as</span> <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span><span class="op">&gt;</span>,
     ) {
         <span class="kw">let</span> (<span class="ident">x</span>, <span class="ident">t</span>) <span class="op">=</span> <span class="ident">ctx</span>;
-        <span class="kw">let</span> (<span class="ident">u</span>, <span class="ident">v</span>) <span class="op">=</span> <span class="op">&lt;</span><span class="ident">T</span> <span class="kw">as</span> <span class="ident">BasePortListSplit</span><span class="op">&lt;</span><span class="ident">U</span>, <span class="ident">S</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::split_ctx</span>(<span class="ident">t</span>);
+        <span class="kw">let</span> (<span class="ident">u</span>, <span class="ident">v</span>) <span class="op">=</span> <span class="ident">T::split_ctx</span>(<span class="ident">t</span>);
         ((<span class="ident">x</span>, <span class="ident">u</span>), <span class="ident">v</span>)
     }
 }
 <span class="attribute">#[<span class="ident">sealed</span>]</span>
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="kw">const</span> <span class="ident">S</span>: <span class="ident">bool</span><span class="op">&gt;</span> <span class="ident">BasePortListSplit</span><span class="op">&lt;</span>(), <span class="ident">S</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">T</span>
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">S</span>, <span class="ident">T</span><span class="op">&gt;</span> <span class="ident">PortListSplit</span><span class="op">&lt;</span><span class="ident">S</span>, ()<span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">T</span>
 <span class="kw">where</span>
-    <span class="ident">T</span>: <span class="ident">BasePortList</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
+    <span class="ident">S</span>: <span class="ident">Polarity</span>,
+    <span class="ident">T</span>: <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">S</span><span class="op">&gt;</span>,
 {
     <span class="kw">type</span> <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">T</span>;
 

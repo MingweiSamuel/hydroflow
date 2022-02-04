@@ -62,12 +62,14 @@
 <span id="57">57</span>
 <span id="58">58</span>
 <span id="59">59</span>
+<span id="60">60</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">PushBuild</span>, <span class="ident">PushBuildBase</span>};
 
 <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::compiled::map::Map</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::handoff::handoff_list::BasePortList</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::handoff::handoff_list::PortList</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::port::SEND</span>;
 
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">MapPushBuild</span><span class="op">&lt;</span><span class="ident">Next</span>, <span class="ident">Func</span>, <span class="ident">In</span><span class="op">&gt;</span>
 <span class="kw">where</span>
@@ -116,7 +118,7 @@
 
     <span class="kw">fn</span> <span class="ident">build</span><span class="op">&lt;</span><span class="lifetime">&#39;slf</span>, <span class="lifetime">&#39;hof</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;slf</span> <span class="kw-2">mut</span> <span class="self">self</span>,
-        <span class="ident">handoffs</span>: <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::OutputHandoffs</span> <span class="kw">as</span> <span class="ident">BasePortList</span><span class="op">&lt;</span><span class="bool-val">true</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;hof</span><span class="op">&gt;</span>,
+        <span class="ident">handoffs</span>: <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::OutputHandoffs</span> <span class="kw">as</span> <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">SEND</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;hof</span><span class="op">&gt;</span>,
     ) -&gt; <span class="ident"><span class="self">Self</span>::Build</span><span class="op">&lt;</span><span class="lifetime">&#39;slf</span>, <span class="lifetime">&#39;hof</span><span class="op">&gt;</span> {
         <span class="ident">Map::new</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> (<span class="self">self</span>.<span class="ident">func</span>)(<span class="ident">x</span>), <span class="self">self</span>.<span class="ident">next</span>.<span class="ident">build</span>(<span class="ident">handoffs</span>))
     }

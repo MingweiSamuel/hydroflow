@@ -335,6 +335,7 @@
 <span id="330">330</span>
 <span id="331">331</span>
 <span id="332">332</span>
+<span id="333">333</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::any::Any</span>;
 <span class="kw">use</span> <span class="ident">std::collections::VecDeque</span>;
 <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
@@ -343,8 +344,9 @@
 <span class="kw">use</span> <span class="ident">ref_cast::RefCast</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::context::Context</span>;
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::handoff</span>::{<span class="ident">Handoff</span>, <span class="ident">HandoffMeta</span>, <span class="ident">RecvPortList</span>, <span class="ident">SendPortList</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::port</span>::{<span class="ident">InputPort</span>, <span class="ident">OutputPort</span>, <span class="ident">RecvCtx</span>, <span class="ident">SendCtx</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::handoff::handoff_list::PortList</span>;
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::handoff</span>::{<span class="ident">Handoff</span>, <span class="ident">HandoffMeta</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::port</span>::{<span class="ident">InputPort</span>, <span class="ident">OutputPort</span>, <span class="ident">RecvCtx</span>, <span class="ident">SendCtx</span>, <span class="ident">RECV</span>, <span class="ident">SEND</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::reactor::Reactor</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::state::StateHandle</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;variadic_generics&quot;</span>)]</span>
@@ -485,8 +487,8 @@
         <span class="kw-2">mut</span> <span class="ident">subgraph</span>: <span class="ident">F</span>,
     ) -&gt; <span class="ident">SubgraphId</span>
     <span class="kw">where</span>
-        <span class="ident">R</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">RecvPortList</span>,
-        <span class="ident">W</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">SendPortList</span>,
+        <span class="ident">R</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">RECV</span><span class="op">&gt;</span>,
+        <span class="ident">W</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">SEND</span><span class="op">&gt;</span>,
         <span class="ident">F</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">FnMut</span>(<span class="kw-2">&amp;</span><span class="ident">Context</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">R::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>, <span class="ident">W::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>),
     {
         <span class="kw">let</span> <span class="ident">sg_id</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">subgraphs</span>.<span class="ident">len</span>();

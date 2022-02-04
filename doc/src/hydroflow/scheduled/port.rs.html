@@ -57,37 +57,83 @@
 <span id="52">52</span>
 <span id="53">53</span>
 <span id="54">54</span>
+<span id="55">55</span>
+<span id="56">56</span>
+<span id="57">57</span>
+<span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
+<span id="61">61</span>
+<span id="62">62</span>
+<span id="63">63</span>
+<span id="64">64</span>
+<span id="65">65</span>
+<span id="66">66</span>
+<span id="67">67</span>
+<span id="68">68</span>
+<span id="69">69</span>
+<span id="70">70</span>
+<span id="71">71</span>
+<span id="72">72</span>
+<span id="73">73</span>
+<span id="74">74</span>
+<span id="75">75</span>
+<span id="76">76</span>
+<span id="77">77</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Organizational module for Hydroflow Send/RecvCtx structs and Input/OutputPort structs.</span>
 <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
 
 <span class="kw">use</span> <span class="ident">ref_cast::RefCast</span>;
+<span class="kw">use</span> <span class="ident">sealed::sealed</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::handoff</span>::{<span class="ident">CanReceive</span>, <span class="ident">Handoff</span>, <span class="ident">TryCanReceive</span>};
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::HandoffId</span>;
 
+<span class="doccomment">/// An empty trait used to denote [`Polarity`]: either **send** or **receive**.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// [`InputPort`] and [`RecvPort`] have identical representations (via [`Port`]) but are not</span>
+<span class="doccomment">/// interchangable, so [`SEND`] and [`RECV`] which implement this trait are used to differentiate</span>
+<span class="doccomment">/// between the two polarities.</span>
+<span class="attribute">#[<span class="ident">sealed</span>]</span>
+<span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">Polarity</span>: <span class="lifetime">&#39;static</span> {}
+
+<span class="doccomment">/// An uninstantiable type used to tag port [`Polarity`] as **send**.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// See also: [`RECV`].</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">SEND</span> {}
+<span class="doccomment">/// An uninstantiable type used to tag port [`Polarity`] as **receive**.</span>
+<span class="doccomment">///</span>
+<span class="doccomment">/// See also: [`SEND`].</span>
+<span class="kw">pub</span> <span class="kw">enum</span> <span class="ident">RECV</span> {}
+<span class="attribute">#[<span class="ident">sealed</span>]</span>
+<span class="kw">impl</span> <span class="ident">Polarity</span> <span class="kw">for</span> <span class="ident">SEND</span> {}
+<span class="attribute">#[<span class="ident">sealed</span>]</span>
+<span class="kw">impl</span> <span class="ident">Polarity</span> <span class="kw">for</span> <span class="ident">RECV</span> {}
+
 <span class="attribute">#[<span class="ident">must_use</span>]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BasePort</span><span class="op">&lt;</span><span class="ident">H</span>, <span class="kw">const</span> <span class="ident">S</span>: <span class="ident">bool</span><span class="op">&gt;</span>
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Port</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Polarity</span>, <span class="ident">H</span><span class="op">&gt;</span>
 <span class="kw">where</span>
     <span class="ident">H</span>: <span class="ident">Handoff</span>,
 {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">handoff_id</span>: <span class="ident">HandoffId</span>,
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">_marker</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw">fn</span>() -&gt; <span class="ident">H</span><span class="op">&gt;</span>,
+    <span class="attribute">#[<span class="ident">allow</span>(<span class="ident">clippy::type_complexity</span>)]</span>
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">_marker</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span>(<span class="kw-2">*const</span> <span class="ident">S</span>, <span class="kw">fn</span>() -&gt; <span class="ident">H</span>)<span class="op">&gt;</span>,
 }
-
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">InputPort</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">BasePort</span><span class="op">&lt;</span><span class="ident">H</span>, <span class="bool-val">true</span><span class="op">&gt;</span>; <span class="comment">// SendPort</span>
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">OutputPort</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">BasePort</span><span class="op">&lt;</span><span class="ident">H</span>, <span class="bool-val">false</span><span class="op">&gt;</span>; <span class="comment">// RecvPort</span>
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">InputPort</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Port</span><span class="op">&lt;</span><span class="ident">SEND</span>, <span class="ident">H</span><span class="op">&gt;</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">OutputPort</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">Port</span><span class="op">&lt;</span><span class="ident">RECV</span>, <span class="ident">H</span><span class="op">&gt;</span>;
 
 <span class="attribute">#[<span class="ident">derive</span>(<span class="ident">RefCast</span>)]</span>
 <span class="attribute">#[<span class="ident">repr</span>(<span class="ident">transparent</span>)]</span>
-<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">BaseCtx</span><span class="op">&lt;</span><span class="ident">H</span>, <span class="kw">const</span> <span class="ident">S</span>: <span class="ident">bool</span><span class="op">&gt;</span> {
+<span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">PortCtx</span><span class="op">&lt;</span><span class="ident">S</span>: <span class="ident">Polarity</span>, <span class="ident">H</span><span class="op">&gt;</span> {
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">handoff</span>: <span class="ident">H</span>,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">_marker</span>: <span class="ident">PhantomData</span><span class="op">&lt;</span><span class="kw-2">*const</span> <span class="ident">S</span><span class="op">&gt;</span>,
 }
 
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SendCtx</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">BaseCtx</span><span class="op">&lt;</span><span class="ident">H</span>, <span class="bool-val">true</span><span class="op">&gt;</span>;
-<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">RecvCtx</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">BaseCtx</span><span class="op">&lt;</span><span class="ident">H</span>, <span class="bool-val">false</span><span class="op">&gt;</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">SendCtx</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PortCtx</span><span class="op">&lt;</span><span class="ident">SEND</span>, <span class="ident">H</span><span class="op">&gt;</span>;
+<span class="kw">pub</span> <span class="kw">type</span> <span class="ident">RecvCtx</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">PortCtx</span><span class="op">&lt;</span><span class="ident">RECV</span>, <span class="ident">H</span><span class="op">&gt;</span>;
 
-<span class="doccomment">/// Context provided to a compiled component for writing to an [OutputPort].</span>
+<span class="doccomment">/// Context provided to a subgraph for writing to an [`OutputPort`].</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Handoff</span><span class="op">&gt;</span> <span class="ident">SendCtx</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span> {
     <span class="comment">// TODO: represent backpressure in this return value.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">give</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">item</span>: <span class="ident">T</span>) -&gt; <span class="ident">T</span>
@@ -105,7 +151,7 @@
     }
 }
 
-<span class="doccomment">/// Context provided to a compiled component for reading from an [InputPort].</span>
+<span class="doccomment">/// Context provided to a subgraph for reading from an [`InputPort`].</span>
 <span class="kw">impl</span><span class="op">&lt;</span><span class="ident">H</span>: <span class="ident">Handoff</span><span class="op">&gt;</span> <span class="ident">RecvCtx</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span> {
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">take_inner</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">H::Inner</span> {
         <span class="self">self</span>.<span class="ident">handoff</span>.<span class="ident">take_inner</span>()
