@@ -132,6 +132,8 @@
 <span id="127">127</span>
 <span id="128">128</span>
 <span id="129">129</span>
+<span id="130">130</span>
+<span id="131">131</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">people</span>, <span class="ident">Decode</span>, <span class="ident">Encode</span>, <span class="ident">Opts</span>, <span class="ident">CONTACTS_ADDR</span>, <span class="ident">DIAGNOSES_ADDR</span>};
 
 <span class="kw">use</span> <span class="ident">std::time::Duration</span>;
@@ -155,12 +157,14 @@
     <span class="kw">let</span> (<span class="ident">encode_contacts_out</span>, <span class="ident">contacts_merge</span>) <span class="op">=</span> <span class="ident">df</span>.<span class="ident">make_edge</span>::<span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span><span class="op">&gt;</span>();
     <span class="kw">let</span> (<span class="ident">encode_diagnoses_out</span>, <span class="ident">diagnoses_merge</span>) <span class="op">=</span> <span class="ident">df</span>.<span class="ident">make_edge</span>::<span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span><span class="ident">Message</span><span class="op">&gt;</span><span class="op">&gt;</span>();
 
-    <span class="kw">let</span> (<span class="ident">contacts_in</span>, <span class="ident">contacts_out</span>) <span class="op">=</span>
-        <span class="ident">df</span>.<span class="ident">add_channel_input</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">usize</span>)<span class="op">&gt;</span><span class="op">&gt;</span>();
-    <span class="kw">let</span> (<span class="ident">diagnoses_in</span>, <span class="ident">diagnoses_out</span>) <span class="op">=</span>
-        <span class="ident">df</span>.<span class="ident">add_channel_input</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, (<span class="ident">usize</span>, <span class="ident">usize</span>))<span class="op">&gt;</span><span class="op">&gt;</span>();
-    <span class="kw">let</span> (<span class="ident">people_in</span>, <span class="ident">people_out</span>) <span class="op">=</span>
-        <span class="ident">df</span>.<span class="ident">add_channel_input</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="ident">String</span>, (<span class="ident">String</span>, <span class="ident">String</span>))<span class="op">&gt;</span><span class="op">&gt;</span>();
+    <span class="kw">let</span> (<span class="ident">contacts_send</span>, <span class="ident">contacts_recv</span>) <span class="op">=</span>
+        <span class="ident">df</span>.<span class="ident">make_edge</span>::<span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, <span class="ident">usize</span>)<span class="op">&gt;</span><span class="op">&gt;</span>();
+    <span class="kw">let</span> <span class="ident">contacts_send</span> <span class="op">=</span> <span class="ident">df</span>.<span class="ident">add_channel_input</span>(<span class="ident">contacts_send</span>);
+    <span class="kw">let</span> (<span class="ident">diagnosed_send</span>, <span class="ident">diagnosed_recv</span>) <span class="op">=</span>
+        <span class="ident">df</span>.<span class="ident">make_edge</span>::<span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>, (<span class="ident">usize</span>, <span class="ident">usize</span>))<span class="op">&gt;</span><span class="op">&gt;</span>();
+    <span class="kw">let</span> <span class="ident">diagnosed_send</span> <span class="op">=</span> <span class="ident">df</span>.<span class="ident">add_channel_input</span>(<span class="ident">diagnosed_send</span>);
+    <span class="kw">let</span> (<span class="ident">people_send</span>, <span class="ident">people_recv</span>) <span class="op">=</span> <span class="ident">df</span>.<span class="ident">make_edge</span>::<span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="ident">String</span>, (<span class="ident">String</span>, <span class="ident">String</span>))<span class="op">&gt;</span><span class="op">&gt;</span>();
+    <span class="kw">let</span> <span class="ident">people_send</span> <span class="op">=</span> <span class="ident">df</span>.<span class="ident">add_channel_input</span>(<span class="ident">people_send</span>);
 
     <span class="kw">let</span> <span class="ident">stream</span> <span class="op">=</span> <span class="ident">TcpListener::bind</span>(<span class="macro">format!</span>(<span class="string">&quot;localhost:{}&quot;</span>, <span class="ident">opts</span>.<span class="ident">port</span>))
         .<span class="kw">await</span>
@@ -181,9 +185,9 @@
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">t</span> <span class="op">=</span> <span class="number">0</span>;
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">rng</span> <span class="op">=</span> <span class="ident">rand::thread_rng</span>();
         <span class="kw">for</span> (<span class="ident">id</span>, (<span class="ident">name</span>, <span class="ident">phone</span>)) <span class="kw">in</span> <span class="ident">all_people</span>.<span class="ident">clone</span>() {
-            <span class="ident">people_in</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>((<span class="ident">id</span>.<span class="ident">to_owned</span>(), (<span class="ident">name</span>.<span class="ident">to_owned</span>(), <span class="ident">phone</span>.<span class="ident">to_owned</span>()))));
+            <span class="ident">people_send</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>((<span class="ident">id</span>.<span class="ident">to_owned</span>(), (<span class="ident">name</span>.<span class="ident">to_owned</span>(), <span class="ident">phone</span>.<span class="ident">to_owned</span>()))));
         }
-        <span class="ident">people_in</span>.<span class="ident">flush</span>();
+        <span class="ident">people_send</span>.<span class="ident">flush</span>();
         <span class="kw">loop</span> {
             <span class="ident">t</span> <span class="op">+</span><span class="op">=</span> <span class="number">1</span>;
             <span class="kw">match</span> <span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">0</span>..<span class="number">2</span>) <span class="kw">as</span> <span class="ident">usize</span> {
@@ -193,8 +197,8 @@
                         <span class="kw">let</span> <span class="ident">p1</span> <span class="op">=</span> <span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">0</span>..<span class="ident">all_people</span>.<span class="ident">len</span>());
                         <span class="kw">let</span> <span class="ident">p2</span> <span class="op">=</span> <span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">0</span>..<span class="ident">all_people</span>.<span class="ident">len</span>());
                         <span class="kw">if</span> <span class="ident">p1</span> <span class="op">!</span><span class="op">=</span> <span class="ident">p2</span> {
-                            <span class="ident">contacts_in</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>((<span class="ident">all_people</span>[<span class="ident">p1</span>].<span class="number">0</span>, <span class="ident">all_people</span>[<span class="ident">p2</span>].<span class="number">0</span>, <span class="ident">t</span>)));
-                            <span class="ident">contacts_in</span>.<span class="ident">flush</span>();
+                            <span class="ident">contacts_send</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>((<span class="ident">all_people</span>[<span class="ident">p1</span>].<span class="number">0</span>, <span class="ident">all_people</span>[<span class="ident">p2</span>].<span class="number">0</span>, <span class="ident">t</span>)));
+                            <span class="ident">contacts_send</span>.<span class="ident">flush</span>();
                         }
                     }
                 }
@@ -202,8 +206,8 @@
                     <span class="comment">// Diagnosis.</span>
                     <span class="kw">if</span> <span class="op">!</span><span class="ident">all_people</span>.<span class="ident">is_empty</span>() {
                         <span class="kw">let</span> <span class="ident">p</span> <span class="op">=</span> <span class="ident">rng</span>.<span class="ident">gen_range</span>(<span class="number">0</span>..<span class="ident">all_people</span>.<span class="ident">len</span>());
-                        <span class="ident">diagnoses_in</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>((<span class="ident">all_people</span>[<span class="ident">p</span>].<span class="number">0</span>, (<span class="ident">t</span>, <span class="ident">t</span> <span class="op">+</span> <span class="number">14</span>))));
-                        <span class="ident">diagnoses_in</span>.<span class="ident">flush</span>();
+                        <span class="ident">diagnosed_send</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>((<span class="ident">all_people</span>[<span class="ident">p</span>].<span class="number">0</span>, (<span class="ident">t</span>, <span class="ident">t</span> <span class="op">+</span> <span class="number">14</span>))));
+                        <span class="ident">diagnosed_send</span>.<span class="ident">flush</span>();
                     }
                 }
                 <span class="kw">_</span> =&gt; <span class="macro">unreachable!</span>(),
@@ -223,7 +227,7 @@
         },
     );
 
-    <span class="ident">df</span>.<span class="ident">add_subgraph_in_out</span>(<span class="ident">contacts_out</span>, <span class="ident">encode_contacts_out</span>, <span class="op">|</span><span class="ident">_ctx</span>, <span class="ident">recv</span>, <span class="ident">send</span><span class="op">|</span> {
+    <span class="ident">df</span>.<span class="ident">add_subgraph_in_out</span>(<span class="ident">contacts_recv</span>, <span class="ident">encode_contacts_out</span>, <span class="op">|</span><span class="ident">_ctx</span>, <span class="ident">recv</span>, <span class="ident">send</span><span class="op">|</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buf</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="ident">recv</span>.<span class="ident">take_inner</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">buf</span>);
         <span class="ident">send</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>(<span class="ident">Message</span> {
@@ -232,7 +236,7 @@
         }));
     });
 
-    <span class="ident">df</span>.<span class="ident">add_subgraph_in_out</span>(<span class="ident">diagnoses_out</span>, <span class="ident">encode_diagnoses_out</span>, <span class="op">|</span><span class="ident">_ctx</span>, <span class="ident">recv</span>, <span class="ident">send</span><span class="op">|</span> {
+    <span class="ident">df</span>.<span class="ident">add_subgraph_in_out</span>(<span class="ident">diagnosed_recv</span>, <span class="ident">encode_diagnoses_out</span>, <span class="op">|</span><span class="ident">_ctx</span>, <span class="ident">recv</span>, <span class="ident">send</span><span class="op">|</span> {
         <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">buf</span> <span class="op">=</span> <span class="ident">Vec::new</span>();
         <span class="ident">recv</span>.<span class="ident">take_inner</span>().<span class="ident">encode</span>(<span class="kw-2">&amp;mut</span> <span class="ident">buf</span>);
         <span class="ident">send</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>(<span class="ident">Message</span> {
@@ -243,7 +247,7 @@
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">join_state</span> <span class="op">=</span> <span class="ident">Default::default</span>();
     <span class="ident">df</span>.<span class="ident">add_subgraph</span>(
-        <span class="macro">tl!</span>(<span class="ident">notif_sink</span>, <span class="ident">people_out</span>),
+        <span class="macro">tl!</span>(<span class="ident">notif_sink</span>, <span class="ident">people_recv</span>),
         <span class="macro">tl!</span>(),
         <span class="kw">move</span> <span class="op">|</span><span class="ident">_ctx</span>, <span class="macro">tl!</span>(<span class="ident">notifs</span>, <span class="ident">people</span>), <span class="macro">tl!</span>()<span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">pivot</span> <span class="op">=</span> <span class="ident">SymmetricHashJoin::new</span>(
@@ -262,5 +266,5 @@
     <span class="ident">df</span>.<span class="ident">run_async</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing_dist" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (4e8fb743c 2022-02-03)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing_dist" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (71226d717 2022-02-04)" ></div>
 </body></html>

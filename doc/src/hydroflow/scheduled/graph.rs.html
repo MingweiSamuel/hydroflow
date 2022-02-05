@@ -346,7 +346,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::context::Context</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::handoff::handoff_list::PortList</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::handoff</span>::{<span class="ident">Handoff</span>, <span class="ident">HandoffMeta</span>};
-<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::port</span>::{<span class="ident">InputPort</span>, <span class="ident">OutputPort</span>, <span class="ident">RecvCtx</span>, <span class="ident">SendCtx</span>, <span class="ident">RECV</span>, <span class="ident">SEND</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::port</span>::{<span class="ident">RecvCtx</span>, <span class="ident">RecvPort</span>, <span class="ident">SendCtx</span>, <span class="ident">SendPort</span>, <span class="ident">RECV</span>, <span class="ident">SEND</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::reactor::Reactor</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::state::StateHandle</span>;
 <span class="attribute">#[<span class="ident">cfg</span>(<span class="ident">feature</span> <span class="op">=</span> <span class="string">&quot;variadic_generics&quot;</span>)]</span>
@@ -512,8 +512,8 @@
     <span class="doccomment">/// Adds a new compiled subraph with a variable number of inputs and outputs of the same respective handoff types.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_subgraph_n_m</span><span class="op">&lt;</span><span class="ident">R</span>, <span class="ident">W</span>, <span class="ident">F</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
-        <span class="ident">recv_ports</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">OutputPort</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span><span class="op">&gt;</span>,
-        <span class="ident">send_ports</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">InputPort</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">recv_ports</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">RecvPort</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">send_ports</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">SendPort</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span><span class="op">&gt;</span>,
         <span class="kw-2">mut</span> <span class="ident">subgraph</span>: <span class="ident">F</span>,
     ) -&gt; <span class="ident">SubgraphId</span>
     <span class="kw">where</span>
@@ -571,7 +571,7 @@
         <span class="ident">sg_id</span>
     }
 
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_edge</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; (<span class="ident">InputPort</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>, <span class="ident">OutputPort</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>)
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">make_edge</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; (<span class="ident">SendPort</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>, <span class="ident">RecvPort</span><span class="op">&lt;</span><span class="ident">H</span><span class="op">&gt;</span>)
     <span class="kw">where</span>
         <span class="ident">H</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Handoff</span>,
     {
@@ -582,11 +582,11 @@
         <span class="self">self</span>.<span class="ident">handoffs</span>.<span class="ident">push</span>(<span class="ident">HandoffData::new</span>(<span class="ident">handoff</span>));
 
         <span class="comment">// Make ports.</span>
-        <span class="kw">let</span> <span class="ident">input_port</span> <span class="op">=</span> <span class="ident">InputPort</span> {
+        <span class="kw">let</span> <span class="ident">input_port</span> <span class="op">=</span> <span class="ident">SendPort</span> {
             <span class="ident">handoff_id</span>,
             <span class="ident">_marker</span>: <span class="ident">PhantomData</span>,
         };
-        <span class="kw">let</span> <span class="ident">output_port</span> <span class="op">=</span> <span class="ident">OutputPort</span> {
+        <span class="kw">let</span> <span class="ident">output_port</span> <span class="op">=</span> <span class="ident">RecvPort</span> {
             <span class="ident">handoff_id</span>,
             <span class="ident">_marker</span>: <span class="ident">PhantomData</span>,
         };
@@ -670,5 +670,5 @@
     <span class="kw">pub</span> <span class="ident">state</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Any</span><span class="op">&gt;</span>,
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (4e8fb743c 2022-02-03)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (71226d717 2022-02-04)" ></div>
 </body></html>

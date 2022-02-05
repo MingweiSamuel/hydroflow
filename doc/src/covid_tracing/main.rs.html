@@ -158,6 +158,8 @@
 <span id="153">153</span>
 <span id="154">154</span>
 <span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
 </pre><pre class="rust"><code><span class="attribute">#![<span class="ident">feature</span>(<span class="ident">never_type</span>)]</span>
 
 <span class="kw">use</span> <span class="ident">std::cell::RefCell</span>;
@@ -187,11 +189,13 @@
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">df</span> <span class="op">=</span> <span class="ident">Hydroflow::new</span>();
 
-    <span class="kw">let</span> (<span class="ident">contacts_send</span>, <span class="ident">contacts_recv</span>) <span class="op">=</span>
-        <span class="ident">df</span>.<span class="ident">add_channel_input</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="ident">Pid</span>, <span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">&gt;</span><span class="op">&gt;</span>();
+    <span class="kw">let</span> (<span class="ident">contacts_send</span>, <span class="ident">contacts_recv</span>) <span class="op">=</span> <span class="ident">df</span>.<span class="ident">make_edge</span>::<span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="ident">Pid</span>, <span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">&gt;</span><span class="op">&gt;</span>();
+    <span class="kw">let</span> <span class="ident">contacts_send</span> <span class="op">=</span> <span class="ident">df</span>.<span class="ident">add_channel_input</span>(<span class="ident">contacts_send</span>);
     <span class="kw">let</span> (<span class="ident">diagnosed_send</span>, <span class="ident">diagnosed_recv</span>) <span class="op">=</span>
-        <span class="ident">df</span>.<span class="ident">add_channel_input</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="ident">Pid</span>, (<span class="ident">DateTime</span>, <span class="ident">DateTime</span>))<span class="op">&gt;</span><span class="op">&gt;</span>();
-    <span class="kw">let</span> (<span class="ident">people_send</span>, <span class="ident">people_recv</span>) <span class="op">=</span> <span class="ident">df</span>.<span class="ident">add_channel_input</span>::<span class="op">&lt;</span><span class="kw">_</span>, <span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="ident">Pid</span>, (<span class="ident">Name</span>, <span class="ident">Phone</span>))<span class="op">&gt;</span><span class="op">&gt;</span>();
+        <span class="ident">df</span>.<span class="ident">make_edge</span>::<span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="ident">Pid</span>, (<span class="ident">DateTime</span>, <span class="ident">DateTime</span>))<span class="op">&gt;</span><span class="op">&gt;</span>();
+    <span class="kw">let</span> <span class="ident">diagnosed_send</span> <span class="op">=</span> <span class="ident">df</span>.<span class="ident">add_channel_input</span>(<span class="ident">diagnosed_send</span>);
+    <span class="kw">let</span> (<span class="ident">people_send</span>, <span class="ident">people_recv</span>) <span class="op">=</span> <span class="ident">df</span>.<span class="ident">make_edge</span>::<span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="ident">Pid</span>, (<span class="ident">Name</span>, <span class="ident">Phone</span>))<span class="op">&gt;</span><span class="op">&gt;</span>();
+    <span class="kw">let</span> <span class="ident">people_send</span> <span class="op">=</span> <span class="ident">df</span>.<span class="ident">add_channel_input</span>(<span class="ident">people_send</span>);
 
     <span class="kw">let</span> (<span class="ident">loop_send</span>, <span class="ident">loop_recv</span>) <span class="op">=</span> <span class="ident">df</span>.<span class="ident">make_edge</span>::<span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">&gt;</span><span class="op">&gt;</span>();
     <span class="kw">let</span> (<span class="ident">notifs_send</span>, <span class="ident">notifs_recv</span>) <span class="op">=</span> <span class="ident">df</span>.<span class="ident">make_edge</span>::<span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">&gt;</span><span class="op">&gt;</span>();
@@ -314,5 +318,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (4e8fb743c 2022-02-03)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (71226d717 2022-02-04)" ></div>
 </body></html>

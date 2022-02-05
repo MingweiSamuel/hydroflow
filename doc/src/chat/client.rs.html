@@ -107,6 +107,7 @@
 <span id="102">102</span>
 <span id="103">103</span>
 <span id="104">104</span>
+<span id="105">105</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">chrono::prelude</span>::<span class="kw-2">*</span>;
 <span class="kw">use</span> <span class="ident">colored::Colorize</span>;
 
@@ -152,10 +153,11 @@
     <span class="kw">let</span> <span class="ident">messages_addr</span> <span class="op">=</span> <span class="macro">format!</span>(<span class="string">&quot;localhost:{}&quot;</span>, <span class="ident">messages_port</span>);
 
     <span class="comment">// set up the flow for requesting to be a member</span>
-    <span class="kw">let</span> (<span class="ident">my_info_set</span>, <span class="ident">my_info_get</span>) <span class="op">=</span> <span class="ident">df</span>
+    <span class="kw">let</span> (<span class="ident">my_info_send</span>, <span class="ident">my_info_recv</span>) <span class="op">=</span> <span class="ident">df</span>
         .<span class="ident">hydroflow</span>
-        .<span class="ident">add_input</span>::<span class="op">&lt;</span><span class="prelude-ty">Option</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">MemberRequest</span>)<span class="op">&gt;</span>, <span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">MemberRequest</span>)<span class="op">&gt;</span><span class="op">&gt;</span>();
-    <span class="kw">let</span> <span class="ident">my_info_get</span> <span class="op">=</span> <span class="ident">df</span>.<span class="ident">wrap_input</span>(<span class="ident">my_info_get</span>);
+        .<span class="ident">make_edge</span>::<span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span>(<span class="ident">String</span>, <span class="ident">MemberRequest</span>)<span class="op">&gt;</span><span class="op">&gt;</span>();
+    <span class="kw">let</span> <span class="ident">my_info_set</span> <span class="op">=</span> <span class="ident">df</span>.<span class="ident">hydroflow</span>.<span class="ident">add_input</span>(<span class="ident">my_info_send</span>);
+    <span class="kw">let</span> <span class="ident">my_info_get</span> <span class="op">=</span> <span class="ident">df</span>.<span class="ident">wrap_input</span>(<span class="ident">my_info_recv</span>);
     <span class="ident">my_info_set</span>.<span class="ident">give</span>(<span class="prelude-val">Some</span>((
         <span class="ident">addr</span>,
         <span class="ident">MemberRequest</span> {
@@ -212,5 +214,5 @@
     <span class="ident">df</span>.<span class="ident">run_async</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="chat" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (4e8fb743c 2022-02-03)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="chat" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (71226d717 2022-02-04)" ></div>
 </body></html>

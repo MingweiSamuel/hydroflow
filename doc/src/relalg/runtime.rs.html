@@ -77,7 +77,7 @@
 <span class="kw">use</span> <span class="ident">hydroflow::scheduled::graph::Hydroflow</span>;
 <span class="kw">use</span> <span class="ident">hydroflow::scheduled::graph_ext::GraphExt</span>;
 <span class="kw">use</span> <span class="ident">hydroflow::scheduled::handoff::VecHandoff</span>;
-<span class="kw">use</span> <span class="ident">hydroflow::scheduled::port::OutputPort</span>;
+<span class="kw">use</span> <span class="ident">hydroflow::scheduled::port::RecvPort</span>;
 
 <span class="kw">use</span> <span class="kw">crate</span>::{<span class="ident">Datum</span>, <span class="ident">RelExpr</span>};
 
@@ -101,7 +101,7 @@
     <span class="ident">v</span>.<span class="ident">clone</span>()
 }
 
-<span class="kw">fn</span> <span class="ident">render_relational</span>(<span class="ident">df</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Hydroflow</span>, <span class="ident">r</span>: <span class="ident">RelExpr</span>) -&gt; <span class="ident">OutputPort</span><span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Datum</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
+<span class="kw">fn</span> <span class="ident">render_relational</span>(<span class="ident">df</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Hydroflow</span>, <span class="ident">r</span>: <span class="ident">RelExpr</span>) -&gt; <span class="ident">RecvPort</span><span class="op">&lt;</span><span class="ident">VecHandoff</span><span class="op">&lt;</span><span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">Datum</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="op">&gt;</span> {
     <span class="kw">let</span> (<span class="ident">send_port</span>, <span class="ident">recv_port</span>) <span class="op">=</span> <span class="ident">df</span>.<span class="ident">make_edge</span>();
     <span class="kw">match</span> <span class="ident">r</span> {
         <span class="ident">RelExpr::Values</span>(<span class="kw-2">mut</span> <span class="ident">v</span>) =&gt; {
@@ -136,5 +136,5 @@
     <span class="ident">recv_port</span>
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="relalg" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (4e8fb743c 2022-02-03)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="relalg" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (71226d717 2022-02-04)" ></div>
 </body></html>
