@@ -256,7 +256,7 @@
                 <span class="kw-2">&amp;mut</span> <span class="ident">join_state</span>,
             )
             .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">_id</span>, <span class="ident">t</span>, (<span class="ident">name</span>, <span class="ident">phone</span>))<span class="op">|</span> (<span class="ident">name</span>, <span class="ident">phone</span>, <span class="ident">t</span>))
-            .<span class="ident">pusherator</span>()
+            .<span class="ident">pull_to_push</span>()
             .<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">name</span>, <span class="ident">phone</span>, <span class="ident">t</span>)<span class="op">|</span> <span class="macro">println!</span>(<span class="string">&quot;notifying {}, {}@{}&quot;</span>, <span class="ident">name</span>, <span class="ident">phone</span>, <span class="ident">t</span>));
 
             <span class="ident">pivot</span>.<span class="ident">run</span>();
@@ -266,5 +266,5 @@
     <span class="ident">df</span>.<span class="ident">run_async</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing_dist" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (f624427f8 2022-02-06)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing_dist" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (734368a20 2022-02-07)" ></div>
 </body></html>

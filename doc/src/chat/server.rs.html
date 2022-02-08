@@ -125,7 +125,7 @@
                 },
             ))
         })
-        .<span class="ident">reverse</span>(<span class="ident">members_out</span>);
+        .<span class="ident">push_to</span>(<span class="ident">members_out</span>);
 
     <span class="comment">// 2. feed new members into the join</span>
     <span class="comment">// But first, we need a buffer to turn push into pull for cross_join.</span>
@@ -135,12 +135,12 @@
         .<span class="ident">start_tee</span>()
         .<span class="ident">map</span>(<span class="op">|</span><span class="ident">req</span>: <span class="ident">MemberRequest</span><span class="op">|</span> <span class="ident">req</span>.<span class="ident">messages_addr</span>)
         .<span class="ident">map</span>(<span class="prelude-val">Some</span>)
-        .<span class="ident">reverse</span>(<span class="ident">memberships_push</span>);
+        .<span class="ident">push_to</span>(<span class="ident">memberships_push</span>);
 
     <span class="comment">// Now assemble the prelude to the tee</span>
     <span class="kw">let</span> <span class="ident">sg</span> <span class="op">=</span> <span class="ident">members_in</span>
         .<span class="ident">flatten</span>()
-        .<span class="ident">pivot</span>()
+        .<span class="ident">pull_to_push</span>()
         .<span class="ident">tee</span>(<span class="ident">membership_response</span>, <span class="ident">member_join_input</span>);
     <span class="ident">hf</span>.<span class="ident">add_subgraph</span>(<span class="ident">sg</span>);
 
@@ -160,8 +160,8 @@
                 },
             ))
         })
-        .<span class="ident">pivot</span>()
-        .<span class="ident">reverse</span>(<span class="ident">messages_out</span>);
+        .<span class="ident">pull_to_push</span>()
+        .<span class="ident">push_to</span>(<span class="ident">messages_out</span>);
 
     <span class="ident">hf</span>.<span class="ident">add_subgraph</span>(<span class="ident">sg</span>);
 
@@ -170,5 +170,5 @@
     <span class="ident">hf</span>.<span class="ident">run_async</span>().<span class="kw">await</span>.<span class="ident">unwrap</span>();
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="chat" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (f624427f8 2022-02-06)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="chat" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (734368a20 2022-02-07)" ></div>
 </body></html>

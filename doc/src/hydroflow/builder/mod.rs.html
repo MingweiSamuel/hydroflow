@@ -276,6 +276,10 @@
 <span id="271">271</span>
 <span id="272">272</span>
 <span id="273">273</span>
+<span id="274">274</span>
+<span id="275">275</span>
+<span id="276">276</span>
+<span id="277">277</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Hydroflow&#39;s Surface API.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! ## Internal Documentation</span>
@@ -388,16 +392,20 @@
     <span class="kw">let</span> <span class="ident">output_evn_take</span> <span class="op">=</span> <span class="ident">Rc::clone</span>(<span class="kw-2">&amp;</span><span class="ident">output_evn</span>);
     <span class="kw">let</span> <span class="ident">output_odd_take</span> <span class="op">=</span> <span class="ident">Rc::clone</span>(<span class="kw-2">&amp;</span><span class="ident">output_odd</span>);
 
-    <span class="kw">let</span> <span class="ident">sg</span> <span class="op">=</span> <span class="ident">ingress</span>.<span class="ident">flatten</span>().<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> [<span class="number">11</span> <span class="op">*</span> <span class="ident">x</span>, <span class="ident">x</span>]).<span class="ident">pivot</span>().<span class="ident">tee</span>(
-        <span class="ident">builder</span>
-            .<span class="ident">start_tee</span>()
-            .<span class="ident">filter</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">x</span><span class="op">|</span> <span class="number">0</span> <span class="op">==</span> <span class="ident">x</span> <span class="op">%</span> <span class="number">2</span>)
-            .<span class="ident">for_each</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">output_evn_take</span>.<span class="ident">borrow_mut</span>().<span class="ident">push</span>(<span class="ident">x</span>)),
-        <span class="ident">builder</span>
-            .<span class="ident">start_tee</span>()
-            .<span class="ident">filter</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">x</span><span class="op">|</span> <span class="number">1</span> <span class="op">==</span> <span class="ident">x</span> <span class="op">%</span> <span class="number">2</span>)
-            .<span class="ident">for_each</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">output_odd_take</span>.<span class="ident">borrow_mut</span>().<span class="ident">push</span>(<span class="ident">x</span>)),
-    );
+    <span class="kw">let</span> <span class="ident">sg</span> <span class="op">=</span> <span class="ident">ingress</span>
+        .<span class="ident">flatten</span>()
+        .<span class="ident">flat_map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> [<span class="number">11</span> <span class="op">*</span> <span class="ident">x</span>, <span class="ident">x</span>])
+        .<span class="ident">pull_to_push</span>()
+        .<span class="ident">tee</span>(
+            <span class="ident">builder</span>
+                .<span class="ident">start_tee</span>()
+                .<span class="ident">filter</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">x</span><span class="op">|</span> <span class="number">0</span> <span class="op">==</span> <span class="ident">x</span> <span class="op">%</span> <span class="number">2</span>)
+                .<span class="ident">for_each</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">output_evn_take</span>.<span class="ident">borrow_mut</span>().<span class="ident">push</span>(<span class="ident">x</span>)),
+            <span class="ident">builder</span>
+                .<span class="ident">start_tee</span>()
+                .<span class="ident">filter</span>(<span class="op">|</span><span class="kw-2">&amp;</span><span class="ident">x</span><span class="op">|</span> <span class="number">1</span> <span class="op">==</span> <span class="ident">x</span> <span class="op">%</span> <span class="number">2</span>)
+                .<span class="ident">for_each</span>(<span class="kw">move</span> <span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">output_odd_take</span>.<span class="ident">borrow_mut</span>().<span class="ident">push</span>(<span class="ident">x</span>)),
+        );
     <span class="ident">builder</span>.<span class="ident">add_subgraph</span>(<span class="ident">sg</span>);
 
     <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">hydroflow</span> <span class="op">=</span> <span class="ident">builder</span>.<span class="ident">build</span>();
@@ -430,7 +438,7 @@
     <span class="kw">let</span> <span class="ident">odd_out</span> <span class="op">=</span> <span class="ident">out</span>.<span class="ident">clone</span>();
 
     <span class="ident">builder</span>.<span class="ident">add_subgraph</span>(
-        <span class="ident">data</span>.<span class="ident">flatten</span>().<span class="ident">pivot</span>().<span class="ident">partition</span>(
+        <span class="ident">data</span>.<span class="ident">flatten</span>().<span class="ident">pull_to_push</span>().<span class="ident">partition</span>(
             <span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="kw-2">*</span><span class="ident">x</span> <span class="op">%</span> <span class="number">2</span> <span class="op">==</span> <span class="number">0</span>,
             <span class="ident">builder</span>
                 .<span class="ident">start_tee</span>()
@@ -496,7 +504,7 @@
                 (<span class="ident">t_from</span>..<span class="op">=</span><span class="ident">t_to</span>).<span class="ident">contains</span>(<span class="kw-2">&amp;</span><span class="ident">t_contact</span>)
             })
             .<span class="ident">map</span>(<span class="op">|</span>(<span class="ident">_pid_a</span>, <span class="ident">pid_b_t_contact</span>, <span class="ident">_t_from_to</span>)<span class="op">|</span> <span class="ident">pid_b_t_contact</span>)
-            .<span class="ident">pivot</span>()
+            .<span class="ident">pull_to_push</span>()
             .<span class="ident">map</span>(<span class="prelude-val">Some</span>) <span class="comment">// For handoff CanReceive.</span>
             .<span class="ident">tee</span>(<span class="ident">notifs_send</span>, <span class="ident">loop_send</span>),
     );
@@ -505,7 +513,7 @@
         <span class="ident">notifs_recv</span>
             .<span class="ident">flatten</span>()
             .<span class="ident">join</span>(<span class="ident">peoples</span>.<span class="ident">flatten</span>())
-            .<span class="ident">pivot</span>()
+            .<span class="ident">pull_to_push</span>()
             .<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">_pid</span>, <span class="ident">exposure_time</span>, (<span class="ident">name</span>, <span class="ident">phone</span>))<span class="op">|</span> {
                 <span class="macro">println!</span>(
                     <span class="string">&quot;[{}] To {}: Possible Exposure at t = {}&quot;</span>,
@@ -550,5 +558,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (f624427f8 2022-02-06)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (734368a20 2022-02-07)" ></div>
 </body></html>

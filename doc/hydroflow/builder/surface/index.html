@@ -15,7 +15,7 @@ You can use the prelude to do this easily:</p>
 <li><a href="trait.BaseSurface.html" title="BaseSurface"><code>BaseSurface</code></a> provides linear chaining methods like <a href="trait.BaseSurface.html#method.map" title="BaseSurface::map"><code>BaseSurface::map</code></a>, <a href="trait.BaseSurface.html#method.filter" title="BaseSurface::filter"><code>BaseSurface::filter</code></a>, etc..</li>
 <li><a href="trait.PullSurface.html" title="PullSurface"><code>PullSurface</code></a> provides methods to combine multiple input streams: <a href="trait.PullSurface.html#method.chain" title="PullSurface::chain"><code>PullSurface::chain</code></a>, <a href="trait.PullSurface.html#method.join" title="PullSurface::join"><code>PullSurface::join</code></a>.
 <ul>
-<li>To switch to push, call <a href="trait.PullSurface.html#method.pivot" title="PullSurface::pivot"><code>PullSurface::pivot</code></a>.</li>
+<li>To switch to push, call <a href="trait.PullSurface.html#method.pull_to_push" title="PullSurface::pull_to_push"><code>PullSurface::pull_to_push</code></a>.</li>
 </ul>
 </li>
 <li><a href="trait.PushSurface.html" title="PushSurface"><code>PushSurface</code></a> provides sink chaining methods and methods to split into multiple output streams: <a href="trait.PushSurface.html#method.tee" title="PushSurface::tee"><code>PushSurface::tee</code></a>, <a href="trait.PushSurface.html#method.for_each" title="PushSurface::for_each"><code>PushSurface::for_each</code></a>.</li>
@@ -29,5 +29,5 @@ chaining syntax each operator owns the previous (can only go in order
 things are called/defined), but in the end we need each pusherator to own
 the <em>next</em> pusherator which it’s pushing to.</p>
 </div></div></div><h2 id="types" class="small-section-header"><a href="#types">Type Definitions</a></h2>
-<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="type" href="type.InspectMapFunc.html" title="hydroflow::builder::surface::InspectMapFunc type">InspectMapFunc</a></div><div class="item-right docblock-short"></div></div></div></section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (f624427f8 2022-02-06)" ></div>
+<div class="item-table"><div class="item-row"><div class="item-left module-item"><a class="type" href="type.InspectMapFunc.html" title="hydroflow::builder::surface::InspectMapFunc type">InspectMapFunc</a></div><div class="item-right docblock-short"></div></div></div></section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (734368a20 2022-02-07)" ></div>
 </body></html>

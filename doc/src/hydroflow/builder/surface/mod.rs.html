@@ -257,7 +257,7 @@
 <span class="doccomment">//!</span>
 <span class="doccomment">//! * [`BaseSurface`] provides linear chaining methods like [`BaseSurface::map`], [`BaseSurface::filter`], etc..</span>
 <span class="doccomment">//! * [`PullSurface`] provides methods to combine multiple input streams: [`PullSurface::chain`], [`PullSurface::join`].</span>
-<span class="doccomment">//!     * To switch to push, call [`PullSurface::pivot`].</span>
+<span class="doccomment">//!     * To switch to push, call [`PullSurface::pull_to_push`].</span>
 <span class="doccomment">//! * [`PushSurface`] provides sink chaining methods and methods to split into multiple output streams: [`PushSurface::tee`], [`PushSurface::for_each`].</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! For implementation info see [super].</span>
@@ -402,7 +402,7 @@
         <span class="ident">pull_cross_join::CrossJoinPullSurface::new</span>(<span class="self">self</span>, <span class="ident">other</span>)
     }
 
-    <span class="kw">fn</span> <span class="ident">pivot</span>(<span class="self">self</span>) -&gt; <span class="ident">push_pivot::PivotPushSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">pull_to_push</span>(<span class="self">self</span>) -&gt; <span class="ident">push_pivot::PivotPushSurface</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
@@ -416,7 +416,7 @@
     <span class="kw">where</span>
         <span class="ident">Next</span>: <span class="ident">PushSurfaceReversed</span><span class="op">&lt;</span><span class="ident">ItemIn</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::ItemOut</span><span class="op">&gt;</span>;
 
-    <span class="kw">fn</span> <span class="ident">reverse</span><span class="op">&lt;</span><span class="ident">Next</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">next</span>: <span class="ident">Next</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span><span class="op">&lt;</span><span class="ident">Next</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">push_to</span><span class="op">&lt;</span><span class="ident">Next</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">next</span>: <span class="ident">Next</span>) -&gt; <span class="ident"><span class="self">Self</span>::Output</span><span class="op">&lt;</span><span class="ident">Next</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="ident">Next</span>: <span class="ident">PushSurfaceReversed</span><span class="op">&lt;</span><span class="ident">ItemIn</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::ItemOut</span><span class="op">&gt;</span>;
 
@@ -437,7 +437,7 @@
             <span class="op">+</span> <span class="ident">PortListSplit</span><span class="op">&lt;</span><span class="ident">SEND</span>, <span class="ident">NextA::OutputHandoffs</span>, <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">NextB::OutputHandoffs</span><span class="op">&gt;</span>,
     {
         <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">push_tee::TeePushSurfaceReversed::new</span>(<span class="ident">next_a</span>, <span class="ident">next_b</span>);
-        <span class="self">self</span>.<span class="ident">reverse</span>(<span class="ident">next</span>)
+        <span class="self">self</span>.<span class="ident">push_to</span>(<span class="ident">next</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">for_each</span><span class="op">&lt;</span><span class="ident">Func</span><span class="op">&gt;</span>(
@@ -449,7 +449,7 @@
         <span class="ident">Func</span>: <span class="ident">FnMut</span>(<span class="ident"><span class="self">Self</span>::ItemOut</span>),
     {
         <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">push_for_each::ForEachPushSurfaceReversed::new</span>(<span class="ident">func</span>);
-        <span class="self">self</span>.<span class="ident">reverse</span>(<span class="ident">next</span>)
+        <span class="self">self</span>.<span class="ident">push_to</span>(<span class="ident">next</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">partition</span><span class="op">&lt;</span><span class="ident">Func</span>, <span class="ident">NextA</span>, <span class="ident">NextB</span><span class="op">&gt;</span>(
@@ -469,7 +469,7 @@
             <span class="op">+</span> <span class="ident">PortListSplit</span><span class="op">&lt;</span><span class="ident">SEND</span>, <span class="ident">NextA::OutputHandoffs</span>, <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">NextB::OutputHandoffs</span><span class="op">&gt;</span>,
     {
         <span class="kw">let</span> <span class="ident">next</span> <span class="op">=</span> <span class="ident">push_partition::PartitionPushSurfaceReversed::new</span>(<span class="ident">func</span>, <span class="ident">next_a</span>, <span class="ident">next_b</span>);
-        <span class="self">self</span>.<span class="ident">reverse</span>(<span class="ident">next</span>)
+        <span class="self">self</span>.<span class="ident">push_to</span>(<span class="ident">next</span>)
     }
 }
 
@@ -488,5 +488,5 @@
     <span class="kw">fn</span> <span class="ident">into_parts</span>(<span class="self">self</span>) -&gt; (<span class="ident"><span class="self">Self</span>::OutputHandoffs</span>, <span class="ident"><span class="self">Self</span>::Build</span>);
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (f624427f8 2022-02-06)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (734368a20 2022-02-07)" ></div>
 </body></html>

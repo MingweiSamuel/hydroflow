@@ -140,7 +140,22 @@
 <span id="135">135</span>
 <span id="136">136</span>
 <span id="137">137</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident"><span class="kw">super</span>::build</span>::{<span class="ident">PullBuild</span>, <span class="ident">PushBuild</span>};
+<span id="138">138</span>
+<span id="139">139</span>
+<span id="140">140</span>
+<span id="141">141</span>
+<span id="142">142</span>
+<span id="143">143</span>
+<span id="144">144</span>
+<span id="145">145</span>
+<span id="146">146</span>
+<span id="147">147</span>
+<span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">futures::Stream</span>;
+
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::build</span>::{<span class="ident">PullBuild</span>, <span class="ident">PushBuild</span>};
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::surface::pivot::PivotSurface</span>;
 
 <span class="kw">use</span> <span class="ident">std::sync::mpsc::SyncSender</span>;
@@ -220,6 +235,17 @@
         (<span class="ident">input</span>, <span class="ident">pull</span>)
     }
 
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_input_from_stream</span><span class="op">&lt;</span><span class="ident">T</span>, <span class="ident">W</span>, <span class="ident">S</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">stream</span>: <span class="ident">S</span>) -&gt; <span class="ident">HandoffPullSurface</span><span class="op">&lt;</span><span class="ident">W</span><span class="op">&gt;</span>
+    <span class="kw">where</span>
+        <span class="ident">S</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Stream</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> <span class="ident">T</span><span class="op">&gt;</span> <span class="op">+</span> <span class="ident">Unpin</span>,
+        <span class="ident">W</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Handoff</span> <span class="op">+</span> <span class="ident">CanReceive</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>,
+    {
+        <span class="kw">let</span> (<span class="ident">send_port</span>, <span class="ident">recv_port</span>) <span class="op">=</span> <span class="self">self</span>.<span class="ident">hydroflow</span>.<span class="ident">make_edge</span>();
+        <span class="self">self</span>.<span class="ident">hydroflow</span>.<span class="ident">add_input_from_stream</span>(<span class="ident">send_port</span>, <span class="ident">stream</span>);
+        <span class="kw">let</span> <span class="ident">pull</span> <span class="op">=</span> <span class="ident">HandoffPullSurface::new</span>(<span class="ident">recv_port</span>);
+        <span class="ident">pull</span>
+    }
+
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_write_tcp_stream</span>(
         <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
         <span class="ident">stream</span>: <span class="ident">tokio::net::TcpStream</span>,
@@ -278,5 +304,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (f624427f8 2022-02-06)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (734368a20 2022-02-07)" ></div>
 </body></html>

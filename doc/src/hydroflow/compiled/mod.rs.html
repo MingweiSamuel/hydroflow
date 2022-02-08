@@ -328,7 +328,7 @@
 }
 
 <span class="kw">pub</span> <span class="kw">trait</span> <span class="ident">IteratorToPusherator</span>: <span class="ident">Iterator</span> {
-    <span class="kw">fn</span> <span class="ident">pusherator</span>(<span class="self">self</span>) -&gt; <span class="ident">pivot::PivotBuild</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>
+    <span class="kw">fn</span> <span class="ident">pull_to_push</span>(<span class="self">self</span>) -&gt; <span class="ident">pivot::PivotBuild</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>
     <span class="kw">where</span>
         <span class="self">Self</span>: <span class="ident">Sized</span>,
     {
@@ -597,7 +597,7 @@
             .<span class="ident">into_iter</span>()
             .<span class="ident">chain</span>([<span class="number">3</span>, <span class="number">4</span>, <span class="number">5</span>, <span class="number">6</span>, <span class="number">7</span>])
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="ident">x</span> <span class="op">*</span> <span class="number">9</span>)
-            .<span class="ident">pusherator</span>()
+            .<span class="ident">pull_to_push</span>()
             .<span class="ident">map</span>(<span class="op">|</span><span class="ident">x</span><span class="op">|</span> <span class="kw">if</span> <span class="number">0</span> <span class="op">==</span> <span class="ident">x</span> <span class="op">%</span> <span class="number">2</span> { <span class="ident">x</span> <span class="op">/</span> <span class="number">2</span> } <span class="kw">else</span> { <span class="number">3</span> <span class="op">*</span> <span class="ident">x</span> <span class="op">+</span> <span class="number">1</span> })
             .<span class="ident">tee</span>(
                 <span class="op">&lt;</span><span class="ident">InputBuild</span><span class="op">&lt;</span><span class="ident">usize</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::new</span>()
@@ -614,5 +614,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (f624427f8 2022-02-06)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (734368a20 2022-02-07)" ></div>
 </body></html>

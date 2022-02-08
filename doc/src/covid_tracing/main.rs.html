@@ -233,7 +233,7 @@
                 });
 
             <span class="kw">let</span> <span class="ident">pivot</span> <span class="op">=</span> <span class="ident">new_exposed</span>
-                .<span class="ident">pusherator</span>()
+                .<span class="ident">pull_to_push</span>()
                 .<span class="ident">tee</span>(
                     <span class="ident">InputBuild::new</span>().<span class="ident">for_each</span>(<span class="op">|</span><span class="ident">exposed_person</span>: (<span class="ident">Pid</span>, <span class="ident">DateTime</span>)<span class="op">|</span> {
                         <span class="comment">// Notif push.</span>
@@ -261,7 +261,7 @@
             <span class="kw">let</span> <span class="ident">joined</span> <span class="op">=</span> <span class="ident">SymmetricHashJoin::new</span>(<span class="ident">peoples</span>, <span class="ident">exposures</span>, <span class="kw-2">&amp;mut</span> <span class="ident">people_exposure</span>);
 
             <span class="kw">let</span> <span class="ident">pivot</span> <span class="op">=</span> <span class="ident">joined</span>
-                .<span class="ident">pusherator</span>()
+                .<span class="ident">pull_to_push</span>()
                 .<span class="ident">for_each</span>(<span class="op">|</span>(<span class="ident">_pid</span>, (<span class="ident">name</span>, <span class="ident">phone</span>), <span class="ident">exposure</span>)<span class="op">|</span> {
                     <span class="macro">println!</span>(
                         <span class="string">&quot;[{}] To {}: Possible Exposure at t = {}&quot;</span>,
@@ -318,5 +318,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (f624427f8 2022-02-06)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="covid_tracing" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (734368a20 2022-02-07)" ></div>
 </body></html>
