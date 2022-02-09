@@ -1,1 +1,0 @@
-initSidebarItems({"constant":[["CONTACTS_ADDR",""],["DIAGNOSES_ADDR",""]],"enum":[["Role",""]],"fn":[["main",""]],"mod":[["database",""],["people",""],["tracker",""]],"struct":[["Opts",""]],"trait":[["Decode",""],["Encode",""]]});

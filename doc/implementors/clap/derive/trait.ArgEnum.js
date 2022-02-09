@@ -1,4 +1,0 @@
-(function() {var implementors = {};
-implementors["chat"] = [{"text":"impl <a class=\"trait\" href=\"https://docs.rs/clap/3.0.0-beta.5/clap/derive/trait.ArgEnum.html\" title=\"trait clap::derive::ArgEnum\">ArgEnum</a> for <a class=\"enum\" href=\"chat/enum.Role.html\" title=\"enum chat::Role\">Role</a>","synthetic":false,"types":["chat::Role"]}];
-implementors["covid_tracing_dist"] = [{"text":"impl <a class=\"trait\" href=\"https://docs.rs/clap/3.0.0-beta.5/clap/derive/trait.ArgEnum.html\" title=\"trait clap::derive::ArgEnum\">ArgEnum</a> for <a class=\"enum\" href=\"covid_tracing_dist/enum.Role.html\" title=\"enum covid_tracing_dist::Role\">Role</a>","synthetic":false,"types":["covid_tracing_dist::Role"]}];
-if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

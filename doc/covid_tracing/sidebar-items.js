@@ -1,1 +1,0 @@
-initSidebarItems({"constant":[["TRANSMISSIBLE_DURATION",""]],"fn":[["main",""]],"mod":[["people",""]]});
