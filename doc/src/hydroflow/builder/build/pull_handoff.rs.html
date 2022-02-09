@@ -61,10 +61,13 @@
 <span id="56">56</span>
 <span id="57">57</span>
 <span id="58">58</span>
+<span id="59">59</span>
+<span id="60">60</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">PullBuild</span>, <span class="ident">PullBuildBase</span>};
 
 <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
 
+<span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::context::Context</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::handoff::handoff_list::PortList</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::handoff::Handoff</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">crate</span>::scheduled::port</span>::{<span class="ident">RecvPort</span>, <span class="ident">RECV</span>};
@@ -113,6 +116,7 @@
 
     <span class="kw">fn</span> <span class="ident">build</span><span class="op">&lt;</span><span class="lifetime">&#39;slf</span>, <span class="lifetime">&#39;hof</span><span class="op">&gt;</span>(
         <span class="kw-2">&amp;</span><span class="lifetime">&#39;slf</span> <span class="kw-2">mut</span> <span class="self">self</span>,
+        <span class="ident">_context</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span><span class="op">&lt;</span><span class="lifetime">&#39;_</span><span class="op">&gt;</span>,
         <span class="ident">handoffs</span>: <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::InputHandoffs</span> <span class="kw">as</span> <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">RECV</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Ctx</span><span class="op">&lt;</span><span class="lifetime">&#39;hof</span><span class="op">&gt;</span>,
     ) -&gt; <span class="ident"><span class="self">Self</span>::Build</span><span class="op">&lt;</span><span class="lifetime">&#39;slf</span>, <span class="lifetime">&#39;hof</span><span class="op">&gt;</span> {
         <span class="kw">let</span> <span class="macro">tl!</span>(<span class="ident">handoff</span>) <span class="op">=</span> <span class="ident">handoffs</span>;
@@ -120,5 +124,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (734368a20 2022-02-07)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.60.0-nightly (0c292c966 2022-02-08)" ></div>
 </body></html>
