@@ -245,6 +245,25 @@
 <span id="240">240</span>
 <span id="241">241</span>
 <span id="242">242</span>
+<span id="243">243</span>
+<span id="244">244</span>
+<span id="245">245</span>
+<span id="246">246</span>
+<span id="247">247</span>
+<span id="248">248</span>
+<span id="249">249</span>
+<span id="250">250</span>
+<span id="251">251</span>
+<span id="252">252</span>
+<span id="253">253</span>
+<span id="254">254</span>
+<span id="255">255</span>
+<span id="256">256</span>
+<span id="257">257</span>
+<span id="258">258</span>
+<span id="259">259</span>
+<span id="260">260</span>
+<span id="261">261</span>
 </pre><pre class="rust"><code><span class="doccomment">//! Structs used to create the user-facing Surface API.</span>
 <span class="doccomment">//!</span>
 <span class="doccomment">//! Main user-facing traits are [`BaseSurface`], [`PullSurface`], and</span>
@@ -270,6 +289,7 @@
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">map</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pivot</span>;
 
+<span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pull_batch</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pull_chain</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pull_cross_join</span>;
 <span class="kw">pub</span> <span class="kw">mod</span> <span class="ident">pull_handoff</span>;
@@ -386,6 +406,24 @@
             <span class="op">+</span> <span class="ident">PortListSplit</span><span class="op">&lt;</span><span class="ident">RECV</span>, <span class="ident"><span class="self">Self</span>::InputHandoffs</span>, <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">Other::InputHandoffs</span><span class="op">&gt;</span>,
     {
         <span class="ident">pull_join::JoinPullSurface::new</span>(<span class="self">self</span>, <span class="ident">other</span>)
+    }
+
+    <span class="kw">fn</span> <span class="ident">batch_with</span><span class="op">&lt;</span><span class="ident">Other</span>, <span class="ident">Key</span>, <span class="ident">ValSelf</span>, <span class="ident">ValOther</span><span class="op">&gt;</span>(
+        <span class="self">self</span>,
+        <span class="ident">other</span>: <span class="ident">Other</span>,
+    ) -&gt; <span class="ident">pull_batch::BatchPullSurface</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">Other</span><span class="op">&gt;</span>
+    <span class="kw">where</span>
+        <span class="self">Self</span>: <span class="ident">Sized</span> <span class="op">+</span> <span class="ident">PullSurface</span><span class="op">&lt;</span><span class="ident">ItemOut</span> <span class="op">=</span> (<span class="ident">Key</span>, <span class="ident">ValSelf</span>)<span class="op">&gt;</span>,
+        <span class="ident">Other</span>: <span class="ident">PullSurface</span><span class="op">&lt;</span><span class="ident">ItemOut</span> <span class="op">=</span> (<span class="ident">Key</span>, <span class="ident">ValOther</span>)<span class="op">&gt;</span>,
+        <span class="ident">Key</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
+        <span class="ident">ValSelf</span>: <span class="lifetime">&#39;static</span>,
+        <span class="ident">ValOther</span>: <span class="lifetime">&#39;static</span>,
+
+        <span class="ident"><span class="self">Self</span>::InputHandoffs</span>: <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">Other::InputHandoffs</span><span class="op">&gt;</span>,
+        <span class="op">&lt;</span><span class="ident"><span class="self">Self</span>::InputHandoffs</span> <span class="kw">as</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">Other::InputHandoffs</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Extended</span>: <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">RECV</span><span class="op">&gt;</span>
+            <span class="op">+</span> <span class="ident">PortListSplit</span><span class="op">&lt;</span><span class="ident">RECV</span>, <span class="ident"><span class="self">Self</span>::InputHandoffs</span>, <span class="ident">Suffix</span> <span class="op">=</span> <span class="ident">Other::InputHandoffs</span><span class="op">&gt;</span>,
+    {
+        <span class="ident">pull_batch::BatchPullSurface::new</span>(<span class="self">self</span>, <span class="ident">other</span>)
     }
 
     <span class="kw">fn</span> <span class="ident">cross_join</span><span class="op">&lt;</span><span class="ident">Other</span><span class="op">&gt;</span>(<span class="self">self</span>, <span class="ident">other</span>: <span class="ident">Other</span>) -&gt; <span class="ident">pull_cross_join::CrossJoinPullSurface</span><span class="op">&lt;</span><span class="self">Self</span>, <span class="ident">Other</span><span class="op">&gt;</span>
