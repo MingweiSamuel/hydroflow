@@ -22,7 +22,10 @@ pub fn main() {
     );
 
     let mut hydroflow = builder.build();
-    hydroflow.dump_graphviz("graph_reachability.dot").unwrap();
+    {
+        use hydroflow::scheduled::graph_graphviz::Graphviz;
+        hydroflow.dump_graphviz("graph_reachability.dot").unwrap();
+    }
 
     println!("A");
 

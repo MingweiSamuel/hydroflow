@@ -1,6 +1,7 @@
 pub mod context;
 pub mod graph;
 pub mod graph_ext;
+pub mod graph_graphviz;
 pub mod handoff;
 pub mod input;
 pub mod net;
