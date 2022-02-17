@@ -22,6 +22,7 @@ pub fn main() {
     );
 
     let mut hydroflow = builder.build();
+    hydroflow.dump_graphviz("graph_reachability.dot").unwrap();
 
     println!("A");
 

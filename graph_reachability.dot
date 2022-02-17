@@ -1,0 +1,20 @@
+digraph hydroflow {
+    subgraph cluster_sg_0 {
+        sg_0_hoff_0_send[label="H[0] send"]
+        label="SG[0]: edge input"
+        style=rounded
+    }
+    subgraph cluster_sg_1 {
+        sg_1_hoff_1_recv[label="H[1] recv"]
+        sg_1_hoff_0_recv[label="H[0] recv"]
+        sg_1_hoff_1_send[label="H[1] send"]
+        label="SG[1]: main"
+        style=rounded
+    }
+    sg_0_hoff_0_send -> hoff_0 
+    hoff_0 -> sg_1_hoff_0_recv 
+    hoff_0[label="H[0]: edge input handoff",shape=box]
+    sg_1_hoff_1_send -> hoff_1 
+    hoff_1 -> sg_1_hoff_1_recv 
+    hoff_1[label="H[1]: loop",shape=box]
+}
