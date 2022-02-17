@@ -41,7 +41,8 @@ fn main() {
     type MyJoinState = RefCell<JoinState<&'static str, (usize, usize), (&'static str, usize)>>;
     let state_handle = df.add_state(MyJoinState::default());
 
-    df.add_subgraph(
+    df.add_subgraph_named(
+        Some("Main Loop".into()),
         tl!(contacts_recv, diagnosed_recv, loop_recv),
         tl!(notifs_send, loop_send),
         move |context,
@@ -89,7 +90,8 @@ fn main() {
 
     let mut people_exposure = Default::default();
 
-    df.add_subgraph(
+    df.add_subgraph_named(
+        Some("Send Join".into()),
         tl!(people_recv, notifs_recv),
         tl!(),
         move |_ctx, tl!(peoples, exposures), ()| {
@@ -110,6 +112,10 @@ fn main() {
             pivot.run();
         },
     );
+
+    {
+        df.dump_graphvis("graphviz.dot").unwrap();
+    }
 
     let all_people = people::get_people();
 

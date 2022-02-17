@@ -1,4 +1,5 @@
 use std::any::Any;
+use std::borrow::Cow;
 use std::cell::Cell;
 use std::collections::VecDeque;
 use std::marker::PhantomData;
@@ -148,8 +149,9 @@ impl Hydroflow {
     /// Adds a new compiled subgraph with the specified inputs and outputs.
     ///
     /// TODO(mingwei): add example in doc.
-    pub fn add_subgraph<R, W, F>(
+    pub fn add_subgraph_named<R, W, F>(
         &mut self,
+        name: Option<Cow<'static, str>>,
         recv_ports: R,
         send_ports: W,
         mut subgraph: F,
@@ -171,6 +173,7 @@ impl Hydroflow {
             (subgraph)(&context, recv, send);
         };
         self.subgraphs.push(SubgraphData::new(
+            name,
             subgraph,
             subgraph_preds,
             subgraph_succs,
@@ -181,9 +184,19 @@ impl Hydroflow {
         sg_id
     }
 
+    pub fn add_subgraph<R, W, F>(&mut self, recv_ports: R, send_ports: W, subgraph: F) -> SubgraphId
+    where
+        R: 'static + PortList<RECV>,
+        W: 'static + PortList<SEND>,
+        F: 'static + FnMut(&Context<'_>, R::Ctx<'_>, W::Ctx<'_>),
+    {
+        self.add_subgraph_named(None, recv_ports, send_ports, subgraph)
+    }
+
     /// Adds a new compiled subraph with a variable number of inputs and outputs of the same respective handoff types.
-    pub fn add_subgraph_n_m<R, W, F>(
+    pub fn add_subgraph_n_m_named<R, W, F>(
         &mut self,
+        name: Option<Cow<'static, str>>,
         recv_ports: Vec<RecvPort<R>>,
         send_ports: Vec<SendPort<W>>,
         mut subgraph: F,
@@ -237,6 +250,7 @@ impl Hydroflow {
             (subgraph)(&context, &recvs, &sends)
         };
         self.subgraphs.push(SubgraphData::new(
+            name,
             subgraph,
             subgraph_preds,
             subgraph_succs,
@@ -247,8 +261,25 @@ impl Hydroflow {
         sg_id
     }
 
+    pub fn add_subgraph_n_m<R, W, F>(
+        &mut self,
+        recv_ports: Vec<RecvPort<R>>,
+        send_ports: Vec<SendPort<W>>,
+        subgraph: F,
+    ) -> SubgraphId
+    where
+        R: 'static + Handoff,
+        W: 'static + Handoff,
+        F: 'static + FnMut(&Context<'_>, &[&RecvCtx<R>], &[&SendCtx<W>]),
+    {
+        self.add_subgraph_n_m_named(None, recv_ports, send_ports, subgraph)
+    }
+
     /// Creates a handoff edge and returns the corresponding send and receive ports.
-    pub fn make_edge<H>(&mut self) -> (SendPort<H>, RecvPort<H>)
+    pub fn make_edge_named<H>(
+        &mut self,
+        name: Option<Cow<'static, str>>,
+    ) -> (SendPort<H>, RecvPort<H>)
     where
         H: 'static + Handoff,
     {
@@ -256,7 +287,7 @@ impl Hydroflow {
 
         // Create and insert handoff.
         let handoff = H::default();
-        self.handoffs.push(HandoffData::new(handoff));
+        self.handoffs.push(HandoffData::new(name, handoff));
 
         // Make ports.
         let input_port = SendPort {
@@ -268,6 +299,13 @@ impl Hydroflow {
             _marker: PhantomData,
         };
         (input_port, output_port)
+    }
+
+    pub fn make_edge<H>(&mut self) -> (SendPort<H>, RecvPort<H>)
+    where
+        H: 'static + Handoff,
+    {
+        self.make_edge_named(None)
     }
 
     pub fn add_state<T>(&mut self, state: T) -> StateHandle<T>
@@ -286,6 +324,89 @@ impl Hydroflow {
             _phantom: PhantomData,
         }
     }
+
+    #[cfg(feature = "graphviz")]
+    pub fn graphviz(&self) -> tabbycat::StmtList {
+        use tabbycat::{AttrList, Edge, Identity, Stmt, StmtList};
+
+        let stmt_list = StmtList::new();
+        let stmt_list = stmt_list.extend(self.subgraphs.iter().enumerate().map(
+            |(sg_id, SubgraphData { name, .. })| Stmt::Node {
+                id: Identity::Usize(2 * sg_id),
+                port: None,
+                attr: Some(AttrList::new().add(
+                    Identity::String("label".into()),
+                    Identity::Quoted(
+                        format!("S[{}]: {}", sg_id, name.as_deref().unwrap_or("_")).into(),
+                    ),
+                )),
+            },
+        ));
+        let stmt_list = stmt_list.extend(self.handoffs.iter().enumerate().map(
+            |(hoff_id, HandoffData { name, .. })| {
+                Stmt::Node {
+                    id: Identity::Usize(2 * hoff_id + 1),
+                    port: None,
+                    attr: Some(
+                        AttrList::new()
+                            .add(
+                                Identity::String("label".into()),
+                                Identity::Quoted(
+                                    format!("H[{}]: {}", hoff_id, name.as_deref().unwrap_or("_"))
+                                        .into(),
+                                ),
+                            )
+                            .add(
+                                Identity::String("shape".into()),
+                                Identity::String("box".into()),
+                            ),
+                    ),
+                }
+            },
+        ));
+        let stmt_list =
+            stmt_list.extend(self.subgraphs.iter().enumerate().flat_map(|(i, sg_data)| {
+                let SubgraphData { preds, succs, .. } = sg_data;
+
+                let this_a = tabbycat::Identity::Usize(2 * i);
+                let this_b = this_a.clone();
+
+                let preds = preds.iter().map(move |&handoff_id: &HandoffId| {
+                    Stmt::Edge(
+                        Edge::head_node(Identity::Usize(2 * handoff_id + 1), None)
+                            .arrow_to_node(this_a.clone(), None),
+                    )
+                });
+
+                let succs = succs.iter().map(move |&handoff_id: &HandoffId| {
+                    Stmt::Edge(
+                        Edge::head_node(this_b.clone(), None)
+                            .arrow_to_node(Identity::Usize(2 * handoff_id + 1), None),
+                    )
+                });
+
+                preds.chain(succs)
+            }));
+        stmt_list
+    }
+
+    #[cfg(feature = "graphviz")]
+    pub fn dump_graphvis(&self, path: impl AsRef<std::path::Path>) -> std::io::Result<()> {
+        use std::io::Write;
+
+        let graph = tabbycat::GraphBuilder::default()
+            .graph_type(tabbycat::GraphType::DiGraph)
+            .strict(false)
+            .id(tabbycat::Identity::id("G").unwrap())
+            .stmts(self.graphviz())
+            .build()
+            .unwrap();
+        //.map_err(|s| std::io::Error::new(std::io::ErrorKind::Other, s))?;
+
+        let mut file = std::io::BufWriter::new(std::fs::File::create(path)?);
+        write!(file, "{}", graph)?;
+        Ok(())
+    }
 }
 
 /// A handoff and its input and output [SubgraphId]s.
@@ -294,6 +415,7 @@ impl Hydroflow {
 ///
 /// TODO(mingwei): restructure `PortList` so this can be crate-private.
 pub struct HandoffData {
+    name: Option<Cow<'static, str>>,
     pub(crate) handoff: Box<dyn HandoffMeta>,
     pub(crate) preds: Vec<SubgraphId>,
     pub(crate) succs: Vec<SubgraphId>,
@@ -307,9 +429,10 @@ impl std::fmt::Debug for HandoffData {
     }
 }
 impl HandoffData {
-    pub fn new(handoff: impl 'static + HandoffMeta) -> Self {
+    pub fn new(name: Option<Cow<'static, str>>, handoff: impl 'static + HandoffMeta) -> Self {
         let (preds, succs) = Default::default();
         Self {
+            name,
             handoff: Box::new(handoff),
             preds,
             succs,
@@ -322,6 +445,7 @@ impl HandoffData {
 /// Used internally by the [Hydroflow] struct to represent the dataflow graph
 /// structure and scheduled state.
 struct SubgraphData {
+    name: Option<Cow<'static, str>>,
     subgraph: Box<dyn Subgraph>,
     #[allow(dead_code)]
     preds: Vec<HandoffId>,
@@ -334,12 +458,14 @@ struct SubgraphData {
 }
 impl SubgraphData {
     pub fn new(
+        name: Option<Cow<'static, str>>,
         subgraph: impl 'static + Subgraph,
         preds: Vec<HandoffId>,
         succs: Vec<HandoffId>,
         is_scheduled: bool,
     ) -> Self {
         Self {
+            name,
             subgraph: Box::new(subgraph),
             preds,
             succs,
