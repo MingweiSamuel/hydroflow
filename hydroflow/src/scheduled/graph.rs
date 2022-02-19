@@ -17,6 +17,104 @@ use super::subgraph::Subgraph;
 use super::{HandoffId, StateId, SubgraphId};
 
 /// A Hydroflow graph. Owns, schedules, and runs the compiled subgraphs.
+///
+/// This struct's methods form the Hydroflow "Core API," at the scheduled
+/// layer. A Hydroflow graph is made up of "compiled subgraphs" (nodes) and
+/// "handoffs" (edges) connecting them. Unlike the Surface API (which is built
+/// upon this API), the Core API does not concern itself with how subgraphs
+/// run. Subgraphs are provided with inputs and outputs and can run arbitrary
+/// Rust code.
+///
+/// ## Usage
+///
+/// When using this API we first construct handoffs, then use the returned port
+/// input/output handles to add subgraphs connected by those handoffs.
+///
+/// First create a Hydroflow instance:
+/// ```
+/// use hydroflow::scheduled::graph::Hydroflow;
+///
+/// let mut hf = Hydroflow::new();
+/// ```
+/// Then handoffs are created by the [`Self::make_edge`] method, providing it
+/// with the handoff type (in generics) and a friendly name. Here we'll create
+/// a handoff to create a loop for a cyclical flow.
+/// ```ignore
+/// use hydroflow::scheduled::handoff::VecHandoff;
+///
+/// let (loop_send_port, loop_recv_port) =
+///     hf.make_edge::<_, VecHandoff<usize>>("loop handoff");
+/// ```
+/// You can also use the [`crate::scheduled::graph_ext::GraphExt`] methods
+/// such as [`add_input`](super::graph_ext::GraphExt::add_input) to add an
+/// external input to the graph. The method takes in an input port to which
+/// data will be sent.
+/// ```ignore
+/// use hydroflow::scheduled::graph_ext::GraphExt;
+///
+/// let (input_send_port, input_recv_port) =
+///     hf.make_edge::<_, VecHandoff<usize>>("external input handoff");
+/// let external_input =
+///     hf.add_input::<_, _, VecHandoff<usize>>("external input", input_send_port);
+/// ```
+/// Then create a subgraph with a variable number of inputs and outputs with
+/// [`Self::add_subgraph`] and the [`crate::tl!`] ("tuple list") macro. We
+/// again provide a friendly name, to the subgraph this time. We'll include the
+/// full code to provide a working example:
+/// ```rust
+/// use hydroflow::scheduled::graph::Hydroflow;
+/// use hydroflow::scheduled::graph_ext::GraphExt;
+/// use hydroflow::scheduled::handoff::VecHandoff;
+/// use hydroflow::tl;
+///
+/// let mut hf = Hydroflow::new();
+///
+/// let (loop_send_port, loop_recv_port) =
+///     hf.make_edge::<_, VecHandoff<usize>>("loop handoff");
+///
+/// let (input_send_port, input_recv_port) =
+///     hf.make_edge::<_, VecHandoff<usize>>("external input handoff");
+/// let external_input =
+///     hf.add_input::<_, _, VecHandoff<usize>>("external input", input_send_port);
+///
+/// hf.add_subgraph(
+///     "incrementer",
+///     tl!(input_recv_port, loop_recv_port),
+///     tl!(loop_send_port),
+///     |_context, tl!(input_recv_ctx, loop_recv_ctx), tl!(loop_send_ctx)| {
+///         let input_buffer = input_recv_ctx.take_inner();
+///         let loop_buffer = loop_recv_ctx.take_inner();
+///         input_buffer
+///             .into_iter()
+///             .chain(loop_buffer)
+///             .inspect(|&x| println!("Value is {}", x))
+///             .filter(|&x| x < 10)
+///             .for_each(|x| {
+///                 loop_send_ctx.give(Some(x + 1));
+///             });
+///     }
+/// );
+///
+/// external_input.give(Some(1));
+/// external_input.flush(); // Make sure to flush!
+///
+/// hf.tick(); // Runs the Hydroflow until no more work can be done.
+///
+/// // Output:
+/// // Value is 1
+/// // Value is 2
+/// // Value is 3
+/// // Value is 4
+/// // Value is 5
+/// // Value is 6
+/// // Value is 7
+/// // Value is 8
+/// // Value is 9
+/// // Value is 10
+/// ```
+/// The port handle types are [`crate::scheduled::port::SendPort`] and [`crate::scheduled::port::RecvPort`],
+/// while the context types are [`crate::scheduled::port::SendCtx`] and [`crate::scheduled::port::RecvCtx`].
+/// See their docs for more information.
 pub struct Hydroflow {
     subgraphs: Vec<SubgraphData>,
     handoffs: Vec<HandoffData>,
