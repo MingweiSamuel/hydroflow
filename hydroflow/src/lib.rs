@@ -6,6 +6,7 @@
 pub mod builder;
 pub mod compiled;
 pub mod lang;
+pub mod metadata;
 pub mod scheduled;
 
 pub use tokio;
