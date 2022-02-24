@@ -3,9 +3,10 @@ use std::borrow::Cow;
 use std::cell::Cell;
 use std::collections::VecDeque;
 use std::marker::PhantomData;
-use std::sync::mpsc::{self, Receiver, RecvError, SyncSender};
+use std::num::NonZeroUsize;
 
 use ref_cast::RefCast;
+use tokio::sync::mpsc::{self, Receiver, Sender};
 
 use super::context::Context;
 use super::handoff::handoff_list::PortList;
@@ -25,13 +26,13 @@ pub struct Hydroflow {
 
     // TODO(mingwei): separate scheduler into its own struct/trait?
     ready_queue: VecDeque<SubgraphId>,
-    event_queue_send: SyncSender<SubgraphId>, // TODO(mingwei) remove this, to prevent hanging.
+    event_queue_send: Sender<SubgraphId>, // TODO(mingwei) remove this, to prevent hanging.
     event_queue_recv: Receiver<SubgraphId>,
 }
 impl Default for Hydroflow {
     fn default() -> Self {
         let (subgraphs, handoffs, states, ready_queue) = Default::default();
-        let (event_queue_send, event_queue_recv) = mpsc::sync_channel(8_000);
+        let (event_queue_send, event_queue_recv) = mpsc::channel(8_000);
         Self {
             subgraphs,
             handoffs,
@@ -92,27 +93,24 @@ impl Hydroflow {
         }
     }
 
-    /// Run the dataflow graph to completion.
+    /// Run the dataflow graph forever. TODO(mingwei).
     ///
     /// TODO(mingwei): Currently blockes forever, no notion of "completion."
-    pub fn run(&mut self) -> Result<!, RecvError> {
+    pub fn run(&mut self) -> Option<!> {
         loop {
             self.tick();
             self.recv_events()?;
         }
     }
 
-    /// Run the dataflow graph to completion asynchronously
+    /// Run the dataflow graph forever, asynchronously. TODO(mingwei).
     ///
     /// TODO(mingwei): Currently blockes forever, no notion of "completion."
-    pub async fn run_async(&mut self) -> Result<!, RecvError> {
+    pub async fn run_async(&mut self) -> Option<!> {
         loop {
             self.tick();
-            // Repeat until an external event triggers more subgraphs.
-            while 0 == self.try_recv_events() {
-                // TODO(mingwei): this busy-spins when other tasks are not running.
-                tokio::task::yield_now().await;
-            }
+            self.recv_events_async().await?;
+            tokio::task::yield_now().await;
         }
     }
 
@@ -121,27 +119,33 @@ impl Hydroflow {
     /// Returns the number of subgraphs enqueued.
     pub fn try_recv_events(&mut self) -> usize {
         let mut enqueued_count = 0;
-        self.ready_queue.extend(
-            self.event_queue_recv
-                .try_iter()
-                .filter(|&sg_id| !self.subgraphs[sg_id].is_scheduled.replace(true))
-                .inspect(|_| enqueued_count += 1),
-        );
+        while let Ok(sg_id) = self.event_queue_recv.try_recv() {
+            if !self.subgraphs[sg_id].is_scheduled.replace(true) {
+                self.ready_queue.push_back(sg_id);
+                enqueued_count += 1;
+            }
+        }
         enqueued_count
     }
 
     /// Enqueues subgraphs triggered by external events, blocking until at
     /// least one subgraph is scheduled.
-    pub fn recv_events(&mut self) -> Result<(), RecvError> {
+    pub fn recv_events(&mut self) -> Option<NonZeroUsize> {
         loop {
-            let sg_id = self.event_queue_recv.recv()?;
+            let sg_id = self.event_queue_recv.blocking_recv()?;
             if !self.subgraphs[sg_id].is_scheduled.replace(true) {
-                self.ready_queue.push_back(sg_id);
+                return Some(NonZeroUsize::new(self.try_recv_events() + 1).unwrap());
+            }
+        }
+    }
 
-                // Enqueue any other immediate events.
-                self.try_recv_events();
-
-                return Ok(());
+    /// Enqueues subgraphs triggered by external events asynchronously, waiting
+    /// until at least one subgraph is scheduled.
+    pub async fn recv_events_async(&mut self) -> Option<NonZeroUsize> {
+        loop {
+            let sg_id = self.event_queue_recv.recv().await?;
+            if !self.subgraphs[sg_id].is_scheduled.replace(true) {
+                return Some(NonZeroUsize::new(self.try_recv_events() + 1).unwrap());
             }
         }
     }

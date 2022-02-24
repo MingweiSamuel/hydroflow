@@ -1,4 +1,5 @@
-use std::sync::mpsc::{SyncSender, TrySendError};
+use tokio::sync::mpsc::error::TrySendError;
+use tokio::sync::mpsc::Sender;
 
 use super::SubgraphId;
 
@@ -8,10 +9,10 @@ use super::SubgraphId;
  */
 #[derive(Clone)]
 pub struct Reactor {
-    event_queue_send: SyncSender<SubgraphId>,
+    event_queue_send: Sender<SubgraphId>,
 }
 impl Reactor {
-    pub fn new(event_queue_send: SyncSender<SubgraphId>) -> Self {
+    pub fn new(event_queue_send: Sender<SubgraphId>) -> Self {
         Self { event_queue_send }
     }
 
