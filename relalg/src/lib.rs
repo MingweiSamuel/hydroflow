@@ -3,7 +3,6 @@
 use anyhow::bail;
 use sexp::Sexp;
 
-mod codegen;
 mod runtime;
 mod sexp;
 
@@ -154,39 +153,5 @@ fn parse_relexpr(s: Sexp) -> anyhow::Result<RelExpr> {
             ))
         }
         v => bail!("{} is not a relational operator", v),
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use crate::{codegen::generate_dataflow, parse_relexpr, runtime::run_dataflow, sexp::Sexp};
-
-    #[test]
-    fn datadriven_tests() {
-        datadriven::walk("testdata/", |t| {
-            t.run(|test_case| match test_case.directive.as_str() {
-                "compile" => {
-                    let sexps = Sexp::parse(test_case.input.clone()).unwrap();
-                    let sexp = (&sexps[0]).clone();
-                    let rel_expr = parse_relexpr(sexp).unwrap();
-                    let output = generate_dataflow(rel_expr);
-                    format!("{}\n", output)
-                }
-                "build" => {
-                    let sexps = Sexp::parse(test_case.input.clone()).unwrap();
-                    let sexp = (&sexps[0]).clone();
-                    let rel_expr = parse_relexpr(sexp);
-                    format!("{:?}\n", rel_expr)
-                }
-                "run" => {
-                    let sexps = Sexp::parse(test_case.input.clone()).unwrap();
-                    let sexp = (&sexps[0]).clone();
-                    let rel_expr = parse_relexpr(sexp).unwrap();
-                    let output = run_dataflow(rel_expr);
-                    format!("{:?}\n", output)
-                }
-                _ => "unhandled directive\n".into(),
-            })
-        });
     }
 }
