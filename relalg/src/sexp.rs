@@ -140,46 +140,6 @@ impl Sexp {
             _ => bail!("expected string"),
         }
     }
-
-    pub fn parse(s: String) -> Result<Vec<Sexp>, anyhow::Error> {
-        let mut p = Parser::new(s);
-        p.parse_multiple()
-    }
-
-    pub fn format(&self) -> String {
-        let mut out = String::new();
-        self.write(&mut out);
-        out
-    }
-
-    fn write(&self, s: &mut String) {
-        match self {
-            Sexp::String(st) => {
-                s.push('"');
-                for ch in st.chars() {
-                    match ch {
-                        '\n' => s.push_str("\\n"),
-                        '"' => s.push_str("\\\""),
-                        '\t' => s.push_str("\\t"),
-                        '\\' => s.push_str("\\\\"),
-                        ch => s.push(ch),
-                    }
-                }
-                s.push('"');
-            }
-            Sexp::Atom(atom) => s.push_str(atom),
-            Sexp::List(v, ch) => {
-                s.push(*ch);
-                let mut space = "";
-                for sexp in v {
-                    s.push_str(space);
-                    space = " ";
-                    Self::write(sexp, s);
-                }
-                s.push(closer(*ch));
-            }
-        }
-    }
 }
 
 pub trait FromSexp: Sized {
@@ -272,20 +232,5 @@ impl ToSexp for LitString {
 impl ToSexp for () {
     fn to_sexp(&self) -> Sexp {
         Sexp::List(Vec::new(), '(')
-    }
-}
-
-#[test]
-fn test_parse() {
-    for s in ["1", "(1)", "(plus (one two))", "(+ 1 2)", "\"foo\""] {
-        assert_eq!(
-            s,
-            Sexp::parse(s.into())
-                .unwrap()
-                .into_iter()
-                .map(|s| s.format())
-                .collect::<Vec<String>>()
-                .join(" ")
-        );
     }
 }

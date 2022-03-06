@@ -1,8 +1,3 @@
-#![allow(dead_code)]
-
-use anyhow::bail;
-use sexp::Sexp;
-
 mod runtime;
 mod sexp;
 
@@ -20,10 +15,6 @@ impl Datum {
         } else {
             panic!("was not int")
         }
-    }
-
-    pub fn is_true(self) -> bool {
-        matches!(self, Datum::Bool(true))
     }
 }
 
@@ -59,99 +50,4 @@ enum RelExpr {
     Values(Vec<Vec<ScalarExpr>>),
     Filter(Vec<ScalarExpr>, Box<RelExpr>),
     Project(Vec<ScalarExpr>, Box<RelExpr>),
-}
-
-fn parse_scalar(s: Sexp) -> anyhow::Result<ScalarExpr> {
-    match s {
-        Sexp::Atom(s) => {
-            if s.strip_prefix('@').is_some() {
-                Ok(ScalarExpr::ColRef(s[1..].parse::<usize>()?))
-            } else {
-                Ok(ScalarExpr::Literal(Datum::Int(s.parse::<i64>()?)))
-            }
-        }
-        Sexp::String(s) => Ok(ScalarExpr::Literal(Datum::String(s))),
-        Sexp::List(list, _) => {
-            if list.is_empty() {
-                bail!("empty list is not a relexpr");
-            }
-            match list[0].clone().expect_atom()?.as_str() {
-                "=" => {
-                    if list.len() < 3 {
-                        bail!("= requires two arguments");
-                    }
-                    Ok(ScalarExpr::Eq(
-                        Box::new(parse_scalar(list[1].clone())?),
-                        Box::new(parse_scalar(list[2].clone())?),
-                    ))
-                }
-                "+" => {
-                    if list.len() < 3 {
-                        bail!("+ requires two arguments");
-                    }
-                    Ok(ScalarExpr::Plus(
-                        Box::new(parse_scalar(list[1].clone())?),
-                        Box::new(parse_scalar(list[2].clone())?),
-                    ))
-                }
-                v => bail!("{} is not a scalar operator", v),
-            }
-        }
-    }
-}
-
-fn parse_relexpr(s: Sexp) -> anyhow::Result<RelExpr> {
-    let (list, _) = s.expect_list()?;
-    if list.is_empty() {
-        bail!("empty list is not a relexpr");
-    }
-    match list[0].clone().expect_atom()?.as_str() {
-        "values" => {
-            if list.len() < 2 {
-                bail!("values requires an argument");
-            }
-            let (values, _) = list[1].clone().expect_list()?;
-            let mut rows = Vec::new();
-            for r in values {
-                let (row, _) = r.expect_list()?;
-                let mut parsed_row = Vec::new();
-                for d in row {
-                    parsed_row.push(parse_scalar(d)?);
-                }
-                rows.push(parsed_row);
-            }
-            Ok(RelExpr::Values(rows))
-        }
-        "project" => {
-            if list.len() < 3 {
-                bail!("filter requires two arguments");
-            }
-            let (exprs_sexp, _) = list[1].clone().expect_list()?;
-            let exprs = exprs_sexp
-                .into_iter()
-                .map(parse_scalar)
-                .collect::<anyhow::Result<Vec<ScalarExpr>>>()?;
-
-            Ok(RelExpr::Project(
-                exprs,
-                Box::new(parse_relexpr(list[2].clone())?),
-            ))
-        }
-        "filter" => {
-            if list.len() < 3 {
-                bail!("filter requires two arguments");
-            }
-            let (filters_sexp, _) = list[1].clone().expect_list()?;
-            let filters = filters_sexp
-                .into_iter()
-                .map(parse_scalar)
-                .collect::<anyhow::Result<Vec<ScalarExpr>>>()?;
-
-            Ok(RelExpr::Filter(
-                filters,
-                Box::new(parse_relexpr(list[2].clone())?),
-            ))
-        }
-        v => bail!("{} is not a relational operator", v),
-    }
 }
