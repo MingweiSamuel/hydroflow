@@ -1,6 +1,6 @@
 [workspace]
 
 members = [
-    "hydroflow",
-    "relalg",
+    "my_package",
+    "my_dependency",
 ]

@@ -1,15 +1,15 @@
 #![feature(generic_associated_types)]
 
 pub trait MyTrait {
-    type Keys<'s>
+    type MyGat<'s>
     where
         Self: 's;
-    fn keys(&self) -> Self::Keys<'_>;
+    fn my_fn(&self) -> Self::MyGat<'_>;
 }
 
 impl MyTrait for () {
-    type Keys<'s> = &'s ();
-    fn keys(&self) -> Self::Keys<'_> {
+    type MyGat<'s> = &'s ();
+    fn my_fn(&self) -> Self::MyGat<'_> {
         &()
     }
 }

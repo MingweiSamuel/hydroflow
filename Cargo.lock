@@ -3,12 +3,12 @@
 version = 3
 
 [[package]]
-name = "hydroflow"
+name = "my_dependency"
 version = "0.1.0"
 
 [[package]]
-name = "relalg"
+name = "my_package"
 version = "0.1.0"
 dependencies = [
- "hydroflow",
+ "my_dependency",
 ]

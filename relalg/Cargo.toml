@@ -1,7 +1,0 @@
-[package]
-name = "relalg"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-hydroflow = { path = "../hydroflow" }
