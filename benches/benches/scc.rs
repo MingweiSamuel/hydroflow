@@ -146,11 +146,11 @@ pub fn fleischer_subroutine(
     assert!(!subgraph_vertices.is_empty());
     let pivot = subgraph_vertices[rand::thread_rng().gen_range(0..subgraph_vertices.len())];
 
-    let mut visited_forw = HashSet::new();
-    dfs(forw, pivot, &mut |v| visited_forw.insert(v), &mut |_| {});
+    let mut subgraph_forw = HashSet::new();
+    dfs(forw, pivot, &mut |v| subgraph_forw.insert(v), &mut |_| {});
 
-    let mut scc_max = 0;
-    let mut scc_members = Vec::new();
+    let mut scc_max = pivot;
+    let mut subgraph_scc = Vec::new();
 
     let mut subgraph_back = HashSet::new();
 
@@ -160,9 +160,9 @@ pub fn fleischer_subroutine(
         pivot,
         &mut |v| {
             if visited_back.insert(v) {
-                if visited_forw.take(&v).is_some() {
+                if subgraph_forw.take(&v).is_some() {
                     scc_max = std::cmp::max(scc_max, v);
-                    scc_members.push(v);
+                    subgraph_scc.push(v);
                 } else {
                     subgraph_back.insert(v);
                 }
@@ -174,25 +174,17 @@ pub fn fleischer_subroutine(
         &mut |_| {},
     );
 
-    println!("A {}", subgraph_vertices.len());
-
-    let subgraph_othr: HashSet<usize> = subgraph_vertices
+    let subgraph_rest: HashSet<usize> = subgraph_vertices
         .into_iter()
-        .filter(|v| !visited_forw.contains(v) && !visited_back.contains(v))
+        .filter(|v| {
+            !subgraph_forw.contains(v) && !subgraph_back.contains(v) && !subgraph_scc.contains(v)
+        })
         .collect();
-    let subgraph_forw = visited_forw;
-
-    println!(
-        "B {} {} {} {}",
-        scc_members.len(),
-        subgraph_othr.len(),
-        subgraph_forw.len(),
-        subgraph_back.len()
-    );
+    let subgraph_forw = subgraph_forw;
 
     (
-        (scc_max, scc_members),
-        subgraph_othr,
+        (scc_max, subgraph_scc),
+        subgraph_rest,
         subgraph_forw,
         subgraph_back,
     )
@@ -216,7 +208,7 @@ pub fn fleischer_single(
     forw: &HashMap<usize, Vec<usize>>,
     back: &HashMap<usize, Vec<usize>>,
 ) -> Vec<usize> {
-    let mut output = vec![0; size];
+    let mut output: Vec<usize> = (0..size).collect();
     let mut subgraph_stack = vec![(0..size).collect::<HashSet<_>>()];
     while let Some(subgraph_vertices) = subgraph_stack.pop() {
         if subgraph_vertices.is_empty() {
@@ -324,6 +316,11 @@ pub fn crit_fleischer_single(c: &mut Criterion) {
     c.bench_function("scc/fleischer_single", |b| {
         b.iter(|| {
             let labels = fleischer_single(size, forw, back);
+            expected
+                .iter()
+                .zip(labels.iter())
+                .enumerate()
+                .for_each(|(i, (a, b))| assert_eq!(a, b, "Fail on vertex {}", i));
             assert_eq!(expected, &*labels);
         });
     });
