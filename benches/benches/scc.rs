@@ -3,31 +3,33 @@ use std::io::{BufRead, BufReader, Cursor};
 use std::time::Duration;
 
 use criterion::Criterion;
+use graph_mesh::{GraphMesh, GraphMeshWriter};
 use once_cell::sync::OnceCell;
 
-type AdjList = HashMap<usize, Vec<usize>>;
-type GraphData = (usize, AdjList, AdjList);
-fn graph_data() -> &'static GraphData {
-    static GRAPH_DATA: OnceCell<GraphData> = OnceCell::new();
+fn graph_edges() -> &'static [(usize, usize)] {
+    static GRAPH_DATA: OnceCell<Vec<(usize, usize)>> = OnceCell::new();
     GRAPH_DATA.get_or_init(|| {
         let cursor = Cursor::new(include_bytes!("scc_edges.txt"));
         let reader = BufReader::new(cursor);
 
-        let mut n = 0;
-        let mut forw = AdjList::new();
-        let mut back = AdjList::new();
-        for line in reader.lines() {
-            let line = line.unwrap();
-            let mut nums = line.split_whitespace();
-            let a = nums.next().unwrap().parse().unwrap();
-            let b = nums.next().unwrap().parse().unwrap();
-            assert!(nums.next().is_none());
-            forw.entry(a).or_default().push(b);
-            back.entry(b).or_default().push(a);
-            n = std::cmp::max(n, std::cmp::max(a, b));
-        }
-        (n + 1, forw, back)
+        reader
+            .lines()
+            .map(|line| {
+                let line = line.unwrap();
+                let mut nums = line.split_whitespace();
+                let a = nums.next().unwrap().parse().unwrap();
+                let b = nums.next().unwrap().parse().unwrap();
+                assert!(nums.next().is_none());
+                (a, b)
+            })
+            .collect()
     })
+}
+
+fn edges_to_graph(edges: impl IntoIterator<Item = (usize, usize)>) -> GraphMeshWriter {
+    let mut graph = GraphMeshWriter::new();
+    edges.into_iter().for_each(|(a, b)| graph.insert_edge(a, b));
+    graph
 }
 
 fn scc_labels() -> &'static [(usize, usize)] {
@@ -51,7 +53,8 @@ fn scc_labels() -> &'static [(usize, usize)] {
 }
 
 pub fn dfs(
-    adj_list: &HashMap<usize, Vec<usize>>,
+    graph: &GraphMesh<'_>,
+    forw: bool,
     from: usize,
     seen: &mut HashSet<usize>,
     mut visit: impl FnMut(usize),
@@ -61,27 +64,23 @@ pub fn dfs(
         if !seen.contains(&v) {
             (visit)(v);
             seen.insert(v);
-            if let Some(nexts) = adj_list.get(&v) {
-                stack.extend(nexts.iter().filter(|&next| !seen.contains(next)));
-            }
+            let nexts = if forw { graph.succs(v) } else { graph.preds(v) };
+            stack.extend(nexts.iter().filter(|&next| !seen.contains(next)));
         }
     }
 }
 
-pub fn naive_n3(
-    size: usize,
-    forw: &HashMap<usize, Vec<usize>>,
-    back: &HashMap<usize, Vec<usize>>,
-) -> Vec<(usize, usize)> {
-    let labels: Vec<_> = (0..size)
+pub fn naive_n3(graph: &GraphMesh<'_>) -> Vec<(usize, usize)> {
+    let labels: Vec<_> = graph
+        .vertices()
         .map(|v| {
             let mut visited = HashSet::new();
             let mut label = v;
 
-            dfs(forw, v, &mut Default::default(), |w| {
+            dfs(graph, true, v, &mut Default::default(), |w| {
                 visited.insert(w);
             });
-            dfs(back, v, &mut Default::default(), |w| {
+            dfs(graph, false, v, &mut Default::default(), |w| {
                 if visited.contains(&w) {
                     label = std::cmp::max(label, w);
                 }
@@ -93,15 +92,11 @@ pub fn naive_n3(
     labels
 }
 
-pub fn kosaraju(
-    size: usize,
-    forw: &HashMap<usize, Vec<usize>>,
-    back: &HashMap<usize, Vec<usize>>,
-) -> Vec<(usize, usize)> {
+pub fn kosaraju(graph: &GraphMesh<'_>) -> Vec<(usize, usize)> {
     let mut seen = Default::default();
     let mut order = std::collections::VecDeque::new();
-    for v in 0..size {
-        dfs(forw, v, &mut seen, |x| order.push_front(x));
+    for v in graph.vertices() {
+        dfs(graph, true, v, &mut seen, |x| order.push_front(x));
     }
     seen.clear();
 
@@ -109,7 +104,7 @@ pub fn kosaraju(
     let mut root_label = HashMap::new();
     for v in order.into_iter() {
         let mut label = v;
-        dfs(back, v, &mut seen, |x| {
+        dfs(graph, false, v, &mut seen, |x| {
             roots.insert(x, v);
             label = std::cmp::max(label, x);
         });
@@ -119,7 +114,8 @@ pub fn kosaraju(
     println!("a {}", roots[&0]);
     println!("b {}", root_label[&roots[&0]]);
 
-    (0..size)
+    graph
+        .vertices()
         .map(|v| {
             let root = roots[&v];
             let label = root_label[&root];
@@ -129,24 +125,30 @@ pub fn kosaraju(
 }
 
 pub fn crit_naive_n3(c: &mut Criterion) {
-    let &(size, ref forw, ref back) = graph_data();
+    let edges = graph_edges();
     let expected = scc_labels();
 
     c.bench_function("scc/naive_n3", |b| {
         b.iter(|| {
-            let labels = naive_n3(size, forw, back);
+            let graph = edges_to_graph(edges.iter().copied());
+            let graph = graph.finish();
+
+            let labels = naive_n3(&graph);
             assert_eq!(expected, &*labels);
         });
     });
 }
 
 pub fn crit_kosaraju(c: &mut Criterion) {
-    let &(size, ref forw, ref back) = graph_data();
+    let edges = graph_edges();
     let expected = scc_labels();
 
     c.bench_function("scc/kosaraju", |b| {
         b.iter(|| {
-            let labels = kosaraju(size, forw, back);
+            let graph = edges_to_graph(edges.iter().copied());
+            let graph = graph.finish();
+
+            let labels = kosaraju(&graph);
             let labels: Vec<_> = labels.into_iter().collect();
             expected
                 .iter()
@@ -161,7 +163,7 @@ criterion::criterion_group!(
     name = scc;
     config = Criterion::default().sample_size(10).measurement_time(Duration::from_secs(10));
     targets =
-        // crit_naive_n3,
+        crit_naive_n3,
         crit_kosaraju,
 );
 #[cfg(not(feature = "scc_graphgen"))]

@@ -12,6 +12,7 @@ scc_graphgen = []
 
 [dev-dependencies]
 criterion = { version = "0.3", features = [ "async_tokio" ] }
+graph_mesh = { path = "../graph_mesh" }
 hydroflow = { path = "../hydroflow" }
 lazy_static = "1.4.0"
 once_cell = "1.9.0"

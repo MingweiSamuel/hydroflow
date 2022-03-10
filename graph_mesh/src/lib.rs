@@ -19,13 +19,13 @@ type Nid = usize;
 ///
 /// ```
 #[derive(Default, Debug)]
-pub struct GraphMesh {
-    edges: HashMap<Vid, Nid>,
+pub struct GraphMeshWriter {
+    verts: HashMap<Vid, Nid>,
     arena: Vec<Node>,
 }
 
-pub struct SecondaryGraphMesh<'a> {
-    edges: HashMap<Vid, Nid>,
+pub struct GraphMesh<'a> {
+    verts: HashMap<Vid, Nid>,
     arena: &'a [Node],
 }
 
@@ -39,13 +39,13 @@ struct Node {
     down: Cell<Nid>,
 }
 
-impl GraphMesh {
+impl GraphMeshWriter {
     pub fn new() -> Self {
         Default::default()
     }
 
     pub fn insert_vertex(&mut self, vertex: Vid) -> bool {
-        match self.edges.entry(vertex) {
+        match self.verts.entry(vertex) {
             Entry::Occupied(_) => false,
             Entry::Vacant(vacant_entry) => {
                 let nid: Nid = self.arena.len();
@@ -82,11 +82,11 @@ impl GraphMesh {
         });
         let new_node = &self.arena[nid];
 
-        let src_node = &self.arena[*self.edges.get(&src).unwrap()];
+        let src_node = &self.arena[*self.verts.get(&src).unwrap()];
         new_node.rght.swap(&self.arena[src_node.left.get()].rght);
         new_node.left.swap(&src_node.left);
 
-        let dst_node = &self.arena[*self.edges.get(&dst).unwrap()];
+        let dst_node = &self.arena[*self.verts.get(&dst).unwrap()];
         new_node.down.swap(&self.arena[dst_node.uppp.get()].down);
         new_node.uppp.swap(&dst_node.uppp);
 
@@ -96,17 +96,17 @@ impl GraphMesh {
         // );
     }
 
-    pub fn as_secondary(&self) -> SecondaryGraphMesh<'_> {
-        SecondaryGraphMesh {
-            edges: self.edges.clone(),
+    pub fn finish(&self) -> GraphMesh<'_> {
+        GraphMesh {
+            verts: self.verts.clone(),
             arena: &*self.arena,
         }
     }
 }
 
-impl<'a> SecondaryGraphMesh<'a> {
+impl<'a> GraphMesh<'a> {
     fn iter_row(&self, vid: Vid, mut visit: impl FnMut(&Node, Vid)) {
-        let nid = self.edges[&vid];
+        let nid = self.verts[&vid];
 
         let mut node = &self.arena[nid];
         node = &self.arena[node.rght.get()];
@@ -118,7 +118,7 @@ impl<'a> SecondaryGraphMesh<'a> {
     }
 
     fn iter_col(&self, vid: Vid, mut visit: impl FnMut(&Node, Vid)) {
-        let nid = self.edges[&vid];
+        let nid = self.verts[&vid];
 
         let mut node = &self.arena[nid];
         node = &self.arena[node.down.get()];
@@ -127,6 +127,16 @@ impl<'a> SecondaryGraphMesh<'a> {
             (visit)(node, other_src);
             node = &self.arena[node.down.get()];
         }
+    }
+
+    pub fn contains_vertex(&self, vid: Vid) -> bool {
+        self.verts.contains_key(&vid)
+    }
+
+    pub fn vertices(
+        &self,
+    ) -> std::iter::Copied<std::collections::hash_map::Keys<'_, usize, usize>> {
+        self.verts.keys().copied()
     }
 
     pub fn succs(&self, vid: Vid) -> Vec<Vid> {
@@ -141,10 +151,10 @@ impl<'a> SecondaryGraphMesh<'a> {
         out
     }
 
-    pub fn partition(&mut self, keep: &HashSet<Vid>) -> SecondaryGraphMesh<'a> {
-        let mut output_edges = HashMap::with_capacity(self.edges.len() - keep.len());
+    pub fn partition(&mut self, keep: &HashSet<Vid>) -> GraphMesh<'a> {
+        let mut output_edges = HashMap::with_capacity(self.verts.len() - keep.len());
 
-        for (&vid, &nid) in self.edges.iter() {
+        for (&vid, &nid) in self.verts.iter() {
             let retain = if keep.contains(&vid) {
                 true
             } else {
@@ -166,10 +176,10 @@ impl<'a> SecondaryGraphMesh<'a> {
             });
         }
 
-        self.edges.retain(|v, _| keep.contains(v));
+        self.verts.retain(|v, _| keep.contains(v));
 
-        SecondaryGraphMesh {
-            edges: output_edges,
+        GraphMesh {
+            verts: output_edges,
             arena: self.arena,
         }
     }
@@ -184,7 +194,7 @@ impl<'a> SecondaryGraphMesh<'a> {
 
 #[test]
 fn test_basic() {
-    let mut graph = GraphMesh::new();
+    let mut graph = GraphMeshWriter::new();
     graph.insert_edge(100, 102);
     graph.insert_edge(101, 102);
     graph.insert_edge(101, 103);
@@ -193,7 +203,7 @@ fn test_basic() {
     graph.insert_edge(103, 100);
     graph.insert_edge(104, 102);
     graph.insert_edge(104, 103);
-    let mut graph = graph.as_secondary();
+    let mut graph = graph.finish();
 
     assert_eq!(&[102], &*graph.succs(100));
     assert_eq!(&[102, 103, 104], &*graph.succs(101));
