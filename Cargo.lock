@@ -49,6 +49,7 @@ dependencies = [
  "bitvec",
  "criterion",
  "differential-dataflow",
+ "graph_mesh",
  "hydroflow",
  "lazy_static",
  "once_cell",
@@ -456,6 +457,10 @@ dependencies = [
  "libc",
  "wasi",
 ]
+
+[[package]]
+name = "graph_mesh"
+version = "0.1.0"
 
 [[package]]
 name = "half"
