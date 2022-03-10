@@ -1,6 +1,7 @@
 [workspace]
 
 members = [
+    "graph_mesh",
     "hydroflow",
     "benches",
     "kvs",
