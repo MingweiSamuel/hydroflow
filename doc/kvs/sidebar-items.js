@@ -1,1 +1,0 @@
-initSidebarItems({"enum":[["Message",""]],"fn":[["main",""],["make_communication_matrix",""],["spawn",""],["spawn_threads",""]],"struct":[["ActorId",""],["PerQuantumPulser",""]],"type":[["Matrix",""],["MessageSender",""]]});

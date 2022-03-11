@@ -171,11 +171,11 @@
 <span class="kw">where</span>
     <span class="ident">PrevBuf</span>: <span class="ident">PullBuild</span><span class="op">&lt;</span><span class="ident">ItemOut</span> <span class="op">=</span> (<span class="ident">Key</span>, <span class="ident">Update::Repr</span>)<span class="op">&gt;</span>,
     <span class="ident">PrevStream</span>: <span class="ident">PullBuild</span><span class="op">&lt;</span><span class="ident">ItemOut</span> <span class="op">=</span> (<span class="ident">Key</span>, <span class="ident">StreamVal</span>)<span class="op">&gt;</span>,
-    <span class="ident">Key</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span> <span class="op">+</span> <span class="ident">Clone</span>,
+    <span class="ident">Key</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
     <span class="ident">L</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">LatticeRepr</span> <span class="op">+</span> <span class="ident">Merge</span><span class="op">&lt;</span><span class="ident">Update</span><span class="op">&gt;</span>,
     <span class="ident">L::Repr</span>: <span class="ident">Default</span>,
     <span class="ident">Update</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">LatticeRepr</span>,
-    <span class="ident">StreamVal</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Clone</span>,
+    <span class="ident">StreamVal</span>: <span class="lifetime">&#39;static</span>,
 
     <span class="ident">PrevBuf::InputHandoffs</span>: <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">PrevStream::InputHandoffs</span><span class="op">&gt;</span>,
     <span class="op">&lt;</span><span class="ident">PrevBuf::InputHandoffs</span> <span class="kw">as</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">PrevStream::InputHandoffs</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Extended</span>: <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">RECV</span><span class="op">&gt;</span>
@@ -198,11 +198,11 @@
 <span class="kw">where</span>
     <span class="ident">PrevBuf</span>: <span class="ident">PullBuild</span><span class="op">&lt;</span><span class="ident">ItemOut</span> <span class="op">=</span> (<span class="ident">Key</span>, <span class="ident">Update::Repr</span>)<span class="op">&gt;</span>,
     <span class="ident">PrevStream</span>: <span class="ident">PullBuild</span><span class="op">&lt;</span><span class="ident">ItemOut</span> <span class="op">=</span> (<span class="ident">Key</span>, <span class="ident">StreamVal</span>)<span class="op">&gt;</span>,
-    <span class="ident">Key</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span> <span class="op">+</span> <span class="ident">Clone</span>,
+    <span class="ident">Key</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">Hash</span>,
     <span class="ident">L</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">LatticeRepr</span> <span class="op">+</span> <span class="ident">Merge</span><span class="op">&lt;</span><span class="ident">Update</span><span class="op">&gt;</span>,
-    <span class="ident">L::Repr</span>: <span class="ident">Default</span> <span class="op">+</span> <span class="ident">Clone</span>,
+    <span class="ident">L::Repr</span>: <span class="ident">Default</span>,
     <span class="ident">Update</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">LatticeRepr</span>,
-    <span class="ident">StreamVal</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">Clone</span>,
+    <span class="ident">StreamVal</span>: <span class="lifetime">&#39;static</span>,
 
     <span class="ident">PrevBuf::InputHandoffs</span>: <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">PrevStream::InputHandoffs</span><span class="op">&gt;</span>,
     <span class="op">&lt;</span><span class="ident">PrevBuf::InputHandoffs</span> <span class="kw">as</span> <span class="ident">Extend</span><span class="op">&lt;</span><span class="ident">PrevStream::InputHandoffs</span><span class="op">&gt;</span><span class="op">&gt;</span><span class="ident">::Extended</span>: <span class="ident">PortList</span><span class="op">&lt;</span><span class="ident">RECV</span><span class="op">&gt;</span>
@@ -222,5 +222,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (1eb72580d 2022-03-08)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (5f4e06771 2022-03-10)" ></div>
 </body></html>

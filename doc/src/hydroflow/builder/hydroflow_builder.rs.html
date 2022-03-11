@@ -192,6 +192,22 @@
 <span id="187">187</span>
 <span id="188">188</span>
 <span id="189">189</span>
+<span id="190">190</span>
+<span id="191">191</span>
+<span id="192">192</span>
+<span id="193">193</span>
+<span id="194">194</span>
+<span id="195">195</span>
+<span id="196">196</span>
+<span id="197">197</span>
+<span id="198">198</span>
+<span id="199">199</span>
+<span id="200">200</span>
+<span id="201">201</span>
+<span id="202">202</span>
+<span id="203">203</span>
+<span id="204">204</span>
+<span id="205">205</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">futures::Stream</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::build</span>::{<span class="ident">PullBuild</span>, <span class="ident">PushBuild</span>};
@@ -267,10 +283,26 @@
         <span class="ident">Pull</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">PullSurface</span>,
         <span class="ident">Push</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">PushSurfaceReversed</span><span class="op">&lt;</span><span class="ident">ItemIn</span> <span class="op">=</span> <span class="ident">Pull::ItemOut</span><span class="op">&gt;</span>,
     {
+        <span class="self">self</span>.<span class="ident">add_subgraph_stratified</span>(<span class="ident">name</span>, <span class="number">0</span>, <span class="ident">pivot</span>)
+    }
+
+    <span class="doccomment">/// Adds a `pivot` created via the Surface API, with the given stratum number.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_subgraph_stratified</span><span class="op">&lt;</span><span class="ident">Name</span>, <span class="ident">Pull</span>, <span class="ident">Push</span><span class="op">&gt;</span>(
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>,
+        <span class="ident">name</span>: <span class="ident">Name</span>,
+        <span class="ident">stratum</span>: <span class="ident">usize</span>,
+        <span class="ident">pivot</span>: <span class="ident">PivotSurface</span><span class="op">&lt;</span><span class="ident">Pull</span>, <span class="ident">Push</span><span class="op">&gt;</span>,
+    ) -&gt; <span class="ident">SubgraphId</span>
+    <span class="kw">where</span>
+        <span class="ident">Name</span>: <span class="ident">Into</span><span class="op">&lt;</span><span class="ident">Cow</span><span class="op">&lt;</span><span class="lifetime">&#39;static</span>, <span class="ident">str</span><span class="op">&gt;</span><span class="op">&gt;</span>,
+        <span class="ident">Pull</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">PullSurface</span>,
+        <span class="ident">Push</span>: <span class="lifetime">&#39;static</span> <span class="op">+</span> <span class="ident">PushSurfaceReversed</span><span class="op">&lt;</span><span class="ident">ItemIn</span> <span class="op">=</span> <span class="ident">Pull::ItemOut</span><span class="op">&gt;</span>,
+    {
         <span class="kw">let</span> ((<span class="ident">recv_ports</span>, <span class="ident">send_ports</span>), (<span class="kw-2">mut</span> <span class="ident">pull_build</span>, <span class="kw-2">mut</span> <span class="ident">push_build</span>)) <span class="op">=</span> <span class="ident">pivot</span>.<span class="ident">into_parts</span>();
 
-        <span class="self">self</span>.<span class="ident">hydroflow</span>.<span class="ident">add_subgraph</span>(
+        <span class="self">self</span>.<span class="ident">hydroflow</span>.<span class="ident">add_subgraph_stratified</span>(
             <span class="ident">name</span>,
+            <span class="ident">stratum</span>,
             <span class="ident">recv_ports</span>,
             <span class="ident">send_ports</span>,
             <span class="kw">move</span> <span class="op">|</span><span class="ident">context</span>, <span class="ident">recv_ctx</span>, <span class="ident">send_ctx</span><span class="op">|</span> {
@@ -382,5 +414,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (1eb72580d 2022-03-08)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (5f4e06771 2022-03-10)" ></div>
 </body></html>

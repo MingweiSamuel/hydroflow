@@ -404,7 +404,6 @@
 <span id="399">399</span>
 <span id="400">400</span>
 <span id="401">401</span>
-<span id="402">402</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::ops::Range</span>;
 <span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">collections::HashMap</span>, <span class="ident">marker::PhantomData</span>};
 
@@ -453,11 +452,10 @@
 <span class="kw">impl</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span>, <span class="ident">Buf</span>, <span class="ident">L</span>, <span class="ident">Update</span>, <span class="ident">Stream</span>, <span class="ident">StreamV</span><span class="op">&gt;</span> <span class="ident">Iterator</span>
     <span class="kw">for</span> <span class="ident">HalfHashJoin</span><span class="op">&lt;</span><span class="lifetime">&#39;a</span>, <span class="ident">K</span>, <span class="ident">Buf</span>, <span class="ident">L</span>, <span class="ident">Update</span>, <span class="ident">Stream</span>, <span class="ident">StreamV</span><span class="op">&gt;</span>
 <span class="kw">where</span>
-    <span class="ident">K</span>: <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">std::hash::Hash</span> <span class="op">+</span> <span class="ident">Clone</span>,
+    <span class="ident">K</span>: <span class="ident">Eq</span> <span class="op">+</span> <span class="ident">std::hash::Hash</span>,
     <span class="ident">L</span>: <span class="ident">LatticeRepr</span> <span class="op">+</span> <span class="ident">Merge</span><span class="op">&lt;</span><span class="ident">Update</span><span class="op">&gt;</span>,
     <span class="ident">L::Repr</span>: <span class="ident">Default</span>,
     <span class="ident">Update</span>: <span class="ident">LatticeRepr</span>,
-    <span class="ident">StreamV</span>: <span class="ident">Clone</span>,
     <span class="ident">Buf</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">K</span>, <span class="ident">Update::Repr</span>)<span class="op">&gt;</span>,
     <span class="ident">Stream</span>: <span class="ident">Iterator</span><span class="op">&lt;</span><span class="ident">Item</span> <span class="op">=</span> (<span class="ident">K</span>, <span class="ident">StreamV</span>)<span class="op">&gt;</span>,
 {
@@ -808,5 +806,5 @@
     }
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (1eb72580d 2022-03-08)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (5f4e06771 2022-03-10)" ></div>
 </body></html>

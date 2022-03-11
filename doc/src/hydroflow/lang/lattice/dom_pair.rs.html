@@ -151,6 +151,17 @@
 <span id="146">146</span>
 <span id="147">147</span>
 <span id="148">148</span>
+<span id="149">149</span>
+<span id="150">150</span>
+<span id="151">151</span>
+<span id="152">152</span>
+<span id="153">153</span>
+<span id="154">154</span>
+<span id="155">155</span>
+<span id="156">156</span>
+<span id="157">157</span>
+<span id="158">158</span>
+<span id="159">159</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::cmp::Ordering</span>;
 
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::bottom::BottomRepr</span>;
@@ -205,11 +216,19 @@
     }
 }
 
-<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">Ra</span>: <span class="ident">LatticeRepr</span>, <span class="ident">Rb</span>: <span class="ident">LatticeRepr</span><span class="op">&gt;</span> <span class="ident">Convert</span><span class="op">&lt;</span><span class="ident">DomPairRepr</span><span class="op">&lt;</span><span class="ident">Ra</span>, <span class="ident">Rb</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="kw">for</span> <span class="ident">DomPairRepr</span><span class="op">&lt;</span><span class="ident">Ra</span>, <span class="ident">Rb</span><span class="op">&gt;</span> {
+<span class="kw">impl</span><span class="op">&lt;</span><span class="ident">SelfRa</span>, <span class="ident">SelfRb</span>, <span class="ident">TargetRa</span>, <span class="ident">TargetRb</span><span class="op">&gt;</span> <span class="ident">Convert</span><span class="op">&lt;</span><span class="ident">DomPairRepr</span><span class="op">&lt;</span><span class="ident">TargetRa</span>, <span class="ident">TargetRb</span><span class="op">&gt;</span><span class="op">&gt;</span>
+    <span class="kw">for</span> <span class="ident">DomPairRepr</span><span class="op">&lt;</span><span class="ident">SelfRa</span>, <span class="ident">SelfRb</span><span class="op">&gt;</span>
+<span class="kw">where</span>
+    <span class="ident">SelfRa</span>: <span class="ident">LatticeRepr</span> <span class="op">+</span> <span class="ident">Convert</span><span class="op">&lt;</span><span class="ident">TargetRa</span><span class="op">&gt;</span>,
+    <span class="ident">SelfRb</span>: <span class="ident">LatticeRepr</span> <span class="op">+</span> <span class="ident">Convert</span><span class="op">&lt;</span><span class="ident">TargetRb</span><span class="op">&gt;</span>,
+    <span class="ident">TargetRa</span>: <span class="ident">LatticeRepr</span><span class="op">&lt;</span><span class="ident">Lattice</span> <span class="op">=</span> <span class="ident">SelfRa::Lattice</span><span class="op">&gt;</span>,
+    <span class="ident">TargetRb</span>: <span class="ident">LatticeRepr</span><span class="op">&lt;</span><span class="ident">Lattice</span> <span class="op">=</span> <span class="ident">SelfRb::Lattice</span><span class="op">&gt;</span>,
+{
     <span class="kw">fn</span> <span class="ident">convert</span>(
-        <span class="ident">this</span>: <span class="op">&lt;</span><span class="ident">DomPairRepr</span><span class="op">&lt;</span><span class="ident">Ra</span>, <span class="ident">Rb</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="ident">LatticeRepr</span><span class="op">&gt;</span><span class="ident">::Repr</span>,
-    ) -&gt; <span class="op">&lt;</span><span class="ident">DomPairRepr</span><span class="op">&lt;</span><span class="ident">Ra</span>, <span class="ident">Rb</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="ident">LatticeRepr</span><span class="op">&gt;</span><span class="ident">::Repr</span> {
-        <span class="ident">this</span>
+        <span class="ident">this</span>: <span class="op">&lt;</span><span class="ident">DomPairRepr</span><span class="op">&lt;</span><span class="ident">SelfRa</span>, <span class="ident">SelfRb</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="ident">LatticeRepr</span><span class="op">&gt;</span><span class="ident">::Repr</span>,
+    ) -&gt; <span class="op">&lt;</span><span class="ident">DomPairRepr</span><span class="op">&lt;</span><span class="ident">TargetRa</span>, <span class="ident">TargetRb</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="ident">LatticeRepr</span><span class="op">&gt;</span><span class="ident">::Repr</span> {
+        <span class="kw">let</span> (<span class="ident">a</span>, <span class="ident">b</span>) <span class="op">=</span> <span class="ident">this</span>;
+        (<span class="ident">SelfRa::convert</span>(<span class="ident">a</span>), <span class="ident">SelfRb::convert</span>(<span class="ident">b</span>))
     }
 }
 
@@ -229,7 +248,10 @@
         <span class="ident">this</span>: <span class="kw-2">&amp;</span><span class="op">&lt;</span><span class="ident">DomPairRepr</span><span class="op">&lt;</span><span class="ident">SelfRA</span>, <span class="ident">SelfRB</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="ident">LatticeRepr</span><span class="op">&gt;</span><span class="ident">::Repr</span>,
         <span class="ident">other</span>: <span class="kw-2">&amp;</span><span class="op">&lt;</span><span class="ident">DomPairRepr</span><span class="op">&lt;</span><span class="ident">DeltaRA</span>, <span class="ident">DeltaRB</span><span class="op">&gt;</span> <span class="kw">as</span> <span class="ident">LatticeRepr</span><span class="op">&gt;</span><span class="ident">::Repr</span>,
     ) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">Ordering</span><span class="op">&gt;</span> {
-        <span class="ident">SelfRA::compare</span>(<span class="kw-2">&amp;</span><span class="ident">this</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="number">0</span>).<span class="ident">or_else</span>(<span class="op">|</span><span class="op">|</span> <span class="ident">SelfRB::compare</span>(<span class="kw-2">&amp;</span><span class="ident">this</span>.<span class="number">1</span>, <span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="number">1</span>))
+        <span class="kw">match</span> <span class="ident">SelfRA::compare</span>(<span class="kw-2">&amp;</span><span class="ident">this</span>.<span class="number">0</span>, <span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="number">0</span>) {
+            <span class="prelude-val">Some</span>(<span class="ident">Ordering::Equal</span>) =&gt; <span class="ident">SelfRB::compare</span>(<span class="kw-2">&amp;</span><span class="ident">this</span>.<span class="number">1</span>, <span class="kw-2">&amp;</span><span class="ident">other</span>.<span class="number">1</span>),
+            <span class="ident">otherwise</span> =&gt; <span class="ident">otherwise</span>,
+        }
     }
 }
 
@@ -300,5 +322,5 @@
     );
 }
 </code></pre></div>
-</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (1eb72580d 2022-03-08)" ></div>
+</section><section id="search" class="content hidden"></section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.61.0-nightly (5f4e06771 2022-03-10)" ></div>
 </body></html>
