@@ -197,15 +197,16 @@ impl GraphExt for Hydroflow {
         S: 'static + Stream<Item = T> + Unpin,
         W: 'static + Handoff + CanReceive<T>,
     {
-        let mut stream = stream;
+        let mut stream = Box::pin(stream);
         self.add_subgraph_source::<_, _, W>(name, send_port, move |ctx, send| {
             let waker = ctx.waker();
             let mut cx = task::Context::from_waker(&waker);
-            let mut r = Pin::new(&mut stream);
-            while let Poll::Ready(Some(v)) = r.poll_next(&mut cx) {
+            // let mut n = 0;
+            while let Poll::Ready(Some(v)) = stream.as_mut().poll_next(&mut cx) {
                 send.give(v);
-                r = Pin::new(&mut stream);
+                // n += 1;
             }
+            // println!("STREAM {}", n);
         });
     }
 }

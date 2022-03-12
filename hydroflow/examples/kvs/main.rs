@@ -11,7 +11,10 @@ use std::{
     time::Instant,
 };
 
+use futures::channel::mpsc::{channel, Receiver, Sender};
 use futures::channel::oneshot::Canceled;
+use futures::sink::SinkExt;
+use futures::stream::StreamExt;
 use hdrhistogram::Histogram;
 use hydroflow::{
     builder::{
@@ -25,10 +28,10 @@ use hydroflow::{
     scheduled::handoff::VecHandoff,
     tokio::{
         self,
-        sync::mpsc::{channel, Receiver, Sender},
+        // sync::mpsc::{channel, Receiver, Sender},
     },
 };
-use tokio_stream::{wrappers::ReceiverStream, StreamExt};
+// use tokio_stream::{wrappers::ReceiverStream, StreamExt};
 
 #[derive(Debug, Copy, Clone, Hash, Eq, PartialEq)]
 struct ActorId(u64);
@@ -60,7 +63,10 @@ fn main() {
     let workers = 1;
     let kvs = Arc::new(Kvs::new(workers));
     let mut i = 0;
-    let rt = tokio::runtime::Runtime::new().unwrap();
+    let rt = tokio::runtime::Builder::new_current_thread()
+        .enable_all()
+        .build()
+        .unwrap();
     let mut h = Histogram::<u64>::new(2).unwrap();
     rt.block_on(async move {
         loop {
@@ -74,7 +80,7 @@ fn main() {
 
             i += 1;
             if i % 100 == 0 {
-                let k = format!("foo{}", i % 99);
+                let k = format!("foo{}", i);
                 println!("doing a read for {}", k);
                 let _ = kvs.clone().get(k).await;
                 println!("read returned");
@@ -109,6 +115,7 @@ where
     async fn set(self: Arc<Self>, k: K, v: V) {
         let receiver = self.round_robin.fetch_add(1, Ordering::SeqCst) % self.senders.len();
         self.senders[receiver]
+            .clone()
             .send(Message::Set(k, v))
             .await
             .unwrap();
@@ -120,6 +127,7 @@ where
         let receiver_idx = self.round_robin.fetch_add(1, Ordering::SeqCst) % self.senders.len();
         let (sender, receiver) = futures::channel::oneshot::channel();
         self.senders[receiver_idx]
+            .clone()
             .send(Message::Get(k, sender))
             .await
             .unwrap();
@@ -177,7 +185,10 @@ where
     spawn(
         workers,
         move |_id, mut receiver: Receiver<Message<K, V>>, _senders: Vec<Sender<Message<K, V>>>| {
-            let rt = tokio::runtime::Runtime::new().unwrap();
+            let rt = tokio::runtime::Builder::new_current_thread()
+                .enable_all()
+                .build()
+                .unwrap();
             rt.block_on(async move {
                 let mut hf = HydroflowBuilder::default();
 
@@ -196,7 +207,7 @@ where
 
                 let q_recv = hf.add_input_from_stream::<_, Option<_>, VecHandoff<_>, _>(
                     "incoming_messages",
-                    ReceiverStream::new(receiver).map(Some),
+                    receiver.map(Some),
                 );
 
                 let (reads_send, reads_recv) = hf.make_edge::<_, VecHandoff<(
