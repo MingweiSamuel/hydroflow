@@ -176,62 +176,59 @@ where
 {
     spawn(
         workers,
-        move |_id, mut receiver: Receiver<Message<K, V>>, _senders: Vec<Sender<Message<K, V>>>| {
-            let rt = tokio::runtime::Runtime::new().unwrap();
-            rt.block_on(async move {
-                let mut hf = HydroflowBuilder::default();
+        move |_id, receiver: Receiver<Message<K, V>>, _senders: Vec<Sender<Message<K, V>>>| {
+            let mut hf = HydroflowBuilder::default();
 
-                // let (q_send, q_recv) = hf
-                //     .add_channel_input::<_, Option<Message<K, V>>, VecHandoff<Message<K, V>>>(
-                //         "writes",
-                //     );
+            // let (q_send, q_recv) = hf
+            //     .add_channel_input::<_, Option<Message<K, V>>, VecHandoff<Message<K, V>>>(
+            //         "writes",
+            //     );
 
-                // tokio::spawn(async move {
-                //     // TODO(justin): batch all these per try_recv?
-                //     while let Some(v) = receiver.recv().await {
-                //         q_send.give(Some(v));
-                //         q_send.flush();
-                //     }
-                // });
+            // tokio::spawn(async move {
+            //     // TODO(justin): batch all these per try_recv?
+            //     while let Some(v) = receiver.recv().await {
+            //         q_send.give(Some(v));
+            //         q_send.flush();
+            //     }
+            // });
 
-                let q_recv = hf.add_input_from_stream::<_, Option<_>, VecHandoff<_>, _>(
-                    "incoming_messages",
-                    ReceiverStream::new(receiver).map(Some),
-                );
+            let q_recv = hf.add_input_from_stream::<_, Option<_>, VecHandoff<_>, _>(
+                "incoming_messages",
+                ReceiverStream::new(receiver).map(Some),
+            );
 
-                let (reads_send, reads_recv) = hf.make_edge::<_, VecHandoff<(
-                    K,
-                    futures::channel::oneshot::Sender<(Clock, V)>,
-                )>, Option<(
-                    K,
-                    futures::channel::oneshot::Sender<(Clock, V)>,
-                )>>("reads");
+            let (reads_send, reads_recv) = hf.make_edge::<_, VecHandoff<(
+                K,
+                futures::channel::oneshot::Sender<(Clock, V)>,
+            )>, Option<(
+                K,
+                futures::channel::oneshot::Sender<(Clock, V)>,
+            )>>("reads");
 
-                hf.add_subgraph(
-                    "demultiplexer",
-                    q_recv
-                        .flatten()
-                        .pull_to_push()
-                        .filter(|x| matches!(x, Message::Get(_, _)))
-                        .map(|msg| {
-                            if let Message::Get(k, sender) = msg {
-                                Some((k, sender))
-                            } else {
-                                panic!()
-                            }
-                        })
-                        .push_to(reads_send),
-                );
+            hf.add_subgraph(
+                "demultiplexer",
+                q_recv
+                    .flatten()
+                    .pull_to_push()
+                    .filter(|x| matches!(x, Message::Get(_, _)))
+                    .map(|msg| {
+                        if let Message::Get(k, sender) = msg {
+                            Some((k, sender))
+                        } else {
+                            panic!()
+                        }
+                    })
+                    .push_to(reads_send),
+            );
 
-                hf.add_subgraph(
-                    "read_handler",
-                    reads_recv.flatten().pull_to_push().for_each(|(_k, ch)| {
-                        ch.send(Default::default()).unwrap();
-                    }),
-                );
+            hf.add_subgraph(
+                "read_handler",
+                reads_recv.flatten().pull_to_push().for_each(|(_k, ch)| {
+                    ch.send(Default::default()).unwrap();
+                }),
+            );
 
-                hf.build().run_async().await.unwrap();
-            })
+            hf.build().run().unwrap();
         },
     )
 }
