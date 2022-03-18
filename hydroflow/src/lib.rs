@@ -9,6 +9,7 @@ pub mod builder;
 pub mod compiled;
 pub mod lang;
 pub mod scheduled;
+pub mod util;
 
 pub use tokio;
 pub use tuple_list::tuple_list as tl;
