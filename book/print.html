@@ -76,7 +76,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">User Guide</li><li class="chapter-item expanded "><a href="chapter_1.html"><strong aria-hidden="true">1.</strong> Chapter 1</a></li><li class="chapter-item expanded "><a href="chapter_2.html"><strong aria-hidden="true">2.</strong> Chapter 2</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">User Guide</li><li class="chapter-item expanded "><a href="setup.html"><strong aria-hidden="true">1.</strong> Setup</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -136,10 +136,67 @@
                 <div id="content" class="content">
                     <main>
                         <h1 id="introduction"><a class="header" href="#introduction">Introduction</a></h1>
-<p>Welcome to The Hydroflow Book.</p>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="chapter-1"><a class="header" href="#chapter-1">Chapter 1</a></h1>
-<div style="break-before: page; page-break-before: always;"></div><h1 id="chapter-2"><a class="header" href="#chapter-2">Chapter 2</a></h1>
-<p>Hello World</p>
+<p><a href="https://github.com/hydro-project/hydroflow">Hydroflow</a> is a dataflow runtime
+written in Rust, serving as the execution layer of the <a href="https://hydro-project.github.io/">Hydro stack</a>.
+This book teaches how to set up and get started with Hydroflow.</p>
+<p>Keep in mind that Hydroflow is under active development and is constantly
+changing. However this book is tested in CI so should always be up-to-date
+(though incomplete, for now).</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="setup"><a class="header" href="#setup">Setup</a></h1>
+<p>This section explains how to get Hydroflow running, either for development or
+usage, even if you are not familiar with Rust development.</p>
+<h2 id="installing-rust"><a class="header" href="#installing-rust">Installing Rust</a></h2>
+<p>First you will need to install Rust. We recommend the conventional installation
+method, <code>rustup</code>, which allows you to easily manage and update Rust versions.</p>
+<p><a href="https://www.rust-lang.org/tools/install"><strong>Install Rust</strong></a></p>
+<p>This will install <code>rustup</code> and the Rust package manager <code>cargo</code> (and the
+internally-used <code>rustc</code> compiler). <code>cargo</code> is Rust's main development tool,
+used for building, running, and testing Rust code.</p>
+<p>The following <code>cargo</code> commands will come in handy:</p>
+<ul>
+<li><code>cargo check --all-targets</code> - Checks the workspace for any compile-time
+errors.</li>
+<li><code>cargo build --all-targets</code> - Builds all projects/tests/benchmarks/examples
+in the workspace.</li>
+<li><code>cargo clean</code> - Cleans the build cache, sometimes needed if the build is
+acting up.</li>
+<li><code>cargo test</code> - Runs tests in the workspace.</li>
+<li><code>cargo run -p hydroflow --example &lt;example name&gt;</code> - Run an example program in
+<code>hydroflow/examples</code>.</li>
+</ul>
+<p>To learn Rust see the official <a href="https://www.rust-lang.org/learn">Learn Rust page</a>.
+Here are some good resources:</p>
+<ul>
+<li><a href="https://doc.rust-lang.org/book/"><em>The Rust Programming Language</em>, AKA &quot;The Book&quot;</a></li>
+<li><a href="https://rust-unofficial.github.io/too-many-lists/">Learn Rust With Entirely Too Many Linked Lists</a>
+is a good way to learn Rust's ownership system and its
+implications.</li>
+</ul>
+<h2 id="vs-code-setup"><a class="header" href="#vs-code-setup">VS Code Setup</a></h2>
+<p>We recommend using VS Code with the <code>rust-anaylzer</code> extension (and NOT the
+<code>Rust</code> extension). To enable the pre-release version of <code>rust-analyzer</code>
+(required by some new nightly syntax we use, at least until 2022-03-14), click
+the &quot;Switch to Pre-Release Version&quot; button next to the uninstall button.</p>
+<h2 id="hydroflow-setup"><a class="header" href="#hydroflow-setup">Hydroflow Setup</a></h2>
+<p>The easiest way to get started with Hydroflow is to clone and work in the
+repository directly. You should fork the repository if you want to push your
+changes.</p>
+<pre><code class="language-bash">git clone git@github.com:hydro-project/hydroflow.git
+</code></pre>
+<p>Hydroflow requires nightly Rust, but the repo is already configured for it via
+<code>rust-toolchain.toml</code>.</p>
+<p>We can then open the repo in VS Code or IDE of your choice. <code>rust-anaylzer</code>
+will provide inline type and error messages, code completion, etc.</p>
+<h2 id="development"><a class="header" href="#development">Development</a></h2>
+<p>The easiest way to try Hydroflow is with an &quot;example&quot;, found in the
+<a href="https://github.com/hydro-project/hydroflow/tree/main/hydroflow/examples"><code>hydroflow/examples</code> folder</a>.
+These examples are include via the <a href="https://github.com/hydro-project/hydroflow/blob/main/hydroflow/Cargo.toml"><code>hydroflow/Cargo.toml</code> file</a>,
+so make sure to add your example there if you create a new one. The simplest
+example is <a href="https://github.com/hydro-project/hydroflow/blob/main/hydroflow/examples/graph_reachability/main.rs"><code>graph_reachability</code></a>.</p>
+<p>The Hydroflow repository is set up as a <a href="https://doc.rust-lang.org/book/ch14-03-cargo-workspaces.html">workspace</a>,
+i.e. a repo containing a bunch of separate packages, <code>hydroflow</code> is just the
+main one. So if you want to work in a proper separate cargo package, you can
+create one and add it into the <a href="https://github.com/hydro-project/hydroflow/blob/main/Cargo.toml">root <code>Cargo.toml</code></a>.</p>
 
                     </main>
 
