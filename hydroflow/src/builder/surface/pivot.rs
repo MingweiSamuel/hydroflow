@@ -1,3 +1,8 @@
+use crate::builder::build::{PullBuild, PushBuild};
+use crate::compiled::pivot::Pivot;
+use crate::scheduled::context::Context;
+use crate::scheduled::subgraph::Subgraph;
+
 use super::{PullSurface, PushSurfaceReversed};
 
 #[allow(type_alias_bounds)]
@@ -33,4 +38,29 @@ where
         let (push_connect, push_build) = self.push.into_parts();
         ((pull_connect, push_connect), (pull_build, push_build))
     }
+}
+
+/// Pivot struct which implements [`Subgraph`] trait.
+struct PivotSubgraph<Pull, Push>
+where
+    Pull: PullBuild,
+    Push: PushBuild<ItemIn = Pull::ItemOut>,
+{
+    pull_build: Pull,
+    push_build: Push,
+}
+
+impl<Pull, Push> Subgraph for PivotSubgraph<Pull, Push>
+where
+    Pull: PullBuild,
+    Push: PushBuild<ItemIn = Pull::ItemOut>,
+{
+    fn run(&mut self, context: Context<'_>) {
+        let pull = self.pull_build.build(&context, recv_ctx);
+        let push = self.push_build.build(&context, send_ctx);
+        let pivot = Pivot::new(pull, push);
+        pivot.run();
+    }
+
+    fn write_flow_graph(&self, _flow_graph: &mut FlowGraph) {}
 }
