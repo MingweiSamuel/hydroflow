@@ -76,7 +76,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">User Guide</li><li class="chapter-item expanded "><a href="setup.html"><strong aria-hidden="true">1.</strong> Setup</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">Introduction</a></li><li class="chapter-item expanded affix "><li class="part-title">User Guide</li><li class="chapter-item expanded "><a href="setup.html"><strong aria-hidden="true">1.</strong> Setup</a></li><li class="chapter-item expanded "><a href="concepts.html"><strong aria-hidden="true">2.</strong> Concepts</a></li><li class="chapter-item expanded "><a href="architecture.html"><strong aria-hidden="true">3.</strong> Architecture</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="in-out_trees.html"><strong aria-hidden="true">3.1.</strong> Subgraph In-Out Trees</a></li></ol></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -142,6 +142,7 @@ This book teaches how to set up and get started with Hydroflow.</p>
 <p>Keep in mind that Hydroflow is under active development and is constantly
 changing. However this book is tested in CI so should always be up-to-date
 (though incomplete, for now).</p>
+<p>If you have any questions, feel free to <a href="https://github.com/hydro-project/hydroflow/issues/new">create an issue on Github</a>.</p>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="setup"><a class="header" href="#setup">Setup</a></h1>
 <p>This section explains how to get Hydroflow running, either for development or
 usage, even if you are not familiar with Rust development.</p>
@@ -197,6 +198,127 @@ example is <a href="https://github.com/hydro-project/hydroflow/blob/main/hydrofl
 i.e. a repo containing a bunch of separate packages, <code>hydroflow</code> is just the
 main one. So if you want to work in a proper separate cargo package, you can
 create one and add it into the <a href="https://github.com/hydro-project/hydroflow/blob/main/Cargo.toml">root <code>Cargo.toml</code></a>.</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="concepts"><a class="header" href="#concepts">Concepts</a></h1>
+<h2 id="dataflow-and-networking"><a class="header" href="#dataflow-and-networking">Dataflow and Networking</a></h2>
+<p>Conventionally, dataflow systems provide a way to analyze and process data by
+chaining functions (operators) together into pipelines. But with a change of
+perspective, many computations can be represented as dataflow. Designing around
+the flow of data naturally separates computation into easily parallelizable and
+distributable pipelines.</p>
+<p>Most dataflow systems provide opinionated mechanisms for running flows across
+multiple machines. Hydroflow however aims to represent many more types of
+computations besides just data processing. This includes networking protocols
+like two-phase commit and Paxos. To this end, Hydroflow is unopinionated about
+network communication. Additionally, Hydroflow provides the abstraction of only
+a single node (single thread) of a system. To build up a distributed system,
+the user must design each node to communicate with others as needed.</p>
+<p>As development continues we will provide more utilities for common networking
+use cases, but for now expect some manual management of IP addresses and
+sockets.</p>
+<h2 id="lattices"><a class="header" href="#lattices">Lattices</a></h2>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="architecture"><a class="header" href="#architecture">Architecture</a></h1>
+<p>Hydroflow graphs are divided into two layers: the outer <em>scheduled layer</em> and
+inner <em>compiled layer</em>.</p>
+<p>The [Hydroflow Architecture Design Doc] contains a more detailed explanation
+of this section. Note that some aspects of the design doc are not implemented
+(e.g. early yielding) or may become out of date as time passes.</p>
+<h2 id="scheduled-layer"><a class="header" href="#scheduled-layer">Scheduled Layer</a></h2>
+<p>The scheduled layer is dynamic: it stores a list of operators (or &quot;subgraphs&quot;)
+as well as buffers (&quot;handoffs&quot;) between them. The scheduled layer chooses how
+to schedule the operators (naturally), and when each operator runs it pulls
+from its input handoffs and pushes to its output handoffs. This setup is
+extremely flexible: operators can have any number of input or output handoffs
+so we can easily represent any graph topology. However this flexibility comes
+at a performance cost due to the overhead of scheduling, buffering, and lack
+of inter-operator compiler optimization.</p>
+<p>The <em>compiled layer</em> helps avoids the costs of the scheduled layer. We can
+combine several operators into a <em>subgraph</em> which are compiled and optimized as
+a single scheduled subgraph. The scheduled layer then runs the entire subgraph
+as if it was one operator with many inputs and outputs. Note the layering here:
+the compiled layer does not replace the scheduled layer but instead exists
+within it.</p>
+<h2 id="compiled-layer"><a class="header" href="#compiled-layer">Compiled Layer</a></h2>
+<p>Rust already has a built-in API similar to dataflow: <a href="https://doc.rust-lang.org/std/iter/trait.Iterator.html"><code>Iterator</code>s</a>.
+When they work well, they work really well and tend to be as fast as for loops.
+However, they are limited in the flow graphs they can represent. Each operator
+in a <code>Iterator</code> takes ownership of, and <em>pulls</em> from, the previous operator.
+Taking two iterators as <em>inputs</em> and merging them together (e.g. with
+<a href="https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.chain"><code>.chain(...)</code></a>
+or <a href="https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.zip"><code>.zip(...)</code></a>)
+is natural and performant as we can <em>pull</em> from both. However if we want an
+iterator to split into multiple <em>outputs</em> then things become tricky. <a href="https://docs.rs/itertools/latest/itertools/trait.Itertools.html#method.tee"><code>Itertools::tee()</code></a>
+does just this by cloning each incoming item into two output buffers, but this
+requires allocation and could cause unbounded buffer growth if the outputs are
+not read from evenly.</p>
+<p>However, if instead iterators were <em>pull</em>-based, where each operator owns one
+or more <em>output</em> operators, then teeing is very easy, just clone each element
+and push to (i.e. run) both outputs. So that's what we did, created push-based
+iterators to allow fast teeing or splitting in the compiled layer.</p>
+<p>Pull-based iterators can be connected to push-based iterators at a &quot;pivot&quot;
+point. Together, this pull-to-push setup dictates the shape compiled subgraphs
+can take. Informally, this is like the roots and leaves of a tree. Water flows
+from the roots (the pull inputs), eventually all join together in the trunk
+(the pull-to-push pivot), the split up into multiple outputs in the leaves.
+We refer to this structure as an <em>in-out tree</em>.</p>
+<table><thead><tr><th style="text-align: center"></th></tr></thead><tbody>
+<tr><td style="text-align: center"><img src="img/oaklandish_logo.jpg" alt="The Oaklandish Logo depicting the stylized roots, trunk, and branches of a tree." /></td></tr>
+<tr><td style="text-align: center">The Oaklandish Logo.</td></tr>
+</tbody></table>
+<p>See <a href="./in-out_trees.html">Subgraph In-Out Trees</a> for more, including how to
+convert a graph into in-out trees.</p>
+<h2 id="apis"><a class="header" href="#apis">APIs</a></h2>
+<p>The two architectural layers can be interacted with through two corresponding
+APIs. The <em>Surface API</em> provides a natural <code>Iterator</code>-like chaining syntax for
+building compiled subgraphs and using them as scheduled operators.</p>
+<p>Alternatively, the <em>Core API</em> requires interacting with handoffs directly and
+doesn't provide any notion of chainable operators. You can use Rust <code>Iterator</code>s
+or any other arbitrary Rust code to implement the operators.</p>
+<p>We intend users to use the Surface API as it is much more friendly, but as
+Hydroflow is in active development some operators might not be available in
+the Surface API, in which case the Core API can be used instead. If you find
+yourself in this sitation be sure to <a href="https://github.com/hydro-project/hydroflow/issues/new">submit an issue</a>!</p>
+<div style="break-before: page; page-break-before: always;"></div><h1 id="subgraph-in-out-trees"><a class="header" href="#subgraph-in-out-trees">Subgraph In-Out Trees</a></h1>
+<p>Formally, we define an in-out-tree is the union of an
+<em>in-tree</em> (<a href="https://en.wikipedia.org/wiki/Arborescence_%28graph_theory%29#cite_ref-KorteVygen2012b_17-0"><em>anti-arborescence</em></a>)
+with an <em>out-tree</em> (<a href="https://en.wikipedia.org/wiki/Arborescence_%28graph_theory%29"><em>arborescence</em></a>)
+where both trees share the same <em>root</em> node.</p>
+<table><thead><tr><th style="text-align: center"></th></tr></thead><tbody>
+<tr><td style="text-align: center"><img src="img/in-out_tree.png" alt="A graph showing multiple nodes on the left all eventually feeding into a central pivot node, then continuing to multiple output nodes." /></td></tr>
+<tr><td style="text-align: center">An <em>in-out tree</em> graph. Data flows from the green <em>pull</em> operators on the left, through the yellow pivot, and to the red <em>push</em> operators on the right.</td></tr>
+</tbody></table>
+<p>In this graph representation, each node corresponds to an operator, and the
+edges direct the flow of data between operators.</p>
+<h2 id="converting-graph"><a class="header" href="#converting-graph">Converting Graph</a></h2>
+<p>Any graph can be partitioned into in-out trees. There is usually not a unique
+partitioning, but it usually makes sense to create as few subgraphs as
+possible.</p>
+<p>Most graphs are pretty simple and can be partitioned with a bit of eye-balling.
+But it is also not too tricky to find in-out tree subgraphs with a simple
+coloring algorithm.</p>
+<table><thead><tr><th style="text-align: center"></th></tr></thead><tbody>
+<tr><td style="text-align: center"><img src="img/in-out_example.png" alt="A random-looking directed graph with 8 nodes." /></td></tr>
+<tr><td style="text-align: center">An example directed graph.</td></tr>
+</tbody></table>
+<p>To identify the in-out trees in an arbitrary directed graph, first identify any
+nodes which have multiple inputs and outputs and mark these as pull-to-push
+<em>pivots</em> (yellow in the example). Mark any nodes with multiple inputs (and a
+single output) as <em>pull</em> (green) and any nodes with multiple outputs as <em>push</em>
+(red).</p>
+<p>In the example:</p>
+<table><thead><tr><th>Pivots (yellow)</th><th>Pulls (green)</th><th>Pushes (red)</th></tr></thead><tbody>
+<tr><td>1, 4</td><td>2</td><td>3, 7</td></tr>
+</tbody></table>
+<p>Finally any one-in-one-out nodes should be marked the same as their neighbors
+(either green pull or red push). If we have green pull -&gt; red push that becomes
+a yellow pivot. And if red push -&gt; green pull that becomes a blue handoff node,
+and this is a division between subgraphs. Note that a subgraph can have a
+handoff with itself; this forms a loop.</p>
+<table><thead><tr><th style="text-align: center"></th></tr></thead><tbody>
+<tr><td style="text-align: center"><img src="img/in-out_partition.png" alt="The graph above converted and partitioned into two in-out trees." /></td></tr>
+<tr><td style="text-align: center">The graph above converted and partitioned into two in-out trees. One is outlined in yellow and the other in red. For the corresponding Hydroflow graph, green nodes are <em>pull</em>, red nodes are <em>push</em>, yellow are <em>pivots</em>, and blue are <em>handoffs</em>.</td></tr>
+</tbody></table>
+<p>In the example partitioning above, some nodes have been split into multiple and
+labelled with suffixes to make the pivots and handoffs more explicit.</p>
 
                     </main>
 
