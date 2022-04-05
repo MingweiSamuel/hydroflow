@@ -26,7 +26,9 @@ output for receiving items into the subgraph.
 
 ```rust,ignore
 let (input_example, example_recv) =
-    builder.add_channel_input::<_, Option<usize>, VecHandoff<usize>>("My example input");
+    builder.add_channel_input::<_, Option<usize>, VecHandoff<usize>>(
+        "My example input"
+    );
 ```
 
 The Rust `::<_, Option<usize>, VecHandoff<usize>>` syntax is affectionately
@@ -63,16 +65,19 @@ pub fn main() {
 
     // Create our channel input.
     let (input_example, example_recv) =
-        builder.add_channel_input::<_, Option<usize>, VecHandoff<usize>>("My example input");
+        builder.add_channel_input::<_, Option<usize>, VecHandoff<usize>>(
+            "My example input"
+        );
 
     builder.add_subgraph(
         "main",
         example_recv
+            .flatten() // Huh?!
             .map(|n| n * n)
             .filter(|&n| n > 10)
             .pull_to_push()
-            .flat_map(|n| (n..=n+1))
-            .for_each(|n| println!("G'day {}", n)),
+            .flat_map(|n| (n..=n + 1))
+            .for_each(|n| println!("Ahoj {}", n)),
     );
 
     let mut hydroflow = builder.build();
@@ -97,5 +102,11 @@ pub fn main() {
 
     hydroflow.tick();
 }
+
 ```
+
+
+
+At the bottom we can see supplying inputs with `.give(Option)`. And
+importantly, make sure to call `.flush()`!
 
