@@ -108,15 +108,15 @@ where
 
                 // Construct the ticker.
                 let epoch_duration = Duration::from_millis(100);
-                tokio::spawn(async move {
-                    let mut tick = 0;
-                    loop {
-                        tokio::time::sleep(epoch_duration).await;
-                        z_send.give(Some(tick));
-                        z_send.flush();
-                        tick += 1;
-                    }
-                });
+                // tokio::spawn(async move {
+                //     let mut tick = 0;
+                //     loop {
+                //         tokio::time::sleep(epoch_duration).await;
+                //         z_send.give(Some(tick));
+                //         z_send.flush();
+                //         tick += 1;
+                //     }
+                // });
 
                 let q_recv = hf.add_input_from_stream::<_, Option<_>, VecHandoff<_>, _>("writes", receiver.map(Some));
 

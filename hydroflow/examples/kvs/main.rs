@@ -16,6 +16,7 @@ use zipf::ZipfDistribution;
 
 mod common;
 mod kvs_compiled;
+mod kvs_noop;
 mod kvs_raw;
 mod kvs_scheduled;
 
@@ -29,6 +30,7 @@ where
     Raw(kvs_raw::Kvs<K, V>),
     Scheduled(kvs_scheduled::Kvs<K, V>),
     Compiled(kvs_compiled::Kvs<K, V>),
+    Noop(kvs_noop::Kvs<K, V>),
 }
 
 impl<K, V> KvsImplementation<K, V>
@@ -41,6 +43,7 @@ where
             Self::Raw(kvs) => kvs.set(k, v).await,
             Self::Scheduled(kvs) => kvs.set(k, v).await,
             Self::Compiled(kvs) => kvs.set(k, v).await,
+            Self::Noop(kvs) => kvs.set(k, v).await,
         }
     }
 
@@ -49,6 +52,7 @@ where
             Self::Raw(kvs) => kvs.get(k).await,
             Self::Scheduled(kvs) => kvs.get(k).await,
             Self::Compiled(kvs) => kvs.get(k).await,
+            Self::Noop(kvs) => kvs.get(k).await,
         }
     }
 }
@@ -71,6 +75,7 @@ where
                 workers,
             ))),
             "compiled" => Ok(KvsImplementation::Compiled(kvs_compiled::Kvs::new(workers))),
+            "noop" => Ok(KvsImplementation::Noop(kvs_noop::Kvs::new(workers))),
             _ => Err("not a valid implementation".into()),
         }
     }
@@ -148,7 +153,7 @@ struct Args {
     #[clap(long)]
     run_seconds: u64,
     #[clap(long)]
-    implementation: KvsImplementation<String, String>,
+    implementation: KvsImplementation<usize, usize>,
 }
 
 fn main() {
@@ -157,67 +162,47 @@ fn main() {
     let kvs = args.implementation;
     let run_duration = Duration::from_millis(args.run_seconds * 1000);
 
-    let read_percentage = args.read_percentage;
+    // let read_percentage = args.read_percentage;
     let bench_workers = args.num_benchmark_workers;
 
     let start = Instant::now();
     let handles: Vec<_> = (0..bench_workers)
         .map(|_| {
             let mut kvs = kvs.clone();
-            let mut distribution = args.dist.clone();
+            // let mut distribution = args.dist.clone();
             std::thread::spawn(move || {
-                let mut i = 0;
-                let mut rng = rand::thread_rng();
+                let mut i: u64 = 0;
+                // let mut rng = rand::thread_rng();
                 let rt = tokio::runtime::Builder::new_current_thread()
                     .enable_all()
                     .build()
                     .unwrap();
-                let mut writes_hist = Histogram::<u64>::new(2).unwrap();
-                let mut reads_hist = Histogram::<u64>::new(2).unwrap();
                 rt.block_on(async move {
                     while start.elapsed() < run_duration {
-                        let before = Instant::now();
-                        if rng.gen::<f64>() < read_percentage {
-                            kvs.get(format!("key{}", distribution.sample(&mut rng)))
-                                .await;
-                            reads_hist
-                                .record(before.elapsed().as_micros().try_into().unwrap())
-                                .unwrap();
-                        } else {
-                            kvs.set(
-                                format!("key{}", distribution.sample(&mut rng)),
-                                format!("bar{}", i),
-                            )
-                            .await;
-                            writes_hist
-                                .record(before.elapsed().as_micros().try_into().unwrap())
-                                .unwrap();
-                        }
+                        // if rng.gen::<f64>() < read_percentage {
+                        kvs.set(1, 1).await;
+                        // } else {
+                        //     kvs.set(1, i).await;
+                        // }
+                        // if rng.gen::<f64>() < read_percentage {
+                        //     kvs.get(distribution.sample(&mut rng)).await;
+                        // } else {
+                        //     kvs.set(distribution.sample(&mut rng), i).await;
+                        // }
                         i += 1;
                     }
 
-                    (writes_hist, reads_hist)
+                    i
                 })
             })
         })
         .collect();
 
-    let mut writes_hist = Histogram::<u64>::new(2).unwrap();
-    let mut reads_hist = Histogram::<u64>::new(2).unwrap();
-    for handle in handles {
-        let (writes, reads) = handle.join().unwrap();
-        writes_hist.add(writes).unwrap();
-        reads_hist.add(reads).unwrap();
+    let mut total_ops = 0;
+    for (_i, handle) in handles.into_iter().enumerate() {
+        let ops = handle.join().unwrap();
+        total_ops += ops;
     }
 
-    println!(
-        "ops={}",
-        writes_hist.len() + reads_hist.len(),
-        // writes_hist.mean(),
-        // writes_hist.value_at_quantile(0.99),
-        // writes_hist.value_at_quantile(0.999),
-        // reads_hist.mean(),
-        // reads_hist.value_at_quantile(0.99),
-        // reads_hist.value_at_quantile(0.999),
-    );
+    println!("ops={}", total_ops);
 }
