@@ -71,8 +71,8 @@ where
 
     fn build<'slf, 'ctx>(
         &'slf mut self,
-        context: &'ctx Context,
-        input: <Self::OutputHandoffs as PortList<SEND>>::Ctx<'ctx>,
+        context: &'ctx mut Context,
+        input: &Self::OutputHandoffs,
     ) -> Self::Build<'slf, 'ctx> {
         let (input_a, input_b) = <Self::OutputHandoffs as PortListSplit<_, _>>::split_ctx(input);
         let build_a = self.next_a.build(context, input_a);

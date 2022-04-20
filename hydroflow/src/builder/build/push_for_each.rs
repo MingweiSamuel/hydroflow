@@ -46,8 +46,8 @@ where
 
     fn build<'slf, 'ctx>(
         &'slf mut self,
-        context: &'ctx Context,
-        (): <Self::OutputHandoffs as PortList<SEND>>::Ctx<'ctx>,
+        &Self::OutputHandoffs
+        (): &Self::OutputHandoffs,
     ) -> Self::Build<'slf, 'ctx> {
         ForEach::new(|x| (self.func)(context, x))
     }

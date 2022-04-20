@@ -43,6 +43,8 @@ tokio = { version = "1.16", features = [ "full" ] }
 tokio-util = { version = "0.6.9", features = [ "codec" ] }
 tuple_list = "0.1"
 
+syn = "^1.0.87" # Version where new GATs where clause position works. Remove when GATs stable.
+
 [dev-dependencies]
 chrono = { version = "0.4", features = [ "serde" ] }
 clap = { version = "3.0.14", features = [ "derive" ] }

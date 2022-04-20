@@ -61,6 +61,18 @@ impl Context {
         futures::task::waker(Arc::new(context_waker))
     }
 
+    pub fn handoff_ref<H>(&self, handoff: HandoffId<H>) -> &H {
+        self.handoffs
+            .get(handoff.0)
+            .expect("Failed to find handoff with given ID.")
+    }
+
+    pub fn handoff_mut<H>(&mut self, handoff: HandoffId<H>) -> &mut H {
+        self.handoffs
+            .get_mut(handoff.0)
+            .expect("Failed to find handoff with given ID.")
+    }
+
     pub fn state_ref<T>(&self, handle: StateHandle<T>) -> &T
     where
         T: Any,

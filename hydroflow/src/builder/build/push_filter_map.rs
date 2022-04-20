@@ -51,8 +51,8 @@ where
 
     fn build<'slf, 'ctx>(
         &'slf mut self,
-        context: &'ctx Context,
-        handoffs: <Self::OutputHandoffs as PortList<SEND>>::Ctx<'ctx>,
+        context: &'ctx mut Context,
+        handoffs: &Self::OutputHandoffs,
     ) -> Self::Build<'slf, 'ctx> {
         FilterMap::new(
             |x| (self.func)(context, x),

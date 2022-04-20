@@ -241,6 +241,37 @@ impl Hydroflow {
         W: 'static + PortList<SEND>,
         F: 'static + for<'ctx> FnMut(&'ctx Context, R::Ctx<'ctx>, W::Ctx<'ctx>),
     {
+        self.add_subgraph_stratified_raw(
+            name,
+            stratum,
+            recv_ports,
+            send_ports,
+            |recv_ports, send_ports| {
+                move |context: &mut Context| {
+                    let recv = recv_ports.make_ctx(&*context.handoffs);
+                    let send = send_ports.make_ctx(&*context.handoffs);
+                    (subgraph)(context, recv, send);
+                }
+            },
+        )
+    }
+
+    /// Adds a new compiled subgraph with the specified inputs and outputs, but does not provide the handoffs contexts directly.
+    pub fn add_subgraph_stratified_raw<Name, R, W, F, B>(
+        &mut self,
+        name: Name,
+        stratum: usize,
+        recv_ports: R,
+        send_ports: W,
+        subgraph_build: B,
+    ) -> SubgraphId
+    where
+        Name: Into<Cow<'static, str>>,
+        R: 'static + PortList<RECV>,
+        W: 'static + PortList<SEND>,
+        F: 'static + for<'ctx> FnMut(&'ctx mut Context),
+        B: 'static + FnOnce(R, W) -> F,
+    {
         let sg_id = SubgraphId(self.subgraphs.len());
 
         let (mut subgraph_preds, mut subgraph_succs) = Default::default();
@@ -257,11 +288,7 @@ impl Hydroflow {
             &mut subgraph_succs,
         );
 
-        let subgraph = move |context: &mut Context| {
-            let recv = recv_ports.make_ctx(&*context.handoffs);
-            let send = send_ports.make_ctx(&*context.handoffs);
-            (subgraph)(context, recv, send);
-        };
+        let subgraph = (subgraph_build)(recv_ports, send_ports);
         self.subgraphs.push(SubgraphData::new(
             name.into(),
             stratum,

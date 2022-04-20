@@ -71,10 +71,10 @@ where
 
     fn build<'slf, 'ctx>(
         &'slf mut self,
-        context: &'ctx Context,
-        input: <Self::InputHandoffs as PortList<RECV>>::Ctx<'ctx>,
+        context: &'ctx mut Context,
+        input: &Self::InputHandoffs,
     ) -> Self::Build<'slf, 'ctx> {
-        let (input_a, input_b) = <Self::InputHandoffs as PortListSplit<_, _>>::split_ctx(input);
+        let (input_a, input_b) = <Self::InputHandoffs as PortListSplit<_, _>>::split_ref(input);
         let iter_a = self.prev_a.build(context, input_a);
         let iter_b = self.prev_b.build(context, input_b);
         BatchJoin::new(iter_a, iter_b, &mut self.state)

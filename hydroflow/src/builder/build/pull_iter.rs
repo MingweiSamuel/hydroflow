@@ -28,8 +28,8 @@ where
 
     fn build<'slf, 'ctx>(
         &'slf mut self,
-        _context: &'ctx Context,
-        _handoffs: <Self::InputHandoffs as PortList<RECV>>::Ctx<'ctx>,
+        _context: &'ctx mut Context,
+        _handoffs: &Self::InputHandoffs,
     ) -> Self::Build<'slf, 'ctx> {
         &mut self.it
     }

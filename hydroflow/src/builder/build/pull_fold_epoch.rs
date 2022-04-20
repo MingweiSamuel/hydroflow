@@ -44,8 +44,8 @@ where
 
     fn build<'slf, 'ctx>(
         &'slf mut self,
-        context: &'ctx Context,
-        handoffs: <Self::InputHandoffs as PortList<RECV>>::Ctx<'ctx>,
+        context: &'ctx mut Context,
+        handoffs: &Self::InputHandoffs,
     ) -> Self::Build<'slf, 'ctx> {
         std::iter::once_with(move || {
             self.prev

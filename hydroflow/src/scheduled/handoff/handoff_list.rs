@@ -13,6 +13,11 @@ pub trait PortList<S>: TypeList
 where
     S: Polarity,
 {
+    type Ref<'a>: TypeList
+    where
+        Self: 'a;
+    fn as_ref<'a>(&'a self) -> Self::Ref<'a>;
+
     #[allow(clippy::ptr_arg)]
     fn set_graph_meta<'a>(
         &self,
@@ -32,6 +37,14 @@ where
     H: Handoff,
     Rest: PortList<S>,
 {
+    type Ref<'a> = (&'a Port<S, H>, Rest::Ref<'a>)
+    where
+        Self: 'a;
+    fn as_ref<'a>(&'a self) -> Self::Ref<'a> {
+        let (this, rest) = self;
+        (this, rest.as_ref())
+    }
+
     fn set_graph_meta<'a>(
         &self,
         handoffs: &'a mut [HandoffData],
@@ -74,6 +87,13 @@ impl<S> PortList<S> for ()
 where
     S: Polarity,
 {
+    type Ref<'a> = ()
+    where
+        Self: 'a;
+    fn as_ref<'a>(&'a self) -> Self::Ref<'a> {
+        *self
+    }
+
     fn set_graph_meta<'a>(
         &self,
         _handoffs: &'a mut [HandoffData],
@@ -95,6 +115,10 @@ where
 {
     type Suffix: PortList<S>;
 
+    fn split_ref<'a>(
+        handoffs: Self::Ref<'a>,
+    ) -> (A::Ref<'a>, <Self::Suffix as PortList<S>>::Ref<'a>);
+
     #[allow(clippy::needless_lifetimes)]
     fn split_ctx<'a>(ctx: Self::Ctx<'a>) -> (A::Ctx<'a>, <Self::Suffix as PortList<S>>::Ctx<'a>);
 }
@@ -107,6 +131,17 @@ where
     U: PortList<S>,
 {
     type Suffix = T::Suffix;
+
+    fn split_ref<'a>(
+        handoffs: Self::Ref<'a>,
+    ) -> (
+        <(Port<S, H>, U) as PortList<S>>::Ref<'a>,
+        <Self::Suffix as PortList<S>>::Ref<'a>,
+    ) {
+        let (x, t) = handoffs;
+        let (u, v) = T::split_ref(t);
+        ((x, u), v)
+    }
 
     #[allow(clippy::needless_lifetimes)]
     fn split_ctx<'a>(
@@ -127,6 +162,10 @@ where
     T: PortList<S>,
 {
     type Suffix = T;
+
+    fn split_ref<'a>(handoffs: Self::Ref<'a>) -> ((), T::Ref<'a>) {
+        ((), handoffs)
+    }
 
     #[allow(clippy::needless_lifetimes)]
     fn split_ctx<'a>(ctx: Self::Ctx<'a>) -> ((), T::Ctx<'a>) {
