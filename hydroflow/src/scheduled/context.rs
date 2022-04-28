@@ -1,4 +1,6 @@
-use std::{any::Any, marker::PhantomData};
+use std::cell::Cell;
+use std::any::Any;
+use std::marker::PhantomData;
 
 use tokio::sync::mpsc::UnboundedSender;
 
@@ -26,7 +28,9 @@ pub struct Context {
     /// The SubgraphId of the currently running operator. When this context is
     /// not being forwarded to a running operator, this field is (mostly)
     /// meaningless.
-    pub(crate) subgraph_id: SubgraphId,
+    /// `Cell` allows the ID to be upgraded when configuring the context
+    /// without hanging on to a mut ref.
+    pub(crate) subgraph_id: Cell<SubgraphId>,
 }
 impl Context {
     /// Gets the current epoch (local time) count.
@@ -63,7 +67,7 @@ impl Context {
         }
 
         let context_waker = ContextWaker {
-            subgraph_id: self.subgraph_id,
+            subgraph_id: self.subgraph_id.get(),
             event_queue_send: self.event_queue_send.clone(),
         };
         futures::task::waker(Arc::new(context_waker))

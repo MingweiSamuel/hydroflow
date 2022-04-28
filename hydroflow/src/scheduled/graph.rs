@@ -42,7 +42,7 @@ impl Default for Hydroflow {
             current_stratum: 0,
             current_epoch: 0,
 
-            subgraph_id: SubgraphId(0),
+            subgraph_id: Cell::new(SubgraphId(0)),
         };
         Self {
             subgraphs,
@@ -88,12 +88,14 @@ impl Hydroflow {
         self.try_recv_events();
 
         while let Some(sg_id) = self.stratum_queues[self.context.current_stratum].pop_front() {
+            // Set the context current SubgraphId.
+            self.context_mut(sg_id);
+
             {
                 let sg_data = &mut self.subgraphs[sg_id.0];
                 // This must be true for the subgraph to be enqueued.
                 assert!(sg_data.is_scheduled.take());
 
-                self.context.subgraph_id = sg_id;
                 sg_data.subgraph.run(&mut self.context);
             }
 
@@ -414,9 +416,15 @@ impl Hydroflow {
         self.context.add_state(state)
     }
 
+    /// Gets a shared ref to the internal context, setting the subgraph ID.
+    pub fn context_ref(&self, sg_id: SubgraphId) -> &Context {
+        self.context.subgraph_id.set(sg_id);
+        &self.context
+    }
+
     /// Gets a exclusive (mut) ref to the internal context, setting the subgraph ID.
     pub fn context_mut(&mut self, sg_id: SubgraphId) -> &mut Context {
-        self.context.subgraph_id = sg_id;
+        self.context.subgraph_id.set(sg_id);
         &mut self.context
     }
 
