@@ -82,6 +82,14 @@ impl Hydroflow {
         }
     }
 
+    /// Runs the dataflow until the next epoch begins.
+    pub fn tick_epoch(&mut self) {
+        let epoch = self.current_epoch();
+        while self.next_stratum() && epoch == self.current_epoch() {
+            self.tick_stratum();
+        }
+    }
+
     /// Runs the current stratum of the dataflow until no more work is immediately available.
     pub fn tick_stratum(&mut self) {
         // Add any external jobs to ready queue.

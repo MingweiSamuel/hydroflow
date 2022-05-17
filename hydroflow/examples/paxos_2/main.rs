@@ -19,12 +19,7 @@ fn main() {
 
     println!("{}", hydroflow.generate_mermaid());
 
-    hydroflow.next_stratum();
-    hydroflow.tick_stratum();
-    hydroflow.next_stratum();
-    hydroflow.tick_stratum();
-    hydroflow.next_stratum();
-    hydroflow.tick_stratum();
+    hydroflow.tick_epoch();
 
     p1a_send
         .send(Some(P1A {
@@ -33,12 +28,7 @@ fn main() {
         }))
         .unwrap();
 
-    hydroflow.next_stratum();
-    hydroflow.tick_stratum();
-    hydroflow.next_stratum();
-    hydroflow.tick_stratum();
-    hydroflow.next_stratum();
-    hydroflow.tick_stratum();
+    hydroflow.tick_epoch();
 
     p1a_send
         .send(Some(P1A {
@@ -47,12 +37,7 @@ fn main() {
         }))
         .unwrap();
 
-    hydroflow.next_stratum();
-    hydroflow.tick_stratum();
-    hydroflow.next_stratum();
-    hydroflow.tick_stratum();
-    hydroflow.next_stratum();
-    hydroflow.tick_stratum();
+    hydroflow.tick_epoch();
 
     p1a_send
         .send(Some(P1A {
@@ -61,12 +46,7 @@ fn main() {
         }))
         .unwrap();
 
-    hydroflow.next_stratum();
-    hydroflow.tick_stratum();
-    hydroflow.next_stratum();
-    hydroflow.tick_stratum();
-    hydroflow.next_stratum();
-    hydroflow.tick_stratum();
+    hydroflow.tick_epoch();
 
     println!("{:#?}", receive_all(p1b_recv));
     println!("{:#?}", receive_all(p1blog_recv));
