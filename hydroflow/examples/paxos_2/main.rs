@@ -19,7 +19,12 @@ fn main() {
 
     println!("{}", hydroflow.generate_mermaid());
 
-    hydroflow.tick();
+    hydroflow.next_stratum();
+    hydroflow.tick_stratum();
+    hydroflow.next_stratum();
+    hydroflow.tick_stratum();
+    hydroflow.next_stratum();
+    hydroflow.tick_stratum();
 
     p1a_send
         .send(Some(P1A {
@@ -28,7 +33,12 @@ fn main() {
         }))
         .unwrap();
 
-    // hydroflow.tick();
+    hydroflow.next_stratum();
+    hydroflow.tick_stratum();
+    hydroflow.next_stratum();
+    hydroflow.tick_stratum();
+    hydroflow.next_stratum();
+    hydroflow.tick_stratum();
 
     p1a_send
         .send(Some(P1A {
@@ -37,7 +47,12 @@ fn main() {
         }))
         .unwrap();
 
-    // hydroflow.tick();
+    hydroflow.next_stratum();
+    hydroflow.tick_stratum();
+    hydroflow.next_stratum();
+    hydroflow.tick_stratum();
+    hydroflow.next_stratum();
+    hydroflow.tick_stratum();
 
     p1a_send
         .send(Some(P1A {
@@ -46,7 +61,12 @@ fn main() {
         }))
         .unwrap();
 
-    hydroflow.tick();
+    hydroflow.next_stratum();
+    hydroflow.tick_stratum();
+    hydroflow.next_stratum();
+    hydroflow.tick_stratum();
+    hydroflow.next_stratum();
+    hydroflow.tick_stratum();
 
     println!("{:#?}", receive_all(p1b_recv));
     println!("{:#?}", receive_all(p1blog_recv));
@@ -70,7 +90,7 @@ pub struct Ballot {
 }
 
 /// log(payload, slot, ballotID, ballotNum, l, t)
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Log {
     pub payload: String,
     pub slot: SlotIdx,
@@ -78,7 +98,7 @@ pub struct Log {
 }
 
 /// p1a(proposerID, ballotID, ballotNum, l, t) # proposerID is the location of the proposer
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct P1A {
     pub proposer_id: ProposerId,
     pub ballot: Ballot,
@@ -104,7 +124,7 @@ pub struct P1BLog {
 }
 
 /// p2a(proposerID, payload, slot, ballotID, ballotNum, l, t) # proposerID is the location of the proposer
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub struct P2A {
     #[allow(dead_code)] // Determines msg destination.
     proposer_id: ProposerId,
