@@ -10,8 +10,8 @@ pub struct CrossJoinPullBuild<PrevA, PrevB>
 where
     PrevA: PullBuild,
     PrevB: PullBuild,
-    PrevA::ItemOut: 'static + Eq + Clone,
-    PrevB::ItemOut: 'static + Eq + Clone,
+    PrevA::ItemOut: 'static + Clone,
+    PrevB::ItemOut: 'static + Clone,
 
     PrevA::InputHandoffs: Extend<PrevB::InputHandoffs>,
     <PrevA::InputHandoffs as Extend<PrevB::InputHandoffs>>::Extended:
@@ -25,8 +25,8 @@ impl<PrevA, PrevB> CrossJoinPullBuild<PrevA, PrevB>
 where
     PrevA: PullBuild,
     PrevB: PullBuild,
-    PrevA::ItemOut: 'static + Eq + Clone,
-    PrevB::ItemOut: 'static + Eq + Clone,
+    PrevA::ItemOut: 'static + Clone,
+    PrevB::ItemOut: 'static + Clone,
 
     PrevA::InputHandoffs: Extend<PrevB::InputHandoffs>,
     <PrevA::InputHandoffs as Extend<PrevB::InputHandoffs>>::Extended:
@@ -45,8 +45,8 @@ impl<PrevA, PrevB> PullBuild for CrossJoinPullBuild<PrevA, PrevB>
 where
     PrevA: PullBuild,
     PrevB: PullBuild,
-    PrevA::ItemOut: 'static + Eq + Clone,
-    PrevB::ItemOut: 'static + Eq + Clone,
+    PrevA::ItemOut: 'static + Clone,
+    PrevB::ItemOut: 'static + Clone,
 
     PrevA::InputHandoffs: Extend<PrevB::InputHandoffs>,
     <PrevA::InputHandoffs as Extend<PrevB::InputHandoffs>>::Extended:

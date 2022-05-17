@@ -11,8 +11,8 @@ pub struct CrossJoinPullSurface<PrevA, PrevB>
 where
     PrevA: PullSurface,
     PrevB: PullSurface,
-    PrevA::ItemOut: 'static + Eq + Clone,
-    PrevB::ItemOut: 'static + Eq + Clone,
+    PrevA::ItemOut: 'static + Clone,
+    PrevB::ItemOut: 'static + Clone,
 
     PrevA::InputHandoffs: Extend<PrevB::InputHandoffs>,
     <PrevA::InputHandoffs as Extend<PrevB::InputHandoffs>>::Extended:
@@ -25,8 +25,8 @@ impl<PrevA, PrevB> CrossJoinPullSurface<PrevA, PrevB>
 where
     PrevA: PullSurface,
     PrevB: PullSurface,
-    PrevA::ItemOut: 'static + Eq + Clone,
-    PrevB::ItemOut: 'static + Eq + Clone,
+    PrevA::ItemOut: 'static + Clone,
+    PrevB::ItemOut: 'static + Clone,
 
     PrevA::InputHandoffs: Extend<PrevB::InputHandoffs>,
     <PrevA::InputHandoffs as Extend<PrevB::InputHandoffs>>::Extended:
@@ -40,8 +40,8 @@ impl<PrevA, PrevB> AssembleFlowGraph for CrossJoinPullSurface<PrevA, PrevB>
 where
     PrevA: PullSurface + AssembleFlowGraph,
     PrevB: PullSurface + AssembleFlowGraph,
-    PrevA::ItemOut: 'static + Eq + Clone,
-    PrevB::ItemOut: 'static + Eq + Clone,
+    PrevA::ItemOut: 'static + Clone,
+    PrevB::ItemOut: 'static + Clone,
 
     PrevA::InputHandoffs: Extend<PrevB::InputHandoffs>,
     <PrevA::InputHandoffs as Extend<PrevB::InputHandoffs>>::Extended:
@@ -61,8 +61,8 @@ impl<PrevA, PrevB> BaseSurface for CrossJoinPullSurface<PrevA, PrevB>
 where
     PrevA: PullSurface,
     PrevB: PullSurface,
-    PrevA::ItemOut: 'static + Eq + Clone,
-    PrevB::ItemOut: 'static + Eq + Clone,
+    PrevA::ItemOut: 'static + Clone,
+    PrevB::ItemOut: 'static + Clone,
 
     PrevA::InputHandoffs: Extend<PrevB::InputHandoffs>,
     <PrevA::InputHandoffs as Extend<PrevB::InputHandoffs>>::Extended:
@@ -75,8 +75,8 @@ impl<PrevA, PrevB> PullSurface for CrossJoinPullSurface<PrevA, PrevB>
 where
     PrevA: PullSurface,
     PrevB: PullSurface,
-    PrevA::ItemOut: 'static + Eq + Clone,
-    PrevB::ItemOut: 'static + Eq + Clone,
+    PrevA::ItemOut: 'static + Clone,
+    PrevB::ItemOut: 'static + Clone,
 
     PrevA::InputHandoffs: Extend<PrevB::InputHandoffs>,
     <PrevA::InputHandoffs as Extend<PrevB::InputHandoffs>>::Extended:

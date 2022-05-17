@@ -289,8 +289,8 @@ pub trait PullSurface: BaseSurface {
     where
         Self: Sized,
         Other: PullSurface,
-        Self::ItemOut: 'static + Eq + Clone,
-        Other::ItemOut: 'static + Eq + Clone,
+        Self::ItemOut: 'static + Clone,
+        Other::ItemOut: 'static + Clone,
 
         Self::InputHandoffs: Extend<Other::InputHandoffs>,
         <Self::InputHandoffs as Extend<Other::InputHandoffs>>::Extended: PortList<RECV>

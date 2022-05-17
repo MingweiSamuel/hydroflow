@@ -20,8 +20,8 @@ impl<'a, V1, V2> Default for CrossJoinState<V1, V2> {
 
 pub struct CrossJoin<'a, I1, V1, I2, V2>
 where
-    V1: Eq + Clone,
-    V2: Eq + Clone,
+    V1: Clone,
+    V2: Clone,
     I1: Iterator<Item = V1>,
     I2: Iterator<Item = V2>,
 {
@@ -32,8 +32,8 @@ where
 
 impl<'a, I1, V1: 'static, I2, V2: 'static> Iterator for CrossJoin<'a, I1, V1, I2, V2>
 where
-    V1: Eq + Clone,
-    V2: Eq + Clone,
+    V1: Clone,
+    V2: Clone,
     I1: Iterator<Item = V1>,
     I2: Iterator<Item = V2>,
 {
@@ -88,8 +88,8 @@ where
 }
 impl<'a, I1, V1, I2, V2> CrossJoin<'a, I1, V1, I2, V2>
 where
-    V1: Eq + Clone,
-    V2: Eq + Clone,
+    V1: Clone,
+    V2: Clone,
     I1: Iterator<Item = V1>,
     I2: Iterator<Item = V2>,
 {

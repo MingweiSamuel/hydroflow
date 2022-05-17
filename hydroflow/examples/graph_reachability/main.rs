@@ -1,6 +1,5 @@
 use clap::{ArgEnum, Parser};
 use hydroflow::builder::prelude::*;
-use hydroflow::scheduled::handoff::VecHandoff;
 
 #[derive(Clone, ArgEnum, Debug)]
 enum GraphType {

@@ -20,6 +20,9 @@ name = "covid_tracing_dist"
 name = "graph_reachability"
 
 [[example]]
+name = "paxos_2"
+
+[[example]]
 name = "three_clique"
 
 [[example]]
