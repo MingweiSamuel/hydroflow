@@ -296,5 +296,4 @@ fn groupby_nonmon_surface() {
         ],
         &*std::mem::take(&mut *output.borrow_mut()).into_sorted_vec(),
     );
-    assert_eq!(false, hf.next_stratum());
 }

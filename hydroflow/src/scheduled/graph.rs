@@ -22,11 +22,7 @@ use super::{HandoffId, SubgraphId};
 pub struct Hydroflow {
     pub(super) subgraphs: Vec<SubgraphData>,
     pub(super) context: Context,
-
-    // TODO(mingwei): separate scheduler into its own struct/trait?
-    // Index is stratum, value is FIFO queue for that stratum.
-    stratum_queues: Vec<VecDeque<SubgraphId>>,
-    event_queue_recv: UnboundedReceiver<SubgraphId>,
+    scheduler: Scheduler,
 }
 impl Default for Hydroflow {
     fn default() -> Self {
@@ -39,18 +35,22 @@ impl Default for Hydroflow {
 
             event_queue_send,
 
-            current_stratum: 0,
             current_epoch: 0,
+            current_stratum: 0,
 
             subgraph_id: SubgraphId(0),
+        };
+        let scheduler = Scheduler {
+            stratum_queues,
+            event_queue_recv,
+
+            current_epoch: 0,
+            current_stratum: 0,
         };
         Self {
             subgraphs,
             context,
-
-            stratum_queues,
-
-            event_queue_recv,
+            scheduler,
         }
     }
 }
@@ -78,7 +78,7 @@ impl Hydroflow {
     /// Runs the dataflow until the next epoch begins.
     pub fn run_epoch(&mut self) {
         let epoch = self.current_epoch();
-        while self.next_stratum() && epoch == self.current_epoch() {
+        while self.scheduler.next_stratum(&*self.subgraphs) && epoch == self.current_epoch() {
             self.run_stratum();
         }
     }
@@ -86,7 +86,7 @@ impl Hydroflow {
     /// Runs the dataflow until no more work is immediately available.
     /// If the dataflow contains loops this method may run forever.
     pub fn run_available(&mut self) {
-        while self.next_stratum() {
+        while self.scheduler.next_stratum(&*self.subgraphs) {
             self.run_stratum();
         }
     }
@@ -94,9 +94,9 @@ impl Hydroflow {
     /// Runs the current stratum of the dataflow until no more work is immediately available.
     pub fn run_stratum(&mut self) {
         // Add any external jobs to ready queue.
-        self.try_recv_events();
+        self.scheduler.try_recv_events(&*self.subgraphs);
 
-        while let Some(sg_id) = self.stratum_queues[self.context.current_stratum].pop_front() {
+        while let Some(sg_id) = self.scheduler.pop_current_stratum() {
             {
                 let sg_data = &mut self.subgraphs[sg_id.0];
                 // This must be true for the subgraph to be enqueued.
@@ -110,44 +110,12 @@ impl Hydroflow {
                 let handoff = &self.context.handoffs[handoff_id.0];
                 if !handoff.handoff.is_bottom() {
                     for &succ_id in handoff.succs.iter() {
-                        let succ_sg_data = &self.subgraphs[succ_id.0];
-                        if succ_sg_data.is_scheduled.get() {
-                            // Skip if task is already scheduled.
-                            continue;
-                        }
-                        succ_sg_data.is_scheduled.set(true);
-                        self.stratum_queues[succ_sg_data.stratum].push_back(succ_id);
+                        self.scheduler.schedule(succ_id, &self.subgraphs);
                     }
                 }
             }
 
-            self.try_recv_events();
-        }
-    }
-
-    /// Go to the next stratum which has work available, possibly the current stratum.
-    /// Return true if more work is available, otherwise false if no work is immediately available on any strata.
-    pub fn next_stratum(&mut self) -> bool {
-        self.try_recv_events();
-
-        let old_stratum = self.context.current_stratum;
-        loop {
-            // If current stratum has work, return true.
-            if !self.stratum_queues[self.context.current_stratum].is_empty() {
-                return true;
-            }
-            // Increment stratum counter.
-            self.context.current_stratum += 1;
-            if self.context.current_stratum >= self.stratum_queues.len() {
-                self.context.current_stratum = 0;
-                self.context.current_epoch += 1;
-            }
-            // After incrementing, exit if we made a full loop around the strata.
-            if old_stratum == self.context.current_stratum {
-                // Note: if current stratum had work, the very first loop iteration would've
-                // returned true. Therefore we can return false without checking.
-                return false;
-            }
+            self.scheduler.try_recv_events(&*self.subgraphs);
         }
     }
 
@@ -156,8 +124,8 @@ impl Hydroflow {
     /// TODO(mingwei): Currently blockes forever, no notion of "completion."
     pub fn run(&mut self) -> Option<!> {
         loop {
-            self.run_epoch();
-            self.recv_events()?;
+            self.run_available();
+            self.scheduler.recv_events(&*self.subgraphs)?;
         }
     }
 
@@ -166,54 +134,9 @@ impl Hydroflow {
     /// TODO(mingwei): Currently blockes forever, no notion of "completion."
     pub async fn run_async(&mut self) -> Option<!> {
         loop {
-            self.run_epoch();
-            self.recv_events_async().await?;
+            self.run_available();
+            self.scheduler.recv_events_async(&*self.subgraphs).await?;
             tokio::task::yield_now().await;
-        }
-    }
-
-    /// Enqueues subgraphs triggered by external events without blocking.
-    ///
-    /// Returns the number of subgraphs enqueued.
-    pub fn try_recv_events(&mut self) -> usize {
-        let mut enqueued_count = 0;
-        while let Ok(sg_id) = self.event_queue_recv.try_recv() {
-            let sg_data = &self.subgraphs[sg_id.0];
-            if !sg_data.is_scheduled.replace(true) {
-                self.stratum_queues[sg_data.stratum].push_back(sg_id);
-                enqueued_count += 1;
-            }
-        }
-        enqueued_count
-    }
-
-    /// Enqueues subgraphs triggered by external events, blocking until at
-    /// least one subgraph is scheduled.
-    pub fn recv_events(&mut self) -> Option<NonZeroUsize> {
-        loop {
-            let sg_id = self.event_queue_recv.blocking_recv()?;
-            let sg_data = &self.subgraphs[sg_id.0];
-            if !sg_data.is_scheduled.replace(true) {
-                self.stratum_queues[sg_data.stratum].push_back(sg_id);
-
-                // Enqueue any other immediate events.
-                return Some(NonZeroUsize::new(self.try_recv_events() + 1).unwrap());
-            }
-        }
-    }
-
-    /// Enqueues subgraphs triggered by external events asynchronously, waiting
-    /// until at least one subgraph is scheduled.
-    pub async fn recv_events_async(&mut self) -> Option<NonZeroUsize> {
-        loop {
-            let sg_id = self.event_queue_recv.recv().await?;
-            let sg_data = &self.subgraphs[sg_id.0];
-            if !sg_data.is_scheduled.replace(true) {
-                self.stratum_queues[sg_data.stratum].push_back(sg_id);
-
-                // Enqueue any other immediate events.
-                return Some(NonZeroUsize::new(self.try_recv_events() + 1).unwrap());
-            }
         }
     }
 
@@ -280,8 +203,7 @@ impl Hydroflow {
             FlowGraph::default(),
             true,
         ));
-        self.init_stratum(stratum);
-        self.stratum_queues[stratum].push_back(sg_id);
+        self.scheduler.schedule(sg_id, &*self.subgraphs);
 
         sg_id
     }
@@ -376,18 +298,9 @@ impl Hydroflow {
             FlowGraph::default(),
             true,
         ));
-        self.init_stratum(stratum);
-        self.stratum_queues[stratum].push_back(sg_id);
+        self.scheduler.schedule(sg_id, &*self.subgraphs);
 
         sg_id
-    }
-
-    /// Makes sure stratum STRATUM is initialized.
-    fn init_stratum(&mut self, stratum: usize) {
-        if self.stratum_queues.len() <= stratum {
-            self.stratum_queues
-                .resize_with(stratum + 1, Default::default);
-        }
     }
 
     /// Creates a handoff edge and returns the corresponding send and receive ports.
@@ -435,6 +348,109 @@ impl Hydroflow {
 
     pub fn add_dependencies(&mut self, sg_id: SubgraphId, deps: FlowGraph) {
         self.subgraphs[sg_id.0].dependencies.append(deps);
+    }
+}
+
+/// Scheduling component of a [`Hydroflow`] graph.
+struct Scheduler {
+    /// Index is stratum, value is FIFO queue for that stratum.
+    stratum_queues: Vec<VecDeque<SubgraphId>>,
+    event_queue_recv: UnboundedReceiver<SubgraphId>,
+
+    current_epoch: usize,
+    current_stratum: usize,
+}
+impl Scheduler {
+    /// Schedules the given `sg_id`. Returns `true` if the subgraph is
+    /// scheduled. Returns `false` if subgraph was already scheduled and no
+    /// changes were made.
+    pub fn schedule(&mut self, sg_id: SubgraphId, subgraphs: &[SubgraphData]) -> bool {
+        let sg_data = &subgraphs[sg_id.0];
+        if sg_data.is_scheduled.replace(true) {
+            // Already scheduled, skip.
+            false
+        } else {
+            self.init_stratum(sg_data.stratum);
+            self.stratum_queues[sg_data.stratum].push_back(sg_id);
+            true
+        }
+    }
+
+    /// Makes sure stratum STRATUM is initialized.
+    fn init_stratum(&mut self, stratum: usize) {
+        if self.stratum_queues.len() <= stratum {
+            self.stratum_queues
+                .resize_with(stratum + 1, Default::default);
+        }
+    }
+
+    /// Enqueues subgraphs triggered by external events without blocking.
+    ///
+    /// Returns the number of subgraphs enqueued.
+    pub fn try_recv_events(&mut self, subgraphs: &[SubgraphData]) -> usize {
+        let mut enqueued_count = 0;
+        while let Ok(sg_id) = self.event_queue_recv.try_recv() {
+            if self.schedule(sg_id, subgraphs) {
+                enqueued_count += 1;
+            }
+        }
+        enqueued_count
+    }
+
+    /// Enqueues subgraphs triggered by external events, blocking until at
+    /// least one subgraph is scheduled.
+    pub fn recv_events(&mut self, subgraphs: &[SubgraphData]) -> Option<NonZeroUsize> {
+        loop {
+            let sg_id = self.event_queue_recv.blocking_recv()?;
+            if self.schedule(sg_id, subgraphs) {
+                // Enqueue any other immediate events.
+                return Some(NonZeroUsize::new(self.try_recv_events(subgraphs) + 1).unwrap());
+            }
+        }
+    }
+
+    /// Enqueues subgraphs triggered by external events asynchronously, waiting
+    /// until at least one subgraph is scheduled.
+    pub async fn recv_events_async(&mut self, subgraphs: &[SubgraphData]) -> Option<NonZeroUsize> {
+        loop {
+            let sg_id = self.event_queue_recv.recv().await?;
+            if self.schedule(sg_id, subgraphs) {
+                // Enqueue any other immediate events.
+                return Some(NonZeroUsize::new(self.try_recv_events(subgraphs) + 1).unwrap());
+            }
+        }
+    }
+
+    /// Go to the next stratum which has work available, possibly the current stratum.
+    /// Return true if more work is available, otherwise false if no work is immediately available on any strata.
+    pub fn next_stratum(&mut self, subgraphs: &[SubgraphData]) -> bool {
+        self.try_recv_events(subgraphs);
+
+        let old_stratum = self.current_stratum;
+        loop {
+            // If current stratum has work, return true.
+            if !self.stratum_queues[self.current_stratum].is_empty() {
+                return true;
+            }
+            // Increment stratum counter.
+            self.current_stratum += 1;
+            if self.current_stratum >= self.stratum_queues.len() {
+                self.current_stratum = 0;
+                self.current_epoch += 1;
+            }
+            // After incrementing, exit if we made a full loop around the strata.
+            if old_stratum == self.current_stratum {
+                // Note: if current stratum had work, the very first loop iteration would've
+                // returned true. Therefore we can return false without checking.
+                return false;
+            }
+        }
+    }
+
+    /// Pops a `SubgraphId` from the current stratum queue, or `None` if none
+    /// available.
+    pub fn pop_current_stratum(&mut self) -> Option<SubgraphId> {
+        self.stratum_queues[self.current_stratum].pop_front()
     }
 }
 
