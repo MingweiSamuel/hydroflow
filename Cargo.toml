@@ -2,6 +2,7 @@
 
 members = [
     "hydroflow",
+    "hydroflow_parser",
     "benches",
     "relalg",
 ]
