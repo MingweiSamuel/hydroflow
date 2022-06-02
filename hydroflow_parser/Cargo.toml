@@ -4,5 +4,10 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+tree-sitter = "0.20.6"
+tree-sitter-javascript = "0.20.0"
 
 [dev-dependencies]
+
+[build-dependencies]
+cc="*"
