@@ -3,12 +3,15 @@ use hydroflow::hydroflow_parser;
 #[test]
 pub fn test_parser_basic() {
     hydroflow_parser! {
-        edges_input = input();
+        edges_input = (input() ->);
 
-        reached_vertices = seed([0]);
+        init_vertex = (seed([0]) ->);
+        // loop_vertices = (->);
+        out_vertices = (-> for_each(|x| println!("Reached: {}", x)));
 
-        join = join();
-        (edges_input -> join);
+        reached_vertices = (merge[init_vertex, loop_vertices] -> map(|v| (v, ())));
+
+        (join[reached_vertices, edges_input] -> map(|(_src, ((), dst))| dst) -> dedup() -> tee[loop_vertices, out_vertices]);
 
 
         // x = (a -> b() -> c() -> (a -> b -> c) -> p);

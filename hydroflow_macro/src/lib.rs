@@ -1,161 +1,154 @@
-use proc_macro2::TokenStream;
+use std::collections::HashMap;
+
+use proc_macro2::Literal;
 use quote::{quote, ToTokens};
-use syn::parse::discouraged::Speculative;
-use syn::parse::{Parse, ParseStream};
-use syn::punctuated::Punctuated;
-use syn::token::Paren;
-use syn::{parenthesized, parse_macro_input, Expr, ExprPath, Ident, Token};
+use slotmap::{DefaultKey, SlotMap};
+use syn::{parse_macro_input, spanned::Spanned, Ident};
 
-struct HfCode {
-    statements: Punctuated<HfStatement, Token![;]>,
-}
-impl Parse for HfCode {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let statements = input.parse_terminated(HfStatement::parse)?;
-        Ok(HfCode { statements })
-    }
-}
-impl ToTokens for HfCode {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        self.statements.to_tokens(tokens)
-    }
-}
-
-struct HfStatement {
-    name: Option<Ident>,
-    equals: Option<Token![=]>,
-    value: Pipeline,
-}
-impl Parse for HfStatement {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let mut name = None;
-        let mut equals = None;
-        if input.peek2(Token![=]) {
-            name = Some(input.parse()?);
-            equals = Some(input.parse()?);
-        }
-        let value = input.parse()?;
-
-        Ok(HfStatement {
-            name,
-            equals,
-            value,
-        })
-    }
-}
-impl ToTokens for HfStatement {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        self.name.to_tokens(tokens);
-        self.equals.to_tokens(tokens);
-        self.value.to_tokens(tokens);
-    }
-}
-
-enum Pipeline {
-    Chain(ChainPipeline),
-    ExprPath(ExprPath),
-    Operator(Operator),
-}
-impl Parse for Pipeline {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        if input.peek(Paren) {
-            Ok(Self::Chain(input.parse()?))
-            // Ok(Self::Paren(expr_paren))
-        } else {
-            let fork = input.fork();
-            let expr_path = fork.parse()?;
-            if fork.peek(Paren) {
-                Ok(Self::Operator(input.parse()?))
-            } else {
-                input.advance_to(&fork);
-                Ok(Self::ExprPath(expr_path))
-            }
-        }
-    }
-}
-impl ToTokens for Pipeline {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        match self {
-            Pipeline::Chain(x) => x.to_tokens(tokens),
-            Pipeline::ExprPath(x) => x.to_tokens(tokens),
-            Pipeline::Operator(x) => x.to_tokens(tokens),
-        }
-    }
-}
-
-struct ChainPipeline {
-    pub paren_token: Paren,
-    pub elems: Punctuated<Pipeline, Token![->]>,
-}
-impl Parse for ChainPipeline {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let content;
-        let paren_token = parenthesized!(content in input);
-        let mut elems = Punctuated::new();
-
-        while !content.is_empty() {
-            let first = content.parse()?;
-            elems.push_value(first);
-            if content.is_empty() {
-                break;
-            }
-            let punct = content.parse()?;
-            elems.push_punct(punct);
-        }
-
-        Ok(Self { paren_token, elems })
-    }
-}
-impl ToTokens for ChainPipeline {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        self.paren_token.surround(tokens, |tokens| {
-            self.elems.to_tokens(tokens);
-        });
-    }
-}
-
-struct Operator {
-    pub path: ExprPath,
-    pub paren_token: Paren,
-    pub args: Punctuated<Expr, Token![,]>,
-}
-impl Parse for Operator {
-    fn parse(input: ParseStream) -> syn::Result<Self> {
-        let path = input.parse()?;
-
-        let content;
-        let paren_token = parenthesized!(content in input);
-        let mut args = Punctuated::new();
-
-        while !content.is_empty() {
-            let first = content.parse()?;
-            args.push_value(first);
-            if content.is_empty() {
-                break;
-            }
-            let punct = content.parse()?;
-            args.push_punct(punct);
-        }
-
-        Ok(Self {
-            path,
-            paren_token,
-            args,
-        })
-    }
-}
-impl ToTokens for Operator {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        self.path.to_tokens(tokens);
-        self.paren_token.surround(tokens, |tokens| {
-            self.args.to_tokens(tokens);
-        });
-    }
-}
+mod parse;
+use parse::{HfCode, Operator, Pipeline};
 
 #[proc_macro]
 pub fn hydroflow_parser(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let input = parse_macro_input!(input as HfCode);
-    // input.into_token_stream().into()
-    quote! { println!("hello world"); }.into()
+    // // input.into_token_stream().into()
+
+    let graph = hfcode_to_graph(input);
+
+    // let debug = format!("{:#?}", graph);
+    let mut debug = String::new();
+    graph.write_graph(&mut debug).unwrap();
+
+    let lit = Literal::string(&*debug);
+
+    quote! { println!("{}", #lit); }.into()
+}
+
+#[derive(Clone, Copy, Debug, Default)]
+struct PipelinePtrPair {
+    inn: Option<DefaultKey>,
+    out: Option<DefaultKey>,
+}
+
+#[derive(Debug, Default)]
+struct Graph {
+    operators: SlotMap<DefaultKey, OpInfo>,
+    names: HashMap<Ident, PipelinePtrPair>,
+}
+impl Graph {
+    pub fn write_graph(&self, mut write: impl std::fmt::Write) -> std::fmt::Result {
+        for (key, op) in self.operators.iter() {
+            writeln!(
+                write,
+                "{:?}: {}",
+                key,
+                op.operator.to_token_stream().to_string()
+            )?;
+            writeln!(write, "    preds: {:?}", op.preds)?;
+            writeln!(write, "    succs: {:?}", op.succs)?;
+            writeln!(write)?;
+        }
+        Ok(())
+    }
+
+    pub fn add_pipeline(&mut self, pipeline: Pipeline) -> PipelinePtrPair {
+        match pipeline {
+            Pipeline::Chain(chain_pipeline) => {
+                let mut pipe_ptr = PipelinePtrPair::default();
+
+                if chain_pipeline.leading_arrow.is_some() {
+                    // TODO(mingwei). this should do something
+                }
+                for elem in chain_pipeline.elems {
+                    let sub_ptr = self.add_pipeline(elem);
+
+                    if let (Some(out), Some(inn)) = (pipe_ptr.out, sub_ptr.inn) {
+                        self.operators[out].succs.push(inn);
+                        self.operators[inn].preds.push(out);
+                    }
+
+                    pipe_ptr.inn = pipe_ptr.inn.or(sub_ptr.inn);
+                    pipe_ptr.out = sub_ptr.out;
+                }
+
+                pipe_ptr
+            }
+            Pipeline::Multiple(multiple) => {
+                // TODO: match on name.
+                let (preds, succs) = Default::default();
+                let key = self.operators.insert(OpInfo {
+                    operator: None,
+                    preds,
+                    succs,
+                });
+                PipelinePtrPair {
+                    inn: Some(key),
+                    out: Some(key),
+                }
+            }
+            Pipeline::Ident(ident) => {
+                *self
+                    .names
+                    .get(&ident)
+                    .unwrap_or_else(|| panic!("Failed to find name: {}", ident))
+                // TODO(mingwei): error reporting
+            }
+            Pipeline::Operator(operator) => {
+                let (preds, succs) = Default::default();
+                let key = self.operators.insert(OpInfo {
+                    operator: Some(operator),
+                    preds,
+                    succs,
+                });
+                PipelinePtrPair {
+                    inn: Some(key),
+                    out: Some(key),
+                }
+            }
+        }
+    }
+}
+
+struct OpInfo {
+    operator: Option<Operator>, // TODO(handle n-ary as operators)
+    preds: Vec<DefaultKey>,
+    succs: Vec<DefaultKey>,
+}
+impl std::fmt::Debug for OpInfo {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        f.debug_struct("OpInfo")
+            .field("operator (span)", &self.operator.span())
+            .field("preds", &self.preds)
+            .field("succs", &self.succs)
+            .finish()
+    }
+}
+
+fn hfcode_to_graph(input: HfCode) -> Graph {
+    let mut graph = Graph::default();
+
+    for stmt in input.statements {
+        let pipe_ptr = graph.add_pipeline(stmt.pipeline);
+
+        match (stmt.name, stmt.equals) {
+            (Some(name), Some(_eq)) => {
+                graph.names.insert(name, pipe_ptr);
+            }
+            (None, None) => {
+                // Anonymous stmt.
+            }
+            _ => {
+                panic!("name and equal must be together!") // TODO(mingwei).
+            }
+        }
+    }
+
+    graph
+}
+
+fn graph_to_hfcode(input: Graph) -> HfCode {
+    todo!();
+    HfCode {
+        statements: Default::default(),
+    }
 }
