@@ -140,7 +140,8 @@ impl Graph {
                 ident
                     .span()
                     .unwrap()
-                    .error(format!("Cannot find name `{}`", ident));
+                    .error(format!("Cannot find name `{}`", ident))
+                    .emit();
                 Ports {
                     inn: None,
                     out: None,
