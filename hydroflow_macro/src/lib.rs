@@ -173,6 +173,8 @@ impl Graph {
         }
     }
 
+    // pub fn validate_operators(&self, )
+
     pub fn mermaid_string(&self) -> String {
         let mut string = String::new();
         self.write_mermaid(&mut string).unwrap();
