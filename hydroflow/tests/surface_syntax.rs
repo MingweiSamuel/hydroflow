@@ -35,5 +35,7 @@ pub fn test_parser_basic() {
         shuffle = (merge() -> tee());
         (shuffle[0] -> [0]shuffle);
         (shuffle[1] -> [1]shuffle);
+        (shuffle[2] -> [2]shuffle);
+        (shuffle[3] -> [3]shuffle);
     }
 }

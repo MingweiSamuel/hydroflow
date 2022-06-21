@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 use proc_macro2::{Literal, Span};
 use quote::{quote, ToTokens};
-use slotmap::{DefaultKey, Key, SlotMap};
+use slotmap::{new_key_type, Key, SecondaryMap, SlotMap};
 use syn::punctuated::Pair;
 use syn::spanned::Spanned;
 use syn::{parse_macro_input, Ident, LitInt};
@@ -17,8 +17,9 @@ pub fn hydroflow_parser(input: proc_macro::TokenStream) -> proc_macro::TokenStre
     let input = parse_macro_input!(input as HfCode);
     // // input.into_token_stream().into()
 
-    let graph = Graph::from_hfcode(input).unwrap(/* TODO(mingwei) */);
+    let mut graph = Graph::from_hfcode(input).unwrap(/* TODO(mingwei) */);
     graph.validate_operators();
+    graph.identify_subgraphs();
 
     // let debug = format!("{:#?}", graph);
     // let mut debug = String::new();
@@ -30,10 +31,14 @@ pub fn hydroflow_parser(input: proc_macro::TokenStream) -> proc_macro::TokenStre
     quote! { println!("{}", #lit); }.into()
 }
 
+new_key_type! { struct OperatorId; }
+new_key_type! { struct SubgraphId; }
+
 #[derive(Debug, Default)]
 struct Graph {
-    operators: SlotMap<DefaultKey, OpInfo>,
+    operators: SlotMap<OperatorId, OpInfo>,
     names: HashMap<Ident, Ports>,
+    subgraphs: SlotMap<SubgraphId, Vec<OperatorId>>,
 }
 impl Graph {
     pub fn from_hfcode(input: HfCode) -> Result<Self, ()> {
@@ -164,6 +169,7 @@ impl Graph {
                     operator,
                     preds,
                     succs,
+                    subgraph_id: None,
                 };
                 let port = self.operators.insert(op_info);
                 Ports {
@@ -262,6 +268,73 @@ impl Graph {
         }
     }
 
+    pub fn identify_subgraphs(&mut self) {
+        // Pull (green)
+        // Push (blue)
+        // Handoff (red) -- not a color for operators, inserted between subgraphs.
+        // Computation (yellow)
+        #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+        enum Color {
+            Pull,
+            Push,
+            Comp,
+        }
+
+        fn op_color(opinfo: &OpInfo) -> Option<Color> {
+            match (1 < opinfo.preds.len(), 1 < opinfo.succs.len()) {
+                (true, true) => Some(Color::Comp),
+                (true, false) => Some(Color::Pull),
+                (false, true) => Some(Color::Push),
+                (false, false) => match (opinfo.preds.is_empty(), opinfo.succs.is_empty()) {
+                    (true, false) => Some(Color::Pull),
+                    (false, true) => Some(Color::Push),
+                    _same => None,
+                },
+            }
+        }
+
+        fn assign_color_nexts(
+            colors: &mut SecondaryMap<OperatorId, Color>,
+            operators: &SlotMap<OperatorId, OpInfo>,
+            id: OperatorId,
+            color: Color,
+            preds: bool,
+        ) {
+            let opinfo = operators.get(id).unwrap();
+            if op_color(opinfo).map(|c| c == color).unwrap_or(true) {
+                colors.insert(id, color);
+
+                let nexts = if preds { &opinfo.preds } else { &opinfo.succs };
+                for &(succ_id, _) in nexts.values() {
+                    assign_color_nexts(colors, operators, succ_id, color, preds);
+                }
+            }
+        }
+
+        let mut colors = SecondaryMap::with_capacity(self.operators.len());
+        for id in self.operators.keys() {
+            if colors.contains_key(id) {
+                continue;
+            }
+
+            let opinfo = self.operators.get(id).unwrap();
+            if let Some(color) = op_color(opinfo) {
+                colors.insert(id, color);
+
+                match color {
+                    Color::Comp => {
+                        assign_color_nexts(&mut colors, &self.operators, id, Color::Pull, true);
+                        assign_color_nexts(&mut colors, &self.operators, id, Color::Push, false);
+                    }
+                    pull_or_push => {
+                        assign_color_nexts(&mut colors, &self.operators, id, pull_or_push, true);
+                        assign_color_nexts(&mut colors, &self.operators, id, pull_or_push, false);
+                    }
+                }
+            }
+        }
+    }
+
     pub fn mermaid_string(&self) -> String {
         let mut string = String::new();
         self.write_mermaid(&mut string).unwrap();
@@ -302,14 +375,17 @@ impl Graph {
 
 #[derive(Clone, Copy, Debug)]
 struct Ports {
-    inn: Option<DefaultKey>,
-    out: Option<DefaultKey>,
+    inn: Option<OperatorId>,
+    out: Option<OperatorId>,
 }
 
 struct OpInfo {
     operator: Operator,
-    preds: HashMap<LitInt, (DefaultKey, LitInt)>,
-    succs: HashMap<LitInt, (DefaultKey, LitInt)>,
+    preds: HashMap<LitInt, (OperatorId, LitInt)>,
+    succs: HashMap<LitInt, (OperatorId, LitInt)>,
+
+    /// Which subgraph this operator belongs to (if determined).
+    subgraph_id: Option<SubgraphId>,
 }
 impl std::fmt::Debug for OpInfo {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
