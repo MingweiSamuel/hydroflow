@@ -11,6 +11,9 @@ use syn::{parse_macro_input, Ident, LitInt};
 
 mod parse;
 use parse::{HfCode, HfStatement, Operator, Pipeline};
+use union_find::UnionFind;
+
+mod union_find;
 
 #[proc_macro]
 pub fn hydroflow_parser(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -19,12 +22,13 @@ pub fn hydroflow_parser(input: proc_macro::TokenStream) -> proc_macro::TokenStre
 
     let mut graph = Graph::from_hfcode(input).unwrap(/* TODO(mingwei) */);
     graph.validate_operators();
-    // graph.identify_subgraphs2();
+    graph.identify_subgraphs();
 
     // let debug = format!("{:#?}", graph);
     // let mut debug = String::new();
     // graph.write_graph(&mut debug).unwrap();
-    let debug = graph.mermaid_string();
+    let mut debug = String::new();
+    graph.write_mermaid_subgraphs(&mut debug).unwrap();
 
     let lit = Literal::string(&*debug);
 
@@ -38,7 +42,8 @@ new_key_type! { struct SubgraphId; }
 struct Graph {
     operators: SlotMap<NodeId, NodeInfo>,
     names: HashMap<Ident, Ports>,
-    subgraphs: SlotMap<SubgraphId, Vec<NodeId>>,
+    /// Equivalent to SparseSecondaryMap<...>.
+    subgraphs: HashMap<NodeId, Vec<NodeId>>,
 }
 impl Graph {
     pub fn from_hfcode(input: HfCode) -> Result<Self, ()> {
@@ -170,7 +175,6 @@ impl Graph {
                     preds,
                     succs,
                     subgraph_id: None,
-                    color: None,
                 });
                 Ports {
                     inn: Some(port),
@@ -267,7 +271,7 @@ impl Graph {
                             .emit();
                     }
                 }
-                Node::Handoff => todo!(),
+                Node::Handoff => todo!("Node::Handoff"),
             }
         }
     }
@@ -288,102 +292,99 @@ impl Graph {
         }
     }
 
-    pub fn identify_subgraphs2(&mut self) {
-        let mut i = 0;
-
-        let mut colors = SecondaryMap::with_capacity(self.operators.len());
-        for id in self.operators.keys() {
-            if colors.contains_key(id) {
-                continue;
-            }
-
-            let node_info = &self.operators[id];
-            if let Some(color) = Self::op_color(node_info) {
-                if matches!(color, Color::Hoff) {
-                    continue;
-                }
-
-                let mut stack = vec![(id, color)];
-                while let Some((id, color)) = stack.pop() {
-
-                    i += 1;
-                    eprintln!("{:?}", id);
-
-                    if 10_000 < i { break; }
-
-                    if colors.contains_key(id) {
-                        continue;
-                    }
-                    colors.insert(id, color);
-                    for &(succ_id, _) in node_info.succs.values() {
-                        let succ_node_info = &self.operators[succ_id];
-                        let succ_color = Self::op_color(succ_node_info).unwrap_or(color);
-                        if color.can_connect(succ_color, true) {
-                            stack.push((succ_id, succ_color));
-                        }
-                    }
-                }
-            }
-            if 10_000 < i { break; }
-        }
-
-        for (id, color) in colors {
-            self.operators[id].color = Some(color);
-        }
+    pub fn edges(&self) -> impl '_ + Iterator<Item = (NodeId, NodeId)> {
+        self.operators
+            .iter()
+            .flat_map(|(src, node_info)| node_info.succs.values().map(move |&(dst, _)| (src, dst)))
     }
 
     pub fn identify_subgraphs(&mut self) {
-        fn assign_color_nexts(
-            colors: &mut SecondaryMap<NodeId, Color>,
-            operators: &SlotMap<NodeId, NodeInfo>,
-            id: NodeId,
-            color: Color,
-            preds: bool,
-        ) {
-            let node_info = &operators[id];
-            if Graph::op_color(node_info)
-                .map(|c| c == color)
-                .unwrap_or(true)
-            {
-                colors.insert(id, color);
+        // Algorithm:
+        // 1. Each node begins as its own subgraph.
+        // 2. Collect edges. Sort so edges which should not be split across a handoff come first.
+        // 3. For each edge, try to join `(to, from)` into the same subgraph.
 
-                let nexts = if preds {
-                    &node_info.preds
-                } else {
-                    &node_info.succs
+        let mut node_color: SecondaryMap<NodeId, Option<Color>> = self
+            .operators
+            .iter()
+            .map(|(id, node_info)| (id, Self::op_color(node_info)))
+            .collect();
+        let mut node_union: UnionFind<NodeId> = self.operators.keys().collect();
+
+        // Sort edges here (for now, no sort/priority).
+        loop {
+            let mut updated = false;
+            for (src, dst) in self.edges() {
+                if node_union.same_set(src, dst) {
+                    // Note this might be triggered even if the edge (src, dst) is not in the subgraph.
+                    // This prevents self-loops. Handoffs needed to break self loops.
+                    continue;
+                }
+
+                // Set `src` or `dst` color if `None` based on the other (if possible):
+                // Pull -> Pull
+                // Push -> Push
+                // Pull -> [Comp] -> Push
+                // Push -> [Hoff] -> Pull
+                match (node_color[src], node_color[dst]) {
+                    (Some(_), Some(_)) => (),
+                    (None, None) => (),
+                    (None, Some(dst_color)) => {
+                        node_color[src] = Some(match dst_color {
+                            Color::Comp => Color::Pull,
+                            Color::Hoff => Color::Push,
+                            pull_or_push => pull_or_push,
+                        });
+                        updated = true;
+                    }
+                    (Some(src_color), None) => {
+                        node_color[dst] = Some(match src_color {
+                            Color::Comp => Color::Push,
+                            Color::Hoff => Color::Pull,
+                            pull_or_push => pull_or_push,
+                        });
+                        updated = true;
+                    }
+                }
+
+                // If SRC and DST can be in the same subgraph.
+                let can_connect = match (node_color[src], node_color[dst]) {
+                    (Some(Color::Pull), Some(Color::Pull)) => true,
+                    (Some(Color::Pull), Some(Color::Comp)) => true,
+                    (Some(Color::Pull), Some(Color::Push)) => true,
+
+                    (Some(Color::Comp | Color::Push), Some(Color::Pull)) => false,
+                    (Some(Color::Comp | Color::Push), Some(Color::Comp)) => false,
+                    (Some(Color::Comp | Color::Push), Some(Color::Push)) => true,
+
+                    // Handoffs are not part of subgraphs.
+                    (Some(Color::Hoff), Some(_)) => false,
+                    (Some(_), Some(Color::Hoff)) => false,
+
+                    // Linear chain.
+                    (None, None) => true,
+
+                    _some_none => unreachable!(),
                 };
-                for &(succ_id, _) in nexts.values() {
-                    assign_color_nexts(colors, operators, succ_id, color, preds);
+                if can_connect {
+                    node_union.union(src, dst);
+                    updated = true;
                 }
             }
-        }
-
-        let mut colors = SecondaryMap::with_capacity(self.operators.len());
-        for id in self.operators.keys() {
-            if colors.contains_key(id) {
-                continue;
-            }
-
-            let node_info = &self.operators[id];
-            if let Some(color) = Self::op_color(node_info) {
-                colors.insert(id, color);
-
-                match color {
-                    Color::Comp => {
-                        assign_color_nexts(&mut colors, &self.operators, id, Color::Pull, true);
-                        assign_color_nexts(&mut colors, &self.operators, id, Color::Push, false);
-                    }
-                    pull_or_push => {
-                        assign_color_nexts(&mut colors, &self.operators, id, pull_or_push, true);
-                        assign_color_nexts(&mut colors, &self.operators, id, pull_or_push, false);
-                    }
-                }
+            if !updated {
+                break;
             }
         }
 
-        for (id, color) in colors {
-            self.operators[id].color = Some(color);
+        for (key, node_info) in self.operators.iter_mut() {
+            let subgraph_key = node_union.find(key);
+            node_info.subgraph_id = Some(subgraph_key);
+            self.subgraphs.entry(subgraph_key).or_default().push(key);
         }
+    }
+
+    pub fn subgraphs(&self) -> std::collections::hash_map::Iter<'_, NodeId, Vec<NodeId>> {
+        self.subgraphs.iter()
     }
 
     pub fn mermaid_string(&self) -> String {
@@ -407,10 +408,50 @@ impl Graph {
                         .replace('<', "&lt;")
                         .replace('>', "&gt;")
                         .replace('"', "&quot;"),
-                    node_info.color,
+                    node_info.subgraph_id.map(|id| id.data().as_ffi()),
                 ),
                 Node::Handoff => writeln!(write, r#"    {}{{"handoff"}}"#, key.data().as_ffi()),
             }?;
+        }
+        writeln!(write)?;
+        for (src_key, op) in self.operators.iter() {
+            for (_src_port, (dst_key, _dst_port)) in op.succs.iter() {
+                writeln!(
+                    write,
+                    "    {}-->{}",
+                    src_key.data().as_ffi(),
+                    dst_key.data().as_ffi()
+                )?;
+            }
+        }
+        Ok(())
+    }
+
+    pub fn write_mermaid_subgraphs(&self, write: &mut impl std::fmt::Write) -> std::fmt::Result {
+        writeln!(write, "flowchart TB")?;
+        for (subgraph_id, node_ids) in self.subgraphs() {
+            writeln!(write, "    subgraph sg_{}", subgraph_id.data().as_ffi())?;
+            for &node_id in node_ids.iter() {
+                let node_info = &self.operators[node_id];
+                match &node_info.node {
+                    Node::Operator(operator) => writeln!(
+                        write,
+                        r#"        {}["{}"]"#,
+                        node_id.data().as_ffi(),
+                        operator
+                            .to_token_stream()
+                            .to_string()
+                            .replace('&', "&amp;")
+                            .replace('<', "&lt;")
+                            .replace('>', "&gt;")
+                            .replace('"', "&quot;"),
+                    ),
+                    Node::Handoff => {
+                        writeln!(write, r#"    {}{{"handoff"}}"#, node_id.data().as_ffi())
+                    }
+                }?;
+            }
+            writeln!(write, "    end")?;
         }
         writeln!(write)?;
         for (src_key, op) in self.operators.iter() {
@@ -492,8 +533,8 @@ struct NodeInfo {
     succs: HashMap<LitInt, (NodeId, LitInt)>,
 
     /// Which subgraph this operator belongs to (if determined).
-    subgraph_id: Option<SubgraphId>,
-    color: Option<Color>,
+    subgraph_id: Option<NodeId>,
+    // color: Option<Color>,
 }
 impl std::fmt::Debug for NodeInfo {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {

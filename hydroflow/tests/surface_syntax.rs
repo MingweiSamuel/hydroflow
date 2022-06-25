@@ -45,4 +45,37 @@ pub fn test_parser_basic() {
         x = (map(a) -> map(b));
         (x -> x);
     }
+
+    hydroflow_parser! {
+        a = map(a); // 0
+        b = (merge() -> tee()); // 1
+        c = merge(); // 2
+        d = tee(); // 3
+        e = (merge() -> tee()); // 4
+        f = map(f); // 5
+        g = merge(); // 6
+        h = tee(); // 7
+
+        (a -> b);
+
+        (b -> e);
+        (b -> g);
+
+        (c -> b);
+
+        (d -> a);
+        (d -> b);
+        (d -> e);
+
+        (e -> c);
+        (e -> h);
+
+        (f -> c);
+
+        (g -> e);
+
+        (h -> d);
+        (h -> f);
+        (h -> g);
+    }
 }
