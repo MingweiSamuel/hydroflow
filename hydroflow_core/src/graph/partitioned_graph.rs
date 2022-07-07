@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
-use quote::ToTokens;
+use proc_macro2::{Ident, Literal, Span, TokenStream};
+use quote::{format_ident, quote, ToTokens};
 use slotmap::{Key, SecondaryMap, SlotMap};
 use syn::LitInt;
 
@@ -39,6 +40,54 @@ impl PartitionedGraph {
         string
     }
 
+    pub fn as_code(&self, root: TokenStream) -> TokenStream {
+        let handoffs = self
+            .nodes
+            .iter()
+            .filter(|(_node_id, node)| matches!(node, Node::Handoff))
+            .map(|(node_id, _node)| {
+                let ident_send = Ident::new(
+                    &*format!("hoff{:?}_send", node_id.data()),
+                    Span::call_site(),
+                );
+                let ident_recv = Ident::new(
+                    &*format!("hoff{:?}_recv", node_id.data()),
+                    Span::call_site(),
+                );
+                let hoff_name = Literal::string(&*format!("handoff {:?}", node_id));
+                quote! {
+                    let (#ident_send, #ident_recv) =
+                        df.make_edge::<_, #root::scheduled::handoff::VecHandoff<_>>(#hoff_name);
+                }
+            });
+
+        let subgraphs = self.subgraphs().map(|(subgraph_id, subgraph_nodes)| {
+            let lit = Literal::string(&*format!("{:?}: {:?}", subgraph_id, subgraph_nodes));
+            let hoff_name = Literal::string(&*format!("Subgraph {:?}", subgraph_id));
+            quote! {
+                df.add_subgraph(
+                    #hoff_name,
+                    tl!(),
+                    tl!(),
+                    move |context, tl!(), tl!()| {
+                        let lit = #lit;
+                    },
+                );
+            }
+        });
+
+        quote! {
+            {
+                use #root::tl;
+
+                let mut df = #root::scheduled::graph::Hydroflow::new();
+                #( #handoffs )*
+                #( #subgraphs )*
+                df
+            }
+        }
+    }
+
     pub fn write_mermaid(&self, write: &mut impl std::fmt::Write) -> std::fmt::Result {
         writeln!(write, "flowchart TB")?;
         for (subgraph_id, node_ids) in self.subgraphs() {
@@ -48,8 +97,8 @@ impl PartitionedGraph {
                     Node::Operator(operator) => {
                         writeln!(
                             write,
-                            r#"        {}["{}"]"#,
-                            node_id.data().as_ffi(),
+                            r#"        {:?}["{}"]"#,
+                            node_id.data(),
                             operator
                                 .to_token_stream()
                                 .to_string()
@@ -60,7 +109,7 @@ impl PartitionedGraph {
                         )?;
                     }
                     Node::Handoff => {
-                        // writeln!(write, r#"        {}{{"handoff"}}"#, node_id.data().as_ffi())
+                        // writeln!(write, r#"        {:?}{{"handoff"}}"#, node_id.data())
                     }
                 }
             }
@@ -69,17 +118,12 @@ impl PartitionedGraph {
         writeln!(write)?;
         for (node_id, node) in self.nodes.iter() {
             if matches!(node, Node::Handoff) {
-                writeln!(write, r#"    {}{{"handoff"}}"#, node_id.data().as_ffi())?;
+                writeln!(write, r#"    {:?}{{"handoff"}}"#, node_id.data())?;
             }
         }
         writeln!(write)?;
         for ((src, _src_idx), (dst, _dst_idx)) in self.edges() {
-            writeln!(
-                write,
-                "    {}-->{}",
-                src.data().as_ffi(),
-                dst.data().as_ffi()
-            )?;
+            writeln!(write, "    {:?}-->{:?}", src.data(), dst.data())?;
         }
         Ok(())
     }
