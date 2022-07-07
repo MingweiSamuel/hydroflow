@@ -45,6 +45,35 @@ impl std::fmt::Debug for Node {
     }
 }
 
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Color {
+    /// Pull (green)
+    Pull,
+    /// Push (blue)
+    Push,
+    /// Computation (yellow)
+    Comp,
+    /// Handoff (red) -- not a color for operators, inserted between subgraphs.
+    Hoff,
+}
+
+pub fn node_color(node: &Node, inn_degree: usize, out_degree: usize) -> Option<Color> {
+    // Determine op color based on in and out degree. If linear (1 in 1 out), color is None.
+    match node {
+        Node::Operator(_) => match (1 < inn_degree, 1 < out_degree) {
+            (true, true) => Some(Color::Comp),
+            (true, false) => Some(Color::Pull),
+            (false, true) => Some(Color::Push),
+            (false, false) => match (inn_degree, out_degree) {
+                (0, _) => Some(Color::Pull),
+                (_, 0) => Some(Color::Push),
+                _same => None,
+            },
+        },
+        Node::Handoff => Some(Color::Hoff),
+    }
+}
+
 impl From<FlatGraph> for PartitionedGraph {
     fn from(mut flat_graph: FlatGraph) -> Self {
         // Algorithm:
@@ -52,40 +81,13 @@ impl From<FlatGraph> for PartitionedGraph {
         // 2. Collect edges. Sort so edges which should not be split across a handoff come first.
         // 3. For each edge, try to join `(to, from)` into the same subgraph.
 
-        /// Pull (green)
-        /// Push (blue)
-        /// Handoff (red) -- not a color for operators, inserted between subgraphs.
-        /// Computation (yellow)
-        #[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord)]
-        enum Color {
-            Pull,
-            Push,
-            Comp,
-            Hoff,
-        }
-
         let mut node_color: SecondaryMap<NodeId, Option<Color>> = flat_graph
             .nodes
             .keys()
             .map(|node_id| {
-                // Determine op color based on in and out degree. If linear (1 in 1 out), color is None.
-                let op_color = {
-                    let inn_degree = flat_graph.preds[node_id].len();
-                    let out_degree = flat_graph.succs[node_id].len();
-                    match &flat_graph.nodes[node_id] {
-                        Node::Operator(_) => match (1 < inn_degree, 1 < out_degree) {
-                            (true, true) => Some(Color::Comp),
-                            (true, false) => Some(Color::Pull),
-                            (false, true) => Some(Color::Push),
-                            (false, false) => match (inn_degree, out_degree) {
-                                (0, _) => Some(Color::Pull),
-                                (_, 0) => Some(Color::Push),
-                                _same => None,
-                            },
-                        },
-                        Node::Handoff => Some(Color::Hoff),
-                    }
-                };
+                let inn_degree = flat_graph.preds[node_id].len();
+                let out_degree = flat_graph.succs[node_id].len();
+                let op_color = node_color(&flat_graph.nodes[node_id], inn_degree, out_degree);
                 (node_id, op_color)
             })
             .collect();

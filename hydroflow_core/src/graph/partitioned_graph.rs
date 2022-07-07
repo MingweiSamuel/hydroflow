@@ -1,11 +1,12 @@
 use std::collections::HashMap;
 
 use proc_macro2::{Ident, Literal, Span, TokenStream};
-use quote::{format_ident, quote, ToTokens};
+use quote::{quote, ToTokens};
 use slotmap::{Key, SecondaryMap, SlotMap};
 use syn::LitInt;
 
-use super::{flat_graph::FlatGraph, EdgePort, EdgePortRef, Node, NodeId, SubgraphId};
+use super::flat_graph::FlatGraph;
+use super::{EdgePort, EdgePortRef, Node, NodeId, SubgraphId};
 
 #[derive(Default)]
 #[allow(dead_code)] // TODO(mingwei): remove when no longer needed.
@@ -62,7 +63,27 @@ impl PartitionedGraph {
             });
 
         let subgraphs = self.subgraphs().map(|(subgraph_id, subgraph_nodes)| {
-            let lit = Literal::string(&*format!("{:?}: {:?}", subgraph_id, subgraph_nodes));
+            let node_code = subgraph_nodes.iter().map(|&node_id| {
+                let node = &self.nodes[node_id];
+                let op = match node {
+                    Node::Operator(op) => op,
+                    Node::Handoff => unreachable!("Handoffs are not part of subgraphs."),
+                };
+                let ident = Ident::new(&*format!("op_{:?}", node_id.data()), Span::call_site());
+                let preds = self.preds[node_id]
+                    .values()
+                    .map(|(pred_id, _)| pred_id)
+                    .fold(String::new(), |mut str, pred_id| {
+                        use std::fmt::Write;
+                        write!(&mut str, "{:?}", pred_id).unwrap();
+                        str
+                    });
+                let lit = Literal::string(&*format!("{} [{}]", op.to_token_stream(), preds));
+                quote! {
+                    let #ident = #lit;
+                }
+            });
+
             let hoff_name = Literal::string(&*format!("Subgraph {:?}", subgraph_id));
             quote! {
                 df.add_subgraph(
@@ -70,7 +91,7 @@ impl PartitionedGraph {
                     tl!(),
                     tl!(),
                     move |context, tl!(), tl!()| {
-                        let lit = #lit;
+                        #( #node_code )*
                     },
                 );
             }
