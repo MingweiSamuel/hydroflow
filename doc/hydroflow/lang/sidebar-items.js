@@ -1,1 +1,1 @@
-initSidebarItems({"mod":[["collections",""],["lattice",""],["tag",""]]});
+window.SIDEBAR_ITEMS = {"mod":[["clear",""],["collections",""],["lattice",""],["monotonic_map",""],["tag",""]]};

@@ -1,9 +1,10 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow/src/scheduled/graph.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>graph.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../hydroflow/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow/src/scheduled/graph.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>graph.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../hydroflow/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"></h2>
     </nav>
     <nav class="sidebar"><a class="sidebar-logo" href="../../../hydroflow/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../hydroflow/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../hydroflow/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
+                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -519,6 +520,37 @@
 <span id="514">514</span>
 <span id="515">515</span>
 <span id="516">516</span>
+<span id="517">517</span>
+<span id="518">518</span>
+<span id="519">519</span>
+<span id="520">520</span>
+<span id="521">521</span>
+<span id="522">522</span>
+<span id="523">523</span>
+<span id="524">524</span>
+<span id="525">525</span>
+<span id="526">526</span>
+<span id="527">527</span>
+<span id="528">528</span>
+<span id="529">529</span>
+<span id="530">530</span>
+<span id="531">531</span>
+<span id="532">532</span>
+<span id="533">533</span>
+<span id="534">534</span>
+<span id="535">535</span>
+<span id="536">536</span>
+<span id="537">537</span>
+<span id="538">538</span>
+<span id="539">539</span>
+<span id="540">540</span>
+<span id="541">541</span>
+<span id="542">542</span>
+<span id="543">543</span>
+<span id="544">544</span>
+<span id="545">545</span>
+<span id="546">546</span>
+<span id="547">547</span>
 </pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::any::Any</span>;
 <span class="kw">use</span> <span class="ident">std::borrow::Cow</span>;
 <span class="kw">use</span> <span class="ident">std::cell::Cell</span>;
@@ -526,6 +558,7 @@
 <span class="kw">use</span> <span class="ident">std::marker::PhantomData</span>;
 <span class="kw">use</span> <span class="ident">std::num::NonZeroUsize</span>;
 
+<span class="kw">use</span> <span class="ident">hydroflow_lang::graph::serde_graph::SerdeGraph</span>;
 <span class="kw">use</span> <span class="ident">ref_cast::RefCast</span>;
 <span class="kw">use</span> <span class="ident">tokio::sync::mpsc</span>::{<span class="self">self</span>, <span class="ident">UnboundedReceiver</span>};
 
@@ -537,7 +570,7 @@
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::reactor::Reactor</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::state::StateHandle</span>;
 <span class="kw">use</span> <span class="ident"><span class="kw">super</span>::subgraph::Subgraph</span>;
-<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">HandoffId</span>, <span class="ident">StateId</span>, <span class="ident">SubgraphId</span>};
+<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">HandoffId</span>, <span class="ident">SubgraphId</span>};
 
 <span class="doccomment">/// A Hydroflow graph. Owns, schedules, and runs the compiled subgraphs.</span>
 <span class="kw">pub</span> <span class="kw">struct</span> <span class="ident">Hydroflow</span> {
@@ -548,6 +581,8 @@
     <span class="comment">// Index is stratum, value is FIFO queue for that stratum.</span>
     <span class="ident">stratum_queues</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">VecDeque</span><span class="op">&lt;</span><span class="ident">SubgraphId</span><span class="op">&gt;</span><span class="op">&gt;</span>,
     <span class="ident">event_queue_recv</span>: <span class="ident">UnboundedReceiver</span><span class="op">&lt;</span><span class="ident">SubgraphId</span><span class="op">&gt;</span>,
+
+    <span class="ident">serde_graph</span>: <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="ident">SerdeGraph</span><span class="op">&gt;</span>,
 }
 <span class="kw">impl</span> <span class="ident">Default</span> <span class="kw">for</span> <span class="ident">Hydroflow</span> {
     <span class="kw">fn</span> <span class="ident">default</span>() -&gt; <span class="self">Self</span> {
@@ -572,6 +607,8 @@
             <span class="ident">stratum_queues</span>,
 
             <span class="ident">event_queue_recv</span>,
+
+            <span class="ident">serde_graph</span>: <span class="prelude-val">None</span>,
         }
     }
 }
@@ -579,6 +616,24 @@
     <span class="doccomment">/// Create a new empty Hydroflow graph.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new</span>() -&gt; <span class="self">Self</span> {
         <span class="ident">Default::default</span>()
+    }
+
+    <span class="doccomment">/// Create a new empty Hydroflow graph with the given serde_graph JSON string.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">new_with_graph</span>(<span class="ident">serde_graph</span>: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static</span> <span class="ident">str</span>) -&gt; <span class="self">Self</span> {
+        <span class="kw">let</span> <span class="kw-2">mut</span> <span class="ident">graph</span> <span class="op">=</span> <span class="ident"><span class="self">Self</span>::new</span>();
+        <span class="ident">graph</span>.<span class="ident">serde_graph</span> <span class="op">=</span> <span class="ident">serde_json::from_str</span>(<span class="ident">serde_graph</span>)
+            .<span class="ident">map_err</span>(<span class="op">|</span><span class="ident">e</span><span class="op">|</span> {
+                <span class="comment">// TODO: use .inspect_err() when stable.</span>
+                <span class="macro">eprintln!</span>(<span class="string">&quot;Failed to deserialize serde_graph {}&quot;</span>, <span class="ident">e</span>);
+                <span class="ident">e</span>
+            })
+            .<span class="ident">ok</span>();
+
+        <span class="ident">graph</span>
+    }
+
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">serde_graph</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">SerdeGraph</span><span class="op">&gt;</span> {
+        <span class="self">self</span>.<span class="ident">serde_graph</span>.<span class="ident">as_ref</span>()
     }
 
     <span class="doccomment">/// Returns a reactor for externally scheduling subgraphs, possibly from another thread.</span>
@@ -596,15 +651,24 @@
         <span class="self">self</span>.<span class="ident">context</span>.<span class="ident">current_stratum</span>
     }
 
+    <span class="doccomment">/// Runs the dataflow until the next epoch begins.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run_epoch</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
+        <span class="kw">let</span> <span class="ident">epoch</span> <span class="op">=</span> <span class="self">self</span>.<span class="ident">current_epoch</span>();
+        <span class="kw">while</span> <span class="self">self</span>.<span class="ident">next_stratum</span>() <span class="op">&amp;&amp;</span> <span class="ident">epoch</span> <span class="op">==</span> <span class="self">self</span>.<span class="ident">current_epoch</span>() {
+            <span class="self">self</span>.<span class="ident">run_stratum</span>();
+        }
+    }
+
     <span class="doccomment">/// Runs the dataflow until no more work is immediately available.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tick</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
+    <span class="doccomment">/// If the dataflow contains loops this method may run forever.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run_available</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="kw">while</span> <span class="self">self</span>.<span class="ident">next_stratum</span>() {
-            <span class="self">self</span>.<span class="ident">tick_stratum</span>();
+            <span class="self">self</span>.<span class="ident">run_stratum</span>();
         }
     }
 
     <span class="doccomment">/// Runs the current stratum of the dataflow until no more work is immediately available.</span>
-    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">tick_stratum</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run_stratum</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) {
         <span class="comment">// Add any external jobs to ready queue.</span>
         <span class="self">self</span>.<span class="ident">try_recv_events</span>();
 
@@ -615,8 +679,7 @@
                 <span class="macro">assert!</span>(<span class="ident">sg_data</span>.<span class="ident">is_scheduled</span>.<span class="ident">take</span>());
 
                 <span class="self">self</span>.<span class="ident">context</span>.<span class="ident">subgraph_id</span> <span class="op">=</span> <span class="ident">sg_id</span>;
-                <span class="kw">let</span> <span class="ident">context</span> <span class="op">=</span> <span class="kw-2">&amp;</span><span class="self">self</span>.<span class="ident">context</span>;
-                <span class="ident">sg_data</span>.<span class="ident">subgraph</span>.<span class="ident">run</span>(<span class="ident">context</span>);
+                <span class="ident">sg_data</span>.<span class="ident">subgraph</span>.<span class="ident">run</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">context</span>);
             }
 
             <span class="kw">for</span> <span class="kw-2">&amp;</span><span class="ident">handoff_id</span> <span class="kw">in</span> <span class="self">self</span>.<span class="ident">subgraphs</span>[<span class="ident">sg_id</span>.<span class="number">0</span>].<span class="ident">succs</span>.<span class="ident">iter</span>() {
@@ -664,22 +727,22 @@
         }
     }
 
-    <span class="doccomment">/// Run the dataflow graph to completion.</span>
+    <span class="doccomment">/// Runs the dataflow graph forever.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// TODO(mingwei): Currently blockes forever, no notion of &quot;completion.&quot;</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">run</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="op">!</span><span class="op">&gt;</span> {
         <span class="kw">loop</span> {
-            <span class="self">self</span>.<span class="ident">tick</span>();
+            <span class="self">self</span>.<span class="ident">run_epoch</span>();
             <span class="self">self</span>.<span class="ident">recv_events</span>()<span class="question-mark">?</span>;
         }
     }
 
-    <span class="doccomment">/// Run the dataflow graph to completion asynchronously</span>
+    <span class="doccomment">/// Runs the dataflow graph forever.</span>
     <span class="doccomment">///</span>
     <span class="doccomment">/// TODO(mingwei): Currently blockes forever, no notion of &quot;completion.&quot;</span>
     <span class="kw">pub</span> <span class="kw">async</span> <span class="kw">fn</span> <span class="ident">run_async</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span><span class="op">&lt;</span><span class="op">!</span><span class="op">&gt;</span> {
         <span class="kw">loop</span> {
-            <span class="self">self</span>.<span class="ident">tick</span>();
+            <span class="self">self</span>.<span class="ident">run_epoch</span>();
             <span class="self">self</span>.<span class="ident">recv_events_async</span>().<span class="kw">await</span><span class="question-mark">?</span>;
             <span class="ident">tokio::task::yield_now</span>().<span class="kw">await</span>;
         }
@@ -779,7 +842,7 @@
             <span class="kw-2">&amp;mut</span> <span class="ident">subgraph_succs</span>,
         );
 
-        <span class="kw">let</span> <span class="ident">subgraph</span> <span class="op">=</span> <span class="kw">move</span> <span class="op">|</span><span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span><span class="op">|</span> {
+        <span class="kw">let</span> <span class="ident">subgraph</span> <span class="op">=</span> <span class="kw">move</span> <span class="op">|</span><span class="ident">context</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Context</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">recv</span> <span class="op">=</span> <span class="ident">recv_ports</span>.<span class="ident">make_ctx</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">context</span>.<span class="ident">handoffs</span>);
             <span class="kw">let</span> <span class="ident">send</span> <span class="op">=</span> <span class="ident">send_ports</span>.<span class="ident">make_ctx</span>(<span class="kw-2">&amp;</span><span class="kw-2">*</span><span class="ident">context</span>.<span class="ident">handoffs</span>);
             (<span class="ident">subgraph</span>)(<span class="ident">context</span>, <span class="ident">recv</span>, <span class="ident">send</span>);
@@ -849,7 +912,7 @@
                 .<span class="ident">push</span>(<span class="ident">sg_id</span>);
         }
 
-        <span class="kw">let</span> <span class="ident">subgraph</span> <span class="op">=</span> <span class="kw">move</span> <span class="op">|</span><span class="ident">context</span>: <span class="kw-2">&amp;</span><span class="ident">Context</span><span class="op">|</span> {
+        <span class="kw">let</span> <span class="ident">subgraph</span> <span class="op">=</span> <span class="kw">move</span> <span class="op">|</span><span class="ident">context</span>: <span class="kw-2">&amp;mut</span> <span class="ident">Context</span><span class="op">|</span> {
             <span class="kw">let</span> <span class="ident">recvs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="kw-2">&amp;</span><span class="ident">RecvCtx</span><span class="op">&lt;</span><span class="ident">R</span><span class="op">&gt;</span><span class="op">&gt;</span> <span class="op">=</span> <span class="ident">recv_ports</span>
                 .<span class="ident">iter</span>()
                 .<span class="ident">map</span>(<span class="op">|</span><span class="ident">hid</span><span class="op">|</span> <span class="ident">hid</span>.<span class="ident">handoff_id</span>)
@@ -933,17 +996,17 @@
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">Any</span>,
     {
-        <span class="kw">let</span> <span class="ident">state_id</span> <span class="op">=</span> <span class="ident">StateId</span>(<span class="self">self</span>.<span class="ident">context</span>.<span class="ident">states</span>.<span class="ident">len</span>());
+        <span class="self">self</span>.<span class="ident">context</span>.<span class="ident">add_state</span>(<span class="ident">state</span>)
+    }
 
-        <span class="kw">let</span> <span class="ident">state_data</span> <span class="op">=</span> <span class="ident">StateData</span> {
-            <span class="ident">state</span>: <span class="ident">Box::new</span>(<span class="ident">state</span>),
-        };
-        <span class="self">self</span>.<span class="ident">context</span>.<span class="ident">states</span>.<span class="ident">push</span>(<span class="ident">state_data</span>);
+    <span class="doccomment">/// Gets a exclusive (mut) ref to the internal context, setting the subgraph ID.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">context_mut</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">sg_id</span>: <span class="ident">SubgraphId</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">Context</span> {
+        <span class="self">self</span>.<span class="ident">context</span>.<span class="ident">subgraph_id</span> <span class="op">=</span> <span class="ident">sg_id</span>;
+        <span class="kw-2">&amp;mut</span> <span class="self">self</span>.<span class="ident">context</span>
+    }
 
-        <span class="ident">StateHandle</span> {
-            <span class="ident">state_id</span>,
-            <span class="ident">_phantom</span>: <span class="ident">PhantomData</span>,
-        }
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">fn</span> <span class="ident">next_subgraph_id</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">SubgraphId</span> {
+        <span class="ident">SubgraphId</span>(<span class="self">self</span>.<span class="ident">subgraphs</span>.<span class="ident">len</span>())
     }
 
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_dependencies</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">sg_id</span>: <span class="ident">SubgraphId</span>, <span class="ident">deps</span>: <span class="ident">FlowGraph</span>) {
@@ -1036,5 +1099,5 @@
     <span class="kw">pub</span> <span class="ident">state</span>: <span class="ident">Box</span><span class="op">&lt;</span><span class="kw">dyn</span> <span class="ident">Any</span><span class="op">&gt;</span>,
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (a5ad0d29a 2022-05-12)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (9067d5277 2022-07-28)" ></div>
 </body></html>

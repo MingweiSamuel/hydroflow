@@ -1,9 +1,10 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow/src/scheduled/context.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>context.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script src="../../../crates.js"></script><script defer src="../../../main.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script>
-    <noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../hydroflow/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow/src/scheduled/context.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>context.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" type="text/css" href="../../../normalize.css"><link rel="stylesheet" type="text/css" href="../../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" type="text/css" href="../../../ayu.css" disabled><link rel="stylesheet" type="text/css" href="../../../dark.css" disabled><link rel="stylesheet" type="text/css" href="../../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../../storage.js"></script><script defer src="../../../source-script.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../main.js"></script><noscript><link rel="stylesheet" href="../../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="mobile-topbar"><button class="sidebar-menu-toggle">&#9776;</button><a class="sidebar-logo" href="../../../hydroflow/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
         </a><h2 class="location"></h2>
     </nav>
     <nav class="sidebar"><a class="sidebar-logo" href="../../../hydroflow/index.html"><div class="logo-container"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></div>
-        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../hydroflow/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><div class="theme-picker hidden"><button id="theme-picker" aria-label="Pick another theme!" aria-haspopup="menu" title="themes"><img width="22" height="22" alt="Pick another theme!" src="../../../brush.svg"></button><div id="theme-choices" role="menu"></div></div><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><button type="button" id="help-button" title="help">?</button><a id="settings-menu" href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
+        </a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../../hydroflow/index.html"><img class="rust-logo" src="../../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><button type="button">?</button></div><div id="settings-menu" tabindex="-1">
+                                <a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../wheel.svg"></a></div>
+                        </div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -90,15 +91,38 @@
 <span id="85">85</span>
 <span id="86">86</span>
 <span id="87">87</span>
-</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std::any::Any</span>;
+<span id="88">88</span>
+<span id="89">89</span>
+<span id="90">90</span>
+<span id="91">91</span>
+<span id="92">92</span>
+<span id="93">93</span>
+<span id="94">94</span>
+<span id="95">95</span>
+<span id="96">96</span>
+<span id="97">97</span>
+<span id="98">98</span>
+<span id="99">99</span>
+<span id="100">100</span>
+<span id="101">101</span>
+<span id="102">102</span>
+<span id="103">103</span>
+<span id="104">104</span>
+<span id="105">105</span>
+<span id="106">106</span>
+<span id="107">107</span>
+<span id="108">108</span>
+<span id="109">109</span>
+<span id="110">110</span>
+<span id="111">111</span>
+<span id="112">112</span>
+</pre><pre class="rust"><code><span class="kw">use</span> <span class="ident">std</span>::{<span class="ident">any::Any</span>, <span class="ident">marker::PhantomData</span>};
 
 <span class="kw">use</span> <span class="ident">tokio::sync::mpsc::UnboundedSender</span>;
 
-<span class="kw">use</span> <span class="kw">super</span>::{
-    <span class="ident">graph</span>::{<span class="ident">HandoffData</span>, <span class="ident">StateData</span>},
-    <span class="ident">state::StateHandle</span>,
-    <span class="ident">SubgraphId</span>,
-};
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::graph</span>::{<span class="ident">HandoffData</span>, <span class="ident">StateData</span>};
+<span class="kw">use</span> <span class="ident"><span class="kw">super</span>::state::StateHandle</span>;
+<span class="kw">use</span> <span class="kw">super</span>::{<span class="ident">StateId</span>, <span class="ident">SubgraphId</span>};
 
 <span class="doccomment">/// The main state of the Hydroflow instance, which is provided as a reference</span>
 <span class="doccomment">/// to each operator as it is run.</span>
@@ -111,7 +135,8 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">handoffs</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">HandoffData</span><span class="op">&gt;</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">states</span>: <span class="ident">Vec</span><span class="op">&lt;</span><span class="ident">StateData</span><span class="op">&gt;</span>,
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">event_queue_send</span>: <span class="ident">UnboundedSender</span><span class="op">&lt;</span><span class="ident">SubgraphId</span><span class="op">&gt;</span>, <span class="comment">// TODO(mingwei) remove this, to prevent hanging.</span>
+    <span class="comment">// TODO(mingwei): as long as this is here, it&#39;s impossible to know when all work is done.</span>
+    <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">event_queue_send</span>: <span class="ident">UnboundedSender</span><span class="op">&lt;</span><span class="ident">SubgraphId</span><span class="op">&gt;</span>,
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">current_epoch</span>: <span class="ident">usize</span>,
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">current_stratum</span>: <span class="ident">usize</span>,
@@ -122,16 +147,22 @@
     <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="ident">subgraph_id</span>: <span class="ident">SubgraphId</span>,
 }
 <span class="kw">impl</span> <span class="ident">Context</span> {
-    <span class="comment">// Gets the current epoch (local time) count.</span>
+    <span class="doccomment">/// Gets the current epoch (local time) count.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">current_epoch</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
         <span class="self">self</span>.<span class="ident">current_epoch</span>
     }
 
-    <span class="comment">// Gets the current stratum nubmer.</span>
+    <span class="doccomment">/// Gets the current stratum nubmer.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">current_stratum</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">usize</span> {
         <span class="self">self</span>.<span class="ident">current_stratum</span>
     }
 
+    <span class="doccomment">/// Schedules a subgraph.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">schedule_subgraph</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">sg_id</span>: <span class="ident">SubgraphId</span>) {
+        <span class="self">self</span>.<span class="ident">event_queue_send</span>.<span class="ident">send</span>(<span class="ident">sg_id</span>).<span class="ident">unwrap</span>()
+    }
+
+    <span class="doccomment">/// Returns a `Waker` for interacting with async Rust.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">waker</span>(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="ident">std::task::Waker</span> {
         <span class="kw">use</span> <span class="ident">futures::task::ArcWake</span>;
         <span class="kw">use</span> <span class="ident">std::sync::Arc</span>;
@@ -142,7 +173,7 @@
         }
         <span class="kw">impl</span> <span class="ident">ArcWake</span> <span class="kw">for</span> <span class="ident">ContextWaker</span> {
             <span class="kw">fn</span> <span class="ident">wake_by_ref</span>(<span class="ident">arc_self</span>: <span class="kw-2">&amp;</span><span class="ident">Arc</span><span class="op">&lt;</span><span class="self">Self</span><span class="op">&gt;</span>) {
-                <span class="ident">arc_self</span>.<span class="ident">event_queue_send</span>.<span class="ident">send</span>(<span class="ident">arc_self</span>.<span class="ident">subgraph_id</span>).<span class="ident">unwrap</span>(<span class="comment">/* TODO(mingwei) */</span>);
+                <span class="kw">let</span> <span class="ident">_recv_closed_error</span> <span class="op">=</span> <span class="ident">arc_self</span>.<span class="ident">event_queue_send</span>.<span class="ident">send</span>(<span class="ident">arc_self</span>.<span class="ident">subgraph_id</span>);
             }
         }
 
@@ -153,6 +184,7 @@
         <span class="ident">futures::task::waker</span>(<span class="ident">Arc::new</span>(<span class="ident">context_waker</span>))
     }
 
+    <span class="doccomment">/// Returns a shared reference to the state.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">state_ref</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;</span><span class="self">self</span>, <span class="ident">handle</span>: <span class="ident">StateHandle</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) -&gt; <span class="kw-2">&amp;</span><span class="ident">T</span>
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">Any</span>,
@@ -165,6 +197,7 @@
             .<span class="ident">expect</span>(<span class="string">&quot;StateHandle wrong type T for casting.&quot;</span>)
     }
 
+    <span class="doccomment">/// Returns an exclusive reference to the state.</span>
     <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">state_mut</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">handle</span>: <span class="ident">StateHandle</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>) -&gt; <span class="kw-2">&amp;mut</span> <span class="ident">T</span>
     <span class="kw">where</span>
         <span class="ident">T</span>: <span class="ident">Any</span>,
@@ -176,7 +209,25 @@
             .<span class="ident">downcast_mut</span>()
             .<span class="ident">expect</span>(<span class="string">&quot;StateHandle wrong type T for casting.&quot;</span>)
     }
+
+    <span class="doccomment">/// Adds state to the context and returns the handle.</span>
+    <span class="kw">pub</span> <span class="kw">fn</span> <span class="ident">add_state</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>(<span class="kw-2">&amp;mut</span> <span class="self">self</span>, <span class="ident">state</span>: <span class="ident">T</span>) -&gt; <span class="ident">StateHandle</span><span class="op">&lt;</span><span class="ident">T</span><span class="op">&gt;</span>
+    <span class="kw">where</span>
+        <span class="ident">T</span>: <span class="ident">Any</span>,
+    {
+        <span class="kw">let</span> <span class="ident">state_id</span> <span class="op">=</span> <span class="ident">StateId</span>(<span class="self">self</span>.<span class="ident">states</span>.<span class="ident">len</span>());
+
+        <span class="kw">let</span> <span class="ident">state_data</span> <span class="op">=</span> <span class="ident">StateData</span> {
+            <span class="ident">state</span>: <span class="ident">Box::new</span>(<span class="ident">state</span>),
+        };
+        <span class="self">self</span>.<span class="ident">states</span>.<span class="ident">push</span>(<span class="ident">state_data</span>);
+
+        <span class="ident">StateHandle</span> {
+            <span class="ident">state_id</span>,
+            <span class="ident">_phantom</span>: <span class="ident">PhantomData</span>,
+        }
+    }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.62.0-nightly (a5ad0d29a 2022-05-12)" ></div>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.64.0-nightly (9067d5277 2022-07-28)" ></div>
 </body></html>
