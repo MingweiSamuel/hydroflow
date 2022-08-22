@@ -406,12 +406,12 @@
         hard_range_out: RANGE_1,
         soft_range_out: RANGE_1,
         num_args: <span class="number">0</span>,
-        write_prologue_fn: <span class="kw-2">&amp;</span>(|<span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">quote!</span> {}),
+        write_prologue_fn: <span class="kw-2">&amp;</span>(|<span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">quote! </span>{}),
         write_iterator_fn: <span class="kw-2">&amp;</span>(|<span class="kw">_</span>, <span class="kw-2">&amp;</span>WriteIteratorArgs { inputs, .. }| {
             <span class="kw">let </span><span class="kw-2">mut </span>inputs = inputs.iter();
             <span class="kw">let </span>first = inputs.next();
-            <span class="kw">let </span>rest = inputs.map(|ident| <span class="macro">quote!</span> { .chain(#ident) });
-            <span class="macro">quote!</span> {
+            <span class="kw">let </span>rest = inputs.map(|ident| <span class="macro">quote! </span>{ .chain(#ident) });
+            <span class="macro">quote! </span>{
                 #first #( #rest )*
             }
         }),
@@ -438,7 +438,7 @@
                 ),
                 Span::call_site(),
             );
-            <span class="macro">quote!</span> {
+            <span class="macro">quote! </span>{
                 <span class="kw">let </span><span class="kw-2">mut </span>#joindata_ident = Default::default();
             }
         }),
@@ -459,7 +459,7 @@
             );
             <span class="kw">let </span>lhs = <span class="kw-2">&amp;</span>inputs[<span class="number">0</span>];
             <span class="kw">let </span>rhs = <span class="kw-2">&amp;</span>inputs[<span class="number">1</span>];
-            <span class="macro">quote!</span> {
+            <span class="macro">quote! </span>{
                 #root::compiled::pull::SymmetricHashJoin::new(#lhs, #rhs, <span class="kw-2">&amp;mut </span>#joindata_ident)
             }
         }),
@@ -471,14 +471,14 @@
         hard_range_out: <span class="kw-2">&amp;</span>(<span class="number">0</span>..),
         soft_range_out: <span class="kw-2">&amp;</span>(<span class="number">2</span>..),
         num_args: <span class="number">0</span>,
-        write_prologue_fn: <span class="kw-2">&amp;</span>(|<span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">quote!</span> {}),
+        write_prologue_fn: <span class="kw-2">&amp;</span>(|<span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">quote! </span>{}),
         write_iterator_fn: <span class="kw-2">&amp;</span>(|<span class="kw-2">&amp;</span>WriteContextArgs { root, .. },
                               <span class="kw-2">&amp;</span>WriteIteratorArgs { outputs, .. }| {
             outputs
                 .iter()
                 .rev()
-                .map(|i| <span class="macro">quote!</span> { #i })
-                .reduce(|b, a| <span class="macro">quote!</span> { #root::compiled::tee::Tee::new(#a, #b) })
+                .map(|i| <span class="macro">quote! </span>{ #i })
+                .reduce(|b, a| <span class="macro">quote! </span>{ #root::compiled::tee::Tee::new(#a, #b) })
                 .unwrap_or_default()
         }),
     },
@@ -489,7 +489,7 @@
         hard_range_out: RANGE_1,
         soft_range_out: RANGE_1,
         num_args: <span class="number">1</span>,
-        write_prologue_fn: <span class="kw-2">&amp;</span>(|<span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">quote!</span> {}),
+        write_prologue_fn: <span class="kw-2">&amp;</span>(|<span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">quote! </span>{}),
         write_iterator_fn: <span class="kw-2">&amp;</span>(|<span class="kw-2">&amp;</span>WriteContextArgs { root, .. },
                               <span class="kw-2">&amp;</span>WriteIteratorArgs {
                                   inputs,
@@ -500,10 +500,10 @@
                               }| {
             <span class="kw">if </span>is_pull {
                 <span class="kw">let </span>input = <span class="kw-2">&amp;</span>inputs[<span class="number">0</span>];
-                <span class="macro">quote!</span> { #input.map(#arguments) }
+                <span class="macro">quote! </span>{ #input.map(#arguments) }
             } <span class="kw">else </span>{
                 <span class="kw">let </span>output = <span class="kw-2">&amp;</span>outputs[<span class="number">0</span>];
-                <span class="macro">quote!</span> { #root::compiled::map::Map::new(#arguments, #output) }
+                <span class="macro">quote! </span>{ #root::compiled::map::Map::new(#arguments, #output) }
             }
         }),
     },
@@ -514,7 +514,7 @@
         hard_range_out: RANGE_1,
         soft_range_out: RANGE_1,
         num_args: <span class="number">1</span>,
-        write_prologue_fn: <span class="kw-2">&amp;</span>(|<span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">quote!</span> {}),
+        write_prologue_fn: <span class="kw-2">&amp;</span>(|<span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">quote! </span>{}),
         write_iterator_fn: <span class="kw-2">&amp;</span>(|<span class="kw-2">&amp;</span>WriteContextArgs { root, .. },
                               <span class="kw-2">&amp;</span>WriteIteratorArgs {
                                   inputs,
@@ -525,10 +525,10 @@
                               }| {
             <span class="kw">if </span>is_pull {
                 <span class="kw">let </span>input = <span class="kw-2">&amp;</span>inputs[<span class="number">0</span>];
-                <span class="macro">quote!</span> { #input.flat_map(#arguments) }
+                <span class="macro">quote! </span>{ #input.flat_map(#arguments) }
             } <span class="kw">else </span>{
                 <span class="kw">let </span>output = <span class="kw-2">&amp;</span>outputs[<span class="number">0</span>];
-                <span class="macro">quote!</span> { #root::compiled::flat_map::FlatMap::new(#arguments, #output) }
+                <span class="macro">quote! </span>{ #root::compiled::flat_map::FlatMap::new(#arguments, #output) }
             }
         }),
     },
@@ -539,7 +539,7 @@
         hard_range_out: RANGE_1,
         soft_range_out: RANGE_1,
         num_args: <span class="number">1</span>,
-        write_prologue_fn: <span class="kw-2">&amp;</span>(|<span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">quote!</span> {}),
+        write_prologue_fn: <span class="kw-2">&amp;</span>(|<span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">quote! </span>{}),
         write_iterator_fn: <span class="kw-2">&amp;</span>(|<span class="kw-2">&amp;</span>WriteContextArgs { root, .. },
                               <span class="kw-2">&amp;</span>WriteIteratorArgs {
                                   inputs,
@@ -550,10 +550,10 @@
                               }| {
             <span class="kw">if </span>is_pull {
                 <span class="kw">let </span>input = <span class="kw-2">&amp;</span>inputs[<span class="number">0</span>];
-                <span class="macro">quote!</span> { #input.filter_map(#arguments) }
+                <span class="macro">quote! </span>{ #input.filter_map(#arguments) }
             } <span class="kw">else </span>{
                 <span class="kw">let </span>output = <span class="kw-2">&amp;</span>outputs[<span class="number">0</span>];
-                <span class="macro">quote!</span> { #root::compiled::filter_map::FilterMap::new(#arguments, #output) }
+                <span class="macro">quote! </span>{ #root::compiled::filter_map::FilterMap::new(#arguments, #output) }
             }
         }),
     },
@@ -564,7 +564,7 @@
         hard_range_out: RANGE_1,
         soft_range_out: RANGE_1,
         num_args: <span class="number">1</span>,
-        write_prologue_fn: <span class="kw-2">&amp;</span>(|<span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">quote!</span> {}),
+        write_prologue_fn: <span class="kw-2">&amp;</span>(|<span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">quote! </span>{}),
         write_iterator_fn: <span class="kw-2">&amp;</span>(|<span class="kw-2">&amp;</span>WriteContextArgs { root, .. },
                               <span class="kw-2">&amp;</span>WriteIteratorArgs {
                                   inputs,
@@ -575,10 +575,10 @@
                               }| {
             <span class="kw">if </span>is_pull {
                 <span class="kw">let </span>input = <span class="kw-2">&amp;</span>inputs[<span class="number">0</span>];
-                <span class="macro">quote!</span> { #input.filter(#arguments) }
+                <span class="macro">quote! </span>{ #input.filter(#arguments) }
             } <span class="kw">else </span>{
                 <span class="kw">let </span>output = <span class="kw-2">&amp;</span>outputs[<span class="number">0</span>];
-                <span class="macro">quote!</span> { #root::compiled::filter::Filter::new(#arguments, #output) }
+                <span class="macro">quote! </span>{ #root::compiled::filter::Filter::new(#arguments, #output) }
             }
         }),
     },
@@ -605,13 +605,13 @@
         num_args: <span class="number">1</span>,
         write_prologue_fn: <span class="kw-2">&amp;</span>(|<span class="kw">_</span>, <span class="kw-2">&amp;</span>WriteIteratorArgs { arguments, .. }| {
             <span class="kw">let </span>receiver = <span class="kw-2">&amp;</span>arguments[<span class="number">0</span>];
-            <span class="macro">quote!</span> {
+            <span class="macro">quote! </span>{
                 <span class="kw">let </span><span class="kw-2">mut </span>#receiver = #receiver;
             }
         }),
         write_iterator_fn: <span class="kw-2">&amp;</span>(|<span class="kw">_</span>, <span class="kw-2">&amp;</span>WriteIteratorArgs { arguments, .. }| {
             <span class="kw">let </span>receiver = <span class="kw-2">&amp;</span>arguments[<span class="number">0</span>];
-            <span class="macro">quote!</span> {
+            <span class="macro">quote! </span>{
                 {
                     std::iter::from_fn(|| {
                         <span class="kw">match </span>#receiver.poll_recv(<span class="kw-2">&amp;mut </span>std::task::Context::from_waker(<span class="kw-2">&amp;mut </span>context.waker())) {
@@ -630,9 +630,9 @@
         hard_range_out: RANGE_1,
         soft_range_out: RANGE_1,
         num_args: <span class="number">1</span>,
-        write_prologue_fn: <span class="kw-2">&amp;</span>(|<span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">quote!</span> {}),
+        write_prologue_fn: <span class="kw-2">&amp;</span>(|<span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">quote! </span>{}),
         write_iterator_fn: <span class="kw-2">&amp;</span>(|<span class="kw">_</span>, <span class="kw-2">&amp;</span>WriteIteratorArgs { arguments, .. }| {
-            <span class="macro">quote!</span> { std::iter::IntoIterator::into_iter(#arguments) }
+            <span class="macro">quote! </span>{ std::iter::IntoIterator::into_iter(#arguments) }
         }),
     },
     OperatorConstraints {
@@ -642,10 +642,10 @@
         hard_range_out: RANGE_0,
         soft_range_out: RANGE_0,
         num_args: <span class="number">1</span>,
-        write_prologue_fn: <span class="kw-2">&amp;</span>(|<span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">quote!</span> {}),
+        write_prologue_fn: <span class="kw-2">&amp;</span>(|<span class="kw">_</span>, <span class="kw">_</span>| <span class="macro">quote! </span>{}),
         write_iterator_fn: <span class="kw-2">&amp;</span>(|<span class="kw-2">&amp;</span>WriteContextArgs { root, .. },
                               <span class="kw-2">&amp;</span>WriteIteratorArgs { arguments, .. }| {
-            <span class="macro">quote!</span> { #root::compiled::for_each::ForEach::new(#arguments) }
+            <span class="macro">quote! </span>{ #root::compiled::for_each::ForEach::new(#arguments) }
         }),
     },
 ];
@@ -725,4 +725,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="hydroflow_lang" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../../" data-current-crate="hydroflow_lang" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>

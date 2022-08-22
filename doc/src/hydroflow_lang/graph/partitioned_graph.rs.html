@@ -279,8 +279,8 @@
 <span class="kw">use </span><span class="kw">super</span>::serde_graph::SerdeGraph;
 <span class="kw">use super</span>::{node_color, Color, EdgePortRef, GraphNodeId, GraphSubgraphId, Node, OutboundEdges};
 
-<span class="attribute">#[derive(Default)]</span>
-<span class="attribute">#[allow(dead_code)]</span> <span class="comment">// TODO(mingwei): remove when no longer needed.
+<span class="attribute">#[derive(Default)]
+#[allow(dead_code)] </span><span class="comment">// TODO(mingwei): remove when no longer needed.
 </span><span class="kw">pub struct </span>PartitionedGraph {
     <span class="kw">pub</span>(<span class="kw">crate</span>) nodes: SlotMap&lt;GraphNodeId, Node&gt;,
     <span class="kw">pub</span>(<span class="kw">crate</span>) preds: SecondaryMap&lt;GraphNodeId, OutboundEdges&gt;,
@@ -341,7 +341,7 @@
                     Span::call_site(),
                 );
                 <span class="kw">let </span>hoff_name = Literal::string(<span class="kw-2">&amp;*</span><span class="macro">format!</span>(<span class="string">&quot;handoff {:?}&quot;</span>, node_id));
-                <span class="macro">quote!</span> {
+                <span class="macro">quote! </span>{
                     <span class="kw">let </span>(#ident_send, #ident_recv) =
                         df.make_edge::&lt;<span class="kw">_</span>, #root::scheduled::handoff::VecHandoff&lt;<span class="kw">_</span>&gt;&gt;(#hoff_name);
                 }
@@ -362,9 +362,9 @@
 
                 <span class="kw">let </span>recv_port_code = recv_ports
                     .iter()
-                    .map(|ident| <span class="macro">quote!</span> { <span class="kw">let </span>#ident = #ident.take_inner().into_iter(); });
+                    .map(|ident| <span class="macro">quote! </span>{ <span class="kw">let </span>#ident = #ident.take_inner().into_iter(); });
                 <span class="kw">let </span>send_port_code = send_ports.iter().map(|ident| {
-                    <span class="macro">quote!</span> {
+                    <span class="macro">quote! </span>{
                         <span class="kw">let </span>#ident = #root::compiled::for_each::ForEach::new(|v| {
                             #ident.give(<span class="prelude-val">Some</span>(v));
                         });
@@ -439,7 +439,7 @@
                             <span class="kw">let </span>iter_code =
                                 (op_constraints.write_iterator_fn)(<span class="kw-2">&amp;</span>context_args, <span class="kw-2">&amp;</span>iter_args);
 
-                            subgraph_op_iter_code.push(<span class="macro">quote!</span> {
+                            subgraph_op_iter_code.push(<span class="macro">quote! </span>{
                                 <span class="kw">let </span>#ident = #iter_code;
                             });
                         }
@@ -451,14 +451,14 @@
                             <span class="self">self</span>.node_id_as_ident(subgraph_nodes[pull_to_push_idx - <span class="number">1</span>], <span class="bool-val">false</span>);
                         <span class="kw">let </span>push_ident =
                             <span class="self">self</span>.node_id_as_ident(subgraph_nodes[pull_to_push_idx], <span class="bool-val">false</span>);
-                        subgraph_op_iter_code.push(<span class="macro">quote!</span> {
+                        subgraph_op_iter_code.push(<span class="macro">quote! </span>{
                             #root::compiled::pivot::Pivot::new(#pull_ident, #push_ident).run();
                         });
                     }
                 };
 
                 <span class="kw">let </span>hoff_name = Literal::string(<span class="kw-2">&amp;*</span><span class="macro">format!</span>(<span class="string">&quot;Subgraph {:?}&quot;</span>, subgraph_id));
-                <span class="macro">quote!</span> {
+                <span class="macro">quote! </span>{
                     #( #op_prologue_code )*
 
                     df.add_subgraph(
@@ -475,7 +475,7 @@
             });
 
         <span class="kw">let </span>serde_string = Literal::string(<span class="kw-2">&amp;*</span><span class="self">self</span>.serde_string());
-        <span class="macro">quote!</span> {
+        <span class="macro">quote! </span>{
             {
                 <span class="kw">use </span>#root::tl;
 
@@ -541,4 +541,4 @@
     }
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow_lang" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (878aef79d 2022-08-20)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../../" data-current-crate="hydroflow_lang" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.65.0-nightly (c0941dfb5 2022-08-21)" ></div></body></html>
