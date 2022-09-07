@@ -1,6 +1,6 @@
 window.BENCHMARK_DATA = 
 {
-  "lastUpdate": 1662441685180,
+  "lastUpdate": 1662528337992,
   "repoUrl": "https://github.com/MingweiSamuel/hydroflow",
   "entries": {
     "Benchmark": [
@@ -18428,6 +18428,82 @@ window.BENCHMARK_DATA =
             "name": "reachability/hydroflow",
             "value": 2602597,
             "range": "± 3064",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Joe Hellerstein",
+            "username": "jhellerstein",
+            "email": "jmh@berkeley.edu"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "700268234d110c228c5e89c489ef698840863066",
+          "message": "initial docs on surface syntax (#163)\n\n* clean up transitive closure test\r\n\r\n* simplify the join\r\n\r\n* SerdeGraph: serialize in parser, deserialize and plot in clients\r\n\r\n* lint and tests\r\n\r\n* code review cleanup\r\n\r\n* initial surface syntax docs\r\n\r\n* fix to_mermaid() calls",
+          "timestamp": "2022-07-28T21:47:37Z",
+          "url": "https://github.com/MingweiSamuel/hydroflow/commit/700268234d110c228c5e89c489ef698840863066"
+        },
+        "date": 1662528337985,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "arithmetic/hydroflow/compiled",
+            "value": 364333,
+            "range": "± 16639",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/hydroflow",
+            "value": 164017820,
+            "range": "± 13191228",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/scheduled",
+            "value": 105835322,
+            "range": "± 6870240",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow",
+            "value": 14241610,
+            "range": "± 689321",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow_builder",
+            "value": 33771038,
+            "range": "± 1522790",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow",
+            "value": 51155436,
+            "range": "± 2838724",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow/compiled",
+            "value": 19023050,
+            "range": "± 963855",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/scheduled",
+            "value": 3215789,
+            "range": "± 146847",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow",
+            "value": 3107066,
+            "range": "± 152294",
             "unit": "ns/iter"
           }
         ]
