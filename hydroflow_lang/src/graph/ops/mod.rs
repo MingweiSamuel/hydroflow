@@ -69,7 +69,7 @@ const IDENTITY_WRITE_ITERATOR_FN: &'static dyn Fn(
     }
 });
 
-pub const OPERATORS: [OperatorConstraints; 20] = [
+pub const OPERATORS: [OperatorConstraints; 21] = [
     OperatorConstraints {
         name: "null",
         hard_range_inn: RANGE_ANY,
@@ -201,6 +201,37 @@ pub const OPERATORS: [OperatorConstraints; 20] = [
         input_delaytype_fn: &|_| None,
         write_prologue_fn: &(|_, _| quote! {}),
         write_iterator_fn: IDENTITY_WRITE_ITERATOR_FN,
+    },
+    OperatorConstraints {
+        name: "inspect",
+        hard_range_inn: RANGE_1,
+        soft_range_inn: RANGE_1,
+        hard_range_out: RANGE_1,
+        soft_range_out: RANGE_1,
+        num_args: 1,
+        input_delaytype_fn: &|_| None,
+        write_prologue_fn: &(|_, _| quote! {}),
+        write_iterator_fn: &(|&WriteContextArgs { root, ident, .. },
+                              &WriteIteratorArgs {
+                                  inputs,
+                                  outputs,
+                                  arguments,
+                                  is_pull,
+                                  ..
+                              }| {
+            let arg = &arguments[0];
+            if is_pull {
+                let input = &inputs[0];
+                quote! {
+                    let #ident = #input.inspect(#arg);
+                }
+            } else {
+                let output = &outputs[0];
+                quote! {
+                    let #ident = #root::pusherator::map::Map::new(|x| { (#arg)(x); x }, #output);
+                }
+            }
+        }),
     },
     OperatorConstraints {
         name: "map",
