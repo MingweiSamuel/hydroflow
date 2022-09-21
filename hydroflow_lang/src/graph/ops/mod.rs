@@ -11,7 +11,11 @@ use super::{GraphNodeId, GraphSubgraphId};
 
 #[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Debug)]
 pub enum DelayType {
+    // Operator input must cross a handoff.
+    Handoff,
+    // Operator input must be for a complete stratum.
     Stratum,
+    // Operator input must be for a complete epoch.
     Epoch,
 }
 
@@ -541,35 +545,66 @@ pub const OPERATORS: [OperatorConstraints; 20] = [
         hard_range_out: RANGE_0,
         soft_range_out: RANGE_0,
         num_args: 1,
-        input_delaytype_fn: &|_| None,
+        input_delaytype_fn: &|_| Some(DelayType::Handoff),
         write_prologue_fn: &(|wc @ &WriteContextArgs { root, .. },
                               &WriteIteratorArgs { arguments, .. }| {
-            let async_write_arg = &arguments[0];
+            // let async_write_arg = &arguments[0];
 
-            let send_ident = wc.make_ident("item_send");
-            let recv_ident = wc.make_ident("item_recv");
+            // let send_ident = wc.make_ident("item_send");
+            // let recv_ident = wc.make_ident("item_recv");
 
+            // TODO(mingwei): use state API.
+            let buffer = wc.make_ident("buffer");
+            let future = wc.make_ident("future");
             quote! {
-                let (#send_ident, #recv_ident) = #root::tokio::sync::mpsc::unbounded_channel();
-                df.tokio_worker().spawn(async move {
-                    use #root::tokio::io::AsyncWriteExt;
+                let mut #buffer: std::collections::VecDeque<_> = Default::default();
+                let mut #future: Option<#root::tokio::io::write_all::WriteAll<_, _>> = None;
+                // let (#send_ident, #recv_ident) = #root::tokio::sync::mpsc::unbounded_channel();
+                // df.tokio_worker().spawn(async move {
+                //     use #root::tokio::io::AsyncWriteExt;
 
-                    let mut recv = #recv_ident;
-                    let mut write = #async_write_arg;
-                    while let Some(item) = recv.recv().await {
-                        let bytes = std::convert::AsRef::<[u8]>::as_ref(&item);
-                        write.write_all(bytes).await.expect("Error processing async write item.");
+                //     let mut recv = #recv_ident;
+                //     let mut write = #async_write_arg;
+                //     while let Some(item) = recv.recv().await {
+                //         let bytes = std::convert::AsRef::<[u8]>::as_ref(&item);
+                //         write.write_all(bytes).await.expect("Error processing async write item.");
+                //     }
+                // });
+            }
+        }),
+        write_iterator_fn: &(|wc @ &WriteContextArgs { root, ident, .. },
+                              &WriteIteratorArgs { arguments, .. }| {
+            let buffer = wc.make_ident("buffer");
+            let future = wc.make_ident("future");
+            let async_write_arg = &arguments[0];
+            quote! {
+                let #ident = #root::pusherator::for_each::ForEach::new(|item| {
+                    #buffer.push_back(item);
+
+                    while let Some(fut) = &mut #future {
+                        match std::future::Future::poll(std::pin::Pin::new(fut), &mut std::task::Context::from_waker(&context.waker())) {
+                            std::task::Poll::Ready(Ok(())) => {
+                                #future = #buffer.pop_front()
+                                    .map(|next_item| #root::tokio::io::AsyncWriteExt::write_all(
+                                        &mut #async_write_arg,
+                                        std::convert::AsRef<[u8]>::as_ref(next_item)
+                                    ));
+                            }
+                            std::task::Poll::Ready(Err(io_err)) => panic!("send_async IO error {:?}", io_err),
+                            std::task::Poll::Pending => {
+                                break;
+                            },
+                        }
                     }
                 });
             }
-        }),
-        write_iterator_fn: &(|wc @ &WriteContextArgs { root, ident, .. }, _| {
-            let send_ident = wc.make_ident("item_send");
-            quote! {
-                let #ident = #root::pusherator::for_each::ForEach::new(|item| {
-                    #send_ident.send(item).expect("Failed to send async write item for processing.");
-                });
-            }
+
+            // let send_ident = wc.make_ident("item_send");
+            // quote! {
+            //     let #ident = #root::pusherator::for_each::ForEach::new(|item| {
+            //         #send_ident.send(item).expect("Failed to send async write item for processing.");
+            //     });
+            // }
         }),
     },
 ];

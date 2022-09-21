@@ -4,16 +4,14 @@ use proc_macro2::Span;
 use slotmap::{Key, SecondaryMap, SlotMap};
 use syn::{parse_quote, spanned::Spanned};
 
-use crate::{parse::IndexInt, union_find::UnionFind};
+use crate::parse::IndexInt;
+use crate::union_find::UnionFind;
 
-use super::{
-    di_mul_graph::DiMulGraph,
-    flat_graph::FlatGraph,
-    graph_algorithms, node_color,
-    ops::{DelayType, OPERATORS},
-    partitioned_graph::PartitionedGraph,
-    Color, GraphEdgeId, GraphNodeId, GraphSubgraphId, Node,
-};
+use super::di_mul_graph::DiMulGraph;
+use super::flat_graph::FlatGraph;
+use super::ops::{DelayType, OPERATORS};
+use super::partitioned_graph::PartitionedGraph;
+use super::{graph_algorithms, node_color, Color, GraphEdgeId, GraphNodeId, GraphSubgraphId, Node};
 
 fn find_barrier_crossers(
     nodes: &SlotMap<GraphNodeId, Node>,
@@ -72,12 +70,19 @@ fn find_subgraph_unionfind(
         }
 
         // Ignore if would join stratum crossers (next edges).
-        if barrier_crossers.iter().any(|(edge_id, _)| {
-            let (x_src, x_dst) = graph.edge(edge_id).unwrap();
-            (subgraph_unionfind.same_set(x_src, src) && subgraph_unionfind.same_set(x_dst, dst))
-                || (subgraph_unionfind.same_set(x_src, dst)
-                    && subgraph_unionfind.same_set(x_dst, src))
-        }) {
+        if barrier_crossers
+            .iter()
+            .any(|(delay_edge_id, delay_type)| match delay_type {
+                DelayType::Handoff => delay_edge_id == edge_id,
+                DelayType::Stratum | DelayType::Epoch => {
+                    let (x_src, x_dst) = graph.edge(delay_edge_id).unwrap();
+                    (subgraph_unionfind.same_set(x_src, src)
+                        && subgraph_unionfind.same_set(x_dst, dst))
+                        || (subgraph_unionfind.same_set(x_src, dst)
+                            && subgraph_unionfind.same_set(x_dst, src))
+                }
+            })
+        {
             continue;
         }
 
@@ -384,6 +389,9 @@ fn find_subgraph_strata(
                         .emit();
                     return Err(());
                 }
+            }
+            DelayType::Handoff => {
+                // No special action needed.
             }
         }
     }

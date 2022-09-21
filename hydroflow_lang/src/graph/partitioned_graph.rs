@@ -195,9 +195,17 @@ impl PartitionedGraph {
                     }
 
                     {
-                        let pull_to_push_idx = pull_to_push_idx;
-                        let pull_ident =
-                            self.node_id_as_ident(subgraph_nodes[pull_to_push_idx - 1], false);
+                        let pull_ident = if let Some(i) = pull_to_push_idx.checked_sub(1) {
+                            self.node_id_as_ident(subgraph_nodes[i], false)
+                        } else {
+                            // Entire subgraph is push.
+                            assert_eq!(
+                                1,
+                                recv_ports.len(),
+                                "If entire subgraph is push, should only have one handoff input."
+                            );
+                            recv_ports[0].clone()
+                        };
 
                         let push_ident =
                             if let Some(&node_id) = subgraph_nodes.get(pull_to_push_idx) {
