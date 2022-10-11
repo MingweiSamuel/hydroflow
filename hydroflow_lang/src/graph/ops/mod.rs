@@ -1,3 +1,5 @@
+pub mod properties_codegen;
+
 use std::fmt::Display;
 use std::ops::{Bound, RangeBounds};
 

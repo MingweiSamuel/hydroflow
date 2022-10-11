@@ -1,6 +1,7 @@
 #![feature(proc_macro_diagnostic, proc_macro_span)]
 #![allow(clippy::explicit_auto_deref)]
 
+use hydroflow_lang::graph::ops::properties_codegen::properties_codegen;
 use proc_macro2::{Ident, Literal, Span};
 use quote::quote;
 use syn::parse_macro_input;
@@ -48,4 +49,18 @@ pub fn hydroflow_parser(input: proc_macro::TokenStream) -> proc_macro::TokenStre
     let lit1 = Literal::string(&*part_mermaid);
 
     quote! { println!("{}\n\n{}\n", #lit0, #lit1); }.into()
+}
+
+#[doc(hidden)]
+#[proc_macro]
+pub fn hydroflow_internal_properties_codegen(
+    input: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    if !input.is_empty() {
+        Span::call_site()
+            .unwrap()
+            .error("Token input must be empty.")
+            .emit();
+    }
+    properties_codegen().into()
 }
