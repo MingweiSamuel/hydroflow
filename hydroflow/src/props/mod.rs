@@ -1,3 +1,6 @@
+use hydroflow_macro::hydroflow_internal_properties_codegen;
+
+pub mod apply_props;
 pub mod wrap;
 
 pub trait Spec {}
@@ -28,3 +31,5 @@ pub struct Duplicates;
 impl PropDuplicates for Duplicates {}
 pub struct NoDuplicates;
 impl PropDuplicates for NoDuplicates {}
+
+hydroflow_internal_properties_codegen!();
