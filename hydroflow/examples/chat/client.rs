@@ -1,7 +1,7 @@
 use chrono::prelude::*;
 use colored::Colorize;
 
-use crate::helpers::{deserialize_msg, is_chat_msg, is_connect_resp, serialize_msg};
+use crate::helpers::{deserialize_msg, serialize_msg};
 use crate::protocol::Message;
 use crate::{GraphType, Opts};
 use chrono::Utc;
@@ -26,9 +26,14 @@ pub(crate) async fn run_client(opts: Opts) {
     let mut hf = hydroflow_syntax! {
         // set up channels
         outbound_chan = merge() -> map(|(m,a)| (serialize_msg(m), a)) -> sink_async(outbound);
-        inbound_chan = recv_stream(inbound) -> map(deserialize_msg) -> tee();
-        connect_acks = inbound_chan[0] -> filter_map(is_connect_resp) -> tee();
-        messages = inbound_chan[1] -> filter_map(is_chat_msg);
+
+        inbound_chan = recv_stream(inbound) -> map(deserialize_msg::<Message>) -> split();
+        // ConnectRequest
+        inbound_chan[0] -> null();
+        // ChatMsg
+        messages = inbound_chan[1] -> flatten();
+        // ConnectResponse
+        connect_acks = inbound_chan[2] -> flatten() -> tee();
 
         // send a single connection request on startup
         recv_iter([()]) -> map(|_m| (Message::ConnectRequest {
@@ -47,23 +52,23 @@ pub(crate) async fn run_client(opts: Opts) {
           -> [0]msg_send;
 
         // receive and print messages
-        messages -> for_each(|m: Message| if let Message::ChatMsg{ nickname, message, ts } = m {
-                println!(
-                    "{} {}: {}",
-                    ts
-                        .with_timezone(&Local)
-                        .format("%b %-d, %-I:%M:%S")
-                        .to_string()
-                        .truecolor(126, 126, 126)
-                        .italic(),
-                    nickname.green().italic(),
-                    message,
-                );
-        });
+        messages -> for_each(|(nickname, message, ts): (String, String, DateTime<Utc>)|
+            println!(
+                "{} {}: {}",
+                ts
+                    .with_timezone(&Local)
+                    .format("%b %-d, %-I:%M:%S")
+                    .to_string()
+                    .truecolor(126, 126, 126)
+                    .italic(),
+                nickname.green().italic(),
+                message,
+            )
+        );
 
         // handle connect ack
-        connect_acks[0] -> for_each(|m: Message| println!("connected: {:?}", m));
-        connect_acks[1] -> filter_map(is_connect_resp) -> [1]msg_send;
+        connect_acks[0] -> for_each(|m| println!("connected: {:?}", m));
+        connect_acks[1] -> map(|()| Message::ConnectResponse) -> [1]msg_send;
 
     };
 

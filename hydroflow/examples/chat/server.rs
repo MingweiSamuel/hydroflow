@@ -1,8 +1,6 @@
 use crate::{GraphType, Opts};
 
-use crate::helpers::{
-    connect_get_addr, deserialize_msg, is_chat_msg, is_connect_req, serialize_msg,
-};
+use crate::helpers::{deserialize_msg, serialize_msg};
 use crate::protocol::Message;
 
 use hydroflow::hydroflow_syntax;
@@ -17,11 +15,18 @@ pub(crate) async fn run_server(opts: Opts) {
 
     let mut df: Hydroflow = hydroflow_syntax! {
         // NW channels
-        outbound_chan = merge() -> map(|(m,a)| (serialize_msg(m), a)) -> sink_async(outbound);
-        inbound_chan = recv_stream(inbound) -> map(deserialize_msg) -> tee();
-        members = inbound_chan[0] -> filter_map(is_connect_req)
-                                  -> filter_map(connect_get_addr) -> tee();
-        msgs = inbound_chan[1] -> filter_map(is_chat_msg);
+        outbound_chan = merge()
+            -> map(|(msg, addr)| (serialize_msg(msg), addr))
+            -> sink_async(outbound);
+
+        inbound_chan = recv_stream(inbound) -> map(deserialize_msg::<Message>) -> split(); // tee();
+        // ConnectRequest
+        members = inbound_chan[0] -> flatten() -> map(|(_nickname, addr)| addr) -> tee();
+        // ChatMsg
+        msgs = inbound_chan[1] -> flatten()
+            -> map(|(nickname, message, ts)| Message::ChatMsg { nickname, message, ts });
+        // ConnectResponse
+        inbound_chan[2] -> null();
 
         // Logic
         members[0] -> map(|addr| (Message::ConnectResponse, addr)) -> [0]outbound_chan;
