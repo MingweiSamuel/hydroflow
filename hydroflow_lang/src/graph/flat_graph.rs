@@ -6,7 +6,7 @@ use syn::spanned::Spanned;
 use syn::Ident;
 
 use crate::graph::ops::{RangeTrait, OPERATORS};
-use crate::parse::{HfCode, HfStatement, IndexInt, Operator, Pipeline};
+use crate::parse::{HfCode, HfStatement, IndexInt, Operator, Pipeline, PortIndex};
 use crate::pretty_span::{PrettyRowCol, PrettySpan};
 
 use super::di_mul_graph::DiMulGraph;
@@ -26,7 +26,7 @@ pub struct FlatGraph {
     /// Graph
     pub(crate) graph: DiMulGraph<GraphNodeId, GraphEdgeId>,
     /// Input and output port for each edge.
-    pub(crate) indices: SecondaryMap<GraphEdgeId, (IndexInt, IndexInt)>,
+    pub(crate) indices: SecondaryMap<GraphEdgeId, (PortIndex, PortIndex)>,
 
     /// Variable names, used as [`HfStatement::Named`] are added.
     names: BTreeMap<Ident, Ports>,
