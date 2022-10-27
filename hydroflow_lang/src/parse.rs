@@ -334,7 +334,7 @@ impl ToTokens for Operator {
 
 #[derive(Clone, Copy, Debug)]
 pub struct IndexInt {
-    pub value: usize,
+    pub value: isize,
     pub span: Span,
 }
 impl Parse for IndexInt {
