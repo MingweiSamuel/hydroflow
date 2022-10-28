@@ -204,6 +204,23 @@ pub async fn test_echo_tcp() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
+// #[tokio::test]
+// pub async fn test_echo_stdin() {
+//     // We provide a command line for users to type a Transaction ID (integer) to commit.
+//     let reader = tokio::io::BufReader::new(tokio::io::stdin());
+//     let stdin_lines = LinesStream::new(reader.lines());
+//     let stdout_lines = tokio::io::stdout();
+
+//     let mut df: Hydroflow = hydroflow_syntax! {
+//         recv_stream(stdin_lines)
+//             -> filter_map(|result| result.ok())
+//             -> map(|line| line + "\n")
+//             -> write_async(stdout_lines);
+//     };
+
+//     df.run_async().await.unwrap();
+// }
+
 #[tokio::test]
 pub async fn test_echo() {
     // An edge in the input data = a pair of `usize` vertex IDs.

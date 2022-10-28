@@ -47,7 +47,9 @@ pub(crate) async fn run_coordinator(opts: Opts, subordinates: Vec<String>) {
         // Phase 1 initiate:
         // Given a transaction commit request from stdio, broadcast a Prepare to subordinates
         recv_stream(stdin_lines)
+            -> inspect(|msg| println!("msg {:?}", msg))
             -> filter_map(|l: Result<std::string::String, std::io::Error>| parse_out(l.unwrap()))
+            -> inspect(|msg| println!("msg2 {:?}", msg))
             -> map(|xid| CoordMsg{xid, mtype: MsgType::Prepare})
             -> [0]broadcast;
 
@@ -69,9 +71,11 @@ pub(crate) async fn run_coordinator(opts: Opts, subordinates: Vec<String>) {
                     let e = ht.entry(xid).or_insert(0);
                     *e += addend;
                     ht})
+            // -> inspect(|ht| println!("{:?}", ht))
             -> flatten()
             -> commit_votes;
-        commit_votes[0] -> next_epoch() -> [1]commit_buf;
+        // persistence loop
+        commit_votes[0] -> map(|(k, v)| (k, 0)) -> next_epoch() -> [1]commit_buf;
 
         // count subordinates
         subord_total = subords[0] -> fold(0, |a,_b| a+1); // -> for_each(|n| println!("There are {} subordinates.", n));

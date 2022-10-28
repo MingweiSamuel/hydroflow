@@ -115,6 +115,11 @@ impl Hydroflow {
     pub fn run_available(&mut self) {
         // While work is immediately available.
         while self.next_stratum() {
+            println!(
+                "EPOCH STRATUM {} {}",
+                self.context.current_epoch(),
+                self.context.current_stratum()
+            );
             // And do any work (this also receives events).
             self.run_stratum();
         }
@@ -128,6 +133,9 @@ impl Hydroflow {
         while let Some(sg_id) = self.stratum_queues[self.context.current_stratum].pop_front() {
             {
                 let sg_data = &mut self.subgraphs[sg_id.0];
+
+                // println!("RUN_STRATUM SG {} {:?}", sg_data.name, sg_id);
+
                 // This must be true for the subgraph to be enqueued.
                 assert!(sg_data.is_scheduled.take());
 
@@ -238,6 +246,7 @@ impl Hydroflow {
     pub async fn recv_events_async(&mut self) -> Option<NonZeroUsize> {
         loop {
             let sg_id = self.event_queue_recv.recv().await?;
+            println!("RECV EVENTS ASYNC {:?}", sg_id);
             let sg_data = &self.subgraphs[sg_id.0];
             if !sg_data.is_scheduled.replace(true) {
                 self.stratum_queues[sg_data.stratum].push_back(sg_id);

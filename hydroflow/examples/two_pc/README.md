@@ -18,6 +18,8 @@ cargo run --example two_pc -- --path hydroflow/examples/two_pc/members.json --ro
 Now for each subordinate, launch a process on the node with the matching IP address as follows.
 Here we assume the subordinate's IP address is `127.0.0.1` and port `12349` is free:
 ```
+cargo run --example two_pc -- --path hydroflow/examples/two_pc/members.json --role subordinate --addr localhost --port 12347 &
+cargo run --example two_pc -- --path hydroflow/examples/two_pc/members.json --role subordinate --addr localhost --port 12348 &
 cargo run --example two_pc -- --path hydroflow/examples/two_pc/members.json --role subordinate --addr localhost --port 12349
 ```
 

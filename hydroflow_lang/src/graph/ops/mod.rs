@@ -592,7 +592,9 @@ pub const OPERATORS: [OperatorConstraints; 24] = [
             };
             let write_iterator = quote_spanned! {op_span=>
                 let #ident = std::iter::from_fn(|| {
-                    match #root::futures::stream::Stream::poll_next(#stream_ident.as_mut(), &mut std::task::Context::from_waker(&context.waker())) {
+                    let x = #root::futures::stream::Stream::poll_next(#stream_ident.as_mut(), &mut std::task::Context::from_waker(&context.waker()));
+                    // println!("from_fn poll_next {:?}", x);
+                    match x {
                         std::task::Poll::Ready(maybe) => maybe,
                         std::task::Poll::Pending => None,
                     }
