@@ -48,3 +48,9 @@ mod booktest {
     booktest!(surface_data);
     booktest!(surface_ops);
 }
+
+#[cfg(doctest)]
+#[path = "../tests/compile-fail"]
+mod tests_compile_fail {
+    mod surface;
+}
