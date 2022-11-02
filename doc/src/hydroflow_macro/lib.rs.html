@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow_macro/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><a class="sidebar-logo" href="../../hydroflow_macro/index.html"><div class="logo-container"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></div></a></nav><main><div class="width-limiter"><div class="sub-container"><a class="sub-logo-container" href="../../hydroflow_macro/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><nav class="sub"><form class="search-form"><div class="search-container"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></div></form></nav></div><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow_macro/src/lib.rs`."><meta name="keywords" content="rust, rustlang, rust-lang"><title>lib.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Regular.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../FiraSans-Medium.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Regular.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceSerif4-Bold.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../SourceCodePro-Semibold.ttf.woff2"><link rel="stylesheet" href="../../normalize.css"><link rel="stylesheet" href="../../rustdoc.css" id="mainThemeStyle"><link rel="stylesheet" href="../../ayu.css" disabled><link rel="stylesheet" href="../../dark.css" disabled><link rel="stylesheet" href="../../light.css" id="themeStyle"><script id="default-settings" ></script><script src="../../storage.js"></script><script defer src="../../source-script.js"></script><script defer src="../../source-files.js"></script><script defer src="../../main.js"></script><noscript><link rel="stylesheet" href="../../noscript.css"></noscript><link rel="alternate icon" type="image/png" href="../../favicon-16x16.png"><link rel="alternate icon" type="image/png" href="../../favicon-32x32.png"><link rel="icon" type="image/svg+xml" href="../../favicon.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><div class="width-limiter"><nav class="sub"><a class="sub-logo-container" href="../../hydroflow_macro/index.html"><img class="rust-logo" src="../../rust-logo.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../wheel.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><span id="1">1</span>
 <span id="2">2</span>
 <span id="3">3</span>
 <span id="4">4</span>
@@ -49,8 +49,7 @@
 <span id="49">49</span>
 <span id="50">50</span>
 <span id="51">51</span>
-<span id="52">52</span>
-</pre><pre class="rust"><code><span class="attribute">#![feature(proc_macro_diagnostic, proc_macro_span)]
+</pre><pre class="rust"><code><span class="attr">#![feature(proc_macro_diagnostic, proc_macro_span)]
 #![allow(clippy::explicit_auto_deref)]
 
 </span><span class="kw">use </span>proc_macro2::{Ident, Literal, Span};
@@ -60,12 +59,12 @@
 <span class="kw">use </span>hydroflow_lang::graph::flat_graph::FlatGraph;
 <span class="kw">use </span>hydroflow_lang::parse::HfCode;
 
-<span class="attribute">#[proc_macro]
+<span class="attr">#[proc_macro]
 </span><span class="kw">pub fn </span>hydroflow_syntax(input: proc_macro::TokenStream) -&gt; proc_macro::TokenStream {
     <span class="kw">let </span>hydroflow_crate = proc_macro_crate::crate_name(<span class="string">&quot;hydroflow&quot;</span>)
         .expect(<span class="string">&quot;hydroflow should be present in `Cargo.toml`&quot;</span>);
     <span class="kw">let </span>root = <span class="kw">match </span>hydroflow_crate {
-        proc_macro_crate::FoundCrate::Itself =&gt; <span class="macro">quote! </span>{ <span class="kw">crate </span>},
+        proc_macro_crate::FoundCrate::Itself =&gt; <span class="macro">quote! </span>{ hydroflow },
         proc_macro_crate::FoundCrate::Name(name) =&gt; {
             <span class="kw">let </span>ident = Ident::new(<span class="kw-2">&amp;</span>name, Span::call_site());
             <span class="macro">quote! </span>{ #ident }
@@ -75,16 +74,15 @@
     <span class="kw">let </span>input = <span class="macro">parse_macro_input!</span>(input <span class="kw">as </span>HfCode);
 
     <span class="kw">let </span>flat_graph = FlatGraph::from_hfcode(input);
-    <span class="kw">let </span>tokens = <span class="kw">if </span>flat_graph.emit_operator_errors() {
-        <span class="macro">quote! </span>{ #root::scheduled::graph::Hydroflow::new() }
-    } <span class="kw">else </span>{
-        <span class="kw">let </span>part_graph = flat_graph.into_partitioned_graph();
-        part_graph.as_code(root)
-    };
-    tokens.into()
+    <span class="kw">if </span>!flat_graph.emit_operator_errors() {
+        <span class="kw">if let </span><span class="prelude-val">Ok</span>(part_graph) = flat_graph.into_partitioned_graph() {
+            <span class="kw">return </span>part_graph.as_code(root).into();
+        }
+    }
+    <span class="macro">quote! </span>{ #root::scheduled::graph::Hydroflow::new() }.into()
 }
 
-<span class="attribute">#[proc_macro]
+<span class="attr">#[proc_macro]
 </span><span class="kw">pub fn </span>hydroflow_parser(input: proc_macro::TokenStream) -&gt; proc_macro::TokenStream {
     <span class="kw">let </span>input = <span class="macro">parse_macro_input!</span>(input <span class="kw">as </span>HfCode);
     <span class="comment">// // input.into_token_stream().into()
@@ -94,13 +92,13 @@
 
     <span class="kw">let </span>flat_mermaid = flat_graph.mermaid_string();
 
-    <span class="comment">// let part_graph = flat_graph.into_partitioned_graph();
-    // let part_mermaid = part_graph.to_serde_graph();
+    <span class="kw">let </span>part_graph = flat_graph.into_partitioned_graph().unwrap();
+    <span class="kw">let </span>part_mermaid = part_graph.to_serde_graph().to_mermaid();
 
-    </span><span class="kw">let </span>lit0 = Literal::string(<span class="kw-2">&amp;*</span>flat_mermaid);
-    <span class="comment">// let lit1 = Literal::string(&amp;*part_mermaid);
+    <span class="kw">let </span>lit0 = Literal::string(<span class="kw-2">&amp;*</span>flat_mermaid);
+    <span class="kw">let </span>lit1 = Literal::string(<span class="kw-2">&amp;*</span>part_mermaid);
 
-    </span><span class="macro">quote! </span>{ <span class="macro">println!</span>(<span class="string">&quot;{}&quot;</span>, #lit0); }.into()
+    <span class="macro">quote! </span>{ <span class="macro">println!</span>(<span class="string">&quot;{}\n\n{}\n&quot;</span>, #lit0, #lit1); }.into()
 }
 </code></pre></div>
-</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="hydroflow_macro" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.66.0-nightly (4b8f43199 2022-10-19)" ></div></body></html>
+</section></div></main><div id="rustdoc-vars" data-root-path="../../" data-current-crate="hydroflow_macro" data-themes="ayu,dark,light" data-resource-suffix="" data-rustdoc-version="1.67.0-nightly (11ebe6512 2022-11-01)" ></div></body></html>
