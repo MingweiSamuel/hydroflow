@@ -17,6 +17,8 @@ pub mod inspect;
 pub mod map;
 pub mod partition;
 pub mod pivot;
+#[cfg(feature = "type_list")]
+pub mod switch;
 pub mod tee;
 
 use std::marker::PhantomData;

@@ -2,3 +2,9 @@
 name = "pusherator"
 version = "0.1.0"
 edition = "2021"
+
+[features]
+default = [ "type_list" ]
+
+[dependencies]
+type_list = { optional = true, path = "../type_list" }

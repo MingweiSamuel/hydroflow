@@ -1203,6 +1203,9 @@ dependencies = [
 [[package]]
 name = "pusherator"
 version = "0.1.0"
+dependencies = [
+ "type_list",
+]
 
 [[package]]
 name = "quote"
