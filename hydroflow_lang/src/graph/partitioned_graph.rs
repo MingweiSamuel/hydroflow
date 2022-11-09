@@ -160,6 +160,10 @@ impl PartitionedGraph {
                             // Ensure sorted by port index.
                             input_edges
                                 .sort_unstable_by_key(|&(edge_id, _pred)| &self.indices[edge_id].1);
+                            let input_port_names: Vec<_>  = input_edges
+                                .iter()
+                                .map(|&(edge_id, _pred)| &self.indices[edge_id].1)
+                                .collect();
                             let inputs: Vec<Ident> = input_edges
                                 .into_iter()
                                 .map(|(_edge_id, pred)| self.node_id_as_ident(pred, true))
@@ -171,7 +175,11 @@ impl PartitionedGraph {
                             // Ensure sorted by port index.
                             output_edges
                                 .sort_unstable_by_key(|&(edge_id, _succ)| &self.indices[edge_id].0);
-                            let outputs: Vec<Ident> = output_edges
+                            let output_port_names: Vec<_>  = output_edges
+                                .iter()
+                                .map(|&(edge_id, _succ)| &self.indices[edge_id].0)
+                                .collect();
+                            let outputs: Vec<_> = output_edges
                                 .into_iter()
                                 .map(|(_edge_id, succ)| self.node_id_as_ident(succ, false))
                                 .collect();
@@ -181,7 +189,9 @@ impl PartitionedGraph {
                             let iter_args = WriteIteratorArgs {
                                 ident: &ident,
                                 inputs: &*inputs,
+                                input_port_names: &*input_port_names,
                                 outputs: &*outputs,
+                                output_port_names: &*output_port_names,
                                 type_arguments: op.type_arguments(),
                                 arguments: &op.args,
                                 is_pull,

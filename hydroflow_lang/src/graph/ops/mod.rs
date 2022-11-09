@@ -9,6 +9,7 @@ use proc_macro2::{Ident, Span, TokenStream};
 use quote::{quote_spanned, ToTokens};
 use slotmap::Key;
 use syn::punctuated::Punctuated;
+use syn::spanned::Spanned;
 use syn::{parse_quote, Expr, GenericArgument, Token};
 
 use crate::parse::PortIndex;
@@ -107,7 +108,7 @@ pub const IDENTITY_WRITE_FN: &'static dyn Fn(
     }
 });
 
-pub const OPERATORS: [OperatorConstraints; 24] = [
+pub const OPERATORS: [OperatorConstraints; 25] = [
     OperatorConstraints {
         name: "null",
         hard_range_inn: RANGE_ANY,
@@ -283,6 +284,69 @@ pub const OPERATORS: [OperatorConstraints; 24] = [
                 quote_spanned! {op_span=>
                     let #ident = #input;
                 }
+            };
+            OperatorWriteOutput {
+                write_iterator,
+                ..Default::default()
+            }
+        }),
+    },
+    OperatorConstraints {
+        name: "switch",
+        hard_range_inn: RANGE_1,
+        soft_range_inn: RANGE_1,
+        hard_range_out: RANGE_ANY,
+        soft_range_out: &(2..),
+        ports_inn: None,
+        ports_out: None,
+        num_args: 0,
+        input_delaytype_fn: &|_| None,
+        write_fn: &(|&WriteContextArgs { root, op_span, .. },
+                     &WriteIteratorArgs {
+                         ident,
+                         inputs,
+                         outputs,
+                         output_port_names,
+                         is_pull,
+                         ..
+                     }| {
+            let write_iterator = if !is_pull {
+                // outputs
+                //     .iter()
+                //     .zip(output_port_names)
+                //     .enumerate()
+                //     .filter_map(|(idx, (output, port))| {
+                //         let port = match port {
+                //             PortIndexValue::Int(x) => x.to_token_stream(),
+                //             PortIndexValue::Path(x) => x.to_token_stream(),
+                //             PortIndexValue::Elided(_) => {
+                //                 // TODO(mingwei): use error collect system
+                //                 port.span().unwrap().error("").emit();
+                //                 return None;
+                //             }
+                //         };
+                //         Some(quote_spanned! {op_span=>
+                //             #port => #root::tl(),
+                //         })
+                //     });
+                let tees = outputs
+                    .iter()
+                    .rev()
+                    .map(|i| i.to_token_stream())
+                    .reduce(|b, a| quote_spanned! {op_span=> #root::pusherator::tee::Tee::new(#a, #b) })
+                    .unwrap_or_else(
+                        || quote_spanned! {op_span=> #root::pusherator::for_each::ForEach::new(std::mem::drop) },
+                    );
+                quote_spanned! {op_span=>
+                    let #ident = #tees;
+                }
+            } else {
+                panic!("TODO(MINGWEI)");
+                // assert_eq!(1, inputs.len());
+                // let input = &inputs[0];
+                // quote_spanned! {op_span=>
+                //     let #ident = #input;
+                // }
             };
             OperatorWriteOutput {
                 write_iterator,
@@ -914,8 +978,12 @@ pub struct WriteIteratorArgs<'a> {
     pub ident: &'a Ident,
     /// Input operator idents (used for pull).
     pub inputs: &'a [Ident],
+    /// Input operator port names (used for pull).
+    pub input_port_names: &'a [&'a PortIndexValue],
     /// Output operator idents (used for push).
     pub outputs: &'a [Ident],
+    /// Output operator port names (used for push).
+    pub output_port_names: &'a [&'a PortIndexValue],
     /// Unused: Operator type arguments.
     pub type_arguments: Option<&'a Punctuated<GenericArgument, Token![,]>>,
     /// Arguments provided by the user into the operator as arguments.
