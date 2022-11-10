@@ -9,6 +9,7 @@ use std::task::{Context, Poll};
 use bytes::Bytes;
 use futures::stream::{SplitSink, SplitStream};
 use futures::Stream;
+use itertools::Either;
 use pin_project_lite::pin_project;
 use tokio::net::UdpSocket;
 use tokio_stream::wrappers::UnboundedReceiverStream;
@@ -105,3 +106,23 @@ where
 {
     std::iter::from_fn(|| recv.as_mut().try_recv().ok()).collect()
 }
+
+/// Trait for splitting enums. Use `#[derive(Split)]`
+pub use hydroflow_macro::EnumSwitch;
+pub trait EnumSwitch {
+    type Output: EitherList;
+    fn into_switch(self) -> Self::Output;
+}
+impl<List> EnumSwitch for List
+where
+    List: EitherList,
+{
+    type Output = Self;
+    fn into_switch(self) -> Self::Output {
+        self
+    }
+}
+
+pub trait EitherList {}
+impl EitherList for () {}
+impl<Item, Rest> EitherList for Either<Item, Rest> where Rest: EitherList {}
