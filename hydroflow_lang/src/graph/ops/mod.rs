@@ -48,6 +48,9 @@ pub struct OperatorConstraints {
     /// Emit code in multiple locations. See [`OperatorWriteOutput`].
     pub write_fn:
         &'static dyn Fn(&WriteContextArgs<'_>, &WriteIteratorArgs<'_>) -> OperatorWriteOutput,
+
+    /// Example surface syntax code demonstrating this operator.
+    pub doc_example: &'static dyn Fn() -> TokenStream,
 }
 
 #[derive(Default)]
@@ -143,6 +146,12 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
                 ..Default::default()
             }
         }),
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                recv_iter(vec!["hello", "world"]) -> null();
+                null() -> for_each(|x: usize| unreachable!());
+            }
+        }),
     },
     OperatorConstraints {
         name: "merge",
@@ -183,6 +192,16 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
                 ..Default::default()
             }
         }),
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                my_merge = merge();
+                recv_iter(vec!["hello", "world"]) -> [0]my_merge;
+                recv_iter(vec!["stay", "gold"]) -> [1]my_merge;
+                recv_iter(vec!["don\'t", "give", "up"]) -> [2]my_merge;
+                my_merge -> map(|x| x.to_uppercase())
+                    -> for_each(|x| println!("{}", x));
+            }
+        }),
     },
     OperatorConstraints {
         name: "join",
@@ -211,6 +230,13 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
                 write_prologue,
                 write_iterator,
                 ..Default::default()
+            }
+        }),
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                recv_iter(vec![("hello", "world"), ("stay", "gold")]) -> [0]my_join;
+                recv_iter(vec![("hello", "cleveland")]) -> [1]my_join;
+                my_join -> for_each(|(k, (v1, v2))| println!("({}, ({}, {})", k, v1, v2));
             }
         }),
     },
@@ -289,6 +315,16 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
                 ..Default::default()
             }
         }),
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                my_tee = recv_iter(vec!["Hello", "World"]) -> tee();
+                my_tee[0] -> map(|x: &str| x.to_uppercase())
+                    -> for_each(|x| println!("{}", x));
+                my_tee[1] -> map(|x: &str| x.to_lowercase())
+                    -> for_each(|x| println!("{}", x));
+                my_tee[2] -> for_each(|x: &str| println!("{}", x));
+            }
+        }),
     },
     OperatorConstraints {
         name: "identity",
@@ -335,6 +371,11 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
             OperatorWriteOutput {
                 write_iterator,
                 ..Default::default()
+            }
+        }),
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                recv_iter(vec!["hello", "world"]) -> map(|x| x.to_uppercase()) -> for_each(|x| println!("{}", x));
             }
         }),
     },
@@ -412,6 +453,11 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
                 ..Default::default()
             }
         }),
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                recv_iter(vec!["hello", "world"]) -> flat_map(|x| x.chars()) -> for_each(|x| println!("{}", x));
+            }
+        }),
     },
     OperatorConstraints {
         name: "flatten",
@@ -483,6 +529,11 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
                 ..Default::default()
             }
         }),
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                recv_iter(vec!["1", "hello", "world", "2"]) -> filter_map(|s| s.parse().ok()) -> for_each(|x| println!("{}", x));
+            }
+        }),
     },
     OperatorConstraints {
         name: "filter",
@@ -517,6 +568,11 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
             OperatorWriteOutput {
                 write_iterator,
                 ..Default::default()
+            }
+        }),
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                recv_iter(vec!["hello", "world"]) -> filter(|&x| x == "hello") -> for_each(|x| println!("{}", x));
             }
         }),
     },
@@ -708,6 +764,19 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
                 ..Default::default()
             }
         }),
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                use hydroflow::hydroflow_syntax;
+                let (input_send, input_recv) = hydroflow::util::unbounded_channel::<&str>();
+                let mut flow = hydroflow_syntax! {
+                    recv_stream(input_recv) -> map(|x| x.to_uppercase())
+                        -> for_each(|x| println!("{}", x));
+                };
+                input_send.send("Hello").unwrap();
+                input_send.send("World").unwrap();
+                flow.run_available();
+            }
+        }),
     },
     OperatorConstraints {
         name: "recv_iter",
@@ -734,6 +803,11 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
                 write_prologue,
                 write_iterator,
                 ..Default::default()
+            }
+        }),
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                recv_iter(vec!["Hello", "World"]) -> for_each(|x| println!("{}", x));
             }
         }),
     },
@@ -849,6 +923,11 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
             OperatorWriteOutput {
                 write_iterator,
                 ..Default::default()
+            }
+        }),
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                recv_iter(vec!["Hello", "World"]) -> for_each(|x| println!("{}", x));
             }
         }),
     },
