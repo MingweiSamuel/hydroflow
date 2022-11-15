@@ -272,6 +272,11 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
                 ..Default::default()
             }
         }),
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                todo!();
+            }
+        }),
     },
     OperatorConstraints {
         name: "tee",
@@ -337,6 +342,11 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
         num_args: 0,
         input_delaytype_fn: &|_| None,
         write_fn: IDENTITY_WRITE_FN,
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                todo!();
+            }
+        }),
     },
     OperatorConstraints {
         name: "map",
@@ -412,6 +422,11 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
             OperatorWriteOutput {
                 write_iterator,
                 ..Default::default()
+            }
+        }),
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                todo!();
             }
         }),
     },
@@ -491,6 +506,11 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
             OperatorWriteOutput {
                 write_iterator,
                 ..Default::default()
+            }
+        }),
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                todo!();
             }
         }),
     },
@@ -606,6 +626,11 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
                 ..Default::default()
             }
         }),
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                todo!();
+            }
+        }),
     },
     OperatorConstraints {
         name: "reduce",
@@ -633,6 +658,11 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
             OperatorWriteOutput {
                 write_iterator,
                 ..Default::default()
+            }
+        }),
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                todo!();
             }
         }),
     },
@@ -728,6 +758,11 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
             OperatorWriteOutput {
                 write_iterator,
                 ..Default::default()
+            }
+        }),
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                todo!();
             }
         }),
     },
@@ -833,6 +868,11 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
                 ..Default::default()
             }
         }),
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                todo!();
+            }
+        }),
     },
     OperatorConstraints {
         name: "difference",
@@ -878,6 +918,11 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
                 ..Default::default()
             }
         }),
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                todo!();
+            }
+        }),
     },
     OperatorConstraints {
         name: "next_stratum",
@@ -890,6 +935,11 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
         num_args: 0,
         input_delaytype_fn: &|_| Some(DelayType::Stratum),
         write_fn: IDENTITY_WRITE_FN,
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                todo!();
+            }
+        }),
     },
     OperatorConstraints {
         name: "next_epoch",
@@ -902,6 +952,11 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
         num_args: 0,
         input_delaytype_fn: &|_| Some(DelayType::Epoch),
         write_fn: IDENTITY_WRITE_FN,
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                todo!();
+            }
+        }),
     },
     OperatorConstraints {
         name: "for_each",
@@ -978,6 +1033,11 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
                 ..Default::default()
             }
         }),
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                todo!();
+            }
+        }),
     },
     OperatorConstraints {
         name: "sink_async",
@@ -1028,6 +1088,11 @@ pub const OPERATORS: [OperatorConstraints; 26] = [
                 write_prologue,
                 write_iterator,
                 ..Default::default()
+            }
+        }),
+        doc_example: &(|| {
+            quote_spanned! {Span::call_site()=>
+                todo!();
             }
         }),
     },
