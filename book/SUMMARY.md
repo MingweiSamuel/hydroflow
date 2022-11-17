@@ -34,6 +34,7 @@
     - [`filter`](surface_op_filter.gen.md)
     - [`fold`](surface_op_fold.gen.md)
     - [`reduce`](surface_op_reduce.gen.md)
+    - [`unique`](surface_op_unique.gen.md)
     - [`sort`](surface_op_sort.gen.md)
     - [`recv_stream`](surface_op_recv_stream.gen.md)
     - [`recv_iter`](surface_op_recv_iter.gen.md)
