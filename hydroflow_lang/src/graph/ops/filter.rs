@@ -5,6 +5,15 @@ use super::{
 use proc_macro2::Span;
 use quote::quote_spanned;
 
+/// Filter outputs a subsequence of the items it receives at its input, according to a
+/// Rust boolean closure passed in as an argument.
+///
+/// > TODO: Why does filter's closure expect a reference and other ops like map do not?
+///
+/// ```hydroflow
+/// recv_iter(vec!["hello", "world"]) -> filter(|&x| x == "hello")
+///     -> for_each(|x| println!("{}", x));
+/// ```
 #[hydroflow_internalmacro::operator_docgen]
 pub const FILTER: OperatorConstraints = OperatorConstraints {
     name: "filter",
