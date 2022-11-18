@@ -5,6 +5,7 @@ use super::{
 
 use quote::quote_spanned;
 
+#[hydroflow_internalmacro::operator_docgen]
 pub const GROUPBY: OperatorConstraints = OperatorConstraints {
     name: "groupby",
     hard_range_inn: RANGE_1,

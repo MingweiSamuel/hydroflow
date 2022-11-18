@@ -20,14 +20,16 @@ pub const UNIQUE: OperatorConstraints = OperatorConstraints {
                  &WriteIteratorArgs {
                      ident,
                      inputs,
-                     arguments,
                      is_pull,
                      ..
                  }| {
         assert!(is_pull);
         let input = &inputs[0];
         let write_iterator = quote_spanned! {op_span=>
-            let #ident = #input.fold(HashSet::new(#arguments), |mut prev, nxt| {prev.insert(nxt); prev}).into_iter();
+            let #ident = #input.fold(
+                std::collections::HashSet::new(),
+                |mut prev, nxt| {prev.insert(nxt); prev}
+            ).into_iter();
         };
         OperatorWriteOutput {
             write_iterator,
