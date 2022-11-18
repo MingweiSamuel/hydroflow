@@ -2,7 +2,6 @@ use super::{
     OperatorConstraints, OperatorWriteOutput, WriteContextArgs, WriteIteratorArgs, RANGE_1,
 };
 
-use proc_macro2::Span;
 use quote::quote_spanned;
 
 #[hydroflow_internalmacro::operator_docgen]
@@ -39,11 +38,6 @@ pub const FILTER_MAP: OperatorConstraints = OperatorConstraints {
         OperatorWriteOutput {
             write_iterator,
             ..Default::default()
-        }
-    }),
-    doc_example: &(|| {
-        quote_spanned! {Span::call_site()=>
-            recv_iter(vec!["1", "hello", "world", "2"]) -> filter_map(|s| s.parse().ok()) -> for_each(|x| println!("{}", x));
         }
     }),
 };

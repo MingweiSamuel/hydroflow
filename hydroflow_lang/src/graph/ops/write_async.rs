@@ -53,9 +53,4 @@ pub const WRITE_ASYNC: OperatorConstraints = OperatorConstraints {
             ..Default::default()
         }
     }),
-    doc_example: &(|| {
-        quote_spanned! {Span::call_site()=>
-            todo!();
-        }
-    }),
 };

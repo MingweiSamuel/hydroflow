@@ -33,9 +33,4 @@ pub const RECV_ITER: OperatorConstraints = OperatorConstraints {
             ..Default::default()
         }
     }),
-    doc_example: &(|| {
-        quote_spanned! {Span::call_site()=>
-            recv_iter(vec!["Hello", "World"]) -> for_each(|x| println!("{}", x));
-        }
-    }),
 };

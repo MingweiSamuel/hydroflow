@@ -2,7 +2,6 @@ use super::{
     OperatorConstraints, OperatorWriteOutput, WriteContextArgs, WriteIteratorArgs, RANGE_1,
 };
 
-use proc_macro2::Span;
 use quote::quote_spanned;
 use syn::parse_quote;
 
@@ -37,11 +36,6 @@ pub const CROSS_JOIN: OperatorConstraints = OperatorConstraints {
             write_prologue,
             write_iterator,
             ..Default::default()
-        }
-    }),
-    doc_example: &(|| {
-        quote_spanned! {Span::call_site()=>
-            todo!();
         }
     }),
 };

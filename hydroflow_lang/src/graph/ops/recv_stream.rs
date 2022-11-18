@@ -39,17 +39,4 @@ pub const RECV_STREAM: OperatorConstraints = OperatorConstraints {
             ..Default::default()
         }
     }),
-    doc_example: &(|| {
-        quote_spanned! {Span::call_site()=>
-            use hydroflow::hydroflow_syntax;
-            let (input_send, input_recv) = hydroflow::util::unbounded_channel::<&str>();
-            let mut flow = hydroflow_syntax! {
-                recv_stream(input_recv) -> map(|x| x.to_uppercase())
-                    -> for_each(|x| println!("{}", x));
-            };
-            input_send.send("Hello").unwrap();
-            input_send.send("World").unwrap();
-            flow.run_available();
-        }
-    }),
 };

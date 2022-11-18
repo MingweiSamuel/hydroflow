@@ -41,10 +41,4 @@ pub const NULL: OperatorConstraints = OperatorConstraints {
             ..Default::default()
         }
     }),
-    doc_example: &(|| {
-        quote_spanned! {Span::call_site()=>
-            recv_iter(vec!["hello", "world"]) -> null();
-            null() -> for_each(|x: usize| unreachable!());
-        }
-    }),
 };

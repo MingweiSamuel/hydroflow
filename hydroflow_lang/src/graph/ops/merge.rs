@@ -46,14 +46,4 @@ pub const MERGE: OperatorConstraints = OperatorConstraints {
             ..Default::default()
         }
     }),
-    doc_example: &(|| {
-        quote_spanned! {Span::call_site()=>
-            my_merge = merge();
-            recv_iter(vec!["hello", "world"]) -> [0]my_merge;
-            recv_iter(vec!["stay", "gold"]) -> [1]my_merge;
-            recv_iter(vec!["don\'t", "give", "up"]) -> [2]my_merge;
-            my_merge -> map(|x| x.to_uppercase())
-                -> for_each(|x| println!("{}", x));
-        }
-    }),
 };

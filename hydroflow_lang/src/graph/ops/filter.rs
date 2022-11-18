@@ -2,7 +2,6 @@ use super::{
     OperatorConstraints, OperatorWriteOutput, WriteContextArgs, WriteIteratorArgs, RANGE_1,
 };
 
-use proc_macro2::Span;
 use quote::quote_spanned;
 
 /// Filter outputs a subsequence of the items it receives at its input, according to a
@@ -11,7 +10,7 @@ use quote::quote_spanned;
 /// > TODO: Why does filter's closure expect a reference and other ops like map do not?
 ///
 /// ```hydroflow
-/// recv_iter(vec!["hello", "world"]) -> filter(|&x| x == "hello")
+/// recv_iter(vec!["hello", "world"]) -> filter(|&x| x == x.starts_with('w'))
 ///     -> for_each(|x| println!("{}", x));
 /// ```
 #[hydroflow_internalmacro::operator_docgen]
@@ -48,11 +47,6 @@ pub const FILTER: OperatorConstraints = OperatorConstraints {
         OperatorWriteOutput {
             write_iterator,
             ..Default::default()
-        }
-    }),
-    doc_example: &(|| {
-        quote_spanned! {Span::call_site()=>
-            recv_iter(vec!["hello", "world"]) -> filter(|&x| x == "hello") -> for_each(|x| println!("{}", x));
         }
     }),
 };

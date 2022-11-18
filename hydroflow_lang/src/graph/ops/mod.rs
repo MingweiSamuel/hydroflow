@@ -71,9 +71,6 @@ pub struct OperatorConstraints {
     /// Emit code in multiple locations. See [`OperatorWriteOutput`].
     pub write_fn:
         &'static dyn Fn(&WriteContextArgs<'_>, &WriteIteratorArgs<'_>) -> OperatorWriteOutput,
-
-    /// Example surface syntax code demonstrating this operator.
-    pub doc_example: &'static dyn Fn() -> TokenStream,
 }
 
 #[derive(Default)]

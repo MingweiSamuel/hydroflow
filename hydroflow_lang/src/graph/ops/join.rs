@@ -36,11 +36,4 @@ pub const JOIN: OperatorConstraints = OperatorConstraints {
             ..Default::default()
         }
     }),
-    doc_example: &(|| {
-        quote_spanned! {Span::call_site()=>
-            recv_iter(vec![("hello", "world"), ("stay", "gold")]) -> [0]my_join;
-            recv_iter(vec![("hello", "cleveland")]) -> [1]my_join;
-            my_join -> for_each(|(k, (v1, v2))| println!("({}, ({}, {})", k, v1, v2));
-        }
-    }),
 };

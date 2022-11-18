@@ -15,9 +15,4 @@ pub const NEXT_STRATUM: OperatorConstraints = OperatorConstraints {
     num_args: 0,
     input_delaytype_fn: &|_| Some(DelayType::Stratum),
     write_fn: IDENTITY_WRITE_FN,
-    doc_example: &(|| {
-        quote_spanned! {Span::call_site()=>
-            todo!();
-        }
-    }),
 };

@@ -5,7 +5,6 @@ use super::{
     RANGE_1,
 };
 
-use proc_macro2::Span;
 use quote::{quote_spanned, ToTokens};
 use syn::parse_quote;
 
@@ -52,11 +51,6 @@ pub const DIFFERENCE: OperatorConstraints = OperatorConstraints {
             write_prologue,
             write_iterator,
             ..Default::default()
-        }
-    }),
-    doc_example: &(|| {
-        quote_spanned! {Span::call_site()=>
-            todo!();
         }
     }),
 };

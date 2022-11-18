@@ -41,9 +41,4 @@ pub const MAP: OperatorConstraints = OperatorConstraints {
             ..Default::default()
         }
     }),
-    doc_example: &(|| {
-        quote_spanned! {Span::call_site()=>
-            recv_iter(vec!["hello", "world"]) -> map(|x| x.to_uppercase()) -> for_each(|x| println!("{}", x));
-        }
-    }),
 };

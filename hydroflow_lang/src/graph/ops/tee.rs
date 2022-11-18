@@ -49,14 +49,4 @@ pub const TEE: OperatorConstraints = OperatorConstraints {
             ..Default::default()
         }
     }),
-    doc_example: &(|| {
-        quote_spanned! {Span::call_site()=>
-            my_tee = recv_iter(vec!["Hello", "World"]) -> tee();
-            my_tee[0] -> map(|x: &str| x.to_uppercase())
-                -> for_each(|x| println!("{}", x));
-            my_tee[1] -> map(|x: &str| x.to_lowercase())
-                -> for_each(|x| println!("{}", x));
-            my_tee[2] -> for_each(|x: &str| println!("{}", x));
-        }
-    }),
 };
