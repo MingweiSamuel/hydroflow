@@ -47,5 +47,7 @@ mod booktest {
     booktest!(surface_data);
     booktest!(surface_ops);
 
-    hydroflow_macro::surface_booktest_operators!();
+    mod surface_op {
+        hydroflow_macro::surface_booktest_operators!();
+    }
 }
