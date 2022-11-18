@@ -2,9 +2,19 @@ use super::{
     OperatorConstraints, OperatorWriteOutput, WriteContextArgs, WriteIteratorArgs, RANGE_0, RANGE_1,
 };
 
-use proc_macro2::Span;
 use quote::quote_spanned;
 
+/// > 1 input stream, 0 output streams
+///
+/// > Arguments: a Rust closure
+///
+/// Iterates through a stream passing each element to the closure in the
+/// argument.
+///
+/// ```hydroflow
+///     recv_iter(vec!["Hello", "World"])
+///         -> for_each(|x| println!("{}", x));
+/// ```
 #[hydroflow_internalmacro::operator_docgen]
 pub const FOR_EACH: OperatorConstraints = OperatorConstraints {
     name: "for_each",

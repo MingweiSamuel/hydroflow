@@ -130,7 +130,7 @@ pub const IDENTITY_WRITE_FN: &'static dyn Fn(
     }
 });
 
-pub const OPERATORS: [OperatorConstraints; 25] = [
+pub const OPERATORS: &[OperatorConstraints] = &[
     null::NULL,
     merge::MERGE,
     join::JOIN,

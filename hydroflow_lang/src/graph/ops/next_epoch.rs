@@ -1,8 +1,5 @@
 use super::{DelayType, OperatorConstraints, IDENTITY_WRITE_FN, RANGE_1};
 
-use proc_macro2::Span;
-use quote::quote_spanned;
-
 #[hydroflow_internalmacro::operator_docgen]
 pub const NEXT_EPOCH: OperatorConstraints = OperatorConstraints {
     name: "next_epoch",

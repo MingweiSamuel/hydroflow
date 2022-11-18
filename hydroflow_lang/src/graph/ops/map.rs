@@ -2,9 +2,17 @@ use super::{
     OperatorConstraints, OperatorWriteOutput, WriteContextArgs, WriteIteratorArgs, RANGE_1,
 };
 
-use proc_macro2::Span;
 use quote::quote_spanned;
 
+/// > 1 input stream, 1 output stream
+///
+/// > Arguments: A Rust closure
+/// For each item passed in, apply the closure to generate an item to emit.
+///
+/// ```hydroflow
+/// recv_iter(vec!["hello", "world"]) -> map(|x| x.to_uppercase())
+///     -> for_each(|x| println!("{}", x));
+/// ```
 #[hydroflow_internalmacro::operator_docgen]
 pub const MAP: OperatorConstraints = OperatorConstraints {
     name: "map",

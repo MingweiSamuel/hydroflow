@@ -3,9 +3,23 @@ use super::{
     RANGE_ANY,
 };
 
-use proc_macro2::Span;
 use quote::{quote_spanned, ToTokens};
 
+/// > *n* input streams of the same type, 1 output stream of the same type
+///
+/// Merges an arbitrary number of input streams into a single stream. Each input sequence is a subsequence of the output, but no guarantee is given on how the inputs are interleaved.
+///
+/// Since `merge` has multiple input streams, it needs to be assigned to
+/// a variable to reference its multiple input ports across statements.
+///
+/// ```hydroflow
+/// my_merge = merge();
+/// recv_iter(vec!["hello", "world"]) -> [0]my_merge;
+/// recv_iter(vec!["stay", "gold"]) -> [1]my_merge;
+/// recv_iter(vec!["don\'t", "give", "up"]) -> [2]my_merge;
+/// my_merge -> map(|x| x.to_uppercase())
+///     -> for_each(|x| println!("{}", x));
+/// ```
 #[hydroflow_internalmacro::operator_docgen]
 pub const MERGE: OperatorConstraints = OperatorConstraints {
     name: "merge",

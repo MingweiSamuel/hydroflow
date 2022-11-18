@@ -3,9 +3,21 @@ use super::{
     RANGE_ANY,
 };
 
-use proc_macro2::Span;
 use quote::{quote_spanned, ToTokens};
 
+/// > 1 input stream, *n* output streams
+///
+/// Takes the input stream and delivers a copy of each item to each output.
+/// > Note: Downstream operators may need explicit type annotations.
+///
+/// ```hydroflow
+/// my_tee = recv_iter(vec!["Hello", "World"]) -> tee();
+/// my_tee[0] -> map(|x: &str| x.to_uppercase())
+///     -> for_each(|x| println!("{}", x));
+/// my_tee[1] -> map(|x: &str| x.to_lowercase())
+///     -> for_each(|x| println!("{}", x));
+/// my_tee[2] -> for_each(|x: &str| println!("{}", x));
+/// ```
 #[hydroflow_internalmacro::operator_docgen]
 pub const TEE: OperatorConstraints = OperatorConstraints {
     name: "tee",

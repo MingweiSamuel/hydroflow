@@ -1,8 +1,5 @@
 use super::{OperatorConstraints, IDENTITY_WRITE_FN, RANGE_1};
 
-use proc_macro2::Span;
-use quote::quote_spanned;
-
 #[hydroflow_internalmacro::operator_docgen]
 pub const IDENTITY: OperatorConstraints = OperatorConstraints {
     name: "identity",

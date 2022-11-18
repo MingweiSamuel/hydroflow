@@ -2,9 +2,18 @@ use super::{
     OperatorConstraints, OperatorWriteOutput, WriteContextArgs, WriteIteratorArgs, RANGE_0, RANGE_1,
 };
 
-use proc_macro2::Span;
 use quote::quote_spanned;
 
+/// > 0 input streams, 1 output stream
+///
+/// > Arguments: An iterable Rust object.
+/// Takes the iterable object and delivers its elements downstream
+/// one by one.
+///
+/// ```hydroflow
+///     recv_iter(vec!["Hello", "World"])
+///         -> for_each(|x| println!("{}", x));
+/// ```
 #[hydroflow_internalmacro::operator_docgen]
 pub const RECV_ITER: OperatorConstraints = OperatorConstraints {
     name: "recv_iter",

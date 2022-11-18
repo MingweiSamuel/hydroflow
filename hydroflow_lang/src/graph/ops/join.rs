@@ -2,10 +2,19 @@ use super::{
     OperatorConstraints, OperatorWriteOutput, WriteContextArgs, WriteIteratorArgs, RANGE_1,
 };
 
-use proc_macro2::Span;
 use quote::quote_spanned;
 use syn::parse_quote;
 
+/// > 2 input streams of type <(K, V1)> and <(K, V2)>, 1 output stream of type <(K, (V1, V2))>
+///
+/// Forms the equijoin of the tuples in the input streams by their first (key) attribute. Note that the result nests the 2nd input field (values) into a tuple in the 2nd output field.
+///
+/// ```hydroflow
+/// my_join = join();
+/// recv_iter(vec![("hello", "world"), ("stay", "gold")]) -> [0]my_join;
+/// recv_iter(vec![("hello", "cleveland")]) -> [1]my_join;
+/// my_join -> for_each(|(k, (v1, v2))| println!("({}, ({}, {}))", k, v1, v2));
+/// ```
 #[hydroflow_internalmacro::operator_docgen]
 pub const JOIN: OperatorConstraints = OperatorConstraints {
     name: "join",

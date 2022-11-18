@@ -55,7 +55,6 @@ fn operator_docgen_internal(item: &ItemConst) -> Result<(), Box<dyn Error>> {
         "../book/docgen",
         &*format!("{}.md", op_name),
     ]);
-    eprintln!("{:?}", docgen_path);
     let mut docgen_write = BufWriter::new(File::create(docgen_path)?);
     writeln!(
         docgen_write,
@@ -103,6 +102,10 @@ fn operator_docgen_internal(item: &ItemConst) -> Result<(), Box<dyn Error>> {
                     docgen_write,
                     "# let mut __hf = hydroflow::hydroflow_syntax! {{"
                 )?;
+            } else if doc_str.trim() == "```rustbook" {
+                writeln!(docgen_write, "```rust")?;
+            } else {
+                writeln!(docgen_write, "{}", doc_str)?;
             }
         } else {
             writeln!(docgen_write, "{}", doc_str)?;

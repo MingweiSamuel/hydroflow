@@ -4,6 +4,17 @@ use super::{
 
 use quote::quote_spanned;
 
+/// > 1 input stream, 1 output stream
+///
+/// > Arguments: A Rust closure that handles an iterator
+///
+/// For each item `i` passed in, treat `i` as an iterator and map the closure to that
+/// iterator to produce items one by one. the type of the input items must be iterable.
+///
+/// ```hydroflow
+/// recv_iter(vec!["hello", "world"]) -> flat_map(|x| x.chars())
+///     -> for_each(|x| println!("{}", x));
+/// ```
 #[hydroflow_internalmacro::operator_docgen]
 pub const FLAT_MAP: OperatorConstraints = OperatorConstraints {
     name: "flat_map",

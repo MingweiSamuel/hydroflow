@@ -2,9 +2,27 @@ use super::{
     OperatorConstraints, OperatorWriteOutput, WriteContextArgs, WriteIteratorArgs, RANGE_0, RANGE_1,
 };
 
-use proc_macro2::Span;
 use quote::quote_spanned;
 
+/// > 0 input streams, 1 output stream
+///
+/// > Arguments: The receive end of a tokio channel
+///
+/// Given a [`Stream`](https://docs.rs/futures/latest/futures/stream/trait.Stream.html)
+/// created in Rust code, `recv_stream`
+/// is passed the receive endpoint of the channel and emits each of the
+/// elements it receives downstream.
+///
+/// ```rustbook
+/// let (input_send, input_recv) = hydroflow::util::unbounded_channel::<&str>();
+/// let mut flow = hydroflow::hydroflow_syntax! {
+///     recv_stream(input_recv) -> map(|x| x.to_uppercase())
+///         -> for_each(|x| println!("{}", x));
+/// };
+/// input_send.send("Hello").unwrap();
+/// input_send.send("World").unwrap();
+/// flow.run_available();
+/// ```
 #[hydroflow_internalmacro::operator_docgen]
 pub const RECV_STREAM: OperatorConstraints = OperatorConstraints {
     name: "recv_stream",
