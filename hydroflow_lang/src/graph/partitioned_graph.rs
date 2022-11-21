@@ -113,6 +113,7 @@ impl PartitionedGraph {
                 let mut subgraph_op_iter_code = Vec::new();
                 let mut subgraph_op_iter_after_code = Vec::new();
                 {
+                    // `pull_to_push_idx` is the index of the first PUSH operator.
                     let pull_to_push_idx = subgraph_nodes
                         .iter()
                         .position(|&node_id| {
@@ -216,6 +217,10 @@ impl PartitionedGraph {
                     {
                         // Determine pull and push halves of the `Pivot`.
                         let pull_to_push_idx = pull_to_push_idx;
+                        assert!(
+                            0 < pull_to_push_idx,
+                            "This is a bug. Entire subgraph is push. Do you have unneccesary `null()` usage?"
+                        );
                         let pull_ident =
                             self.node_id_as_ident(subgraph_nodes[pull_to_push_idx - 1], false);
 
@@ -229,7 +234,8 @@ impl PartitionedGraph {
                             assert_eq!(
                                 1,
                                 send_ports.len(),
-                                "If entire subgraph is pull, should have only one handoff output. Do you have a loose `null()` or other degenerate pipeline somewhere?"
+                                "This is a bug. If entire subgraph is pull, should have only one handoff output.\
+                                Do you have a loose `null()` or other degenerate pipeline somewhere?"
                             );
                             send_ports[0].clone()
                         };
