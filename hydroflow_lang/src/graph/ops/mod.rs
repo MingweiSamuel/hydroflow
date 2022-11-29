@@ -32,6 +32,7 @@ mod reduce;
 mod repeat_iter;
 mod sink_async;
 mod sort;
+mod split;
 mod switch;
 mod tee;
 mod unique;
@@ -135,6 +136,7 @@ pub const OPERATORS: &[OperatorConstraints] = &[
     join::JOIN,
     cross_join::CROSS_JOIN,
     tee::TEE,
+    split::SPLIT,
     switch::SWITCH,
     identity::IDENTITY,
     map::MAP,
