@@ -23,7 +23,7 @@ pub mod tee;
 
 use std::marker::PhantomData;
 
-use either::Either;
+pub use either::Either;
 
 pub trait Pusherator: Sized {
     type Item;

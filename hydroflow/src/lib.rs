@@ -15,7 +15,7 @@ pub mod util;
 
 pub use bytes;
 pub use futures;
-pub use pusherator;
+pub use pusherator::{self, Either};
 pub use static_assertions;
 pub use tokio;
 pub use tokio_stream;
