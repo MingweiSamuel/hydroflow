@@ -25,6 +25,8 @@ pub const FLAT_MAP: OperatorConstraints = OperatorConstraints {
     soft_range_out: RANGE_1,
     ports_inn: None,
     ports_out: None,
+    sort_ports_inn: true,
+    sort_ports_out: true,
     num_args: 1,
     input_delaytype_fn: &|_| None,
     write_fn: &(|&WriteContextArgs { root, op_span, .. },

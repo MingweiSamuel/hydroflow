@@ -65,6 +65,10 @@ pub struct OperatorConstraints {
     pub ports_inn: Option<&'static dyn Fn() -> Vec<TokenStream>>,
     /// What named or numbered output ports to expect?
     pub ports_out: Option<&'static dyn Fn() -> Vec<TokenStream>>,
+    /// Should the inputs be sorted by their port lexicographically?
+    pub sort_ports_inn: bool,
+    /// Should the outputs be sorted by their port lexicographically?
+    pub sort_ports_out: bool,
 
     /// Determines if this input must be preceeded by a stratum barrier.
     pub input_delaytype_fn: &'static dyn Fn(&PortIndexValue) -> Option<DelayType>,

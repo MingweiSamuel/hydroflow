@@ -18,6 +18,8 @@ pub const IDENTITY: OperatorConstraints = OperatorConstraints {
     soft_range_out: RANGE_1,
     ports_inn: None,
     ports_out: None,
+    sort_ports_inn: true,
+    sort_ports_out: true,
     num_args: 0,
     input_delaytype_fn: &|_| None,
     write_fn: IDENTITY_WRITE_FN,

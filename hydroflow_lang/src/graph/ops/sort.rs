@@ -22,6 +22,8 @@ pub const SORT: OperatorConstraints = OperatorConstraints {
     soft_range_out: RANGE_1,
     ports_inn: None,
     ports_out: None,
+    sort_ports_inn: true,
+    sort_ports_out: true,
     num_args: 0,
     input_delaytype_fn: &|_| Some(DelayType::Stratum),
     write_fn: &(|&WriteContextArgs { op_span, .. },

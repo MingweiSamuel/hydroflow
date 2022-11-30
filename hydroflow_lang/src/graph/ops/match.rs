@@ -33,6 +33,8 @@ pub const MATCH: OperatorConstraints = OperatorConstraints {
     soft_range_out: &(1..),
     ports_inn: None,
     ports_out: None,
+    sort_ports_inn: true,
+    sort_ports_out: false, // Do not sort, keep match arm order.
     num_args: 0,
     input_delaytype_fn: &|_| None,
     write_fn: &(|&WriteContextArgs { root, op_span, .. },

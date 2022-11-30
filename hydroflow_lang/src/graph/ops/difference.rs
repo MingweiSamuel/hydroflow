@@ -29,6 +29,8 @@ pub const DIFFERENCE: OperatorConstraints = OperatorConstraints {
     soft_range_out: RANGE_1,
     ports_inn: Some(&|| vec![quote!(pos), quote!(neg)]),
     ports_out: None,
+    sort_ports_inn: true,
+    sort_ports_out: true,
     num_args: 0,
     input_delaytype_fn: &|idx| match idx {
         PortIndexValue::Tokens(tokens) if "neg" == tokens.to_string() => Some(DelayType::Stratum),

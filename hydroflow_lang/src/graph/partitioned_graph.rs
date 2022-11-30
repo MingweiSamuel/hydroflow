@@ -159,8 +159,10 @@ impl PartitionedGraph {
                                 self.graph.predecessors(node_id)
                                 .map(|(edge_id, pred)| (&self.indices[edge_id].1, pred))
                                 .collect();
-                            // Ensure sorted by port index.
-                            input_edges.sort();
+                            if op_constraints.sort_ports_inn {
+                                // Ensure sorted by port index.
+                                input_edges.sort();
+                            }
                             let inputs: Vec<Ident> = input_edges
                                 .iter()
                                 .map(|&(_port, pred)| self.node_id_as_ident(pred, true))
@@ -172,8 +174,10 @@ impl PartitionedGraph {
                                 self.graph.successors(node_id)
                                 .map(|(edge_id, succ)| (&self.indices[edge_id].0, succ))
                                 .collect();
-                            // Ensure sorted by port index.
-                            output_edges.sort();
+                            if op_constraints.sort_ports_out {
+                                // Ensure sorted by port index.
+                                output_edges.sort();
+                            }
                             let outputs: Vec<Ident> = output_edges
                                 .iter()
                                 .map(|&(_port, succ)| self.node_id_as_ident(succ, false))

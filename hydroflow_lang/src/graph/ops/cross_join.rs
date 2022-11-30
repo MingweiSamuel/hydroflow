@@ -24,6 +24,8 @@ pub const CROSS_JOIN: OperatorConstraints = OperatorConstraints {
     soft_range_out: RANGE_1,
     ports_inn: Some(&(|| vec![quote!(0), quote!(1)])),
     ports_out: None,
+    sort_ports_inn: true,
+    sort_ports_out: true,
     num_args: 0,
     input_delaytype_fn: &|_| None,
     write_fn: &(|wc @ &WriteContextArgs { root, op_span, .. },

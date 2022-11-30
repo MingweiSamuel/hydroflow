@@ -254,6 +254,39 @@ pub fn test_match_2() {
         my_match[None => ()] -> for_each(|()| println!("unknown"));
     };
     df.run_available();
+
+    // let mut df = hydroflow_syntax! {
+    //     my_match = recv_iter([Some(0), Some(1), Some(9), Some(10), None]) -> named_split(
+    //         |x|
+    //         match x {
+    //             None    => 'none: { () },
+    //             Some(0) => 'zero: { () },
+    //             Some(x) => 'vals: { x },
+    //             MyVariant { my_int, my_str } => { (my_int, my_str) }
+    //         });
+
+    //     my_match['zero] -> for_each(|_| println!("zero"));
+    //     my_match['vals] -> for_each(|x| println!("{}", x));
+    //     my_match['none] -> for_each(|_| println!("unknown"));
+    // };
+
+    enum Shape {
+        Circle(usize),
+        Rect { width: usize, height: usize },
+    }
+    hydroflow_syntax! {
+        x = map(|my_shape| split_enum! {
+            my_shape {
+                Shape::Circle(radius) => ("circ", my_shape), // port!("circ" => my_shape), // go to lhs
+                Shape::Rect { width, height } => ("rect", (width, height)), // port!("rect" => (width, height)), // go to rhs
+            }
+        });
+        x["circ"] -> map(|my_shape| {
+            let Shape::Circle(radius) = my_shape else { panic!() };
+            return radius;
+        });
+        x["rect"] -> map(|(w, h)| w * h);
+    };
 }
 
 #[test]
@@ -273,13 +306,20 @@ pub fn test_match_degeneratre() {
 #[test]
 pub fn test_match_fizzbuzz() {
     let mut df = hydroflow_syntax! {
-        my_match = recv_iter(0..100) -> match();
-        my_match[x if 0 == x % 15 => x] -> for_each(|x| println!("fizzbuzz"));
-        my_match[x if 0 == x %  3 => x] -> for_each(|x| println!("fizz"));
-        my_match[x if 0 == x %  5 => x] -> for_each(|x| println!("buzz"));
+        my_match = recv_iter(1..=100) -> match();
+        my_match[x if 0 == x % 15 => x] -> for_each(|_| println!("fizzbuzz"));
+        my_match[x if 0 == x %  3 => x] -> for_each(|_| println!("fizz"));
+        my_match[x if 0 == x %  5 => x] -> for_each(|_| println!("buzz"));
         my_match[x => x]                -> for_each(|x| println!("{}", x));
     };
     df.run_available();
+
+    // match x {
+    //     x if 0 == x % 15 => x,
+    //     x if 0 == x %  3 => x,
+    //     x if 0 == x %  5 => x,
+    //     x => x,
+    // }
 }
 
 #[test]
