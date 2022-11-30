@@ -2,6 +2,7 @@ use proc_macro2::TokenStream;
 use quote::ToTokens;
 use syn::parse::{Parse, ParseStream};
 use syn::punctuated::Punctuated;
+use syn::spanned::Spanned;
 use syn::token::{Bracket, Paren};
 use syn::{
     bracketed, parenthesized, Expr, GenericArgument, Ident, Path, PathArguments, PathSegment, Token,
@@ -256,7 +257,19 @@ impl Operator {
 }
 impl Parse for Operator {
     fn parse(input: ParseStream) -> syn::Result<Self> {
-        let path = input.parse()?;
+        let path = if input.peek(Token![match]) {
+            let m: Token![match] = input.parse()?;
+            Path {
+                leading_colon: None,
+                segments: std::iter::once(PathSegment {
+                    ident: Ident::new("match", m.span()),
+                    arguments: PathArguments::None,
+                })
+                .collect(),
+            }
+        } else {
+            input.parse()?
+        };
 
         let content;
         let paren_token = parenthesized!(content in input);

@@ -22,6 +22,7 @@ mod identity;
 mod inspect;
 mod join;
 mod map;
+mod r#match;
 mod merge;
 mod next_epoch;
 mod next_stratum;
@@ -138,6 +139,7 @@ pub const OPERATORS: &[OperatorConstraints] = &[
     tee::TEE,
     split::SPLIT,
     switch::SWITCH,
+    r#match::MATCH,
     identity::IDENTITY,
     map::MAP,
     inspect::INSPECT,
@@ -162,9 +164,13 @@ pub const OPERATORS: &[OperatorConstraints] = &[
 ];
 
 pub struct WriteContextArgs<'a> {
+    /// `hydroflow` crate name for `use #root::something`.
     pub root: &'a TokenStream,
+    /// Subgraph ID in which this operator is contained.
     pub subgraph_id: GraphSubgraphId,
+    /// Node ID identifying this operator in the flat or partitioned graph meta-datastructure.
     pub node_id: GraphNodeId,
+    /// The source span of this operator.
     pub op_span: Span,
 }
 impl WriteContextArgs<'_> {
@@ -184,17 +190,23 @@ impl WriteContextArgs<'_> {
 pub struct WriteIteratorArgs<'a> {
     /// Ident the iterator or pullerator should be assigned to.
     pub ident: &'a Ident,
+    /// If a pull iterator (true) or pusherator (false) should be used.
+    pub is_pull: bool,
     /// Input operator idents (used for pull).
     pub inputs: &'a [Ident],
     /// Output operator idents (used for push).
     pub outputs: &'a [Ident],
+
+    /// Port values used as this operator's input.
+    pub input_ports: &'a [&'a PortIndexValue],
+    /// Port values used as this operator's output.
+    pub output_ports: &'a [&'a PortIndexValue],
+
     /// Unused: Operator type arguments.
     pub type_arguments: Option<&'a Punctuated<GenericArgument, Token![,]>>,
     /// Arguments provided by the user into the operator as arguments.
     /// I.e. the `a, b, c` in `-> my_op(a, b, c) -> `.
     pub arguments: &'a Punctuated<Expr, Token![,]>,
-    /// If a pull iterator (true) or pusherator (false) should be used.
-    pub is_pull: bool,
 }
 
 pub trait RangeTrait<T>

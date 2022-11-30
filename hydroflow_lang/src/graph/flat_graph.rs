@@ -177,187 +177,182 @@ impl FlatGraph {
             match node {
                 Node::Operator(operator) => {
                     let op_name = &*operator.name_string();
-                    match OPERATORS.iter().find(|&op| op_name == op.name) {
-                        Some(op_constraints) => {
-                            // Check numer of args
-                            if op_constraints.num_args != operator.args.len() {
-                                self.diagnostics.push(Diagnostic::spanned(
-                                    operator.span(),
-                                    Level::Error,
-                                    format!(
-                                        "expected {} argument(s), found {}",
-                                        op_constraints.num_args,
-                                        operator.args.len()
-                                    ),
-                                ));
-                            }
+                    let Some(op_constraints) = OPERATORS.iter().find(|&op| op_name == op.name) else {
+                        self.diagnostics.push(Diagnostic::spanned(
+                            operator.path.span(),
+                            Level::Error,
+                            format!("Unknown operator `{}`", op_name),
+                        ));
+                        continue;
+                    };
+                    // Check numer of args
+                    if op_constraints.num_args != operator.args.len() {
+                        self.diagnostics.push(Diagnostic::spanned(
+                            operator.span(),
+                            Level::Error,
+                            format!(
+                                "expected {} argument(s), found {}",
+                                op_constraints.num_args,
+                                operator.args.len()
+                            ),
+                        ));
+                    }
 
-                            // Check input/output (port) arity
-                            /// Returns true if an error was found.
-                            fn emit_arity_error(
-                                operator: &Operator,
-                                is_in: bool,
-                                is_hard: bool,
-                                degree: usize,
-                                range: &dyn RangeTrait<usize>,
-                                diagnostics: &mut Vec<Diagnostic>,
-                            ) -> bool {
-                                let op_name = &*operator.name_string();
-                                let message = format!(
-                                    "`{}` {} have {} {}, actually has {}.",
-                                    op_name,
-                                    if is_hard { "must" } else { "should" },
-                                    range.human_string(),
-                                    if is_in { "input(s)" } else { "output(s)" },
-                                    degree,
-                                );
-                                let out_of_range = !range.contains(&degree);
-                                if out_of_range {
+                    /// Check input/output (port) arity
+                    /// Returns true if an error was found.
+                    fn emit_arity_error(
+                        operator: &Operator,
+                        is_in: bool,
+                        is_hard: bool,
+                        degree: usize,
+                        range: &dyn RangeTrait<usize>,
+                        diagnostics: &mut Vec<Diagnostic>,
+                    ) -> bool {
+                        let op_name = &*operator.name_string();
+                        let message = format!(
+                            "`{}` {} have {} {}, actually has {}.",
+                            op_name,
+                            if is_hard { "must" } else { "should" },
+                            range.human_string(),
+                            if is_in { "input(s)" } else { "output(s)" },
+                            degree,
+                        );
+                        let out_of_range = !range.contains(&degree);
+                        if out_of_range {
+                            diagnostics.push(Diagnostic::spanned(
+                                operator.span(),
+                                if is_hard {
+                                    Level::Error
+                                } else {
+                                    Level::Warning
+                                },
+                                message,
+                            ));
+                        }
+                        out_of_range
+                    }
+
+                    let inn_degree = self.graph.degree_in(node_key);
+                    let _ = emit_arity_error(
+                        operator,
+                        true,
+                        true,
+                        inn_degree,
+                        op_constraints.hard_range_inn,
+                        &mut self.diagnostics,
+                    ) || emit_arity_error(
+                        operator,
+                        true,
+                        false,
+                        inn_degree,
+                        op_constraints.soft_range_inn,
+                        &mut self.diagnostics,
+                    );
+
+                    let out_degree = self.graph.degree_out(node_key);
+                    let _ = emit_arity_error(
+                        operator,
+                        false,
+                        true,
+                        out_degree,
+                        op_constraints.hard_range_out,
+                        &mut self.diagnostics,
+                    ) || emit_arity_error(
+                        operator,
+                        false,
+                        false,
+                        out_degree,
+                        op_constraints.soft_range_out,
+                        &mut self.diagnostics,
+                    );
+
+                    /// Check expected ports
+                    fn emit_port_error<'a>(
+                        operator_span: Span,
+                        expected_ports_fn: Option<&dyn Fn() -> Vec<TokenStream>>,
+                        actual_ports_iter: impl Iterator<Item = &'a PortIndexValue>,
+                        input_output: &'static str,
+                        diagnostics: &mut Vec<Diagnostic>,
+                    ) {
+                        let Some(expected_ports_fn) = expected_ports_fn else {
+                            return
+                        };
+                        let expected_ports: Vec<_> = (expected_ports_fn)().into_iter().collect();
+
+                        // Reject unexpected ports.
+                        let ports: BTreeSet<_> = actual_ports_iter
+                            .inspect(|port_index_value| {
+                                if !expected_ports.iter().any(|port_index| {
+                                    port_index_value == &&port_index.clone().into()
+                                }) {
                                     diagnostics.push(Diagnostic::spanned(
-                                        operator.span(),
-                                        if is_hard {
-                                            Level::Error
-                                        } else {
-                                            Level::Warning
-                                        },
-                                        message,
-                                    ));
-                                }
-                                out_of_range
-                            }
-
-                            let inn_degree = self.graph.degree_in(node_key);
-                            let _ = emit_arity_error(
-                                operator,
-                                true,
-                                true,
-                                inn_degree,
-                                op_constraints.hard_range_inn,
-                                &mut self.diagnostics,
-                            ) || emit_arity_error(
-                                operator,
-                                true,
-                                false,
-                                inn_degree,
-                                op_constraints.soft_range_inn,
-                                &mut self.diagnostics,
-                            );
-
-                            let out_degree = self.graph.degree_out(node_key);
-                            let _ = emit_arity_error(
-                                operator,
-                                false,
-                                true,
-                                out_degree,
-                                op_constraints.hard_range_out,
-                                &mut self.diagnostics,
-                            ) || emit_arity_error(
-                                operator,
-                                false,
-                                false,
-                                out_degree,
-                                op_constraints.soft_range_out,
-                                &mut self.diagnostics,
-                            );
-
-                            fn emit_port_error<'a>(
-                                operator_span: Span,
-                                expected_ports_fn: Option<&dyn Fn() -> Vec<TokenStream>>,
-                                actual_ports_iter: impl Iterator<Item = &'a PortIndexValue>,
-                                input_output: &'static str,
-                                diagnostics: &mut Vec<Diagnostic>,
-                            ) {
-                                let Some(expected_ports_fn) = expected_ports_fn else {
-                                    return
-                                };
-                                let expected_ports: Vec<_> =
-                                    (expected_ports_fn)().into_iter().collect();
-
-                                // Reject unexpected ports.
-                                let ports: BTreeSet<_> = actual_ports_iter
-                                    .inspect(|port_index_value| {
-                                        if !expected_ports.iter().any(|port_index| {
-                                            port_index_value == &&port_index.clone().into()
-                                        }) {
-                                            diagnostics.push(Diagnostic::spanned(
-                                                port_index_value.span(),
-                                                Level::Error,
-                                                format!(
-                                                    "Unexpected {} port. Expected one of: `{}`",
-                                                    input_output,
-                                                    expected_ports
-                                                        .iter()
-                                                        .map(|port| Cow::Owned(
-                                                            port.to_token_stream().to_string()
-                                                        ))
-                                                        .intersperse(Cow::Borrowed("`, `"))
-                                                        .collect::<String>()
-                                                ),
-                                            ))
-                                        }
-                                    })
-                                    .collect();
-
-                                // List missing ports.
-                                let missing: Vec<_> = expected_ports
-                                    .into_iter()
-                                    .filter_map(|expected_port| {
-                                        let tokens = expected_port.to_token_stream();
-                                        if !ports.contains(&&expected_port.into()) {
-                                            Some(tokens)
-                                        } else {
-                                            None
-                                        }
-                                    })
-                                    .collect();
-                                if !missing.is_empty() {
-                                    diagnostics.push(Diagnostic::spanned(
-                                        operator_span,
+                                        port_index_value.span(),
                                         Level::Error,
                                         format!(
-                                            "Missing expected {} port(s): `{}`.",
+                                            "Unexpected {} port. Expected one of: `{}`",
                                             input_output,
-                                            missing
-                                                .into_iter()
+                                            expected_ports
+                                                .iter()
                                                 .map(|port| Cow::Owned(
                                                     port.to_token_stream().to_string()
                                                 ))
                                                 .intersperse(Cow::Borrowed("`, `"))
                                                 .collect::<String>()
                                         ),
-                                    ));
+                                    ))
                                 }
-                            }
+                            })
+                            .collect();
 
-                            emit_port_error(
-                                operator.span(),
-                                op_constraints.ports_inn,
-                                self.graph
-                                    .predecessor_edges(node_key)
-                                    .map(|edge_id| &self.indices[edge_id].1),
-                                "input",
-                                &mut self.diagnostics,
-                            );
-                            emit_port_error(
-                                operator.span(),
-                                op_constraints.ports_out,
-                                self.graph
-                                    .successor_edges(node_key)
-                                    .map(|edge_id| &self.indices[edge_id].0),
-                                "output",
-                                &mut self.diagnostics,
-                            );
-                        }
-                        None => {
-                            self.diagnostics.push(Diagnostic::spanned(
-                                operator.path.span(),
+                        // List missing ports.
+                        let missing: Vec<_> = expected_ports
+                            .into_iter()
+                            .filter_map(|expected_port| {
+                                let tokens = expected_port.to_token_stream();
+                                if !ports.contains(&&expected_port.into()) {
+                                    Some(tokens)
+                                } else {
+                                    None
+                                }
+                            })
+                            .collect();
+                        if !missing.is_empty() {
+                            diagnostics.push(Diagnostic::spanned(
+                                operator_span,
                                 Level::Error,
-                                format!("Unknown operator `{}`", op_name),
+                                format!(
+                                    "Missing expected {} port(s): `{}`.",
+                                    input_output,
+                                    missing
+                                        .into_iter()
+                                        .map(|port| Cow::Owned(port.to_token_stream().to_string()))
+                                        .intersperse(Cow::Borrowed("`, `"))
+                                        .collect::<String>()
+                                ),
                             ));
                         }
                     }
+
+                    emit_port_error(
+                        operator.span(),
+                        op_constraints.ports_inn,
+                        self.graph
+                            .predecessor_edges(node_key)
+                            .map(|edge_id| &self.indices[edge_id].1),
+                        "input",
+                        &mut self.diagnostics,
+                    );
+                    emit_port_error(
+                        operator.span(),
+                        op_constraints.ports_out,
+                        self.graph
+                            .successor_edges(node_key)
+                            .map(|edge_id| &self.indices[edge_id].0),
+                        "output",
+                        &mut self.diagnostics,
+                    );
                 }
-                Node::Handoff => todo!("Node::Handoff"),
+                Node::Handoff => todo!("Node::Handoff"), // No way to manually specify handoff yet.
             }
         }
     }

@@ -55,7 +55,7 @@ pub fn hydroflow_parser(input: proc_macro::TokenStream) -> proc_macro::TokenStre
 pub fn surface_booktest_operators(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     assert!(input.is_empty(), "Input must be empty");
     let each = hydroflow_lang::graph::ops::OPERATORS.iter().map(|op| {
-        let op_ident = Ident::new(op.name, Span::call_site());
+        let op_ident = Ident::new_raw(op.name, Span::call_site());
         let op_filename = format!("../../book/docgen/{}.md", op.name);
         let lit_filename = LitStr::new(&*op_filename, Span::call_site());
         quote! {

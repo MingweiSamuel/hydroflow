@@ -235,6 +235,54 @@ pub fn test_flatten() {
 }
 
 #[test]
+pub fn test_match_1() {
+    let mut df = hydroflow_syntax! {
+        my_match = recv_iter([Some(1), Some(10), None]) -> match();
+        my_match[Some(x @ 0..=2) => x] -> for_each(|x| println!("a {:?}", x));
+        my_match[Some(x) => x] -> for_each(|x| println!("b {:?}", x));
+        my_match[None => 100] -> for_each(|x| println!("c {:?}", x));
+    };
+    df.run_available();
+}
+
+#[test]
+pub fn test_match_2() {
+    let mut df = hydroflow_syntax! {
+        my_match = recv_iter([Some(0), Some(1), Some(9), Some(10), None]) -> match();
+        my_match[Some(0) => ()] -> for_each(|()| println!("zero"));
+        my_match[Some(x) => x] -> for_each(|x| println!("{}", x));
+        my_match[None => ()] -> for_each(|()| println!("unknown"));
+    };
+    df.run_available();
+}
+
+#[test]
+pub fn test_match_degeneratre() {
+    let mut df = hydroflow_syntax! {
+        my_match = recv_iter(0..10) -> match();
+
+        my_merge = merge();
+        my_match[x => x] -> my_merge;
+        recv_iter(10..15) -> my_merge;
+
+        my_merge -> for_each(|x| println!("{:?}", x));
+    };
+    df.run_available();
+}
+
+#[test]
+pub fn test_match_fizzbuzz() {
+    let mut df = hydroflow_syntax! {
+        my_match = recv_iter(0..100) -> match();
+        my_match[x if 0 == x % 15 => x] -> for_each(|x| println!("fizzbuzz"));
+        my_match[x if 0 == x %  3 => x] -> for_each(|x| println!("fizz"));
+        my_match[x if 0 == x %  5 => x] -> for_each(|x| println!("buzz"));
+        my_match[x => x]                -> for_each(|x| println!("{}", x));
+    };
+    df.run_available();
+}
+
+#[test]
 pub fn test_next_epoch() {
     let (inp_send, inp_recv) = hydroflow::util::unbounded_channel::<usize>();
     let (out_send, mut out_recv) = hydroflow::util::unbounded_channel::<usize>();
