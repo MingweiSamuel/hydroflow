@@ -18,6 +18,12 @@ use super::di_mul_graph::DiMulGraph;
 use super::partitioned_graph::PartitionedGraph;
 use super::{GraphEdgeId, GraphNodeId, Node, PortIndexValue};
 
+#[derive(Clone, Copy, Debug)]
+struct Ends {
+    inn: Option<GraphNodeId>,
+    out: Option<GraphNodeId>,
+}
+
 /// A graph representing a hydroflow dataflow graph before subgraph partitioning, stratification, and handoff insertion.
 /// I.e. the graph is a simple "flat" without any subgraph heirarchy.
 ///
@@ -316,12 +322,6 @@ impl FlatGraph {
     pub fn into_partitioned_graph(self) -> Result<PartitionedGraph, Diagnostic> {
         self.try_into()
     }
-}
-
-#[derive(Clone, Copy, Debug)]
-struct Ends {
-    inn: Option<GraphNodeId>,
-    out: Option<GraphNodeId>,
 }
 
 fn emit_assignment_conflict(
