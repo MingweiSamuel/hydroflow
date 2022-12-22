@@ -130,6 +130,8 @@ impl Hydroflow {
                 // This must be true for the subgraph to be enqueued.
                 assert!(sg_data.is_scheduled.take());
 
+                eprintln!("Running subgraph {}", sg_id);
+
                 self.context.subgraph_id = sg_id;
                 sg_data.subgraph.run(&mut self.context);
             }
@@ -198,6 +200,7 @@ impl Hydroflow {
             self.run_available();
             // Only when there is absolutely no work available in any stratum.
             // Do we yield to wait for more events.
+            eprintln!("WAITING FOR EVENTS");
             self.recv_events_async().await;
         }
     }

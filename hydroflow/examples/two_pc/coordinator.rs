@@ -20,9 +20,9 @@ pub(crate) async fn run_coordinator(
 
         // set up channels
         outbound_chan = tee();
-        outbound_chan[0] -> dest_sink_serde(outbound);
-        inbound_chan = source_stream_serde(inbound) -> map(|(m, _a)| m) -> tee();
-        msgs = inbound_chan[0] ->  demux(|m:SubordResponse, var_args!(commits, aborts, acks, endeds, errs)| match m.mtype {
+        outbound_chan -> dest_sink_serde(outbound);
+        inbound_chan = source_stream_serde(inbound) -> tee();
+        msgs = inbound_chan -> map(|(msg, _addr)| msg) -> demux(|m: SubordResponse, var_args!(commits, aborts, acks, endeds, errs)| match m.mtype {
                     MsgType::Commit => commits.give(m),
                     MsgType::Abort => aborts.give(m),
                     MsgType::AckP2 {..} => acks.give(m),
@@ -33,8 +33,8 @@ pub(crate) async fn run_coordinator(
         msgs[endeds] -> null();
 
         // we log all messages (in this prototype we just print)
-        inbound_chan[1] -> for_each(|m| println!("Received {:?}", m));
-        outbound_chan[1] -> for_each(|(m, a)| println!("Sending {:?} to {:?}", m, a));
+        inbound_chan -> for_each(|(m, a)| println!("Received {:?} from {:?}", m, a));
+        outbound_chan -> for_each(|(m, a)| println!("Sending {:?} to {:?}", m, a));
 
         // setup broadcast channel to all subords
         broadcast_join = cross_join() -> outbound_chan;
@@ -47,14 +47,14 @@ pub(crate) async fn run_coordinator(
         source_stdin()
             -> filter_map(|l: Result<std::string::String, std::io::Error>| parse_out(l.unwrap()))
             -> map(|xid| CoordMsg{xid, mtype: MsgType::Prepare})
-            -> [0]broadcast;
+            -> broadcast;
 
         // Phase 1 responses:
         // as soon as we get an abort message for P1, we start Phase 2 with Abort.
         // We'll respond to each abort message: this is redundant but correct (and monotone)
         msgs[aborts]
             -> map(|m: SubordResponse| CoordMsg{xid: m.xid, mtype: MsgType::Abort})
-            -> [1]broadcast;
+            -> broadcast;
 
         // count commit votes
         // persistence done explicitly here!
@@ -65,20 +65,20 @@ pub(crate) async fn run_coordinator(
         commit_buf
             -> group_by(|| 0, |old: &mut u32, val: u32| *old += val)
             -> commit_votes;
-        commit_votes[0] -> next_tick() -> [1]commit_buf;
+        commit_votes -> next_tick() -> [1]commit_buf;
 
         // count subordinates
         subord_total = subords[0] -> fold(0, |a,_b| a+1); // -> for_each(|n| println!("There are {} subordinates.", n));
 
         // If commit_votes for this xid is the same as all_votes, send a P2 Commit message
         committed = join() -> map(|(_c, (xid, ()))| xid);
-        commit_votes[1] -> map(|(xid, c)| (c, xid)) -> [0]committed;
+        commit_votes -> map(|(xid, c)| (c, xid)) -> [0]committed;
         subord_total -> map(|c| (c, ())) -> [1]committed;
-        committed -> map(|xid| CoordMsg{xid, mtype: MsgType::Commit}) -> [2]broadcast;
+        committed -> map(|xid| CoordMsg{xid, mtype: MsgType::Commit}) -> broadcast;
 
         // Handle p2 acknowledgments by sending an End message
         msgs[acks]  -> map(|m:SubordResponse| CoordMsg{xid: m.xid, mtype: MsgType::End,})
-                    -> [3]broadcast;
+                    -> broadcast;
 
         // Handler for ended acknowledgments not necessary; we just print them
     };
