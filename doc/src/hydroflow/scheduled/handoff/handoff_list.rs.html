@@ -151,35 +151,30 @@
 <a href="#151" id="151">151</a>
 <a href="#152" id="152">152</a>
 <a href="#153" id="153">153</a>
-<a href="#154" id="154">154</a>
-<a href="#155" id="155">155</a>
-<a href="#156" id="156">156</a>
-<a href="#157" id="157">157</a>
 </pre><pre class="rust"><code><span class="kw">use </span>ref_cast::RefCast;
 <span class="kw">use </span>sealed::sealed;
+<span class="kw">use </span>variadics::Variadic;
 
 <span class="kw">use </span><span class="kw">crate</span>::scheduled::graph::HandoffData;
 <span class="kw">use </span><span class="kw">crate</span>::scheduled::port::{Polarity, Port, PortCtx};
-<span class="kw">use </span><span class="kw">crate</span>::scheduled::type_list::TypeList;
 <span class="kw">use </span><span class="kw">crate</span>::scheduled::{HandoffId, SubgraphId};
 
 <span class="kw">use </span><span class="kw">super</span>::Handoff;
 
 <span class="attr">#[sealed]
-</span><span class="kw">pub trait </span>PortList&lt;S&gt;: TypeList
+</span><span class="kw">pub trait </span>PortList&lt;S&gt;: Variadic
 <span class="kw">where
     </span>S: Polarity,
 {
-    <span class="attr">#[allow(clippy::ptr_arg)]
-    </span><span class="kw">fn </span>set_graph_meta&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>set_graph_meta(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        handoffs: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>[HandoffData],
+        handoffs: <span class="kw-2">&amp;mut </span>[HandoffData],
         pred: <span class="prelude-ty">Option</span>&lt;SubgraphId&gt;,
         succ: <span class="prelude-ty">Option</span>&lt;SubgraphId&gt;,
         out_handoff_ids: <span class="kw-2">&amp;mut </span>Vec&lt;HandoffId&gt;,
     );
 
-    <span class="kw">type </span>Ctx&lt;<span class="lifetime">&#39;a</span>&gt;: TypeList;
+    <span class="kw">type </span>Ctx&lt;<span class="lifetime">&#39;a</span>&gt;: Variadic;
     <span class="kw">fn </span>make_ctx&lt;<span class="lifetime">&#39;a</span>&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>, handoffs: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[HandoffData]) -&gt; <span class="self">Self</span>::Ctx&lt;<span class="lifetime">&#39;a</span>&gt;;
 }
 <span class="attr">#[sealed]
@@ -189,9 +184,9 @@
     H: Handoff,
     Rest: PortList&lt;S&gt;,
 {
-    <span class="kw">fn </span>set_graph_meta&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>set_graph_meta(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        handoffs: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>[HandoffData],
+        handoffs: <span class="kw-2">&amp;mut </span>[HandoffData],
         pred: <span class="prelude-ty">Option</span>&lt;SubgraphId&gt;,
         succ: <span class="prelude-ty">Option</span>&lt;SubgraphId&gt;,
         out_handoff_ids: <span class="kw-2">&amp;mut </span>Vec&lt;HandoffId&gt;,
@@ -231,9 +226,9 @@
 <span class="kw">where
     </span>S: Polarity,
 {
-    <span class="kw">fn </span>set_graph_meta&lt;<span class="lifetime">&#39;a</span>&gt;(
+    <span class="kw">fn </span>set_graph_meta(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
-        _handoffs: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>[HandoffData],
+        _handoffs: <span class="kw-2">&amp;mut </span>[HandoffData],
         _pred: <span class="prelude-ty">Option</span>&lt;SubgraphId&gt;,
         _succ: <span class="prelude-ty">Option</span>&lt;SubgraphId&gt;,
         _out_handoff_ids: <span class="kw-2">&amp;mut </span>Vec&lt;HandoffId&gt;,
@@ -252,8 +247,7 @@
 {
     <span class="kw">type </span>Suffix: PortList&lt;S&gt;;
 
-    <span class="attr">#[allow(clippy::needless_lifetimes)]
-    </span><span class="kw">fn </span>split_ctx&lt;<span class="lifetime">&#39;a</span>&gt;(ctx: <span class="self">Self</span>::Ctx&lt;<span class="lifetime">&#39;a</span>&gt;) -&gt; (A::Ctx&lt;<span class="lifetime">&#39;a</span>&gt;, &lt;<span class="self">Self</span>::Suffix <span class="kw">as </span>PortList&lt;S&gt;&gt;::Ctx&lt;<span class="lifetime">&#39;a</span>&gt;);
+    <span class="kw">fn </span>split_ctx(ctx: <span class="self">Self</span>::Ctx&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; (A::Ctx&lt;<span class="lifetime">&#39;_</span>&gt;, &lt;<span class="self">Self</span>::Suffix <span class="kw">as </span>PortList&lt;S&gt;&gt;::Ctx&lt;<span class="lifetime">&#39;_</span>&gt;);
 }
 <span class="attr">#[sealed]
 </span><span class="kw">impl</span>&lt;S, H, T, U&gt; PortListSplit&lt;S, (Port&lt;S, H&gt;, U)&gt; <span class="kw">for </span>(Port&lt;S, H&gt;, T)
@@ -265,12 +259,11 @@
 {
     <span class="kw">type </span>Suffix = T::Suffix;
 
-    <span class="attr">#[allow(clippy::needless_lifetimes)]
-    </span><span class="kw">fn </span>split_ctx&lt;<span class="lifetime">&#39;a</span>&gt;(
-        ctx: <span class="self">Self</span>::Ctx&lt;<span class="lifetime">&#39;a</span>&gt;,
+    <span class="kw">fn </span>split_ctx(
+        ctx: <span class="self">Self</span>::Ctx&lt;<span class="lifetime">&#39;_</span>&gt;,
     ) -&gt; (
-        &lt;(Port&lt;S, H&gt;, U) <span class="kw">as </span>PortList&lt;S&gt;&gt;::Ctx&lt;<span class="lifetime">&#39;a</span>&gt;,
-        &lt;<span class="self">Self</span>::Suffix <span class="kw">as </span>PortList&lt;S&gt;&gt;::Ctx&lt;<span class="lifetime">&#39;a</span>&gt;,
+        &lt;(Port&lt;S, H&gt;, U) <span class="kw">as </span>PortList&lt;S&gt;&gt;::Ctx&lt;<span class="lifetime">&#39;_</span>&gt;,
+        &lt;<span class="self">Self</span>::Suffix <span class="kw">as </span>PortList&lt;S&gt;&gt;::Ctx&lt;<span class="lifetime">&#39;_</span>&gt;,
     ) {
         <span class="kw">let </span>(x, t) = ctx;
         <span class="kw">let </span>(u, v) = T::split_ctx(t);
@@ -285,8 +278,7 @@
 {
     <span class="kw">type </span>Suffix = T;
 
-    <span class="attr">#[allow(clippy::needless_lifetimes)]
-    </span><span class="kw">fn </span>split_ctx&lt;<span class="lifetime">&#39;a</span>&gt;(ctx: <span class="self">Self</span>::Ctx&lt;<span class="lifetime">&#39;a</span>&gt;) -&gt; ((), T::Ctx&lt;<span class="lifetime">&#39;a</span>&gt;) {
+    <span class="kw">fn </span>split_ctx(ctx: <span class="self">Self</span>::Ctx&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; ((), T::Ctx&lt;<span class="lifetime">&#39;_</span>&gt;) {
         ((), ctx)
     }
 }
@@ -297,12 +289,12 @@
 /// ```ignore
 /// type MyHandoffList = (VecHandoff&lt;usize&gt;, (VecHandoff&lt;String&gt;, (TeeingHandoff&lt;u32&gt;, ())));
 /// ```
-/// The [`tl!`](crate::tl) (tuple list) macro simplifies usage of this kind:
+/// The [`var_expr!`](variadics::var_expr) macro simplifies usage of this kind:
 /// ```ignore
-/// type MyHandoffList = tl!(VecHandoff&lt;usize&gt;, VecHandoff&lt;String&gt;, TeeingHandoff&lt;u32&gt;);
+/// type MyHandoffList = var_expr!(VecHandoff&lt;usize&gt;, VecHandoff&lt;String&gt;, TeeingHandoff&lt;u32&gt;);
 /// ```
 </span><span class="attr">#[sealed]
-</span><span class="kw">pub trait </span>HandoffList: TypeList {}
+</span><span class="kw">pub trait </span>HandoffList: Variadic {}
 <span class="attr">#[sealed]
 </span><span class="kw">impl</span>&lt;H, L&gt; HandoffList <span class="kw">for </span>(H, L)
 <span class="kw">where

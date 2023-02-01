@@ -7,14 +7,12 @@
 <a href="#7" id="7">7</a>
 <a href="#8" id="8">8</a>
 <a href="#9" id="9">9</a>
-<a href="#10" id="10">10</a>
 </pre><pre class="rust"><code><span class="attr">#![feature(proc_macro_diagnostic, proc_macro_span)]
+#![feature(iter_intersperse, array_zip)]
 #![allow(clippy::let_and_return)]
 #![allow(clippy::explicit_auto_deref)]
-</span><span class="comment">// TODO(mingwei): Need rust-analyzer support
-</span><span class="attr">#![allow(clippy::uninlined_format_args)]
-
-</span><span class="kw">pub mod </span>graph;
+</span><span class="kw">pub mod </span>diagnostic;
+<span class="kw">pub mod </span>graph;
 <span class="kw">pub mod </span>parse;
 <span class="kw">pub mod </span>pretty_span;
 <span class="kw">pub mod </span>union_find;

@@ -514,43 +514,160 @@
 <a href="#514" id="514">514</a>
 <a href="#515" id="515">515</a>
 <a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a>
+<a href="#532" id="532">532</a>
+<a href="#533" id="533">533</a>
+<a href="#534" id="534">534</a>
+<a href="#535" id="535">535</a>
+<a href="#536" id="536">536</a>
+<a href="#537" id="537">537</a>
+<a href="#538" id="538">538</a>
+<a href="#539" id="539">539</a>
+<a href="#540" id="540">540</a>
+<a href="#541" id="541">541</a>
+<a href="#542" id="542">542</a>
+<a href="#543" id="543">543</a>
+<a href="#544" id="544">544</a>
+<a href="#545" id="545">545</a>
+<a href="#546" id="546">546</a>
+<a href="#547" id="547">547</a>
+<a href="#548" id="548">548</a>
+<a href="#549" id="549">549</a>
+<a href="#550" id="550">550</a>
+<a href="#551" id="551">551</a>
+<a href="#552" id="552">552</a>
+<a href="#553" id="553">553</a>
+<a href="#554" id="554">554</a>
+<a href="#555" id="555">555</a>
+<a href="#556" id="556">556</a>
+<a href="#557" id="557">557</a>
+<a href="#558" id="558">558</a>
+<a href="#559" id="559">559</a>
+<a href="#560" id="560">560</a>
+<a href="#561" id="561">561</a>
+<a href="#562" id="562">562</a>
+<a href="#563" id="563">563</a>
+<a href="#564" id="564">564</a>
+<a href="#565" id="565">565</a>
+<a href="#566" id="566">566</a>
+<a href="#567" id="567">567</a>
+<a href="#568" id="568">568</a>
+<a href="#569" id="569">569</a>
+<a href="#570" id="570">570</a>
+<a href="#571" id="571">571</a>
+<a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
+<a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
+<a href="#616" id="616">616</a>
+<a href="#617" id="617">617</a>
+<a href="#618" id="618">618</a>
+<a href="#619" id="619">619</a>
+<a href="#620" id="620">620</a>
+<a href="#621" id="621">621</a>
+<a href="#622" id="622">622</a>
+<a href="#623" id="623">623</a>
+<a href="#624" id="624">624</a>
+<a href="#625" id="625">625</a>
+<a href="#626" id="626">626</a>
+<a href="#627" id="627">627</a>
+<a href="#628" id="628">628</a>
+<a href="#629" id="629">629</a>
+<a href="#630" id="630">630</a>
 </pre><pre class="rust"><code><span class="kw">use </span>std::collections::{BTreeMap, BTreeSet};
 
 <span class="kw">use </span>proc_macro2::Span;
-<span class="kw">use </span>slotmap::{Key, SecondaryMap, SlotMap};
+<span class="kw">use </span>slotmap::{Key, SecondaryMap, SlotMap, SparseSecondaryMap};
 <span class="kw">use </span>syn::parse_quote;
 <span class="kw">use </span>syn::spanned::Spanned;
 
+<span class="kw">use </span><span class="kw">crate</span>::diagnostic::{Diagnostic, Level};
 <span class="kw">use </span><span class="kw">crate</span>::union_find::UnionFind;
 
 <span class="kw">use </span><span class="kw">super</span>::di_mul_graph::DiMulGraph;
 <span class="kw">use </span><span class="kw">super</span>::flat_graph::FlatGraph;
-<span class="kw">use </span><span class="kw">super</span>::ops::{DelayType, OPERATORS};
+<span class="kw">use </span><span class="kw">super</span>::ops::{DelayType, OperatorConstraints};
 <span class="kw">use </span><span class="kw">super</span>::partitioned_graph::PartitionedGraph;
 <span class="kw">use super</span>::{
     graph_algorithms, node_color, Color, GraphEdgeId, GraphNodeId, GraphSubgraphId, Node,
     PortIndexValue,
 };
 
+<span class="kw">fn </span>find_operator_constraints(node: <span class="kw-2">&amp;</span>Node) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>OperatorConstraints&gt; {
+    <span class="kw">if let </span>Node::Operator(operator) = node {
+        <span class="kw">let </span>name = <span class="kw-2">&amp;*</span>operator.name_string();
+        <span class="kw">super</span>::ops::OPERATORS.iter().find(|<span class="kw-2">&amp;</span>op| name == op.name)
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>}
+}
+
 <span class="kw">fn </span>find_barrier_crossers(
     nodes: <span class="kw-2">&amp;</span>SlotMap&lt;GraphNodeId, Node&gt;,
-    indices: <span class="kw-2">&amp;</span>SecondaryMap&lt;GraphEdgeId, (PortIndexValue, PortIndexValue)&gt;,
+    ports: <span class="kw-2">&amp;</span>SecondaryMap&lt;GraphEdgeId, (PortIndexValue, PortIndexValue)&gt;,
     graph: <span class="kw-2">&amp;</span>DiMulGraph&lt;GraphNodeId, GraphEdgeId&gt;,
 ) -&gt; SecondaryMap&lt;GraphEdgeId, DelayType&gt; {
     graph
         .edges()
         .filter_map(|(edge_id, (_src, dst))| {
-            <span class="kw">let </span>(_src_idx, dst_idx) = <span class="kw-2">&amp;</span>indices[edge_id];
-            <span class="kw">if let </span>Node::Operator(dst_operator) = <span class="kw-2">&amp;</span>nodes[dst] {
-                <span class="kw">let </span>dst_name = <span class="kw-2">&amp;*</span>dst_operator.name_string();
-                OPERATORS
-                    .iter()
-                    .find(|<span class="kw-2">&amp;</span>op| dst_name == op.name)
-                    .and_then(|op_constraints| (op_constraints.input_delaytype_fn)(dst_idx))
-                    .map(|input_barrier| (edge_id, input_barrier))
-            } <span class="kw">else </span>{
-                <span class="prelude-val">None
-            </span>}
+            <span class="kw">let </span>op_constraints = find_operator_constraints(<span class="kw-2">&amp;</span>nodes[dst])<span class="question-mark">?</span>;
+            <span class="kw">let </span>(_src_idx, dst_idx) = <span class="kw-2">&amp;</span>ports[edge_id];
+            <span class="kw">let </span>input_barrier = (op_constraints.input_delaytype_fn)(dst_idx)<span class="question-mark">?</span>;
+            <span class="prelude-val">Some</span>((edge_id, input_barrier))
         })
         .collect()
 }
@@ -559,18 +676,8 @@
     nodes: <span class="kw-2">&amp;</span>SlotMap&lt;GraphNodeId, Node&gt;,
     graph: <span class="kw-2">&amp;</span>DiMulGraph&lt;GraphNodeId, GraphEdgeId&gt;,
     barrier_crossers: <span class="kw-2">&amp;</span>SecondaryMap&lt;GraphEdgeId, DelayType&gt;,
+    node_color_map: <span class="kw-2">&amp;mut </span>SparseSecondaryMap&lt;GraphNodeId, Color&gt;,
 ) -&gt; (UnionFind&lt;GraphNodeId&gt;, BTreeSet&lt;GraphEdgeId&gt;) {
-    <span class="comment">// Pre-calculate node colors.
-    </span><span class="kw">let </span><span class="kw-2">mut </span>node_color: SecondaryMap&lt;GraphNodeId, <span class="prelude-ty">Option</span>&lt;Color&gt;&gt; = nodes
-        .keys()
-        .map(|node_id| {
-            <span class="kw">let </span>inn_degree = graph.degree_in(node_id);
-            <span class="kw">let </span>out_degree = graph.degree_out(node_id);
-            <span class="kw">let </span>op_color = node_color(<span class="kw-2">&amp;</span>nodes[node_id], inn_degree, out_degree);
-            (node_id, op_color)
-        })
-        .collect();
-
     <span class="kw">let </span><span class="kw-2">mut </span>subgraph_unionfind: UnionFind&lt;GraphNodeId&gt; = UnionFind::with_capacity(nodes.len());
     <span class="comment">// Will contain all edges which are handoffs. Starts out with all edges and
     // we remove from this set as we construct subgraphs.
@@ -606,7 +713,7 @@
                 <span class="kw">continue</span>;
             }
 
-            <span class="kw">if </span>can_connect_colorize(<span class="kw-2">&amp;mut </span>node_color, src, dst) {
+            <span class="kw">if </span>can_connect_colorize(node_color_map, src, dst) {
                 <span class="comment">// At this point we have selected this edge and its src &amp; dst to be
                 // within a single subgraph.
                 </span>subgraph_unionfind.union(src, dst);
@@ -636,12 +743,12 @@
     </span><span class="kw">let </span>topo_sort = graph_algorithms::topo_sort(
         nodes
             .iter()
-            .filter(|<span class="kw-2">&amp;</span>(<span class="kw">_</span>, node)| !<span class="macro">matches!</span>(node, Node::Handoff))
+            .filter(|<span class="kw-2">&amp;</span>(<span class="kw">_</span>, node)| !<span class="macro">matches!</span>(node, Node::Handoff { .. }))
             .map(|(node_id, <span class="kw">_</span>)| node_id),
         |v| {
             graph
                 .predecessor_nodes(v)
-                .filter(|<span class="kw-2">&amp;</span>pred| !<span class="macro">matches!</span>(nodes[pred], Node::Handoff))
+                .filter(|<span class="kw-2">&amp;</span>pred| !<span class="macro">matches!</span>(nodes[pred], Node::Handoff { .. }))
         },
     );
 
@@ -672,9 +779,10 @@
 /// the DelayType data.
 </span><span class="kw">fn </span>make_subgraphs(
     nodes: <span class="kw-2">&amp;mut </span>SlotMap&lt;GraphNodeId, Node&gt;,
-    indices: <span class="kw-2">&amp;mut </span>SecondaryMap&lt;GraphEdgeId, (PortIndexValue, PortIndexValue)&gt;,
+    ports: <span class="kw-2">&amp;mut </span>SecondaryMap&lt;GraphEdgeId, (PortIndexValue, PortIndexValue)&gt;,
     graph: <span class="kw-2">&amp;mut </span>DiMulGraph&lt;GraphNodeId, GraphEdgeId&gt;,
     barrier_crossers: <span class="kw-2">&amp;mut </span>SecondaryMap&lt;GraphEdgeId, DelayType&gt;,
+    node_color: <span class="kw-2">&amp;mut </span>SparseSecondaryMap&lt;GraphNodeId, Color&gt;,
 ) -&gt; (
     SecondaryMap&lt;GraphNodeId, GraphSubgraphId&gt;,
     SlotMap&lt;GraphSubgraphId, Vec&lt;GraphNodeId&gt;&gt;,
@@ -687,19 +795,24 @@
     </span>graph.assert_valid();
 
     <span class="kw">let </span>(subgraph_unionfind, handoff_edges) =
-        find_subgraph_unionfind(nodes, graph, barrier_crossers);
+        find_subgraph_unionfind(nodes, graph, barrier_crossers, node_color);
 
     <span class="comment">// Insert handoffs between subgraphs (or on subgraph self-loop edges)
     </span><span class="kw">for </span>edge_id <span class="kw">in </span>handoff_edges {
-        <span class="kw">let </span>(src, dst) = graph.edge(edge_id).unwrap();
+        <span class="kw">let </span>(src_id, dst_id) = graph.edge(edge_id).unwrap();
 
         <span class="comment">// Already has a handoff, no need to insert one.
-        </span><span class="kw">if </span><span class="macro">matches!</span>(nodes[src], Node::Handoff) || <span class="macro">matches!</span>(nodes[dst], Node::Handoff) {
+        </span><span class="kw">let </span>src_node = <span class="kw-2">&amp;</span>nodes[src_id];
+        <span class="kw">let </span>dst_node = <span class="kw-2">&amp;</span>nodes[dst_id];
+        <span class="kw">if </span><span class="macro">matches!</span>(src_node, Node::Handoff { .. }) || <span class="macro">matches!</span>(dst_node, Node::Handoff { .. }) {
             <span class="kw">continue</span>;
         }
 
-        <span class="kw">let </span>(_node_id, out_edge_id) =
-            insert_intermediate_node(nodes, indices, graph, Node::Handoff, edge_id);
+        <span class="kw">let </span>hoff = Node::Handoff {
+            src_span: src_node.span(),
+            dst_span: dst_node.span(),
+        };
+        <span class="kw">let </span>(_node_id, out_edge_id) = insert_intermediate_node(nodes, ports, graph, hoff, edge_id);
 
         <span class="comment">// Update barrier_crossers for inserted node.
         </span><span class="kw">if let </span><span class="prelude-val">Some</span>(delay_type) = barrier_crossers.remove(edge_id) {
@@ -720,7 +833,7 @@
 ///
 /// Returns if `src` and `dst` can be in the same subgraph.
 </span><span class="kw">fn </span>can_connect_colorize(
-    node_color: <span class="kw-2">&amp;mut </span>SecondaryMap&lt;GraphNodeId, <span class="prelude-ty">Option</span>&lt;Color&gt;&gt;,
+    node_color: <span class="kw-2">&amp;mut </span>SparseSecondaryMap&lt;GraphNodeId, Color&gt;,
     src: GraphNodeId,
     dst: GraphNodeId,
 ) -&gt; bool {
@@ -728,28 +841,28 @@
     // Push -&gt; Push
     // Pull -&gt; [Computation] -&gt; Push
     // Push -&gt; [Handoff] -&gt; Pull
-    </span><span class="kw">let </span>can_connect = <span class="kw">match </span>(node_color[src], node_color[dst]) {
+    </span><span class="kw">let </span>can_connect = <span class="kw">match </span>(node_color.get(src), node_color.get(dst)) {
         <span class="comment">// Linear chain, can&#39;t connect because it may cause future conflicts.
         // But if it doesn&#39;t in the _future_ we can connect it (once either/both ends are determined).
         </span>(<span class="prelude-val">None</span>, <span class="prelude-val">None</span>) =&gt; <span class="bool-val">false</span>,
 
         <span class="comment">// Infer left side.
         </span>(<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(Color::Pull | Color::Comp)) =&gt; {
-            node_color[src] = <span class="prelude-val">Some</span>(Color::Pull);
+            node_color.insert(src, Color::Pull);
             <span class="bool-val">true
         </span>}
         (<span class="prelude-val">None</span>, <span class="prelude-val">Some</span>(Color::Push | Color::Hoff)) =&gt; {
-            node_color[src] = <span class="prelude-val">Some</span>(Color::Push);
+            node_color.insert(src, Color::Push);
             <span class="bool-val">true
         </span>}
 
         <span class="comment">// Infer right side.
         </span>(<span class="prelude-val">Some</span>(Color::Pull | Color::Hoff), <span class="prelude-val">None</span>) =&gt; {
-            node_color[dst] = <span class="prelude-val">Some</span>(Color::Pull);
+            node_color.insert(dst, Color::Pull);
             <span class="bool-val">true
         </span>}
         (<span class="prelude-val">Some</span>(Color::Comp | Color::Push), <span class="prelude-val">None</span>) =&gt; {
-            node_color[dst] = <span class="prelude-val">Some</span>(Color::Push);
+            node_color.insert(dst, Color::Push);
             <span class="bool-val">true
         </span>}
 
@@ -775,33 +888,33 @@
 
 <span class="kw">fn </span>find_subgraph_strata(
     nodes: <span class="kw-2">&amp;mut </span>SlotMap&lt;GraphNodeId, Node&gt;,
-    indices: <span class="kw-2">&amp;mut </span>SecondaryMap&lt;GraphEdgeId, (PortIndexValue, PortIndexValue)&gt;,
+    ports: <span class="kw-2">&amp;mut </span>SecondaryMap&lt;GraphEdgeId, (PortIndexValue, PortIndexValue)&gt;,
     graph: <span class="kw-2">&amp;mut </span>DiMulGraph&lt;GraphNodeId, GraphEdgeId&gt;,
     node_subgraph: <span class="kw-2">&amp;mut </span>SecondaryMap&lt;GraphNodeId, GraphSubgraphId&gt;,
     subgraph_nodes: <span class="kw-2">&amp;mut </span>SlotMap&lt;GraphSubgraphId, Vec&lt;GraphNodeId&gt;&gt;,
     barrier_crossers: <span class="kw-2">&amp;</span>SecondaryMap&lt;GraphEdgeId, DelayType&gt;,
-) -&gt; <span class="prelude-ty">Result</span>&lt;SecondaryMap&lt;GraphSubgraphId, usize&gt;, ()&gt; {
+) -&gt; <span class="prelude-ty">Result</span>&lt;SecondaryMap&lt;GraphSubgraphId, usize&gt;, Diagnostic&gt; {
     <span class="comment">// Determine subgraphs&#39;s stratum number.
-    // Find SCCs ignoring `next_epoch()` edges, then do TopoSort on the resulting DAG.
+    // Find SCCs ignoring `next_tick()` edges, then do TopoSort on the resulting DAG.
     // (Cycles on cross-stratum negative edges are an error.)
 
     // Generate a subgraph graph. I.e. each node is a subgraph.
-    // Edges are connections between subgraphs, ignoring epoch-crossers.
+    // Edges are connections between subgraphs, ignoring tick-crossers.
     // TODO: use DiMulGraph here?
     </span><span class="kw">let </span><span class="kw-2">mut </span>subgraph_preds: BTreeMap&lt;GraphSubgraphId, Vec&lt;GraphSubgraphId&gt;&gt; = Default::default();
     <span class="kw">let </span><span class="kw-2">mut </span>subgraph_succs: BTreeMap&lt;GraphSubgraphId, Vec&lt;GraphSubgraphId&gt;&gt; = Default::default();
 
-    <span class="comment">// Negative (next stratum) connections between subgraphs. (Ignore `next_epoch()` connections).
+    <span class="comment">// Negative (next stratum) connections between subgraphs. (Ignore `next_tick()` connections).
     </span><span class="kw">let </span><span class="kw-2">mut </span>subgraph_negative_connections: BTreeSet&lt;(GraphSubgraphId, GraphSubgraphId)&gt; =
         Default::default();
 
     <span class="kw">for </span>(node_id, node) <span class="kw">in </span>nodes.iter() {
-        <span class="kw">if </span><span class="macro">matches!</span>(node, Node::Handoff) {
+        <span class="kw">if </span><span class="macro">matches!</span>(node, Node::Handoff { .. }) {
             <span class="macro">assert_eq!</span>(<span class="number">1</span>, graph.successors(node_id).count());
             <span class="kw">let </span>(succ_edge, succ) = graph.successors(node_id).next().unwrap();
 
-            <span class="comment">// Ignore Epoch edges.
-            </span><span class="kw">if </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>DelayType::Epoch) == barrier_crossers.get(succ_edge) {
+            <span class="comment">// Ignore tick edges.
+            </span><span class="kw">if </span><span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>DelayType::Tick) == barrier_crossers.get(succ_edge) {
                 <span class="kw">continue</span>;
             }
 
@@ -864,8 +977,8 @@
         );
     }
 
-    <span class="comment">// Re-introduce the `next_epoch()` edges, ensuring they actually go to the next epoch.
-    </span><span class="kw">let </span>max_stratum = subgraph_stratum.values().cloned().max().unwrap_or(<span class="number">0</span>) + <span class="number">1</span>; <span class="comment">// Used for `next_epoch()` delayer subgraphs.
+    <span class="comment">// Re-introduce the `next_tick()` edges, ensuring they actually go to the next tick.
+    </span><span class="kw">let </span>max_stratum = subgraph_stratum.values().cloned().max().unwrap_or(<span class="number">0</span>) + <span class="number">1</span>; <span class="comment">// Used for `next_tick()` delayer subgraphs.
     </span><span class="kw">for </span>(edge_id, <span class="kw-2">&amp;</span>delay_type) <span class="kw">in </span>barrier_crossers.iter() {
         <span class="kw">let </span>(hoff, dst) = graph.edge(edge_id).unwrap();
         <span class="macro">assert_eq!</span>(<span class="number">1</span>, graph.predecessor_nodes(hoff).count());
@@ -876,26 +989,33 @@
         <span class="kw">let </span>src_stratum = subgraph_stratum[src_sg];
         <span class="kw">let </span>dst_stratum = subgraph_stratum[dst_sg];
         <span class="kw">match </span>delay_type {
-            DelayType::Epoch =&gt; {
-                <span class="comment">// If epoch edge goes foreward in stratum, need to buffer.
+            DelayType::Tick =&gt; {
+                <span class="comment">// If tick edge goes foreward in stratum, need to buffer.
                 // (TODO(mingwei): could use a different kind of handoff.)
                 </span><span class="kw">if </span>src_stratum &lt;= dst_stratum {
                     <span class="comment">// We inject a new subgraph between the src/dst which runs as the last stratum
-                    // of the epoch and therefore delays the data until the next epoch.
+                    // of the tick and therefore delays the data until the next tick.
 
                     // Before: A (src) -&gt; H -&gt; B (dst)
+                    // Then add intermediate identity:
                     </span><span class="kw">let </span>(new_node_id, new_edge_id) = insert_intermediate_node(
                         nodes,
-                        indices,
+                        ports,
                         graph,
-                        Node::Operator(<span class="macro">parse_quote! </span>{ identity() }),
+                        <span class="comment">// TODO(mingwei): Proper span w/ `parse_quote_spanned!`?
+                        </span>Node::Operator(<span class="macro">parse_quote! </span>{ identity() }),
                         edge_id,
                     );
-                    <span class="comment">// Intermediate: A (src) -&gt; H -&gt; X -&gt; B (dst)
-                    </span><span class="kw">let </span>(_hoff_node_id, _hoff_edge_id) =
-                        insert_intermediate_node(nodes, indices, graph, Node::Handoff, new_edge_id);
+                    <span class="comment">// Intermediate: A (src) -&gt; H -&gt; ID -&gt; B (dst)
+                    </span><span class="kw">let </span>hoff = Node::Handoff {
+                        src_span: Span::call_site(), <span class="comment">// TODO(mingwei): Proper spanning?
+                        </span>dst_span: Span::call_site(),
+                    };
+                    <span class="kw">let </span>(_hoff_node_id, _hoff_edge_id) =
+                        insert_intermediate_node(nodes, ports, graph, hoff, new_edge_id);
+                    <span class="comment">// After: A (src) -&gt; H -&gt; ID -&gt; H&#39; -&gt; B (dst)
 
-                    <span class="comment">// Set stratum numbers.
+                    // Set stratum numbers.
                     </span><span class="kw">let </span>new_subgraph_id = subgraph_nodes.insert(<span class="macro">vec!</span>[new_node_id]);
                     subgraph_stratum.insert(new_subgraph_id, max_stratum);
                     node_subgraph.insert(new_node_id, new_subgraph_id);
@@ -905,19 +1025,65 @@
                 <span class="comment">// Any negative edges which go onto the same or previous stratum are bad.
                 // Indicates an unbroken negative cycle.
                 </span><span class="kw">if </span>dst_stratum &lt;= src_stratum {
-                    <span class="kw">let </span>(_src_idx, dst_idx) = <span class="kw-2">&amp;</span>indices[edge_id];
-                    dst_idx
-                        .span()
-                        .unwrap()
-                        .error(<span class="string">&quot;Negative edge creates a negative cycle which must be broken with a `next_epoch()` operator.&quot;</span>)
-                        .emit();
-                    <span class="kw">return </span><span class="prelude-val">Err</span>(());
+                    <span class="kw">let </span>(_src_idx, dst_idx) = <span class="kw-2">&amp;</span>ports[edge_id];
+                    <span class="kw">return </span><span class="prelude-val">Err</span>(Diagnostic::spanned(dst_idx.span(), Level::Error, <span class="string">&quot;Negative edge creates a negative cycle which must be broken with a `next_tick()` operator.&quot;</span>));
                 }
             }
         }
     }
 
     <span class="prelude-val">Ok</span>(subgraph_stratum)
+}
+
+<span class="doccomment">/// Put `is_external_input: true` operators in separate stratum 0 subgraphs if they are not in stratum 0.
+</span><span class="kw">fn </span>separate_external_inputs(
+    nodes: <span class="kw-2">&amp;mut </span>SlotMap&lt;GraphNodeId, Node&gt;,
+    ports: <span class="kw-2">&amp;mut </span>SecondaryMap&lt;GraphEdgeId, (PortIndexValue, PortIndexValue)&gt;,
+    graph: <span class="kw-2">&amp;mut </span>DiMulGraph&lt;GraphNodeId, GraphEdgeId&gt;,
+    node_subgraph: <span class="kw-2">&amp;mut </span>SecondaryMap&lt;GraphNodeId, GraphSubgraphId&gt;,
+    subgraph_nodes: <span class="kw-2">&amp;mut </span>SlotMap&lt;GraphSubgraphId, Vec&lt;GraphNodeId&gt;&gt;,
+    subgraph_stratum: <span class="kw-2">&amp;mut </span>SecondaryMap&lt;GraphSubgraphId, usize&gt;,
+) {
+    <span class="kw">let </span>external_input_nodes: Vec&lt;<span class="kw">_</span>&gt; = nodes
+        .iter()
+        <span class="comment">// Ensure node is an operator (not a handoff), get constraints spec.
+        </span>.filter_map(|(node_id, node)| {
+            find_operator_constraints(node).map(|op_constraints| (node_id, op_constraints))
+        })
+        <span class="comment">// Ensure current `node_id` is an external input.
+        </span>.filter(|(_node_id, op_constraints)| op_constraints.is_external_input)
+        <span class="comment">// Collect just `node_id`s.
+        </span>.map(|(node_id, _op_constraints)| node_id)
+        <span class="comment">// Ignore if operator node is already stratum 0.
+        </span>.filter(|<span class="kw-2">&amp;</span>node_id| <span class="number">0 </span>!= subgraph_stratum[node_subgraph[node_id]])
+        .collect();
+
+    <span class="kw">for </span>node_id <span class="kw">in </span>external_input_nodes {
+        <span class="kw">let </span>old_sg_id = node_subgraph[node_id];
+        <span class="comment">// Remove node from old subgraph.
+        </span>{
+            <span class="kw">let </span>old_subgraph_nodes = <span class="kw-2">&amp;mut </span>subgraph_nodes[old_sg_id];
+            <span class="kw">let </span>index = old_subgraph_nodes
+                .iter()
+                .position(|<span class="kw-2">&amp;</span>nid| node_id == nid)
+                .unwrap();
+            old_subgraph_nodes.remove(index);
+        }
+        <span class="comment">// Create new subgraph in stratum 0 for this source.
+        </span><span class="kw">let </span>new_sg_id = subgraph_nodes.insert(<span class="macro">vec!</span>[node_id]);
+        node_subgraph.insert(node_id, new_sg_id);
+        subgraph_stratum.insert(new_sg_id, <span class="number">0</span>);
+        <span class="comment">// Insert handoff.
+        </span><span class="kw">let </span>successor_edges: Vec&lt;<span class="kw">_</span>&gt; = graph.successor_edges(node_id).collect();
+        <span class="kw">for </span>edge_id <span class="kw">in </span>successor_edges {
+            <span class="kw">let </span>span = nodes[node_id].span();
+            <span class="kw">let </span>hoff = Node::Handoff {
+                src_span: span,
+                dst_span: span,
+            };
+            insert_intermediate_node(nodes, ports, graph, hoff, edge_id);
+        }
+    }
 }
 
 <span class="comment">// Find the input (recv) and output (send) handoffs for each subgraph.
@@ -945,13 +1111,13 @@
         <span class="kw">let </span>(src_node, dst_node) = (<span class="kw-2">&amp;</span>nodes[src], <span class="kw-2">&amp;</span>nodes[dst]);
         <span class="kw">match </span>(src_node, dst_node) {
             (Node::Operator(<span class="kw">_</span>), Node::Operator(<span class="kw">_</span>)) =&gt; {}
-            (Node::Operator(<span class="kw">_</span>), Node::Handoff) =&gt; {
+            (Node::Operator(<span class="kw">_</span>), Node::Handoff { .. }) =&gt; {
                 subgraph_send_handoffs[node_subgraph[src]].push(dst);
             }
-            (Node::Handoff, Node::Operator(<span class="kw">_</span>)) =&gt; {
+            (Node::Handoff { .. }, Node::Operator(<span class="kw">_</span>)) =&gt; {
                 subgraph_recv_handoffs[node_subgraph[dst]].push(src);
             }
-            (Node::Handoff, Node::Handoff) =&gt; {
+            (Node::Handoff { .. }, Node::Handoff { .. }) =&gt; {
                 Span::call_site().unwrap().error(<span class="macro">format!</span>(
                     <span class="string">&quot;Internal Error: Consecutive handoffs {:?} -&gt; {:?}&quot;</span>,
                     src.data(),
@@ -965,44 +1131,106 @@
 }
 
 <span class="kw">impl </span>TryFrom&lt;FlatGraph&gt; <span class="kw">for </span>PartitionedGraph {
-    <span class="kw">type </span>Error = (); <span class="comment">// TODO(mingwei).
+    <span class="kw">type </span>Error = Diagnostic;
 
-    </span><span class="kw">fn </span>try_from(flat_graph: FlatGraph) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
+    <span class="kw">fn </span>try_from(flat_graph: FlatGraph) -&gt; <span class="prelude-ty">Result</span>&lt;<span class="self">Self</span>, <span class="self">Self</span>::Error&gt; {
         <span class="kw">let </span>FlatGraph {
             <span class="kw-2">mut </span>nodes,
             <span class="kw-2">mut </span>graph,
-            <span class="kw-2">mut </span>indices,
+            <span class="kw-2">mut </span>ports,
             ..
         } = flat_graph;
 
-        <span class="comment">// Pairs of node IDs which cross stratums or epochs and therefore cannot be in the same subgraph.
-        </span><span class="kw">let </span><span class="kw-2">mut </span>barrier_crossers = find_barrier_crossers(<span class="kw-2">&amp;</span>nodes, <span class="kw-2">&amp;</span>indices, <span class="kw-2">&amp;</span>graph);
+        <span class="comment">// Pairs of node IDs which cross stratums or ticks and therefore cannot be in the same subgraph.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>barrier_crossers = find_barrier_crossers(<span class="kw-2">&amp;</span>nodes, <span class="kw-2">&amp;</span>ports, <span class="kw-2">&amp;</span>graph);
+        <span class="kw">let </span><span class="kw-2">mut </span>node_color = nodes
+            .keys()
+            .map(|node_id| {
+                <span class="kw">let </span>inn_degree = graph.degree_in(node_id);
+                <span class="kw">let </span>out_degree = graph.degree_out(node_id);
+                <span class="kw">let </span>op_color = node_color(<span class="kw-2">&amp;</span>nodes[node_id], inn_degree, out_degree);
+                (node_id, op_color)
+            })
+            .filter(|(_node_id, op_color)| op_color.is_some())
+            .map(|(node_id, op_color)| (node_id, op_color.unwrap()))
+            .collect();
 
-        <span class="kw">let </span>(<span class="kw-2">mut </span>node_subgraph, <span class="kw-2">mut </span>subgraph_nodes) =
-            make_subgraphs(<span class="kw-2">&amp;mut </span>nodes, <span class="kw-2">&amp;mut </span>indices, <span class="kw-2">&amp;mut </span>graph, <span class="kw-2">&amp;mut </span>barrier_crossers);
-
-        <span class="kw">let </span>subgraph_stratum = find_subgraph_strata(
+        <span class="comment">// Partition into subgraphs.
+        </span><span class="kw">let </span>(<span class="kw-2">mut </span>node_subgraph, <span class="kw-2">mut </span>subgraph_nodes) = make_subgraphs(
             <span class="kw-2">&amp;mut </span>nodes,
-            <span class="kw-2">&amp;mut </span>indices,
+            <span class="kw-2">&amp;mut </span>ports,
+            <span class="kw-2">&amp;mut </span>graph,
+            <span class="kw-2">&amp;mut </span>barrier_crossers,
+            <span class="kw-2">&amp;mut </span>node_color,
+        );
+
+        <span class="comment">// Find strata for subgraphs.
+        </span><span class="kw">let </span><span class="kw-2">mut </span>subgraph_stratum = find_subgraph_strata(
+            <span class="kw-2">&amp;mut </span>nodes,
+            <span class="kw-2">&amp;mut </span>ports,
             <span class="kw-2">&amp;mut </span>graph,
             <span class="kw-2">&amp;mut </span>node_subgraph,
             <span class="kw-2">&amp;mut </span>subgraph_nodes,
             <span class="kw-2">&amp;</span>barrier_crossers,
         )<span class="question-mark">?</span>;
 
+        <span class="comment">// Ensure all external inputs are in stratum 0.
+        </span>separate_external_inputs(
+            <span class="kw-2">&amp;mut </span>nodes,
+            <span class="kw-2">&amp;mut </span>ports,
+            <span class="kw-2">&amp;mut </span>graph,
+            <span class="kw-2">&amp;mut </span>node_subgraph,
+            <span class="kw-2">&amp;mut </span>subgraph_nodes,
+            <span class="kw-2">&amp;mut </span>subgraph_stratum,
+        );
+
         <span class="kw">let </span>(subgraph_recv_handoffs, subgraph_send_handoffs) =
             find_subgraph_handoffs(<span class="kw-2">&amp;</span>nodes, <span class="kw-2">&amp;</span>graph, <span class="kw-2">&amp;</span>node_subgraph, <span class="kw-2">&amp;</span>subgraph_nodes);
 
+        <span class="kw">let </span><span class="kw-2">mut </span>subgraph_internal_handoffs: SecondaryMap&lt;GraphSubgraphId, Vec&lt;GraphNodeId&gt;&gt; =
+            SecondaryMap::new();
+
+        <span class="comment">// build a SecondaryMap from edges.dst to edges to find inbound edges of a node
+        </span><span class="kw">let </span><span class="kw-2">mut </span>dest_map = SecondaryMap::new();
+        graph.edges.iter().for_each(|e| {
+            <span class="kw">let </span>(<span class="kw">_</span>, (_src, dest)) = e;
+            dest_map.insert(<span class="kw-2">*</span>dest, e);
+        });
+        <span class="comment">// iterate through edges, find internal handoffs and their inbound/outbound edges
+        </span><span class="kw">for </span>e <span class="kw">in </span>graph.edges() {
+            <span class="kw">let </span>(src, dst) = e.<span class="number">1</span>;
+            <span class="kw">if let </span>Node::Handoff { .. } = nodes[src] {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>((<span class="kw">_</span>, (inbound_src, _inbound_dest))) = dest_map.get(src) {
+                    <span class="comment">// Found an inbound edge to this handoff. Check if it&#39;s in the same subgraph as dst
+                    </span><span class="kw">if let </span><span class="prelude-val">Some</span>(inbound_src_subgraph) = node_subgraph.get(<span class="kw-2">*</span>inbound_src) {
+                        <span class="kw">if let </span><span class="prelude-val">Some</span>(dst_subgraph) = node_subgraph.get(dst) {
+                            <span class="kw">if </span>inbound_src_subgraph == dst_subgraph {
+                                <span class="comment">// Found an internal handoff
+                                </span><span class="kw">if let </span>Node::Handoff { .. } = nodes[src] {
+                                    subgraph_internal_handoffs
+                                        .entry(<span class="kw-2">*</span>inbound_src_subgraph)
+                                        .unwrap()
+                                        .or_insert(Vec::new())
+                                        .push(src);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
         <span class="prelude-val">Ok</span>(PartitionedGraph {
             nodes,
             graph,
-            indices,
+            ports,
             node_subgraph,
 
             subgraph_nodes,
             subgraph_stratum,
             subgraph_recv_handoffs,
             subgraph_send_handoffs,
+            subgraph_internal_handoffs,
+            node_color_map: node_color,
         })
     }
 }
@@ -1015,7 +1243,7 @@
 /// Returns the ID of X &amp; ID of edge OUT of X.
 </span><span class="kw">fn </span>insert_intermediate_node(
     nodes: <span class="kw-2">&amp;mut </span>SlotMap&lt;GraphNodeId, Node&gt;,
-    indices: <span class="kw-2">&amp;mut </span>SecondaryMap&lt;GraphEdgeId, (PortIndexValue, PortIndexValue)&gt;,
+    ports: <span class="kw-2">&amp;mut </span>SecondaryMap&lt;GraphEdgeId, (PortIndexValue, PortIndexValue)&gt;,
     graph: <span class="kw-2">&amp;mut </span>DiMulGraph&lt;GraphNodeId, GraphEdgeId&gt;,
     node: Node,
     edge_id: GraphEdgeId,
@@ -1024,9 +1252,9 @@
     <span class="kw">let </span>node_id = nodes.insert(node);
     <span class="kw">let </span>(e0, e1) = graph.insert_intermediate_node(node_id, edge_id).unwrap();
 
-    <span class="kw">let </span>(src_idx, dst_idx) = indices.remove(edge_id).unwrap();
-    indices.insert(e0, (src_idx, PortIndexValue::Elided(span)));
-    indices.insert(e1, (PortIndexValue::Elided(span), dst_idx));
+    <span class="kw">let </span>(src_idx, dst_idx) = ports.remove(edge_id).unwrap();
+    ports.insert(e0, (src_idx, PortIndexValue::Elided(span)));
+    ports.insert(e1, (PortIndexValue::Elided(span), dst_idx));
 
     (node_id, e1)
 }

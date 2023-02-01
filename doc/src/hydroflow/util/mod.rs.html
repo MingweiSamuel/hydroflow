@@ -89,29 +89,19 @@
 <a href="#89" id="89">89</a>
 <a href="#90" id="90">90</a>
 <a href="#91" id="91">91</a>
-<a href="#92" id="92">92</a>
-<a href="#93" id="93">93</a>
-<a href="#94" id="94">94</a>
-<a href="#95" id="95">95</a>
-<a href="#96" id="96">96</a>
-<a href="#97" id="97">97</a>
-<a href="#98" id="98">98</a>
 </pre><pre class="rust"><code><span class="doccomment">//! Helper utilities for the Hydroflow surface syntax.
 
-</span><span class="kw">use </span>std::future::Future;
-<span class="kw">use </span>std::marker::PhantomData;
+</span><span class="kw">mod </span>udp;
+<span class="kw">pub use </span>udp::<span class="kw-2">*</span>;
+<span class="kw">mod </span>tcp;
+<span class="kw">pub use </span>tcp::<span class="kw-2">*</span>;
+
 <span class="kw">use </span>std::net::SocketAddr;
-<span class="kw">use </span>std::pin::Pin;
 <span class="kw">use </span>std::task::{Context, Poll};
 
-<span class="kw">use </span>bytes::Bytes;
-<span class="kw">use </span>futures::stream::{SplitSink, SplitStream};
+<span class="kw">use </span>bincode;
 <span class="kw">use </span>futures::Stream;
-<span class="kw">use </span>pin_project_lite::pin_project;
-<span class="kw">use </span>tokio::net::UdpSocket;
-<span class="kw">use </span>tokio_util::codec::length_delimited::LengthDelimitedCodec;
-<span class="kw">use </span>tokio_util::codec::{Decoder, Encoder, LinesCodec};
-<span class="kw">use </span>tokio_util::udp::UdpFramed;
+<span class="kw">use </span>serde::{Deserialize, Serialize};
 
 <span class="kw">pub fn </span>unbounded_channel&lt;T&gt;() -&gt; (
     tokio::sync::mpsc::UnboundedSender&lt;T&gt;,
@@ -122,77 +112,73 @@
     (send, recv)
 }
 
-<span class="kw">pub type </span>UdpFramedSink&lt;Codec, Item&gt; = SplitSink&lt;UdpFramed&lt;Codec&gt;, (Item, SocketAddr)&gt;;
-<span class="kw">pub type </span>UdpFramedStream&lt;Codec&gt; = SplitStream&lt;UdpFramed&lt;Codec&gt;&gt;;
-
-<span class="kw">pub fn </span>udp_framed&lt;Codec, Item&gt;(
-    socket: UdpSocket,
-    codec: Codec,
-) -&gt; (UdpFramedSink&lt;Codec, Item&gt;, UdpFramedStream&lt;Codec&gt;)
-<span class="kw">where
-    </span>Codec: Encoder&lt;Item&gt; + Decoder,
-{
-    <span class="kw">let </span>framed = UdpFramed::new(socket, codec);
-    futures::stream::StreamExt::split(framed)
-}
-
-<span class="kw">pub fn </span>udp_bytes(
-    socket: UdpSocket,
-) -&gt; (
-    UdpFramedSink&lt;LengthDelimitedCodec, Bytes&gt;,
-    UdpFramedStream&lt;LengthDelimitedCodec&gt;,
-) {
-    udp_framed(socket, LengthDelimitedCodec::new())
-}
-
-<span class="kw">pub fn </span>udp_lines(
-    socket: UdpSocket,
-) -&gt; (
-    UdpFramedSink&lt;LinesCodec, String&gt;,
-    UdpFramedStream&lt;LinesCodec&gt;,
-) {
-    udp_framed(socket, LinesCodec::new())
-}
-
-<span class="macro">pin_project! </span>{
-    <span class="kw">pub struct </span>CollectReady&lt;St, Out&gt; {
-        <span class="attr">#[pin]
-        </span>stream: St,
-        _phantom: PhantomData&lt;Out&gt;,
-    }
-}
-<span class="kw">impl</span>&lt;St, Out&gt; Future <span class="kw">for </span>CollectReady&lt;St, Out&gt;
-<span class="kw">where
-    </span>St: Stream,
-    Out: FromIterator&lt;St::Item&gt;,
-{
-    <span class="kw">type </span>Output = Out;
-
-    <span class="kw">fn </span>poll(<span class="self">self</span>: Pin&lt;<span class="kw-2">&amp;mut </span><span class="self">Self</span>&gt;, ctx: <span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Poll&lt;<span class="self">Self</span>::Output&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>this = <span class="self">self</span>.project();
-        <span class="kw">let </span>out = std::iter::from_fn(<span class="kw">move </span>|| <span class="kw">match </span>Pin::new(<span class="kw-2">&amp;mut </span>this.stream).poll_next(ctx) {
-            Poll::Pending =&gt; <span class="prelude-val">None</span>,
-            Poll::Ready(opt_item) =&gt; opt_item,
-        })
-        .collect();
-        Poll::Ready(out)
-    }
-}
-
-<span class="doccomment">/// Collects the immediately available items into the stream.
+<span class="doccomment">/// Collects the immediately available items from the `Stream` into a `FromIterator` collection.
 ///
-/// This consumes the stream, use [`futures::StreamExt::by_ref()`] if you want
+/// This consumes the stream, use [`futures::StreamExt::by_ref()`] (or just `&amp;mut ...`) if you want
 /// to retain ownership of your stream.
-</span><span class="kw">pub async fn </span>collect_ready&lt;St, Out&gt;(stream: St) -&gt; Out
+</span><span class="kw">pub fn </span>collect_ready&lt;C, S&gt;(stream: S) -&gt; C
 <span class="kw">where
-    </span>St: Stream,
-    Out: FromIterator&lt;St::Item&gt;,
+    </span>C: FromIterator&lt;S::Item&gt;,
+    S: Stream,
 {
-    <span class="kw">let </span>collect_ready = CollectReady {
-        stream,
-        _phantom: PhantomData,
-    };
-    collect_ready.<span class="kw">await
-</span>}
+    <span class="kw">let </span><span class="kw-2">mut </span>stream = Box::pin(stream);
+    std::iter::from_fn(|| {
+        <span class="kw">match </span>stream
+            .as_mut()
+            .poll_next(<span class="kw-2">&amp;mut </span>Context::from_waker(futures::task::noop_waker_ref()))
+        {
+            Poll::Ready(opt) =&gt; opt,
+            Poll::Pending =&gt; <span class="prelude-val">None</span>,
+        }
+    })
+    .collect()
+}
+
+<span class="kw">pub fn </span>serialize_to_bytes&lt;T&gt;(msg: T) -&gt; bytes::Bytes
+<span class="kw">where
+    </span>T: Serialize + <span class="kw">for</span>&lt;<span class="lifetime">&#39;a</span>&gt; Deserialize&lt;<span class="lifetime">&#39;a</span>&gt; + Clone,
+{
+    bytes::Bytes::from(bincode::serialize(<span class="kw-2">&amp;</span>msg).unwrap())
+}
+
+<span class="kw">pub fn </span>deserialize_from_bytes&lt;T&gt;(msg: bytes::BytesMut) -&gt; T
+<span class="kw">where
+    </span>T: Serialize + <span class="kw">for</span>&lt;<span class="lifetime">&#39;a</span>&gt; Deserialize&lt;<span class="lifetime">&#39;a</span>&gt; + Clone,
+{
+    bincode::deserialize(<span class="kw-2">&amp;</span>msg).unwrap()
+}
+
+<span class="kw">pub fn </span>ipv4_resolve(addr: <span class="kw-2">&amp;</span>str) -&gt; <span class="prelude-ty">Result</span>&lt;SocketAddr, std::io::Error&gt; {
+    <span class="kw">use </span>std::net::ToSocketAddrs;
+    <span class="kw">let </span><span class="kw-2">mut </span>addrs = addr.to_socket_addrs()<span class="question-mark">?</span>;
+    <span class="kw">let </span>result = addrs.find(|addr| addr.is_ipv4());
+    <span class="kw">match </span>result {
+        <span class="prelude-val">Some</span>(addr) =&gt; <span class="prelude-val">Ok</span>(addr),
+        <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(std::io::Error::new(
+            std::io::ErrorKind::Other,
+            <span class="string">&quot;Unable to resolve IPv4 address&quot;</span>,
+        )),
+    }
+}
+
+<span class="kw">pub async fn </span>bind_udp_bytes(addr: SocketAddr) -&gt; (UdpSink, UdpStream, SocketAddr) {
+    <span class="kw">let </span>socket = tokio::net::UdpSocket::bind(addr).<span class="kw">await</span>.unwrap();
+    udp_bytes(socket)
+}
+
+<span class="kw">pub async fn </span>bind_udp_lines(addr: SocketAddr) -&gt; (UdpLinesSink, UdpLinesStream, SocketAddr) {
+    <span class="kw">let </span>socket = tokio::net::UdpSocket::bind(addr).<span class="kw">await</span>.unwrap();
+    udp_lines(socket)
+}
+
+<span class="comment">// from addendum in
+// https://stackoverflow.com/questions/56105305/how-to-sort-a-vec-of-structs-by-a-string-field
+</span><span class="kw">pub fn </span>sort_unstable_by_key_hrtb&lt;T, F, K&gt;(slice: <span class="kw-2">&amp;mut </span>[T], f: F)
+<span class="kw">where
+    </span>F: <span class="kw">for</span>&lt;<span class="lifetime">&#39;a</span>&gt; Fn(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K,
+    K: Ord,
+{
+    slice.sort_unstable_by(|a, b| f(a).cmp(f(b)))
+}
 </code></pre></div>
 </section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hydroflow" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (dc1d9d50f 2023-01-31)" data-search-js="search-98d53477a794af0b.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-7c23ac01f615ce90.css" ></div></body></html>
