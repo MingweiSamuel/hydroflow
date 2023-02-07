@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 
 use std::future::Future;
 use tokio::runtime::{Handle, TryCurrentError};
-use tokio::sync::mpsc::UnboundedSender;
+use tokio::sync::mpsc::{UnboundedSender, WeakUnboundedSender};
 use tokio::task::JoinHandle;
 
 use super::graph::StateData;
@@ -20,8 +20,7 @@ use super::{StateId, SubgraphId};
 pub struct Context {
     pub(crate) states: Vec<StateData>,
 
-    // TODO(mingwei): as long as this is here, it's impossible to know when all work is done.
-    pub(crate) event_queue_send: UnboundedSender<SubgraphId>,
+    pub(crate) event_queue_send: WeakUnboundedSender<SubgraphId>,
 
     pub(crate) current_tick: usize,
     pub(crate) current_stratum: usize,
@@ -47,7 +46,9 @@ impl Context {
 
     /// Schedules a subgraph.
     pub fn schedule_subgraph(&self, sg_id: SubgraphId) {
-        self.event_queue_send.send(sg_id).unwrap()
+        if let Some(queue) = self.event_queue_send.upgrade() {
+            queue.send(sg_id).unwrap();
+        }
     }
 
     /// Returns a `Waker` for interacting with async Rust.
@@ -67,7 +68,7 @@ impl Context {
 
         let context_waker = ContextWaker {
             subgraph_id: self.subgraph_id,
-            event_queue_send: self.event_queue_send.clone(),
+            event_queue_send: self.event_queue_send.upgrade().unwrap(),
         };
         futures::task::waker(Arc::new(context_waker))
     }

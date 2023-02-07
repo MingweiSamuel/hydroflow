@@ -14,6 +14,13 @@ use tokio::task::LocalSet;
 use tokio_util::codec::{BytesCodec, FramedWrite, LinesCodec};
 
 #[tokio::test]
+pub async fn test_exit() -> Result<(), Box<dyn Error>> {
+    let mut hf = hydroflow_syntax! {};
+    hf.run_async().await;
+    Ok(())
+}
+
+#[tokio::test]
 pub async fn test_echo_udp() -> Result<(), Box<dyn Error>> {
     let local = LocalSet::new();
 
@@ -327,9 +334,7 @@ async fn asynctest_dest_asyncwrite_duplex() {
             Bytes::from_static("world".as_bytes()),
         ]) -> dest_sink(sink);
     };
-    tokio::time::timeout(std::time::Duration::from_secs(1), flow.run_async())
-        .await
-        .expect_err("Expected time out");
+    flow.run_async().await;
 
     let mut buf = Vec::<u8>::new();
     asyncread.read_buf(&mut buf).await.unwrap();
@@ -348,13 +353,13 @@ async fn asynctest_source_stream() {
                 let mut flow = hydroflow_syntax! {
                     source_stream(a_recv) -> for_each(|x| { b_send.send(x).unwrap(); });
                 };
-                flow.run_async().await.unwrap();
+                flow.run_async().await;
             });
             tokio::task::spawn_local(async move {
                 let mut flow = hydroflow_syntax! {
                     source_stream(b_recv) -> for_each(|x| println!("{}", x));
                 };
-                flow.run_async().await.unwrap();
+                flow.run_async().await;
             });
 
             a_send.send(1).unwrap();

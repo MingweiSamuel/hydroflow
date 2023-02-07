@@ -9,7 +9,7 @@ use std::num::NonZeroUsize;
 use hydroflow_lang::graph::serde_graph::SerdeGraph;
 use ref_cast::RefCast;
 use tokio::runtime::TryCurrentError;
-use tokio::sync::mpsc::{self, UnboundedReceiver};
+use tokio::sync::mpsc::{self, UnboundedReceiver, UnboundedSender};
 
 use super::context::Context;
 use super::handoff::handoff_list::PortList;
@@ -29,6 +29,7 @@ pub struct Hydroflow {
     /// TODO(mingwei): separate scheduler into its own struct/trait?
     /// Index is stratum, value is FIFO queue for that stratum.
     stratum_queues: Vec<VecDeque<SubgraphId>>,
+    event_queue_send: Option<UnboundedSender<SubgraphId>>,
     event_queue_recv: UnboundedReceiver<SubgraphId>,
 
     serde_graph: Option<SerdeGraph>,
@@ -41,7 +42,7 @@ impl Default for Hydroflow {
         let context = Context {
             states,
 
-            event_queue_send,
+            event_queue_send: event_queue_send.downgrade(),
 
             current_stratum: 0,
             current_tick: 0,
@@ -57,6 +58,7 @@ impl Default for Hydroflow {
 
             stratum_queues,
 
+            event_queue_send: Some(event_queue_send),
             event_queue_recv,
 
             serde_graph: None,
@@ -89,15 +91,17 @@ impl Hydroflow {
 
     /// Returns a reactor for externally scheduling subgraphs, possibly from another thread.
     pub fn reactor(&self) -> Reactor {
-        Reactor::new(self.context.event_queue_send.clone())
+        Reactor {
+            event_queue_send: self.context.event_queue_send.clone(),
+        }
     }
 
-    // Gets the current tick (local time) count.
+    /// Gets the current tick (local time) count.
     pub fn current_tick(&self) -> usize {
         self.context.current_tick
     }
 
-    // Gets the current stratum nubmer.
+    /// Gets the current stratum nubmer.
     pub fn current_stratum(&self) -> usize {
         self.context.current_stratum
     }
@@ -113,12 +117,15 @@ impl Hydroflow {
 
     /// Runs the dataflow until no more work is immediately available.
     /// If the dataflow contains loops this method may run forever.
-    pub fn run_available(&mut self) {
+    pub fn run_available(&mut self) -> bool {
         // While work is immediately available.
         while self.next_stratum(false) {
             // Do any work (this also receives events).
             self.run_stratum();
         }
+        let weak = self.event_queue_send.take().unwrap().downgrade();
+        self.event_queue_send = weak.upgrade();
+        self.event_queue_send.is_some()
     }
 
     /// Runs the current stratum of the dataflow until no more work is immediately available.
@@ -198,13 +205,10 @@ impl Hydroflow {
         }
     }
 
-    /// Runs the dataflow graph forever.
-    ///
-    /// TODO(mingwei): Currently blockes forever, no notion of "completion."
-    pub async fn run_async(&mut self) -> Option<!> {
-        loop {
-            // Run any work which is immediately available.
-            self.run_available();
+    /// Runs the dataflow graph until all external inputs are closed.
+    pub async fn run_async(&mut self) {
+        // Run any work which is immediately available.
+        while self.run_available() {
             // Only when there is absolutely no work available in any stratum.
             // Do we yield to wait for more events.
             self.recv_events_async().await;
