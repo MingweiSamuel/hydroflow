@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow_lang/src/graph/ops/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-c4dbdcde0fbd8430.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../../static.files/light-db279b6232be9c13.css"><link rel="stylesheet" disabled href="../../../../static.files/dark-cf923f49f397b216.css"><link rel="stylesheet" disabled href="../../../../static.files/ayu-be46fdc453a55015.css"><script src="../../../../static.files/storage-3891ce972e3a2bf8.js"></script><script defer src="../../../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-98a684e84ae5b08b.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../hydroflow_lang/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow_lang/src/graph/ops/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-e5308b57e507db71.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../../static.files/light-d59023bfa12059d2.css"><link rel="stylesheet" disabled href="../../../../static.files/dark-1ca41bb1e10af075.css"><link rel="stylesheet" disabled href="../../../../static.files/ayu-18b4181a2f3fb862.css"><script src="../../../../static.files/storage-3891ce972e3a2bf8.js"></script><script defer src="../../../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-98a684e84ae5b08b.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../hydroflow_lang/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -345,21 +345,31 @@
 <a href="#345" id="345">345</a>
 <a href="#346" id="346">346</a>
 <a href="#347" id="347">347</a>
-</pre><pre class="rust"><code><span class="kw">use </span>std::fmt::Display;
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+</pre><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
+<span class="kw">use </span>std::fmt::{Debug, Display};
 <span class="kw">use </span>std::ops::{Bound, RangeBounds};
 
+<span class="kw">use </span>once_cell::sync::OnceCell;
 <span class="kw">use </span>proc_macro2::{Ident, Span, TokenStream};
 <span class="kw">use </span>quote::quote_spanned;
 <span class="kw">use </span>slotmap::Key;
 <span class="kw">use </span>syn::punctuated::Punctuated;
-<span class="kw">use </span>syn::spanned::Spanned;
-<span class="kw">use </span>syn::{Expr, GenericArgument, Token, Type};
+<span class="kw">use </span>syn::Token;
 
-<span class="kw">use </span><span class="kw">crate</span>::diagnostic::{Diagnostic, Level};
-<span class="kw">use </span><span class="kw">crate</span>::parse::PortIndex;
+<span class="kw">use </span><span class="kw">crate</span>::diagnostic::Diagnostic;
+<span class="kw">use </span><span class="kw">crate</span>::parse::{Operator, PortIndex};
 
-<span class="kw">use super</span>::{GraphNodeId, GraphSubgraphId, PortIndexValue};
+<span class="kw">use super</span>::{GraphNodeId, GraphSubgraphId, Node, OpInstGenerics, OperatorInstance, PortIndexValue};
+<span class="kw">use </span>serde::{Deserialize, Serialize};
 
+<span class="kw">mod </span>anti_join;
 <span class="kw">mod </span>cross_join;
 <span class="kw">mod </span>demux;
 <span class="kw">mod </span>dest_sink;
@@ -403,6 +413,24 @@
     Fixed(Punctuated&lt;PortIndex, <span class="macro">Token!</span>[,]&gt;),
 }
 
+<span class="attr">#[derive(Default, Debug, Eq, PartialEq, Clone, Copy)]
+</span><span class="kw">pub enum </span>FlowPropertyVal {
+    <span class="attr">#[default]
+    </span>No,
+    Yes,
+    Preserve,
+    DependsOnArgs,
+}
+<span class="attr">#[derive(Default, Debug, Eq, PartialEq, Clone, Copy)]
+</span><span class="kw">pub struct </span>FlowProperties {
+    <span class="doccomment">/// Is the flow deterministic.
+    </span><span class="kw">pub </span>deterministic: FlowPropertyVal,
+    <span class="doccomment">/// Is the flow monotonic.
+    </span><span class="kw">pub </span>monotonic: FlowPropertyVal,
+    <span class="doccomment">/// Has inconsistency been introduced.
+    </span><span class="kw">pub </span>inconsistency_tainted: bool,
+}
+
 <span class="kw">pub struct </span>OperatorConstraints {
     <span class="doccomment">/// Operator&#39;s name.
     </span><span class="kw">pub </span>name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
@@ -418,27 +446,52 @@
     </span><span class="kw">pub </span>soft_range_out: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw">dyn </span>RangeTrait&lt;usize&gt;,
     <span class="doccomment">/// Number of arguments i.e. `operator(a, b, c)` has `num_args = 3`.
     </span><span class="kw">pub </span>num_args: usize,
+    <span class="doccomment">/// How many persistence lifetime arguments can be provided.
+    </span><span class="kw">pub </span>persistence_args: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw">dyn </span>RangeTrait&lt;usize&gt;,
+    <span class="comment">// /// How many (non-persistence) lifetime arguemtns can be provided.
+    // pub lifetime_args: &amp;&#39;static dyn RangeTrait&lt;usize&gt;,
+    </span><span class="doccomment">/// How many generic type arguments can be provided.
+    </span><span class="kw">pub </span>type_args: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw">dyn </span>RangeTrait&lt;usize&gt;,
     <span class="doccomment">/// If this operator receives external inputs and therefore must be in
     /// stratum 0.
     </span><span class="kw">pub </span>is_external_input: bool,
 
     <span class="doccomment">/// What named or numbered input ports to expect?
-    </span><span class="kw">pub </span>ports_inn: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw">dyn </span>Fn() -&gt; PortListSpec&gt;,
+    </span><span class="kw">pub </span>ports_inn: <span class="prelude-ty">Option</span>&lt;<span class="kw">fn</span>() -&gt; PortListSpec&gt;,
     <span class="doccomment">/// What named or numbered output ports to expect?
-    </span><span class="kw">pub </span>ports_out: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw">dyn </span>Fn() -&gt; PortListSpec&gt;,
+    </span><span class="kw">pub </span>ports_out: <span class="prelude-ty">Option</span>&lt;<span class="kw">fn</span>() -&gt; PortListSpec&gt;,
+
+    <span class="doccomment">/// Monotonicity preservation properties, for analysis.
+    </span><span class="kw">pub </span>properties: FlowProperties,
 
     <span class="doccomment">/// Determines if this input must be preceeded by a stratum barrier.
-    </span><span class="kw">pub </span>input_delaytype_fn: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw">dyn </span>Fn(<span class="kw-2">&amp;</span>PortIndexValue) -&gt; <span class="prelude-ty">Option</span>&lt;DelayType&gt;,
+    </span><span class="kw">pub </span>input_delaytype_fn: <span class="kw">fn</span>(<span class="kw-2">&amp;</span>PortIndexValue) -&gt; <span class="prelude-ty">Option</span>&lt;DelayType&gt;,
 
     <span class="doccomment">/// Emit code in multiple locations. See [`OperatorWriteOutput`].
     </span><span class="kw">pub </span>write_fn: WriteFn,
 }
+<span class="kw">impl </span>Debug <span class="kw">for </span>OperatorConstraints {
+    <span class="kw">fn </span>fmt(<span class="kw-2">&amp;</span><span class="self">self</span>, f: <span class="kw-2">&amp;mut </span>std::fmt::Formatter&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; std::fmt::Result {
+        f.debug_struct(<span class="string">&quot;OperatorConstraints&quot;</span>)
+            .field(<span class="string">&quot;name&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.name)
+            .field(<span class="string">&quot;hard_range_inn&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.hard_range_inn)
+            .field(<span class="string">&quot;soft_range_inn&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.soft_range_inn)
+            .field(<span class="string">&quot;hard_range_out&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.hard_range_out)
+            .field(<span class="string">&quot;soft_range_out&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.soft_range_out)
+            .field(<span class="string">&quot;num_args&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.num_args)
+            .field(<span class="string">&quot;persistence_args&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.persistence_args)
+            .field(<span class="string">&quot;type_args&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.type_args)
+            .field(<span class="string">&quot;is_external_input&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.is_external_input)
+            .field(<span class="string">&quot;ports_inn&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.ports_inn)
+            .field(<span class="string">&quot;ports_out&quot;</span>, <span class="kw-2">&amp;</span><span class="self">self</span>.ports_out)
+            <span class="comment">// .field(&quot;input_delaytype_fn&quot;, &amp;self.input_delaytype_fn)
+            // .field(&quot;write_fn&quot;, &amp;self.write_fn)
+            </span>.finish()
+    }
+}
 
-<span class="kw">pub type </span>WriteFn = <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw">dyn </span>Fn(
-    <span class="kw-2">&amp;</span>WriteContextArgs&lt;<span class="lifetime">&#39;_</span>&gt;,
-    <span class="kw-2">&amp;</span>WriteIteratorArgs&lt;<span class="lifetime">&#39;_</span>&gt;,
-    <span class="kw-2">&amp;mut </span>Vec&lt;Diagnostic&gt;,
-) -&gt; <span class="prelude-ty">Result</span>&lt;OperatorWriteOutput, ()&gt;;
+<span class="kw">pub type </span>WriteFn =
+    <span class="kw">fn</span>(<span class="kw-2">&amp;</span>WriteContextArgs&lt;<span class="lifetime">&#39;_</span>&gt;, <span class="kw-2">&amp;mut </span>Vec&lt;Diagnostic&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;OperatorWriteOutput, ()&gt;;
 
 <span class="attr">#[derive(Default)]
 #[non_exhaustive]
@@ -462,17 +515,15 @@
 <span class="kw">pub const </span>RANGE_1: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw">dyn </span>RangeTrait&lt;usize&gt; = <span class="kw-2">&amp;</span>(<span class="number">1</span>..=<span class="number">1</span>);
 
 <span class="kw">pub fn </span>identity_write_iterator_fn(
-    write_context_args: <span class="kw-2">&amp;</span>WriteContextArgs,
-    write_iterator_args: <span class="kw-2">&amp;</span>WriteIteratorArgs,
-) -&gt; TokenStream {
-    <span class="kw">let </span><span class="kw-2">&amp;</span>WriteContextArgs { op_span, .. } = write_context_args;
-    <span class="kw">let </span><span class="kw-2">&amp;</span>WriteIteratorArgs {
+    <span class="kw-2">&amp;</span>WriteContextArgs {
+        op_span,
         ident,
         inputs,
         outputs,
         is_pull,
         ..
-    } = write_iterator_args;
+    }: <span class="kw-2">&amp;</span>WriteContextArgs,
+) -&gt; TokenStream {
     <span class="kw">if </span>is_pull {
         <span class="kw">let </span>input = <span class="kw-2">&amp;</span>inputs[<span class="number">0</span>];
         <span class="macro">quote_spanned! </span>{op_span=&gt;
@@ -486,13 +537,13 @@
     }
 }
 
-<span class="kw">pub const </span>IDENTITY_WRITE_FN: WriteFn = <span class="kw-2">&amp;</span>(|write_context_args, write_iterator_args, <span class="kw">_</span>| {
-    <span class="kw">let </span>write_iterator = identity_write_iterator_fn(write_context_args, write_iterator_args);
+<span class="kw">pub const </span>IDENTITY_WRITE_FN: WriteFn = |write_context_args, <span class="kw">_</span>| {
+    <span class="kw">let </span>write_iterator = identity_write_iterator_fn(write_context_args);
     <span class="prelude-val">Ok</span>(OperatorWriteOutput {
         write_iterator,
         ..Default::default()
     })
-});
+};
 
 <span class="kw">pub const </span>OPERATORS: <span class="kw-2">&amp;</span>[OperatorConstraints] = <span class="kw-2">&amp;</span>[
     null::NULL,
@@ -520,6 +571,7 @@
     source_stream_serde::SOURCE_STREAM_SERDE,
     repeat_iter::REPEAT_ITER,
     difference::DIFFERENCE,
+    anti_join::ANTI_JOIN,
     next_stratum::NEXT_STRATUM,
     next_tick::NEXT_TICK,
     for_each::FOR_EACH,
@@ -527,16 +579,53 @@
     dest_sink::DEST_SINK,
     dest_sink_serde::DEST_SINK_SERDE,
 ];
+<span class="kw">pub fn </span>operator_lookup() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>HashMap&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>OperatorConstraints&gt; {
+    <span class="kw">pub static </span>OPERATOR_LOOKUP: OnceCell&lt;HashMap&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>OperatorConstraints&gt;&gt; =
+        OnceCell::new();
+    OPERATOR_LOOKUP.get_or_init(|| OPERATORS.iter().map(|op| (op.name, op)).collect())
+}
+<span class="kw">pub fn </span>find_node_op_constraints(node: <span class="kw-2">&amp;</span>Node) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>OperatorConstraints&gt; {
+    <span class="kw">if let </span>Node::Operator(operator) = node {
+        find_op_op_constraints(operator)
+    } <span class="kw">else </span>{
+        <span class="prelude-val">None
+    </span>}
+}
+<span class="kw">pub fn </span>find_op_op_constraints(operator: <span class="kw-2">&amp;</span>Operator) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>OperatorConstraints&gt; {
+    <span class="kw">let </span>name = <span class="kw-2">&amp;*</span>operator.name_string();
+    operator_lookup().get(name).copied()
+}
 
 <span class="kw">pub struct </span>WriteContextArgs&lt;<span class="lifetime">&#39;a</span>&gt; {
     <span class="doccomment">/// `hydroflow` crate name for `use #root::something`.
     </span><span class="kw">pub </span>root: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TokenStream,
+    <span class="doccomment">/// `context` ident, the name of the provided
+    /// [`hydroflow::scheduled::Context`](https://hydro-project.github.io/hydroflow/doc/hydroflow/scheduled/context/struct.Context.html).
+    </span><span class="kw">pub </span>context: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Ident,
+    <span class="doccomment">/// `df` ident, the name of the
+    /// [`hydroflow::scheduled::graph::Hydroflow`](https://hydro-project.github.io/hydroflow/doc/hydroflow/scheduled/graph/struct.Hydroflow.html)
+    /// instance.
+    </span><span class="kw">pub </span>hydroflow: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Ident,
     <span class="doccomment">/// Subgraph ID in which this operator is contained.
     </span><span class="kw">pub </span>subgraph_id: GraphSubgraphId,
     <span class="doccomment">/// Node ID identifying this operator in the flat or partitioned graph meta-datastructure.
     </span><span class="kw">pub </span>node_id: GraphNodeId,
     <span class="doccomment">/// The source span of this operator.
     </span><span class="kw">pub </span>op_span: Span,
+
+    <span class="doccomment">/// Ident the iterator or pullerator should be assigned to.
+    </span><span class="kw">pub </span>ident: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Ident,
+    <span class="doccomment">/// If a pull iterator (true) or pusherator (false) should be used.
+    </span><span class="kw">pub </span>is_pull: bool,
+    <span class="doccomment">/// Input operator idents (used for pull).
+    </span><span class="kw">pub </span>inputs: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[Ident],
+    <span class="doccomment">/// Output operator idents (used for push).
+    </span><span class="kw">pub </span>outputs: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[Ident],
+
+    <span class="doccomment">/// Operator name.
+    </span><span class="kw">pub </span>op_name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
+    <span class="doccomment">/// Operator instance arguments object.
+    </span><span class="kw">pub </span>op_inst: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>OperatorInstance,
 }
 <span class="kw">impl </span>WriteContextArgs&lt;<span class="lifetime">&#39;_</span>&gt; {
     <span class="kw">pub fn </span>make_ident(<span class="kw-2">&amp;</span><span class="self">self</span>, suffix: <span class="kw">impl </span>AsRef&lt;str&gt;) -&gt; Ident {
@@ -552,31 +641,7 @@
     }
 }
 
-<span class="kw">pub struct </span>WriteIteratorArgs&lt;<span class="lifetime">&#39;a</span>&gt; {
-    <span class="doccomment">/// Ident the iterator or pullerator should be assigned to.
-    </span><span class="kw">pub </span>ident: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Ident,
-    <span class="doccomment">/// If a pull iterator (true) or pusherator (false) should be used.
-    </span><span class="kw">pub </span>is_pull: bool,
-    <span class="doccomment">/// Input operator idents (used for pull).
-    </span><span class="kw">pub </span>inputs: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[Ident],
-    <span class="doccomment">/// Output operator idents (used for push).
-    </span><span class="kw">pub </span>outputs: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[Ident],
-
-    <span class="doccomment">/// Port values used as this operator&#39;s input.
-    </span><span class="kw">pub </span>input_ports: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>PortIndexValue],
-    <span class="doccomment">/// Port values used as this operator&#39;s output.
-    </span><span class="kw">pub </span>output_ports: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>PortIndexValue],
-
-    <span class="doccomment">/// Operator generic (type or lifetime) arguments.
-    </span><span class="kw">pub </span>generic_args: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Punctuated&lt;GenericArgument, <span class="macro">Token!</span>[,]&gt;&gt;,
-    <span class="doccomment">/// Arguments provided by the user into the operator as arguments.
-    /// I.e. the `a, b, c` in `-&gt; my_op(a, b, c) -&gt; `.
-    </span><span class="kw">pub </span>arguments: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Punctuated&lt;Expr, <span class="macro">Token!</span>[,]&gt;,
-    <span class="doccomment">/// Name of the operator (will match [`OperatorConstraints::name`]).
-    </span><span class="kw">pub </span>op_name: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str,
-}
-
-<span class="kw">pub trait </span>RangeTrait&lt;T&gt;
+<span class="kw">pub trait </span>RangeTrait&lt;T&gt;: Send + Sync + std::fmt::Debug
 <span class="kw">where
     </span>T: <span class="question-mark">?</span>Sized,
 {
@@ -618,7 +683,7 @@
 
 <span class="kw">impl</span>&lt;R, T&gt; RangeTrait&lt;T&gt; <span class="kw">for </span>R
 <span class="kw">where
-    </span>R: RangeBounds&lt;T&gt;,
+    </span>R: RangeBounds&lt;T&gt; + Send + Sync + std::fmt::Debug,
 {
     <span class="kw">fn </span>start_bound(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Bound&lt;<span class="kw-2">&amp;</span>T&gt; {
         <span class="self">self</span>.start_bound()
@@ -636,61 +701,10 @@
     }
 }
 
-<span class="attr">#[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Debug)]
+<span class="attr">#[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Debug, Serialize, Deserialize)]
 </span><span class="kw">pub enum </span>Persistence {
     Tick,
     Static,
 }
-
-<span class="kw">pub fn </span>parse_generic_types&lt;<span class="lifetime">&#39;a</span>&gt;(
-    <span class="kw-2">&amp;</span>WriteIteratorArgs { generic_args, .. }: <span class="kw-2">&amp;</span>WriteIteratorArgs&lt;<span class="lifetime">&#39;a</span>&gt;,
-) -&gt; Vec&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>Type&gt; {
-    <span class="kw">if let </span><span class="prelude-val">Some</span>(generic_args) = generic_args {
-        generic_args
-            .iter()
-            .skip_while(|generic_arg| <span class="macro">matches!</span>(generic_arg, GenericArgument::Lifetime(<span class="kw">_</span>)))
-            .map_while(|generic_arg| {
-                <span class="kw">if let </span>GenericArgument::Type(ty) = generic_arg {
-                    <span class="prelude-val">Some</span>(ty)
-                } <span class="kw">else </span>{
-                    <span class="prelude-val">None
-                </span>}
-            })
-            .collect()
-    } <span class="kw">else </span>{
-        Vec::new()
-    }
-}
-
-<span class="kw">pub fn </span>parse_persistence_lifetimes(
-    <span class="kw-2">&amp;</span>WriteIteratorArgs { generic_args, .. }: <span class="kw-2">&amp;</span>WriteIteratorArgs,
-    diagnostics: <span class="kw-2">&amp;mut </span>Vec&lt;Diagnostic&gt;,
-) -&gt; Vec&lt;Persistence&gt; {
-    <span class="kw">if let </span><span class="prelude-val">Some</span>(generic_args) = generic_args {
-        generic_args
-            .iter()
-            .map_while(|generic_arg| {
-                <span class="kw">if let </span>GenericArgument::Lifetime(lifetime) = generic_arg {
-                    <span class="kw">match </span><span class="kw-2">&amp;*</span>lifetime.ident.to_string() {
-                        <span class="string">&quot;static&quot; </span>=&gt; <span class="prelude-val">Some</span>(Persistence::Static),
-                        <span class="string">&quot;tick&quot; </span>=&gt; <span class="prelude-val">Some</span>(Persistence::Tick),
-                        <span class="kw">_ </span>=&gt; {
-                                diagnostics.push(Diagnostic::spanned(
-                                generic_arg.span(),
-                                Level::Error,
-                                <span class="macro">format!</span>(<span class="string">&quot;Unknown lifetime generic argument `&#39;{}`, expected `&#39;epoch` or `&#39;static`.&quot;</span>, lifetime.ident),
-                            ));
-                            <span class="prelude-val">None
-                        </span>}
-                    }
-                } <span class="kw">else </span>{
-                    <span class="prelude-val">None
-                </span>}
-            })
-            .collect()
-    } <span class="kw">else </span>{
-        Vec::new()
-    }
-}
 </code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="hydroflow_lang" data-themes="" data-resource-suffix="" data-rustdoc-version="1.70.0-nightly (39f2657d1 2023-03-09)" data-search-js="search-8a59a8356673ec1f.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</section></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="hydroflow_lang" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (31f858d9a 2023-02-28)" data-search-js="search-d5a6cd8418084717.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>

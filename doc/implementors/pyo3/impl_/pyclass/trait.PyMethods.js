@@ -1,0 +1,3 @@
+(function() {var implementors = {
+"hydro":[["impl PyMethods&lt;<a class=\"struct\" href=\"hydro/struct.PyDeployment.html\" title=\"struct hydro::PyDeployment\">PyDeployment</a>&gt; for PyClassImplCollector&lt;<a class=\"struct\" href=\"hydro/struct.PyDeployment.html\" title=\"struct hydro::PyDeployment\">PyDeployment</a>&gt;"]]
+};if (window.register_implementors) {window.register_implementors(implementors);} else {window.pending_implementors = implementors;}})()

@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Color","Node","PortIndexValue"],"fn":["node_color"],"mod":["di_mul_graph","flat_graph","flat_to_partitioned","graph_algorithms","ops","partitioned_graph","serde_graph"],"struct":["GraphEdgeId","GraphNodeId","GraphSubgraphId"]};
+window.SIDEBAR_ITEMS = {"enum":["Color","Node","PortIndexValue"],"fn":["get_operator_generics","node_color","partition_graph"],"mod":["graph_algorithms","ops","serde_graph"],"struct":["DiMulGraph","FlatGraphBuilder","GraphEdgeId","GraphNodeId","GraphSubgraphId","HydroflowGraph","OpInstGenerics","OperatorInstance"]};

@@ -429,7 +429,7 @@ machine code.</p>
             }
         })
         -&gt; flat_map(|n| (n..=n+1))
-        -&gt; for_each(|n| println!(&quot;G'day {}&quot;, n))
+        -&gt; for_each(|n| println!(&quot;G'day {}&quot;, n));
     };
 
     flow.run_available();
@@ -505,7 +505,7 @@ pub fn main() {
             }
         })
         -&gt; flat_map(|n| (n..=n+1))
-        -&gt; for_each(|n| println!(&quot;Ahoy, {}&quot;, n))
+        -&gt; for_each(|n| println!(&quot;Ahoy, {}&quot;, n));
     };
 
     println!(&quot;A&quot;);
@@ -1699,67 +1699,89 @@ pub fn example() {
 }
 <span class="boring">}
 </span></code></pre></pre>
-<p>The resulting <code>flow</code> object is of type <code>Hydroflow</code>.</p>
+<p>The resulting <code>flow</code> object is of type <a href="https://hydro-project.github.io/hydroflow/doc/hydroflow/scheduled/graph/struct.Hydroflow.html"><code>Hydroflow</code></a>.</p>
 <!-- TODO(mingwei): see the documentation on the
 [Hydroflow Object](./hydroflow_object.md) for details on how to use the result. -->
 <div style="break-before: page; page-break-before: always;"></div><h1 id="flow-syntax"><a class="header" href="#flow-syntax">Flow Syntax</a></h1>
 <p>Flows consist of named <em>operators</em> that are connected via flow <em>edges</em> denoted by <code>-&gt;</code>. The example below
-uses the <a href="./surface_ops.gen.html#source_iter"><code>source_iter</code></a> operator to generate two strings from a Rust <code>vec</code>, the 
-<a href="./surface_ops.gen.html#map"><code>map</code></a> operator to apply some Rust code to uppercase each string, and the <a href="./surface_ops.gen.html#for_each"><code>for_each</code></a> 
+uses the <a href="./surface_ops.gen.html#source_iter"><code>source_iter</code></a> operator to generate two strings from a Rust <code>vec</code>, the
+<a href="./surface_ops.gen.html#map"><code>map</code></a> operator to apply some Rust code to uppercase each string, and the <a href="./surface_ops.gen.html#for_each"><code>for_each</code></a>
 operator to print each string to stdout.</p>
-<pre><code class="language-rust ignore">source_iter(vec![&quot;Hello&quot;, &quot;world&quot;]) 
+<pre><code class="language-rust ignore">source_iter(vec![&quot;Hello&quot;, &quot;world&quot;])
     -&gt; map(|x| x.to_uppercase()) -&gt; for_each(|x| println!(&quot;{}&quot;, x));
 </code></pre>
 <p>Flows can be assigned to variable names for convenience. E.g, the above can be rewritten as follows:</p>
-<pre><code class="language-rust ignore">upper_print = map(|x| x.to_uppercase()) -&gt; for_each(|x| println!(&quot;{}&quot;, x));
-source_iter(vec![&quot;Hello&quot;, &quot;world&quot;]) -&gt; upper_print;
+<pre><code class="language-rust ignore">source_iter(vec![&quot;Hello&quot;, &quot;world&quot;]) -&gt; upper_print;
+upper_print = map(|x| x.to_uppercase()) -&gt; for_each(|x| println!(&quot;{}&quot;, x));
 </code></pre>
+<p>Note that the order of the statements (lines) doesn't matter. In this example, <code>upper_print</code> is
+referenced before it is assigned, and that is completely OK and better matches the flow of
+data, making the program more understandable.</p>
 <h2 id="operators-with-multiple-ports"><a class="header" href="#operators-with-multiple-ports">Operators with Multiple Ports</a></h2>
-<p>Some operators have more than one input <em>port</em> that can be referenced by <code>-&gt;</code>. For example <a href="./surface_ops.gen.html#merge"><code>merge</code></a> 
+<p>Some operators have more than one input <em>port</em> that can be referenced by <code>-&gt;</code>. For example <a href="./surface_ops.gen.html#merge"><code>merge</code></a>
 merges the contents of many flows, so it can have an abitrary number of input ports. Some operators have multiple outputs, notably <a href="./surface_ops.gen.html#tee"><code>tee</code></a>,
-which has an arbitrary number of outputs. </p>
-<p>In the syntax, we distinguish input ports via an <em>indexing prefix</em> number
-in square brackets before the operator name (e.g. <code>[0]merge(...)</code> and <code>[1]merge(...)</code>). We 
-distinguish output ports by an <em>indexing suffix</em> (e.g. <code>tee[0]</code>). </p>
+which has an arbitrary number of outputs.</p>
+<p>In the syntax, we optionally distinguish input ports via an <em>indexing prefix</em> number
+in square brackets before the name (e.g. <code>[0]my_join</code> and <code>[1]my_join</code>). We
+can distinguish output ports by an <em>indexing suffix</em> (e.g. <code>my_tee[0]</code>).</p>
 <p>Here is an example that tees one flow into two, handles each separately, and then merges them to print out the contents in both lowercase and uppercase:</p>
-<pre><code class="language-rust ignore">source = source_iter(vec![&quot;Hello&quot;, &quot;world&quot;]) -&gt; tee();
-print = merge() -&gt; for_each(|x| println!(&quot;{}&quot;, x));
-source[0] -&gt; map(|x: &amp;str| x.to_uppercase()) -&gt; [0]print;
-source[1] -&gt; map(|x: &amp;str| x.to_lowercase()) -&gt; [1]print;
+<pre><code class="language-rust ignore">my_tee = source_iter(vec![&quot;Hello&quot;, &quot;world&quot;]) -&gt; tee();
+my_tee -&gt; map(|x| x.to_uppercase()) -&gt; my_merge;
+my_tee -&gt; map(|x| x.to_lowercase()) -&gt; my_merge;
+my_merge = merge() -&gt; for_each(|x| println!(&quot;{}&quot;, x));
 </code></pre>
-<p>(Note that the Rust code inside map needed a little help with type inference after the <code>tee</code>.)</p>
+<p><code>merge()</code> and <code>tee()</code> treat all their input/outputs the same, so we omit the indexing.</p>
 <p>Here is a visualization of the flow that was generated:</p>
-<pre class="mermaid">flowchart TB
-    subgraph Compiled Component 2
-        3v1[&quot;3v1 &lt;tt&gt;op_3v1: merge()&lt;/tt&gt;&quot;]
-        4v1[&quot;4v1 &lt;tt&gt;op_4v1: for_each(| x | println! (&amp;quot;{}&amp;quot;, x))&lt;/tt&gt;&quot;]
+<pre class="mermaid">%%{init:{'theme':'base','themeVariables':{'clusterBkg':'#ddd','clusterBorder':'#888'}}}%%
+flowchart TD
+classDef pullClass fill:#02f,color:#fff,stroke:#000
+classDef pushClass fill:#ff0,stroke:#000
+linkStyle default stroke:#aaa,stroke-width:4px,color:red,font-size:1.5em;
+subgraph sg_1v1 [&quot;sg_1v1 stratum 0&quot;]
+    1v1[\&quot;(1v1) &lt;tt&gt;source_iter(vec! [&amp;quot;Hello&amp;quot;, &amp;quot;world&amp;quot;])&lt;/tt&gt;&quot;/]:::pullClass
+    2v1[/&quot;(2v1) &lt;tt&gt;tee()&lt;/tt&gt;&quot;\]:::pushClass
+    1v1---&gt;2v1
+    subgraph sg_1v1_var_my_tee [&quot;var &lt;tt&gt;my_tee&lt;/tt&gt;&quot;]
+        1v1
+        2v1
     end
-    subgraph Compiled Component 1
-        1v1[&quot;1v1 &lt;tt&gt;op_1v1: source_iter(vec! [&amp;quot;Hello&amp;quot;, &amp;quot;world&amp;quot;])&lt;/tt&gt;&quot;]
-        2v1[&quot;2v1 &lt;tt&gt;op_2v1: tee()&lt;/tt&gt;&quot;]
-        5v1[&quot;5v1 &lt;tt&gt;op_5v1: map(| x : &amp;amp; str | x.to_uppercase())&lt;/tt&gt;&quot;]
-        6v1[&quot;6v1 &lt;tt&gt;op_6v1: map(| x : &amp;amp; str | x.to_lowercase())&lt;/tt&gt;&quot;]
+end
+subgraph sg_2v1 [&quot;sg_2v1 stratum 0&quot;]
+    3v1[\&quot;(3v1) &lt;tt&gt;map(| x : &amp;amp; str | x.to_uppercase())&lt;/tt&gt;&quot;/]:::pullClass
+    4v1[\&quot;(4v1) &lt;tt&gt;map(| x : &amp;amp; str | x.to_lowercase())&lt;/tt&gt;&quot;/]:::pullClass
+    5v1[\&quot;(5v1) &lt;tt&gt;merge()&lt;/tt&gt;&quot;/]:::pullClass
+    6v1[/&quot;(6v1) &lt;tt&gt;for_each(| x | println! (&amp;quot;{}&amp;quot;, x))&lt;/tt&gt;&quot;\]:::pushClass
+    3v1--0---&gt;5v1
+    4v1--1---&gt;5v1
+    5v1---&gt;6v1
+    subgraph sg_2v1_var_my_merge [&quot;var &lt;tt&gt;my_merge&lt;/tt&gt;&quot;]
+        5v1
+        6v1
     end
-
-    7v1{&quot;handoff&quot;}
-    8v1{&quot;handoff&quot;}
-
-    1v1--&gt;2v1
-    2v1--&gt;5v1
-    2v1--&gt;6v1
-    3v1--&gt;4v1
-    5v1--&gt;7v1
-    6v1--&gt;8v1
-    7v1--&gt;3v1
-    8v1--&gt;3v1
+end
+2v1--0---&gt;7v1
+2v1--1---&gt;8v1
+7v1[&quot;(7v1) &lt;tt&gt;handoff&lt;/tt&gt;&quot;]:::otherClass
+7v1---&gt;3v1
+8v1[&quot;(8v1) &lt;tt&gt;handoff&lt;/tt&gt;&quot;]:::otherClass
+8v1---&gt;4v1
 </pre>
-<p>Hydroflow compiled this flow into two subgraphs called <em>compiled components</em>, connected by <em>handoffs</em>. You can ignore 
+<p>Hydroflow compiled this flow into two subgraphs called <em>compiled components</em>, connected by <em>handoffs</em>. You can ignore
 these details unless you are interested in low-level performance tuning; they are explained in the discussion
-of <a href="./in-out_trees.html">in-out trees</a>. </p>
+of <a href="./in-out_trees.html">in-out trees</a>.</p>
 <h3 id="a-note-on-assigning-flows-with-multiple-ports"><a class="header" href="#a-note-on-assigning-flows-with-multiple-ports">A note on assigning flows with multiple ports</a></h3>
 <blockquote>
 <p><em>TODO</em>: <em>Need to document the port numbers for variables assigned to tree- or dag-shaped flows</em></p>
 </blockquote>
+<h2 id="the-context-object"><a class="header" href="#the-context-object">The <code>context</code> object</a></h2>
+<p>Closures inside surface syntax operators have access to a special <code>context</code> object which provides
+access to scheduling, timing, and state APIs. The object is accessible as a shared reference
+(<code>&amp;Context</code>) via the special name <code>context</code>.
+<a href="https://hydro-project.github.io/hydroflow/doc/hydroflow/scheduled/context/struct.Context.html">Here is the full API documentation for <code>Context</code></a>.</p>
+<pre><code class="language-rust ignore">source_iter([()])
+    -&gt; for_each(|()| println!(&quot;Current tick: {}, stratum: {}&quot;, context.current_tick(), context.current_stratum()));
+// Current tick: 0, stratum: 0
+</code></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="data-sources-and-sinks-in-rust"><a class="header" href="#data-sources-and-sinks-in-rust">Data Sources and Sinks in Rust</a></h1>
 <p>Any useful flow requires us to define sources of data, either generated computationally or received from 
 and outside environment via I/O.</p>
@@ -1806,6 +1828,41 @@ flow.run_available();
 <p>In our previous examples we made use of some of Hydroflow's built-in operators.
 Here we document each operators in more detail. Most of these operators
 are based on the Rust equivalents for iterators; see the <a href="https://doc.rust-lang.org/std/iter/trait.Iterator.html">Rust documentation</a>.</p>
+<h2 id="anti_join"><a class="header" href="#anti_join"><code>anti_join</code></a></h2>
+<div class="table-wrapper"><table><thead><tr><th>Inputs</th><th>Syntax</th><th>Outputs</th><th>Flow</th></tr></thead><tbody>
+<tr><td><span title="exactly 2">exactly 2</span></td><td><code>-&gt; [&lt;input_port&gt;]anti_join() -&gt;</code></td><td><span title="exactly 1">exactly 1</span></td><td>Blocking</td></tr>
+</tbody></table>
+</div>
+<blockquote>
+<p>Input port names: <code>pos</code> (streaming), <code>neg</code> (blocking)</p>
+</blockquote>
+<!-- GENERATED "hydroflow_lang/src/graph/ops/anti_join.rs" -->
+<blockquote>
+<p>2 input streams the first of type (K, T), the second of type K,
+with output type (K, T)</p>
+</blockquote>
+<p>For a given tick, computes the anti-join of the items in the input
+streams, returning items in the <code>pos</code> input that do not have matching keys
+in the <code>neg</code> input.</p>
+<pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
+</span><span class="boring">fn main() {
+</span><span class="boring">#[allow(unused_imports)] use hydroflow::{var_args, var_expr};
+</span><span class="boring">#[allow(unused_imports)] use hydroflow::pusherator::Pusherator;
+</span><span class="boring">let mut __hf = hydroflow::hydroflow_syntax! {
+</span>// should print (&quot;elephant&quot;, 3)
+source_iter(vec![(&quot;dog&quot;, 1), (&quot;cat&quot;, 2), (&quot;elephant&quot;, 3)]) -&gt; [pos]diff;
+source_iter(vec![&quot;dog&quot;, &quot;cat&quot;, &quot;gorilla&quot;]) -&gt; [neg]diff;
+diff = anti_join() -&gt; for_each(|v: (_, _)| println!(&quot;{}, {}&quot;, v.0, v.1));
+// elephant 3
+<span class="boring">};
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
+</span><span class="boring">}
+</span></code></pre></pre>
 <h2 id="cross_join"><a class="header" href="#cross_join"><code>cross_join</code></a></h2>
 <div class="table-wrapper"><table><thead><tr><th>Inputs</th><th>Syntax</th><th>Outputs</th><th>Flow</th></tr></thead><tbody>
 <tr><td><span title="exactly 2">exactly 2</span></td><td><code>-&gt; [&lt;input_port&gt;]cross_join() -&gt;</code></td><td><span title="exactly 1">exactly 1</span></td><td>Streaming</td></tr>
@@ -1826,12 +1883,16 @@ tupled pairs.</p>
 </span><span class="boring">#[allow(unused_imports)] use hydroflow::pusherator::Pusherator;
 </span><span class="boring">let mut __hf = hydroflow::hydroflow_syntax! {
 </span>// should print all 4 pairs of emotion and animal
-my_join = cross_join();
 source_iter(vec![&quot;happy&quot;, &quot;sad&quot;]) -&gt; [0]my_join;
 source_iter(vec![&quot;dog&quot;, &quot;cat&quot;]) -&gt; [1]my_join;
-my_join -&gt; for_each(|(v1, v2)| println!(&quot;({}, {})&quot;, v1, v2));
+my_join = cross_join() -&gt; for_each(|(v1, v2)| println!(&quot;({}, {})&quot;, v1, v2));
 <span class="boring">};
-</span><span class="boring">__hf.run_available();
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
 </span><span class="boring">}
 </span></code></pre></pre>
 <p><code>cross_join</code> can also be provided with one or two generic lifetime persistence arguments
@@ -1876,6 +1937,9 @@ deliver to any number of output streams.</p>
 <p>Note: The <a href="https://hydro-project.github.io/hydroflow/doc/pusherator/trait.Pusherator.html"><code>Pusherator</code></a>
 trait is automatically imported to enable the <a href="https://hydro-project.github.io/hydroflow/doc/pusherator/trait.Pusherator.html#tymethod.give"><code>.give(...)</code> method</a>.</p>
 </blockquote>
+<blockquote>
+<p>Note: The closure has access to the <a href="surface_flows.html#the-context-object"><code>context</code> object</a>.</p>
+</blockquote>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span><span class="boring">#[allow(unused_imports)] use hydroflow::{var_args, var_expr};
@@ -1894,7 +1958,12 @@ my_demux[fizz] -&gt; for_each(|v| println!(&quot;{}: fizz&quot;, v));
 my_demux[buzz] -&gt; for_each(|v| println!(&quot;{}: buzz&quot;, v));
 my_demux[vals] -&gt; for_each(|v| println!(&quot;{}&quot;, v));
 <span class="boring">};
-</span><span class="boring">__hf.run_available();
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
 </span><span class="boring">}
 </span></code></pre></pre>
 <h2 id="dest_sink"><a class="header" href="#dest_sink"><code>dest_sink</code></a></h2>
@@ -1932,7 +2001,7 @@ let mut recv = tokio_stream::wrappers::ReceiverStream::new(recv);
 // Only 5 elements received due to buffer size.
 // (Note that if we were using a multi-threaded executor instead of `current_thread` it would
 // be possible for more items to be added as they're removed, resulting in &gt;5 collected.)
-let out: Vec&lt;_&gt; = hydroflow::util::collect_ready(&amp;mut recv);
+let out: Vec&lt;_&gt; = hydroflow::util::ready_iter(&amp;mut recv).collect();
 assert_eq!(&amp;[0, 1, 2, 3, 4], &amp;*out);
 <span class="boring">}
 </span></code></pre></pre>
@@ -2015,12 +2084,16 @@ streams, returning items in the <code>pos</code> input that are not found in the
 </span><span class="boring">#[allow(unused_imports)] use hydroflow::pusherator::Pusherator;
 </span><span class="boring">let mut __hf = hydroflow::hydroflow_syntax! {
 </span>// should print &quot;elephant&quot;
-diff = difference();
 source_iter(vec![&quot;dog&quot;, &quot;cat&quot;, &quot;elephant&quot;]) -&gt; [pos]diff;
 source_iter(vec![&quot;dog&quot;, &quot;cat&quot;, &quot;gorilla&quot;]) -&gt; [neg]diff;
-diff -&gt; for_each(|v| println!(&quot;{}&quot;, v));
+diff = difference() -&gt; for_each(|v| println!(&quot;{}&quot;, v));
 <span class="boring">};
-</span><span class="boring">__hf.run_available();
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
 </span><span class="boring">}
 </span></code></pre></pre>
 <h2 id="filter"><a class="header" href="#filter"><code>filter</code></a></h2>
@@ -2030,8 +2103,11 @@ diff -&gt; for_each(|v| println!(&quot;{}&quot;, v));
 </div><!-- GENERATED "hydroflow_lang/src/graph/ops/filter.rs" -->
 <p>Filter outputs a subsequence of the items it receives at its input, according to a
 Rust boolean closure passed in as an argument.</p>
+<p>The closure receives a reference <code>&amp;T</code> rather than an owned value <code>T</code> because filtering does
+not modify or take ownership of the values. If you need to modify the values while filtering
+use <a href="surface_ops.gen.html#filter_map"><code>filter_map</code></a> instead.</p>
 <blockquote>
-<p>TODO: Why does filter's closure expect a reference and other ops like map do not?</p>
+<p>Note: The closure has access to the <a href="surface_flows.html#the-context-object"><code>context</code> object</a>.</p>
 </blockquote>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
@@ -2041,7 +2117,12 @@ Rust boolean closure passed in as an argument.</p>
 </span>source_iter(vec![&quot;hello&quot;, &quot;world&quot;]) -&gt; filter(|x| x.starts_with('w'))
     -&gt; for_each(|x| println!(&quot;{}&quot;, x));
 <span class="boring">};
-</span><span class="boring">__hf.run_available();
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
 </span><span class="boring">}
 </span></code></pre></pre>
 <h2 id="filter_map"><a class="header" href="#filter_map"><code>filter_map</code></a></h2>
@@ -2053,6 +2134,9 @@ Rust boolean closure passed in as an argument.</p>
 <p>1 input stream, 1 output stream</p>
 </blockquote>
 <p>An operator that both filters and maps. It yields only the items for which the supplied closure returns <code>Some(value)</code>.</p>
+<blockquote>
+<p>Note: The closure has access to the <a href="surface_flows.html#the-context-object"><code>context</code> object</a>.</p>
+</blockquote>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span><span class="boring">#[allow(unused_imports)] use hydroflow::{var_args, var_expr};
@@ -2061,7 +2145,12 @@ Rust boolean closure passed in as an argument.</p>
 </span>source_iter(vec![&quot;1&quot;, &quot;hello&quot;, &quot;world&quot;, &quot;2&quot;]) -&gt; filter_map(|s| s.parse().ok())
     -&gt; for_each(|x: usize| println!(&quot;{}&quot;, x));
 <span class="boring">};
-</span><span class="boring">__hf.run_available();
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
 </span><span class="boring">}
 </span></code></pre></pre>
 <h2 id="flat_map"><a class="header" href="#flat_map"><code>flat_map</code></a></h2>
@@ -2077,6 +2166,9 @@ Rust boolean closure passed in as an argument.</p>
 </blockquote>
 <p>For each item <code>i</code> passed in, treat <code>i</code> as an iterator and map the closure to that
 iterator to produce items one by one. The type of the input items must be iterable.</p>
+<blockquote>
+<p>Note: The closure has access to the <a href="surface_flows.html#the-context-object"><code>context</code> object</a>.</p>
+</blockquote>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span><span class="boring">#[allow(unused_imports)] use hydroflow::{var_args, var_expr};
@@ -2086,7 +2178,12 @@ iterator to produce items one by one. The type of the input items must be iterab
 source_iter(vec![&quot;hello&quot;, &quot;world&quot;]) -&gt; flat_map(|x| x.chars())
     -&gt; for_each(|x| println!(&quot;{}&quot;, x));
 <span class="boring">};
-</span><span class="boring">__hf.run_available();
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
 </span><span class="boring">}
 </span></code></pre></pre>
 <h2 id="flatten"><a class="header" href="#flatten"><code>flatten</code></a></h2>
@@ -2108,12 +2205,17 @@ The type of the input items must be iterable.</p>
 source_iter(vec![[1, 2], [3, 4], [5, 6]]) -&gt; flatten()
 -&gt; for_each(|x| println!(&quot;{}&quot;, x));
 <span class="boring">};
-</span><span class="boring">__hf.run_available();
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
 </span><span class="boring">}
 </span></code></pre></pre>
 <h2 id="fold"><a class="header" href="#fold"><code>fold</code></a></h2>
 <div class="table-wrapper"><table><thead><tr><th>Inputs</th><th>Syntax</th><th>Outputs</th><th>Flow</th></tr></thead><tbody>
-<tr><td><span title="exactly 1">exactly 1</span></td><td><code>-&gt; fold(A, B) -&gt;</code></td><td><span title="exactly 1">exactly 1</span></td><td>Streaming</td></tr>
+<tr><td><span title="exactly 1">exactly 1</span></td><td><code>-&gt; fold(A, B) -&gt;</code></td><td><span title="exactly 1">exactly 1</span></td><td>Blocking</td></tr>
 </tbody></table>
 </div><!-- GENERATED "hydroflow_lang/src/graph/ops/fold.rs" -->
 <blockquote>
@@ -2125,6 +2227,14 @@ an 'accumulator', and an element. The closure returns the value that the accumul
 </blockquote>
 <p>Akin to Rust's built-in fold operator. Folds every element into an accumulator by applying a closure,
 returning the final result.</p>
+<blockquote>
+<p>Note: The closure has access to the <a href="surface_flows.html#the-context-object"><code>context</code> object</a>.</p>
+</blockquote>
+<p><code>fold</code> can also be provided with one generic lifetime persistence argument, either
+<code>'tick</code> or <code>'static</code>, to specify how data persists. With <code>'tick</code>, values will only be collected
+within the same tick. With <code>'static</code>, values will be remembered across ticks and will be
+aggregated with pairs arriving in later ticks. When not explicitly specified persistence
+defaults to <code>'static</code>.</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span><span class="boring">#[allow(unused_imports)] use hydroflow::{var_args, var_expr};
@@ -2132,13 +2242,18 @@ returning the final result.</p>
 </span><span class="boring">let mut __hf = hydroflow::hydroflow_syntax! {
 </span>// should print `Reassembled vector [1,2,3,4,5]`
 source_iter([1,2,3,4,5])
-    -&gt; fold(Vec::new(), |mut accum, elem| {
+    -&gt; fold::&lt;'tick&gt;(Vec::new(), |mut accum, elem| {
         accum.push(elem);
         accum
     })
     -&gt; for_each(|e| println!(&quot;Ressembled vector {:?}&quot;, e));
 <span class="boring">};
-</span><span class="boring">__hf.run_available();
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
 </span><span class="boring">}
 </span></code></pre></pre>
 <h2 id="for_each"><a class="header" href="#for_each"><code>for_each</code></a></h2>
@@ -2154,6 +2269,9 @@ source_iter([1,2,3,4,5])
 </blockquote>
 <p>Iterates through a stream passing each element to the closure in the
 argument.</p>
+<blockquote>
+<p>Note: The closure has access to the <a href="surface_flows.html#the-context-object"><code>context</code> object</a>.</p>
+</blockquote>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span><span class="boring">#[allow(unused_imports)] use hydroflow::{var_args, var_expr};
@@ -2162,12 +2280,17 @@ argument.</p>
 </span>    source_iter(vec![&quot;Hello&quot;, &quot;World&quot;])
         -&gt; for_each(|x| println!(&quot;{}&quot;, x));
 <span class="boring">};
-</span><span class="boring">__hf.run_available();
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
 </span><span class="boring">}
 </span></code></pre></pre>
 <h2 id="group_by"><a class="header" href="#group_by"><code>group_by</code></a></h2>
 <div class="table-wrapper"><table><thead><tr><th>Inputs</th><th>Syntax</th><th>Outputs</th><th>Flow</th></tr></thead><tbody>
-<tr><td><span title="exactly 1">exactly 1</span></td><td><code>-&gt; group_by(A, B) -&gt;</code></td><td><span title="exactly 1">exactly 1</span></td><td>Streaming</td></tr>
+<tr><td><span title="exactly 1">exactly 1</span></td><td><code>-&gt; group_by(A, B) -&gt;</code></td><td><span title="exactly 1">exactly 1</span></td><td>Blocking</td></tr>
 </tbody></table>
 </div><!-- GENERATED "hydroflow_lang/src/graph/ops/group_by.rs" -->
 <blockquote>
@@ -2182,11 +2305,14 @@ value that the accumulator should have for the next iteration.</p>
 <p>A special case of <code>fold</code>, in the spirit of SQL's GROUP BY and aggregation constructs. The input
 is partitioned into groups by the first field, and for each group the values in the second
 field are accumulated via the closures in the arguments.</p>
+<blockquote>
+<p>Note: The closures have access to the <a href="surface_flows.html#the-context-object"><code>context</code> object</a>.</p>
+</blockquote>
 <p><code>group_by</code> can also be provided with one generic lifetime persistence argument, either
 <code>'tick</code> or <code>'static</code>, to specify how data persists. With <code>'tick</code>, values will only be collected
 within the same tick. With <code>'static</code>, values will be remembered across ticks and will be
 aggregated with pairs arriving in later ticks. When not explicitly specified persistence
-defaults to `static.</p>
+defaults to <code>'static</code>.</p>
 <p><code>group_by</code> can also be provided with two type arguments, the key and value type. This is
 required when using <code>'static</code> persistence if the compiler cannot infer the types.</p>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
@@ -2198,7 +2324,12 @@ required when using <code>'static</code> persistence if the compiler cannot infe
     -&gt; group_by(|| 0, |old: &amp;mut u32, val: u32| *old += val)
     -&gt; for_each(|(k, v)| println!(&quot;Total for group {} is {}&quot;, k, v));
 <span class="boring">};
-</span><span class="boring">__hf.run_available();
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
 </span><span class="boring">}
 </span></code></pre></pre>
 <p>Example using <code>'tick</code> persistence:</p>
@@ -2243,7 +2374,12 @@ flow.run_available();
 source_iter(vec![&quot;hello&quot;, &quot;world&quot;]) -&gt; identity()
     -&gt; for_each(|x| println!(&quot;{}&quot;, x));
 <span class="boring">};
-</span><span class="boring">__hf.run_available();
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
 </span><span class="boring">}
 </span></code></pre></pre>
 <h2 id="inspect"><a class="header" href="#inspect"><code>inspect</code></a></h2>
@@ -2258,6 +2394,9 @@ source_iter(vec![&quot;hello&quot;, &quot;world&quot;]) -&gt; identity()
 modifying it. The closure is called on a reference to each item. This is
 mainly useful for debugging as in the example below, and it is generally an
 anti-pattern to provide a closure with side effects.</p>
+<blockquote>
+<p>Note: The closure has access to the <a href="surface_flows.html#the-context-object"><code>context</code> object</a>.</p>
+</blockquote>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span><span class="boring">#[allow(unused_imports)] use hydroflow::{var_args, var_expr};
@@ -2265,7 +2404,12 @@ anti-pattern to provide a closure with side effects.</p>
 </span><span class="boring">let mut __hf = hydroflow::hydroflow_syntax! {
 </span>source_iter([1, 2, 3, 4]) -&gt; inspect(|&amp;x| println!(&quot;{}&quot;, x)) -&gt; null();
 <span class="boring">};
-</span><span class="boring">__hf.run_available();
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
 </span><span class="boring">}
 </span></code></pre></pre>
 <h2 id="join"><a class="header" href="#join"><code>join</code></a></h2>
@@ -2287,12 +2431,16 @@ anti-pattern to provide a closure with side effects.</p>
 </span><span class="boring">#[allow(unused_imports)] use hydroflow::pusherator::Pusherator;
 </span><span class="boring">let mut __hf = hydroflow::hydroflow_syntax! {
 </span>// should print `(hello, (world, cleveland))`
-my_join = join();
 source_iter(vec![(&quot;hello&quot;, &quot;world&quot;), (&quot;stay&quot;, &quot;gold&quot;)]) -&gt; [0]my_join;
 source_iter(vec![(&quot;hello&quot;, &quot;cleveland&quot;)]) -&gt; [1]my_join;
-my_join -&gt; for_each(|(k, (v1, v2))| println!(&quot;({}, ({}, {}))&quot;, k, v1, v2));
+my_join = join() -&gt; for_each(|(k, (v1, v2))| println!(&quot;({}, ({}, {}))&quot;, k, v1, v2));
 <span class="boring">};
-</span><span class="boring">__hf.run_available();
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
 </span><span class="boring">}
 </span></code></pre></pre>
 <p><code>join</code> can also be provided with one or two generic lifetime persistence arguments, either
@@ -2308,11 +2456,11 @@ When no persistence arguments are applied it defaults to <code>'static</code> fo
 <pre><code class="language-hydroflow ignore">join(); // Or
 join::&lt;'static&gt;();
 
-join::&lt;'epoch&gt;();
+join::&lt;'tick&gt;();
 
-join::&lt;'static, 'epoch&gt;();
+join::&lt;'static, 'tick&gt;();
 
-join::&lt;'epoch, 'static&gt;();
+join::&lt;'tick, 'static&gt;();
 // etc.
 </code></pre>
 <h3 id="examples"><a class="header" href="#examples">Examples</a></h3>
@@ -2320,10 +2468,9 @@ join::&lt;'epoch, 'static&gt;();
 </span><span class="boring">fn main() {
 </span>let (input_send, input_recv) = hydroflow::util::unbounded_channel::&lt;(&amp;str, &amp;str)&gt;();
 let mut flow = hydroflow::hydroflow_syntax! {
-    my_join = join::&lt;'tick&gt;();
     source_iter([(&quot;hello&quot;, &quot;world&quot;)]) -&gt; [0]my_join;
     source_stream(input_recv) -&gt; [1]my_join;
-    my_join -&gt; for_each(|(k, (v1, v2))| println!(&quot;({}, ({}, {}))&quot;, k, v1, v2));
+    my_join = join::&lt;'tick&gt;() -&gt; for_each(|(k, (v1, v2))| println!(&quot;({}, ({}, {}))&quot;, k, v1, v2));
 };
 input_send.send((&quot;hello&quot;, &quot;oakland&quot;)).unwrap();
 flow.run_tick();
@@ -2338,10 +2485,9 @@ included in the first tick, then forgotten.</p>
 </span><span class="boring">fn main() {
 </span>let (input_send, input_recv) = hydroflow::util::unbounded_channel::&lt;(&amp;str, &amp;str)&gt;();
 let mut flow = hydroflow::hydroflow_syntax! {
-    my_join = join::&lt;'static&gt;();
     source_iter([(&quot;hello&quot;, &quot;world&quot;)]) -&gt; [0]my_join;
     source_stream(input_recv) -&gt; [1]my_join;
-    my_join -&gt; for_each(|(k, (v1, v2))| println!(&quot;({}, ({}, {}))&quot;, k, v1, v2));
+    my_join = join::&lt;'static&gt;() -&gt; for_each(|(k, (v1, v2))| println!(&quot;({}, ({}, {}))&quot;, k, v1, v2));
 };
 input_send.send((&quot;hello&quot;, &quot;oakland&quot;)).unwrap();
 flow.run_tick();
@@ -2365,6 +2511,9 @@ For each item passed in, apply the closure to generate an item to emit.</p>
 </blockquote>
 <p>If you do not want to modify the item stream and instead only want to view
 each item use the <a href="surface_ops.gen.html#inspect"><code>inspect</code></a> operator instead.</p>
+<blockquote>
+<p>Note: The closure has access to the <a href="surface_flows.html#the-context-object"><code>context</code> object</a>.</p>
+</blockquote>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span><span class="boring">#[allow(unused_imports)] use hydroflow::{var_args, var_expr};
@@ -2373,7 +2522,12 @@ each item use the <a href="surface_ops.gen.html#inspect"><code>inspect</code></a
 </span>source_iter(vec![&quot;hello&quot;, &quot;world&quot;]) -&gt; map(|x| x.to_uppercase())
     -&gt; for_each(|x| println!(&quot;{}&quot;, x));
 <span class="boring">};
-</span><span class="boring">__hf.run_available();
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
 </span><span class="boring">}
 </span></code></pre></pre>
 <h2 id="merge"><a class="header" href="#merge"><code>merge</code></a></h2>
@@ -2392,26 +2546,30 @@ a variable to reference its multiple input ports across statements.</p>
 </span><span class="boring">#[allow(unused_imports)] use hydroflow::{var_args, var_expr};
 </span><span class="boring">#[allow(unused_imports)] use hydroflow::pusherator::Pusherator;
 </span><span class="boring">let mut __hf = hydroflow::hydroflow_syntax! {
-</span>my_merge = merge();
-source_iter(vec![&quot;hello&quot;, &quot;world&quot;]) -&gt; my_merge;
+</span>source_iter(vec![&quot;hello&quot;, &quot;world&quot;]) -&gt; my_merge;
 source_iter(vec![&quot;stay&quot;, &quot;gold&quot;]) -&gt; my_merge;
 source_iter(vec![&quot;don\'t&quot;, &quot;give&quot;, &quot;up&quot;]) -&gt; my_merge;
-my_merge -&gt; map(|x| x.to_uppercase())
+my_merge = merge() -&gt; map(|x| x.to_uppercase())
     -&gt; for_each(|x| println!(&quot;{}&quot;, x));
 <span class="boring">};
-</span><span class="boring">__hf.run_available();
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
 </span><span class="boring">}
 </span></code></pre></pre>
 <h2 id="next_stratum"><a class="header" href="#next_stratum"><code>next_stratum</code></a></h2>
 <div class="table-wrapper"><table><thead><tr><th>Inputs</th><th>Syntax</th><th>Outputs</th><th>Flow</th></tr></thead><tbody>
-<tr><td><span title="exactly 1">exactly 1</span></td><td><code>-&gt; next_stratum() -&gt;</code></td><td><span title="exactly 1">exactly 1</span></td><td>Streaming</td></tr>
+<tr><td><span title="exactly 1">exactly 1</span></td><td><code>-&gt; next_stratum() -&gt;</code></td><td><span title="exactly 1">exactly 1</span></td><td>Blocking</td></tr>
 </tbody></table>
 </div><!-- GENERATED "hydroflow_lang/src/graph/ops/next_stratum.rs" -->
 <p>Delays all elements which pass through to the next stratum (in the same
 tick).</p>
 <h2 id="next_tick"><a class="header" href="#next_tick"><code>next_tick</code></a></h2>
 <div class="table-wrapper"><table><thead><tr><th>Inputs</th><th>Syntax</th><th>Outputs</th><th>Flow</th></tr></thead><tbody>
-<tr><td><span title="exactly 1">exactly 1</span></td><td><code>-&gt; next_tick() -&gt;</code></td><td><span title="exactly 1">exactly 1</span></td><td>Streaming</td></tr>
+<tr><td><span title="exactly 1">exactly 1</span></td><td><code>-&gt; next_tick() -&gt;</code></td><td><span title="exactly 1">exactly 1</span></td><td>Blocking</td></tr>
 </tbody></table>
 </div><!-- GENERATED "hydroflow_lang/src/graph/ops/next_tick.rs" -->
 <p>Delays all elements which pass through to the next tick. In short,
@@ -2469,12 +2627,17 @@ null_src[0] -&gt; for_each(|_: ()| panic!());
 // note: use `for_each()` (or `inspect()`) instead of this:
 source_iter([4,5,6]) -&gt; map(|i| println!(&quot;{}&quot;, i)) -&gt; [0]null_sink;
 <span class="boring">};
-</span><span class="boring">__hf.run_available();
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
 </span><span class="boring">}
 </span></code></pre></pre>
 <h2 id="reduce"><a class="header" href="#reduce"><code>reduce</code></a></h2>
 <div class="table-wrapper"><table><thead><tr><th>Inputs</th><th>Syntax</th><th>Outputs</th><th>Flow</th></tr></thead><tbody>
-<tr><td><span title="exactly 1">exactly 1</span></td><td><code>-&gt; reduce(A) -&gt;</code></td><td><span title="exactly 1">exactly 1</span></td><td>Streaming</td></tr>
+<tr><td><span title="exactly 1">exactly 1</span></td><td><code>-&gt; reduce(A) -&gt;</code></td><td><span title="exactly 1">exactly 1</span></td><td>Blocking</td></tr>
 </tbody></table>
 </div><!-- GENERATED "hydroflow_lang/src/graph/ops/reduce.rs" -->
 <blockquote>
@@ -2486,6 +2649,9 @@ an ‘accumulator’, and an element. The closure returns the value that the acc
 </blockquote>
 <p>Akin to Rust's built-in reduce operator. Folds every element into an accumulator by applying a closure,
 returning the final result.</p>
+<blockquote>
+<p>Note: The closure has access to the <a href="surface_flows.html#the-context-object"><code>context</code> object</a>.</p>
+</blockquote>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span><span class="boring">#[allow(unused_imports)] use hydroflow::{var_args, var_expr};
@@ -2499,7 +2665,12 @@ source_iter([1,2,3,4,5])
     })
     -&gt; for_each(|e| println!(&quot;{}&quot;, e));
 <span class="boring">};
-</span><span class="boring">__hf.run_available();
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
 </span><span class="boring">}
 </span></code></pre></pre>
 <h2 id="repeat_iter"><a class="header" href="#repeat_iter"><code>repeat_iter</code></a></h2>
@@ -2509,7 +2680,7 @@ source_iter([1,2,3,4,5])
 </div><!-- GENERATED "hydroflow_lang/src/graph/ops/repeat_iter.rs" -->
 <h2 id="sort"><a class="header" href="#sort"><code>sort</code></a></h2>
 <div class="table-wrapper"><table><thead><tr><th>Inputs</th><th>Syntax</th><th>Outputs</th><th>Flow</th></tr></thead><tbody>
-<tr><td><span title="exactly 1">exactly 1</span></td><td><code>-&gt; sort() -&gt;</code></td><td><span title="exactly 1">exactly 1</span></td><td>Streaming</td></tr>
+<tr><td><span title="exactly 1">exactly 1</span></td><td><code>-&gt; sort() -&gt;</code></td><td><span title="exactly 1">exactly 1</span></td><td>Blocking</td></tr>
 </tbody></table>
 </div><!-- GENERATED "hydroflow_lang/src/graph/ops/sort.rs" -->
 <p>Takes a stream as input and produces a sorted version of the stream as output.</p>
@@ -2523,7 +2694,12 @@ source_iter(vec![2, 3, 1])
     -&gt; sort()
     -&gt; for_each(|x| println!(&quot;{}&quot;, x));
 <span class="boring">};
-</span><span class="boring">__hf.run_available();
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
 </span><span class="boring">}
 </span></code></pre></pre>
 <p><code>sort</code> can also be provided with one generic lifetime persistence argument, either
@@ -2554,11 +2730,14 @@ flow.run_available();
 </span></code></pre></pre>
 <h2 id="sort_by"><a class="header" href="#sort_by"><code>sort_by</code></a></h2>
 <div class="table-wrapper"><table><thead><tr><th>Inputs</th><th>Syntax</th><th>Outputs</th><th>Flow</th></tr></thead><tbody>
-<tr><td><span title="exactly 1">exactly 1</span></td><td><code>-&gt; sort_by(A) -&gt;</code></td><td><span title="exactly 1">exactly 1</span></td><td>Streaming</td></tr>
+<tr><td><span title="exactly 1">exactly 1</span></td><td><code>-&gt; sort_by(A) -&gt;</code></td><td><span title="exactly 1">exactly 1</span></td><td>Blocking</td></tr>
 </tbody></table>
 </div><!-- GENERATED "hydroflow_lang/src/graph/ops/sort_by.rs" -->
 <p>Takes a stream as input and produces a version of the stream as output
 sorted according to the key extracted by the closure.</p>
+<blockquote>
+<p>Note: The closure has access to the <a href="surface_flows.html#the-context-object"><code>context</code> object</a>.</p>
+</blockquote>
 <pre><pre class="playground"><code class="language-rust"><span class="boring">#![allow(unused)]
 </span><span class="boring">fn main() {
 </span><span class="boring">#[allow(unused_imports)] use hydroflow::{var_args, var_expr};
@@ -2569,7 +2748,12 @@ source_iter(vec![(2, 'y'), (3, 'x'), (1, 'z')])
     -&gt; sort_by(|(k, _v)| k)
     -&gt; for_each(|x| println!(&quot;{:?}&quot;, x));
 <span class="boring">};
-</span><span class="boring">__hf.run_available();
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
 </span><span class="boring">}
 </span></code></pre></pre>
 <h2 id="source_iter-1"><a class="header" href="#source_iter-1"><code>source_iter</code></a></h2>
@@ -2594,7 +2778,12 @@ one by one.</p>
 </span>    source_iter(vec![&quot;Hello&quot;, &quot;World&quot;])
         -&gt; for_each(|x| println!(&quot;{}&quot;, x));
 <span class="boring">};
-</span><span class="boring">__hf.run_available();
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
 </span><span class="boring">}
 </span></code></pre></pre>
 <h2 id="source_stdin"><a class="header" href="#source_stdin"><code>source_stdin</code></a></h2>
@@ -2697,7 +2886,12 @@ my_tee -&gt; map(|x: &amp;str| x.to_lowercase())
     -&gt; for_each(|x| println!(&quot;{}&quot;, x));
 my_tee -&gt; for_each(|x: &amp;str| println!(&quot;{}&quot;, x));
 <span class="boring">};
-</span><span class="boring">__hf.run_available();
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
 </span><span class="boring">}
 </span></code></pre></pre>
 <h2 id="unique"><a class="header" href="#unique"><code>unique</code></a></h2>
@@ -2717,7 +2911,12 @@ source_iter(vec![1, 1, 2, 3, 2, 1, 3])
     -&gt; unique()
     -&gt; for_each(|x| println!(&quot;{}&quot;, x));
 <span class="boring">};
-</span><span class="boring">__hf.run_available();
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
 </span><span class="boring">}
 </span></code></pre></pre>
 <p><code>unique</code> can also be provided with one generic lifetime persistence argument, either
@@ -2771,7 +2970,12 @@ its corresponding side.</p>
 my_unzip[0] -&gt; for_each(|x| println!(&quot;0: {}&quot;, x)); // Hello World
 my_unzip[1] -&gt; for_each(|x| println!(&quot;1: {}&quot;, x)); // Foo Bar
 <span class="boring">};
-</span><span class="boring">__hf.run_available();
+</span><span class="boring">for _ in 0..100 {
+</span><span class="boring">    if !__hf.run_tick() {
+</span><span class="boring">        // No work done.
+</span><span class="boring">        break;
+</span><span class="boring">    }
+</span><span class="boring">}
 </span><span class="boring">}
 </span></code></pre></pre>
 <div style="break-before: page; page-break-before: always;"></div><h1 id="state-and-lifetimes"><a class="header" href="#state-and-lifetimes">State and Lifetimes</a></h1>
