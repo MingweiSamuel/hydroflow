@@ -1,6 +1,6 @@
 window.BENCHMARK_DATA = 
 {
-  "lastUpdate": 1679370897828,
+  "lastUpdate": 1679457167558,
   "repoUrl": "https://github.com/MingweiSamuel/hydroflow",
   "entries": {
     "Benchmark": [
@@ -37336,6 +37336,190 @@ window.BENCHMARK_DATA =
             "name": "micro/ops/crossjoin",
             "value": 234776,
             "range": "± 626",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Mingwei Samuel",
+            "username": "MingweiSamuel",
+            "email": "mingwei.samuel@gmail.com"
+          },
+          "committer": {
+            "name": "Mingwei Samuel",
+            "username": "MingweiSamuel",
+            "email": "mingwei.samuel@gmail.com"
+          },
+          "id": "39522f8372c3465dba2430aa8297f09ca7e6e500",
+          "message": "Cleanup graph docs, organize method names\n\n- Cleanup (`DiMulGraph`) graph docs\n- Unify/organize `HydroflowGraph` edge methods\n- Update `HydroflowGraph` subgraph method naming\n- Unify/organize `HydroflowGraph` node methods\n- Add `ExactSizeIterator` to predecessor/successor methods",
+          "timestamp": "2023-03-10T04:48:56Z",
+          "url": "https://github.com/MingweiSamuel/hydroflow/commit/39522f8372c3465dba2430aa8297f09ca7e6e500"
+        },
+        "date": 1679457167545,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "arithmetic/hydroflow/compiled",
+            "value": 378574,
+            "range": "± 2896",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "arithmetic/hydroflow/compiled_no_cheating",
+            "value": 16478698,
+            "range": "± 14704",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "arithmetic/hydroflow/surface",
+            "value": 17004000,
+            "range": "± 107423",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/hydroflow",
+            "value": 145323948,
+            "range": "± 431096",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/hydroflow/surface",
+            "value": 150189873,
+            "range": "± 607078",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/scheduled",
+            "value": 97560456,
+            "range": "± 424454",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/surface",
+            "value": 7161824,
+            "range": "± 28268",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow",
+            "value": 9641173,
+            "range": "± 20980",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow_builder",
+            "value": 14266287,
+            "range": "± 23983",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow",
+            "value": 18584587,
+            "range": "± 126567",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow/compiled",
+            "value": 14686887,
+            "range": "± 48930",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow/surface",
+            "value": 14805180,
+            "range": "± 4435",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/scheduled",
+            "value": 2698512,
+            "range": "± 4249",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow",
+            "value": 2679176,
+            "range": "± 2410",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/surface",
+            "value": 7240483,
+            "range": "± 82746",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/surface_cheating",
+            "value": 2136609,
+            "range": "± 5624",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/identity",
+            "value": 5241,
+            "range": "± 27",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/unique",
+            "value": 279131,
+            "range": "± 649",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/map",
+            "value": 12146,
+            "range": "± 225",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/flat_map",
+            "value": 25222,
+            "range": "± 33",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/join",
+            "value": 129210,
+            "range": "± 271",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/difference",
+            "value": 406317,
+            "range": "± 513",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/merge",
+            "value": 35485,
+            "range": "± 46",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/tee",
+            "value": 9043,
+            "range": "± 84",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/fold",
+            "value": 27365,
+            "range": "± 78",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/sort",
+            "value": 136085,
+            "range": "± 258",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/crossjoin",
+            "value": 195766,
+            "range": "± 314",
             "unit": "ns/iter"
           }
         ]
