@@ -17,6 +17,11 @@ where
             self.next.give(x);
         }
     }
+
+    fn size_hint(&self, _bounds: (usize, Option<usize>)) {
+        // Could be lower or higher.
+        self.next.size_hint((0, None));
+    }
 }
 impl<Next, In> Flatten<Next, In>
 where

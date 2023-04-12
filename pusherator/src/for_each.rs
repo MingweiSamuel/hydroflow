@@ -14,6 +14,10 @@ where
     fn give(&mut self, item: Self::Item) {
         (self.func)(item)
     }
+
+    fn size_hint(&self, _bounds: (usize, Option<usize>)) {
+        // Nothing to do.
+    }
 }
 impl<Func, In> ForEach<Func, In>
 where

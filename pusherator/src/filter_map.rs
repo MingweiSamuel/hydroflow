@@ -18,6 +18,10 @@ where
             self.next.give(item);
         }
     }
+
+    fn size_hint(&self, (_low, high): (usize, Option<usize>)) {
+        self.next.size_hint((0, high));
+    }
 }
 impl<Next, Func, In> FilterMap<Next, Func, In>
 where

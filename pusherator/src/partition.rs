@@ -19,6 +19,11 @@ where
             self.next2.give(item);
         }
     }
+
+    fn size_hint(&self, (_low, high): (usize, Option<usize>)) {
+        self.next1.size_hint((0, high));
+        self.next2.size_hint((0, high));
+    }
 }
 impl<Next1, Next2, Func> Partition<Next1, Next2, Func>
 where

@@ -18,6 +18,11 @@ where
             Either::Right(item2) => self.next2.give(item2),
         }
     }
+
+    fn size_hint(&self, (_low, high): (usize, Option<usize>)) {
+        self.next1.size_hint((0, high));
+        self.next2.size_hint((0, high));
+    }
 }
 impl<Next1, Next2> Switch<Next1, Next2>
 where

@@ -21,6 +21,10 @@ where
     fn give(&mut self, item: Self::Item) {
         (self.func)(item, &mut self.nexts);
     }
+
+    fn size_hint(&self, _bounds: (usize, Option<usize>)) {
+        // `func` is a black box so no estimate can be given.
+    }
 }
 impl<Func, Nexts, Item> Demux<Func, Nexts, Item>
 where

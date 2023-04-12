@@ -16,6 +16,10 @@ where
     fn give(&mut self, item: Self::Item) {
         self.next.give((self.func)(item));
     }
+
+    fn size_hint(&self, bounds: (usize, Option<usize>)) {
+        self.next.size_hint(bounds)
+    }
 }
 impl<Next, Func, In> Map<Next, Func, In>
 where

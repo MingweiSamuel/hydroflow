@@ -31,4 +31,8 @@ where
     fn give(&mut self, item: Self::Item) {
         self.send_ctx.give(item);
     }
+
+    fn size_hint(&self, bounds: (usize, Option<usize>)) {
+        todo!()
+    }
 }

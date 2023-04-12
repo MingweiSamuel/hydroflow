@@ -164,7 +164,7 @@ impl Hydroflow {
     pub async fn run_available_async(&mut self) -> bool {
         let mut work_done = false;
         // While work is immediately available.
-        while self.next_stratum(false) {
+        while self.next_stratum(true) {
             work_done = true;
             // Do any work.
             self.run_stratum();

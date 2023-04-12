@@ -15,6 +15,11 @@ where
         self.next1.give(item.clone());
         self.next2.give(item);
     }
+
+    fn size_hint(&self, bounds: (usize, Option<usize>)) {
+        self.next1.size_hint(bounds);
+        self.next2.size_hint(bounds);
+    }
 }
 impl<Next1, Next2> Tee<Next1, Next2>
 where

@@ -15,6 +15,10 @@ where
         (self.func)(&item);
         self.next.give(item);
     }
+
+    fn size_hint(&self, bounds: (usize, Option<usize>)) {
+        self.next.size_hint(bounds)
+    }
 }
 impl<Next, Func> Inspect<Next, Func>
 where

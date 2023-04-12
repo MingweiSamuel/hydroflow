@@ -29,6 +29,8 @@ use either::Either;
 pub trait Pusherator: Sized {
     type Item;
     fn give(&mut self, item: Self::Item);
+
+    fn size_hint(&self, bounds: (usize, Option<usize>));
 }
 
 pub trait IteratorToPusherator: Iterator {
