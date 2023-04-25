@@ -1,0 +1,64 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Specify how to bump the version for `hydroflow` crates. Does not affect dependencies."
+        required: true
+        default: "patch"
+        type: choice
+        options:
+          - major
+          - minor
+          - patch
+          - keep
+          - auto
+      execute:
+        description: "Actually execute and publish the release?"
+        required: true
+        type: boolean
+        default: false
+
+jobs:
+  release-job:
+    name: Release Job
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "Version bump: $BUMP"
+          echo "Execute: $EXECUTE"
+        env:
+          BUMP: ${{ inputs.bump }}
+          EXECUTE: ${{ inputs.execute }}
+
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install nightly toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: nightly
+
+      # Double-check that tests pass (do we )
+      - name: Run cargo test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+          args: --no-fail-fast
+
+      - name: Install cargo-smart-release
+        uses: actions-rs/cargo@v1
+        with:
+          command: install
+          args: cargo-smart-release
+
+      - name: Cargo smart-release
+        uses: actions-rs/cargo@v1
+        with:
+          command: smart-release
+          args: --update-crates-index --no-changelog-preview --bump patch --bump-dependencies auto --no-bump-on-demand "$EXECUTE_ARG" hydroflow hydroflow_*
+        env:
+          EXECUTE_ARG: ${{ inputs.execute && '--execute' || '--no-publish' }}
