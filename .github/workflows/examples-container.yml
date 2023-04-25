@@ -12,9 +12,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
-      - name: Lowercase OWNER
+      - id: owner
+        name: Lowercase OWNER
         run: |
-          echo "OWNER=${OWNER,,}" >>${GITHUB_ENV}
+          echo "owner=${OWNER,,}" >> "$GITHUB_OUTPUT"
         env:
           OWNER: ${{ github.repository_owner }}
 
@@ -44,5 +45,5 @@ jobs:
           secrets: |
             GIT_AUTH_TOKEN=${{ github.token }}
           tags: |
-            ghcr.io/${{ $OWNER }}/hydroflow-examples:${{ github.sha }}
-            ghcr.io/${{ $OWNER }}/hydroflow-examples:latest
+            ghcr.io/${{ steps.owner.outputs.owner }}/hydroflow-examples:${{ github.sha }}
+            ghcr.io/${{ steps.owner.outputs.owner }}/hydroflow-examples:latest
