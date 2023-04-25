@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow_lang/src/graph/ops/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-e5308b57e507db71.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../../static.files/light-d59023bfa12059d2.css"><link rel="stylesheet" disabled href="../../../../static.files/dark-1ca41bb1e10af075.css"><link rel="stylesheet" disabled href="../../../../static.files/ayu-18b4181a2f3fb862.css"><script src="../../../../static.files/storage-3891ce972e3a2bf8.js"></script><script defer src="../../../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-98a684e84ae5b08b.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../hydroflow_lang/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow_lang/src/graph/ops/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="hydroflow_lang" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (7908a1d65 2023-04-17)" data-search-js="search-e077946657036a58.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../../static.files/source-script-905937fbbdc8e9ea.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-1a524efa7bd4ab32.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../hydroflow_lang/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -352,55 +352,76 @@
 <a href="#352" id="352">352</a>
 <a href="#353" id="353">353</a>
 <a href="#354" id="354">354</a>
-</pre><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
+<a href="#360" id="360">360</a>
+<a href="#361" id="361">361</a>
+<a href="#362" id="362">362</a>
+<a href="#363" id="363">363</a>
+<a href="#364" id="364">364</a>
+<a href="#365" id="365">365</a>
+<a href="#366" id="366">366</a>
+<a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
+<a href="#371" id="371">371</a>
+<a href="#372" id="372">372</a>
+<a href="#373" id="373">373</a>
+<a href="#374" id="374">374</a>
+<a href="#375" id="375">375</a>
+<a href="#376" id="376">376</a>
+<a href="#377" id="377">377</a>
+<a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
+<a href="#382" id="382">382</a>
+<a href="#383" id="383">383</a>
+<a href="#384" id="384">384</a>
+<a href="#385" id="385">385</a>
+<a href="#386" id="386">386</a>
+<a href="#387" id="387">387</a>
+<a href="#388" id="388">388</a>
+<a href="#389" id="389">389</a>
+<a href="#390" id="390">390</a>
+<a href="#391" id="391">391</a>
+<a href="#392" id="392">392</a>
+<a href="#393" id="393">393</a>
+<a href="#394" id="394">394</a>
+<a href="#395" id="395">395</a>
+<a href="#396" id="396">396</a>
+<a href="#397" id="397">397</a>
+<a href="#398" id="398">398</a>
+<a href="#399" id="399">399</a>
+<a href="#400" id="400">400</a>
+<a href="#401" id="401">401</a>
+<a href="#402" id="402">402</a>
+<a href="#403" id="403">403</a>
+<a href="#404" id="404">404</a>
+<a href="#405" id="405">405</a>
+<a href="#406" id="406">406</a>
+<a href="#407" id="407">407</a>
+<a href="#408" id="408">408</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::fmt::{Debug, Display};
 <span class="kw">use </span>std::ops::{Bound, RangeBounds};
+<span class="kw">use </span>std::sync::OnceLock;
 
-<span class="kw">use </span>once_cell::sync::OnceCell;
-<span class="kw">use </span>proc_macro2::{Ident, Span, TokenStream};
+<span class="kw">use </span>proc_macro2::{Ident, Literal, Span, TokenStream};
 <span class="kw">use </span>quote::quote_spanned;
 <span class="kw">use </span>slotmap::Key;
 <span class="kw">use </span>syn::punctuated::Punctuated;
-<span class="kw">use </span>syn::Token;
+<span class="kw">use </span>syn::{parse_quote_spanned, Token};
 
 <span class="kw">use </span><span class="kw">crate</span>::diagnostic::Diagnostic;
 <span class="kw">use </span><span class="kw">crate</span>::parse::{Operator, PortIndex};
 
 <span class="kw">use super</span>::{GraphNodeId, GraphSubgraphId, Node, OpInstGenerics, OperatorInstance, PortIndexValue};
 <span class="kw">use </span>serde::{Deserialize, Serialize};
-
-<span class="kw">mod </span>anti_join;
-<span class="kw">mod </span>cross_join;
-<span class="kw">mod </span>demux;
-<span class="kw">mod </span>dest_sink;
-<span class="kw">mod </span>dest_sink_serde;
-<span class="kw">mod </span>difference;
-<span class="kw">mod </span>filter;
-<span class="kw">mod </span>filter_map;
-<span class="kw">mod </span>flat_map;
-<span class="kw">mod </span>flatten;
-<span class="kw">mod </span>fold;
-<span class="kw">mod </span>for_each;
-<span class="kw">mod </span>group_by;
-<span class="kw">mod </span>identity;
-<span class="kw">mod </span>inspect;
-<span class="kw">mod </span>join;
-<span class="kw">mod </span>map;
-<span class="kw">mod </span>merge;
-<span class="kw">mod </span>next_stratum;
-<span class="kw">mod </span>next_tick;
-<span class="kw">mod </span>null;
-<span class="kw">mod </span>reduce;
-<span class="kw">mod </span>repeat_iter;
-<span class="kw">mod </span>sort;
-<span class="kw">mod </span>sort_by;
-<span class="kw">mod </span>source_iter;
-<span class="kw">mod </span>source_stdin;
-<span class="kw">mod </span>source_stream;
-<span class="kw">mod </span>source_stream_serde;
-<span class="kw">mod </span>tee;
-<span class="kw">mod </span>unique;
-<span class="kw">mod </span>unzip;
 
 <span class="attr">#[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Debug)]
 </span><span class="kw">pub enum </span>DelayType {
@@ -448,7 +469,7 @@
     </span><span class="kw">pub </span>num_args: usize,
     <span class="doccomment">/// How many persistence lifetime arguments can be provided.
     </span><span class="kw">pub </span>persistence_args: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw">dyn </span>RangeTrait&lt;usize&gt;,
-    <span class="comment">// /// How many (non-persistence) lifetime arguemtns can be provided.
+    <span class="comment">// /// How many (non-persistence) lifetime arguments can be provided.
     // pub lifetime_args: &amp;&#39;static dyn RangeTrait&lt;usize&gt;,
     </span><span class="doccomment">/// How many generic type arguments can be provided.
     </span><span class="kw">pub </span>type_args: <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span><span class="kw">dyn </span>RangeTrait&lt;usize&gt;,
@@ -516,23 +537,40 @@
 
 <span class="kw">pub fn </span>identity_write_iterator_fn(
     <span class="kw-2">&amp;</span>WriteContextArgs {
+        root,
         op_span,
         ident,
         inputs,
         outputs,
         is_pull,
+        op_inst:
+            OperatorInstance {
+                generics: OpInstGenerics { type_args, .. },
+                ..
+            },
         ..
     }: <span class="kw-2">&amp;</span>WriteContextArgs,
 ) -&gt; TokenStream {
+    <span class="kw">let </span>generic_type = type_args
+        .get(<span class="number">0</span>)
+        .map(quote::ToTokens::to_token_stream)
+        .unwrap_or(<span class="macro">quote_spanned!</span>(op_span=&gt; <span class="kw">_</span>));
+
     <span class="kw">if </span>is_pull {
         <span class="kw">let </span>input = <span class="kw-2">&amp;</span>inputs[<span class="number">0</span>];
         <span class="macro">quote_spanned! </span>{op_span=&gt;
-            <span class="kw">let </span>#ident = #input;
+            <span class="kw">let </span>#ident = {
+                <span class="kw">fn </span>check_input&lt;Iter: ::std::iter::Iterator&lt;Item = Item&gt;, Item&gt;(iter: Iter) -&gt; <span class="kw">impl </span>::std::iter::Iterator&lt;Item = Item&gt; { iter }
+                check_input::&lt;<span class="kw">_</span>, #generic_type&gt;(#input)
+            };
         }
     } <span class="kw">else </span>{
         <span class="kw">let </span>output = <span class="kw-2">&amp;</span>outputs[<span class="number">0</span>];
         <span class="macro">quote_spanned! </span>{op_span=&gt;
-            <span class="kw">let </span>#ident = #output;
+            <span class="kw">let </span>#ident = {
+                <span class="kw">fn </span>check_output&lt;Push: #root::pusherator::Pusherator&lt;Item = Item&gt;, Item&gt;(push: Push) -&gt; <span class="kw">impl </span>#root::pusherator::Pusherator&lt;Item = Item&gt; { push }
+                check_output::&lt;<span class="kw">_</span>, #generic_type&gt;(#output)
+            }
         }
     }
 }
@@ -545,43 +583,108 @@
     })
 };
 
-<span class="kw">pub const </span>OPERATORS: <span class="kw-2">&amp;</span>[OperatorConstraints] = <span class="kw-2">&amp;</span>[
-    null::NULL,
-    merge::MERGE,
-    join::JOIN,
+<span class="kw">pub fn </span>null_write_iterator_fn(
+    <span class="kw-2">&amp;</span>WriteContextArgs {
+        root,
+        op_span,
+        ident,
+        inputs,
+        outputs,
+        is_pull,
+        op_inst:
+            OperatorInstance {
+                generics: OpInstGenerics { type_args, .. },
+                ..
+            },
+        ..
+    }: <span class="kw-2">&amp;</span>WriteContextArgs,
+) -&gt; TokenStream {
+    <span class="kw">let </span>default_type = <span class="macro">parse_quote_spanned! </span>{op_span=&gt; <span class="kw">_</span>};
+    <span class="kw">let </span>iter_type = type_args.get(<span class="number">0</span>).unwrap_or(<span class="kw-2">&amp;</span>default_type);
+    <span class="kw">if </span>is_pull {
+        <span class="macro">quote_spanned! </span>{op_span=&gt;
+            #(
+                #inputs.for_each(std::mem::drop);
+            )*
+            <span class="kw">let </span>#ident = std::iter::empty::&lt;#iter_type&gt;();
+        }
+    } <span class="kw">else </span>{
+        <span class="macro">quote_spanned! </span>{op_span=&gt;
+            <span class="attr">#[allow(clippy::let_unit_value)]
+            </span><span class="kw">let _ </span>= (#(#outputs),<span class="kw-2">*</span>);
+            <span class="kw">let </span>#ident = #root::pusherator::for_each::ForEach::&lt;<span class="kw">_</span>, #iter_type&gt;::new(std::mem::drop);
+        }
+    }
+}
+
+<span class="kw">pub const </span>NULL_WRITE_FN: WriteFn = |write_context_args, <span class="kw">_</span>| {
+    <span class="kw">let </span>write_iterator = null_write_iterator_fn(write_context_args);
+    <span class="prelude-val">Ok</span>(OperatorWriteOutput {
+        write_iterator,
+        ..Default::default()
+    })
+};
+
+<span class="macro">macro_rules! </span>declare_ops {
+    ( $( <span class="macro-nonterminal">$</span><span class="kw">mod</span>:<span class="macro-nonterminal">ident </span>:: <span class="macro-nonterminal">$op</span>:ident, )* ) =&gt; {
+        $( <span class="kw">mod </span><span class="macro-nonterminal">$</span><span class="kw">mod</span>; )*
+        <span class="kw">pub const </span><span class="macro-nonterminal">OPERATORS</span>: <span class="kw-2">&amp;</span>[OperatorConstraints] = <span class="kw-2">&amp;</span>[
+            $( <span class="macro-nonterminal">$</span><span class="kw">mod </span>:: <span class="macro-nonterminal">$op</span>, )*
+        ];
+    };
+}
+<span class="macro">declare_ops!</span>[
+    anti_join::ANTI_JOIN,
+    batch::BATCH,
     cross_join::CROSS_JOIN,
-    tee::TEE,
-    unzip::UNZIP,
-    identity::IDENTITY,
-    map::MAP,
-    inspect::INSPECT,
+    demux::DEMUX,
+    dest_file::DEST_FILE,
+    dest_sink::DEST_SINK,
+    dest_sink_serde::DEST_SINK_SERDE,
+    difference::DIFFERENCE,
+    enumerate::ENUMERATE,
+    filter::FILTER,
+    filter_map::FILTER_MAP,
     flat_map::FLAT_MAP,
     flatten::FLATTEN,
-    filter_map::FILTER_MAP,
-    filter::FILTER,
     fold::FOLD,
-    reduce::REDUCE,
+    for_each::FOR_EACH,
     group_by::GROUP_BY,
-    unique::UNIQUE,
+    identity::IDENTITY,
+    initialize::INITIALIZE,
+    inspect::INSPECT,
+    join::JOIN,
+    keyed_fold::KEYED_FOLD,
+    keyed_reduce::KEYED_REDUCE,
+    lattice_join::LATTICE_JOIN,
+    lattice_merge::LATTICE_MERGE,
+    map::MAP,
+    merge::MERGE,
+    next_stratum::NEXT_STRATUM,
+    next_tick::NEXT_TICK,
+    null::NULL,
+    persist::PERSIST,
+    reduce::REDUCE,
+    repeat_fn::REPEAT_FN,
+    repeat_iter::REPEAT_ITER,
+    repeat_iter_external::REPEAT_ITER_EXTERNAL,
     sort::SORT,
     sort_by::SORT_BY,
+    source_file::SOURCE_FILE,
+    source_interval::SOURCE_INTERVAL,
     source_iter::SOURCE_ITER,
+    source_json::SOURCE_JSON,
     source_stdin::SOURCE_STDIN,
     source_stream::SOURCE_STREAM,
     source_stream_serde::SOURCE_STREAM_SERDE,
-    repeat_iter::REPEAT_ITER,
-    difference::DIFFERENCE,
-    anti_join::ANTI_JOIN,
-    next_stratum::NEXT_STRATUM,
-    next_tick::NEXT_TICK,
-    for_each::FOR_EACH,
-    demux::DEMUX,
-    dest_sink::DEST_SINK,
-    dest_sink_serde::DEST_SINK_SERDE,
+    tee::TEE,
+    unique::UNIQUE,
+    unzip::UNZIP,
 ];
+
 <span class="kw">pub fn </span>operator_lookup() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>HashMap&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>OperatorConstraints&gt; {
-    <span class="kw">pub static </span>OPERATOR_LOOKUP: OnceCell&lt;HashMap&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>OperatorConstraints&gt;&gt; =
-        OnceCell::new();
+    <span class="kw">pub static </span>OPERATOR_LOOKUP: OnceLock&lt;HashMap&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>OperatorConstraints&gt;&gt; =
+        OnceLock::new();
     OPERATOR_LOOKUP.get_or_init(|| OPERATORS.iter().map(|op| (op.name, op)).collect())
 }
 <span class="kw">pub fn </span>find_node_op_constraints(node: <span class="kw-2">&amp;</span>Node) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>OperatorConstraints&gt; {
@@ -596,7 +699,8 @@
     operator_lookup().get(name).copied()
 }
 
-<span class="kw">pub struct </span>WriteContextArgs&lt;<span class="lifetime">&#39;a</span>&gt; {
+<span class="attr">#[derive(Clone)]
+</span><span class="kw">pub struct </span>WriteContextArgs&lt;<span class="lifetime">&#39;a</span>&gt; {
     <span class="doccomment">/// `hydroflow` crate name for `use #root::something`.
     </span><span class="kw">pub </span>root: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>TokenStream,
     <span class="doccomment">/// `context` ident, the name of the provided
@@ -706,5 +810,8 @@
     Tick,
     Static,
 }
-</code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="hydroflow_lang" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (31f858d9a 2023-02-28)" data-search-js="search-d5a6cd8418084717.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+
+<span class="kw">fn </span>make_missing_runtime_msg(op_name: <span class="kw-2">&amp;</span>str) -&gt; Literal {
+    Literal::string(<span class="kw-2">&amp;*</span><span class="macro">format!</span>(<span class="string">&quot;`{}()` must be used within a Tokio runtime. For example, use `#[tokio::main]` on your main method.&quot;</span>, op_name))
+}
+</code></pre></div></section></main></body></html>

@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydro_cli/src/core/gcp.rs`."><title>gcp.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-e5308b57e507db71.css" id="mainThemeStyle"><link rel="stylesheet" id="themeStyle" href="../../../static.files/light-d59023bfa12059d2.css"><link rel="stylesheet" disabled href="../../../static.files/dark-1ca41bb1e10af075.css"><link rel="stylesheet" disabled href="../../../static.files/ayu-18b4181a2f3fb862.css"><script src="../../../static.files/storage-3891ce972e3a2bf8.js"></script><script defer src="../../../static.files/source-script-1b95b7cca98b26e5.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-98a684e84ae5b08b.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../hydro/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydro_cli/src/core/gcp.rs`."><title>gcp.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hydro" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (7908a1d65 2023-04-17)" data-search-js="search-e077946657036a58.js" data-settings-js="settings-298e1ea74db45b39.js" data-settings-css="settings-7bfb4c59cc6bc502.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../../static.files/source-script-905937fbbdc8e9ea.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-1a524efa7bd4ab32.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../hydro/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -495,74 +495,139 @@
 <a href="#495" id="495">495</a>
 <a href="#496" id="496">496</a>
 <a href="#497" id="497">497</a>
-</pre><pre class="rust"><code><span class="kw">use </span>std::{
-    net::SocketAddr,
-    path::{Path, PathBuf},
-    sync::{atomic::AtomicUsize, Arc},
-    time::Duration,
-};
+<a href="#498" id="498">498</a>
+<a href="#499" id="499">499</a>
+<a href="#500" id="500">500</a>
+<a href="#501" id="501">501</a>
+<a href="#502" id="502">502</a>
+<a href="#503" id="503">503</a>
+<a href="#504" id="504">504</a>
+<a href="#505" id="505">505</a>
+<a href="#506" id="506">506</a>
+<a href="#507" id="507">507</a>
+<a href="#508" id="508">508</a>
+<a href="#509" id="509">509</a>
+<a href="#510" id="510">510</a>
+<a href="#511" id="511">511</a>
+<a href="#512" id="512">512</a>
+<a href="#513" id="513">513</a>
+<a href="#514" id="514">514</a>
+<a href="#515" id="515">515</a>
+<a href="#516" id="516">516</a>
+<a href="#517" id="517">517</a>
+<a href="#518" id="518">518</a>
+<a href="#519" id="519">519</a>
+<a href="#520" id="520">520</a>
+<a href="#521" id="521">521</a>
+<a href="#522" id="522">522</a>
+<a href="#523" id="523">523</a>
+<a href="#524" id="524">524</a>
+<a href="#525" id="525">525</a>
+<a href="#526" id="526">526</a>
+<a href="#527" id="527">527</a>
+<a href="#528" id="528">528</a>
+<a href="#529" id="529">529</a>
+<a href="#530" id="530">530</a>
+<a href="#531" id="531">531</a>
+<a href="#532" id="532">532</a>
+<a href="#533" id="533">533</a>
+<a href="#534" id="534">534</a>
+<a href="#535" id="535">535</a>
+<a href="#536" id="536">536</a>
+<a href="#537" id="537">537</a>
+<a href="#538" id="538">538</a>
+<a href="#539" id="539">539</a>
+<a href="#540" id="540">540</a>
+<a href="#541" id="541">541</a>
+<a href="#542" id="542">542</a>
+<a href="#543" id="543">543</a>
+<a href="#544" id="544">544</a>
+<a href="#545" id="545">545</a>
+<a href="#546" id="546">546</a>
+<a href="#547" id="547">547</a>
+<a href="#548" id="548">548</a>
+<a href="#549" id="549">549</a>
+<a href="#550" id="550">550</a>
+<a href="#551" id="551">551</a>
+<a href="#552" id="552">552</a>
+<a href="#553" id="553">553</a>
+<a href="#554" id="554">554</a>
+<a href="#555" id="555">555</a>
+<a href="#556" id="556">556</a>
+<a href="#557" id="557">557</a>
+<a href="#558" id="558">558</a>
+<a href="#559" id="559">559</a>
+<a href="#560" id="560">560</a>
+<a href="#561" id="561">561</a>
+<a href="#562" id="562">562</a>
+<a href="#563" id="563">563</a>
+<a href="#564" id="564">564</a>
+<a href="#565" id="565">565</a>
+<a href="#566" id="566">566</a>
+<a href="#567" id="567">567</a>
+<a href="#568" id="568">568</a>
+<a href="#569" id="569">569</a>
+<a href="#570" id="570">570</a>
+<a href="#571" id="571">571</a>
+<a href="#572" id="572">572</a>
+<a href="#573" id="573">573</a>
+<a href="#574" id="574">574</a>
+<a href="#575" id="575">575</a>
+<a href="#576" id="576">576</a>
+<a href="#577" id="577">577</a>
+<a href="#578" id="578">578</a>
+<a href="#579" id="579">579</a>
+<a href="#580" id="580">580</a>
+<a href="#581" id="581">581</a>
+<a href="#582" id="582">582</a>
+<a href="#583" id="583">583</a>
+<a href="#584" id="584">584</a>
+<a href="#585" id="585">585</a>
+<a href="#586" id="586">586</a>
+<a href="#587" id="587">587</a>
+<a href="#588" id="588">588</a>
+<a href="#589" id="589">589</a>
+<a href="#590" id="590">590</a>
+<a href="#591" id="591">591</a>
+<a href="#592" id="592">592</a>
+<a href="#593" id="593">593</a>
+<a href="#594" id="594">594</a>
+<a href="#595" id="595">595</a>
+<a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::{collections::HashMap, net::SocketAddr, path::PathBuf, sync::Arc, time::Duration};
 
 <span class="kw">use </span>anyhow::{Context, <span class="prelude-ty">Result</span>};
-<span class="kw">use </span>async_channel::{Receiver, Sender};
 
-<span class="kw">use </span>async_ssh2_lite::{AsyncChannel, AsyncSession, SessionConfiguration};
+<span class="kw">use </span>async_ssh2_lite::{AsyncSession, SessionConfiguration};
 <span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>futures::{AsyncWriteExt, StreamExt};
-<span class="kw">use </span>hydroflow_cli_integration::BindConfig;
+<span class="kw">use </span>hydroflow_cli_integration::ServerBindConfig;
+<span class="kw">use </span>nanoid::nanoid;
 <span class="kw">use </span>serde_json::json;
 <span class="kw">use </span>tokio::{net::TcpStream, sync::RwLock};
 
 <span class="kw">use super</span>::{
-    localhost::create_broadcast,
-    terraform::{TerraformOutput, TerraformProvider},
+    progress::ProgressTracker,
+    ssh::LaunchedSSHHost,
+    terraform::{TerraformOutput, TerraformProvider, TERRAFORM_ALPHABET},
     util::async_retry,
-    BindType, ConnectionType, Host, HostTargetType, LaunchedBinary, LaunchedHost, ResourceBatch,
-    ResourceResult,
+    ClientStrategy, Host, HostTargetType, LaunchedHost, ResourceBatch, ResourceResult,
+    ServerStrategy,
 };
 
-<span class="kw">struct </span>LaunchedComputeEngineBinary {
-    _resource_result: Arc&lt;ResourceResult&gt;,
-    channel: AsyncChannel&lt;TcpStream&gt;,
-    stdin_sender: Sender&lt;String&gt;,
-    stdout_receivers: Arc&lt;RwLock&lt;Vec&lt;Sender&lt;String&gt;&gt;&gt;&gt;,
-    stderr_receivers: Arc&lt;RwLock&lt;Vec&lt;Sender&lt;String&gt;&gt;&gt;&gt;,
-}
-
-<span class="attr">#[async_trait]
-</span><span class="kw">impl </span>LaunchedBinary <span class="kw">for </span>LaunchedComputeEngineBinary {
-    <span class="kw">async fn </span>stdin(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Sender&lt;String&gt; {
-        <span class="self">self</span>.stdin_sender.clone()
-    }
-
-    <span class="kw">async fn </span>stdout(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Receiver&lt;String&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>receivers = <span class="self">self</span>.stdout_receivers.write().<span class="kw">await</span>;
-        <span class="kw">let </span>(sender, receiver) = async_channel::unbounded::&lt;String&gt;();
-        receivers.push(sender);
-        receiver
-    }
-
-    <span class="kw">async fn </span>stderr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Receiver&lt;String&gt; {
-        <span class="kw">let </span><span class="kw-2">mut </span>receivers = <span class="self">self</span>.stderr_receivers.write().<span class="kw">await</span>;
-        <span class="kw">let </span>(sender, receiver) = async_channel::unbounded::&lt;String&gt;();
-        receivers.push(sender);
-        receiver
-    }
-
-    <span class="kw">async fn </span>exit_code(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;i32&gt; {
-        <span class="comment">// until the program exits, the exit status is meaningless
-        </span><span class="kw">if </span><span class="self">self</span>.channel.eof() {
-            <span class="self">self</span>.channel.exit_status().ok()
-        } <span class="kw">else </span>{
-            <span class="prelude-val">None
-        </span>}
-    }
-}
-
-<span class="kw">pub struct </span>LaunchedComputeEngine {
+<span class="comment">// #[derive(Debug)]
+</span><span class="kw">pub struct </span>LaunchedComputeEngine {
     resource_result: Arc&lt;ResourceResult&gt;,
+    user: String,
     <span class="kw">pub </span>internal_ip: String,
     <span class="kw">pub </span>external_ip: <span class="prelude-ty">Option</span>&lt;String&gt;,
-    binary_counter: AtomicUsize,
 }
 
 <span class="kw">impl </span>LaunchedComputeEngine {
@@ -579,16 +644,45 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl </span>LaunchedHost <span class="kw">for </span>LaunchedComputeEngine {
-    <span class="kw">fn </span>get_bind_config(<span class="kw-2">&amp;</span><span class="self">self</span>, bind_type: <span class="kw-2">&amp;</span>BindType) -&gt; BindConfig {
+</span><span class="kw">impl </span>LaunchedSSHHost <span class="kw">for </span>LaunchedComputeEngine {
+    <span class="kw">fn </span>server_config(<span class="kw-2">&amp;</span><span class="self">self</span>, bind_type: <span class="kw-2">&amp;</span>ServerStrategy) -&gt; ServerBindConfig {
         <span class="kw">match </span>bind_type {
-            BindType::UnixSocket =&gt; BindConfig::UnixSocket,
-            BindType::InternalTcpPort =&gt; BindConfig::TcpPort(<span class="self">self</span>.internal_ip.clone()),
-            BindType::ExternalTcpPort(<span class="kw">_</span>) =&gt; <span class="macro">todo!</span>(),
+            ServerStrategy::UnixSocket =&gt; ServerBindConfig::UnixSocket,
+            ServerStrategy::InternalTcpPort =&gt; ServerBindConfig::TcpPort(<span class="self">self</span>.internal_ip.clone()),
+            ServerStrategy::ExternalTcpPort(<span class="kw">_</span>) =&gt; <span class="macro">todo!</span>(),
+            ServerStrategy::Demux(demux) =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>config_map = HashMap::new();
+                <span class="kw">for </span>(key, underlying) <span class="kw">in </span>demux {
+                    config_map.insert(<span class="kw-2">*</span>key, LaunchedSSHHost::server_config(<span class="self">self</span>, underlying));
+                }
+
+                ServerBindConfig::Demux(config_map)
+            }
+            ServerStrategy::Merge(merge) =&gt; {
+                <span class="kw">let </span><span class="kw-2">mut </span>configs = <span class="macro">vec!</span>[];
+                <span class="kw">for </span>underlying <span class="kw">in </span>merge {
+                    configs.push(LaunchedSSHHost::server_config(<span class="self">self</span>, underlying));
+                }
+
+                ServerBindConfig::Merge(configs)
+            }
+            ServerStrategy::Tagged(underlying, id) =&gt; ServerBindConfig::Tagged(
+                Box::new(LaunchedSSHHost::server_config(<span class="self">self</span>, underlying)),
+                <span class="kw-2">*</span>id,
+            ),
+            ServerStrategy::Null =&gt; ServerBindConfig::Null,
         }
     }
 
-    <span class="kw">async fn </span>launch_binary(<span class="kw-2">&amp;</span><span class="self">self</span>, binary: <span class="kw-2">&amp;</span>Path) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;RwLock&lt;<span class="kw">dyn </span>LaunchedBinary&gt;&gt;&gt; {
+    <span class="kw">fn </span>resource_result(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;ResourceResult&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.resource_result
+    }
+
+    <span class="kw">fn </span>ssh_user(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+        <span class="self">self</span>.user.as_str()
+    }
+
+    <span class="kw">async fn </span>open_ssh_session(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;AsyncSession&lt;TcpStream&gt;&gt; {
         <span class="kw">let </span>target_addr = SocketAddr::new(
             <span class="self">self</span>.external_ip
                 .as_ref()
@@ -597,70 +691,164 @@
                 .unwrap(),
             <span class="number">22</span>,
         );
-        <span class="kw">let </span>session = async_retry(
-            || <span class="kw">async </span>{
-                <span class="kw">let </span><span class="kw-2">mut </span>config = SessionConfiguration::new();
-                config.set_timeout(<span class="number">5000</span>);
 
-                <span class="kw">let </span><span class="kw-2">mut </span>session =
-                    AsyncSession::&lt;TcpStream&gt;::connect(target_addr, <span class="prelude-val">Some</span>(config)).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">let </span>res = ProgressTracker::leaf(
+            <span class="macro">format!</span>(
+                <span class="string">&quot;connecting to host @ {}&quot;</span>,
+                <span class="self">self</span>.external_ip.as_ref().unwrap()
+            ),
+            async_retry(
+                <span class="kw-2">&amp;</span>|| <span class="kw">async </span>{
+                    <span class="kw">let </span><span class="kw-2">mut </span>config = SessionConfiguration::new();
+                    config.set_compress(<span class="bool-val">true</span>);
 
-                session.handshake().<span class="kw">await</span><span class="question-mark">?</span>;
+                    <span class="kw">let </span><span class="kw-2">mut </span>session =
+                        AsyncSession::&lt;TcpStream&gt;::connect(target_addr, <span class="prelude-val">Some</span>(config)).<span class="kw">await</span><span class="question-mark">?</span>;
 
-                session
-                    .userauth_pubkey_file(<span class="string">&quot;hydro&quot;</span>, <span class="prelude-val">None</span>, <span class="self">self</span>.ssh_key_path().as_path(), <span class="prelude-val">None</span>)
-                    .<span class="kw">await</span><span class="question-mark">?</span>;
+                    session.handshake().<span class="kw">await</span><span class="question-mark">?</span>;
 
-                <span class="prelude-val">Ok</span>(session)
-            },
-            <span class="number">10</span>,
-            Duration::from_secs(<span class="number">1</span>),
+                    session
+                        .userauth_pubkey_file(
+                            <span class="self">self</span>.user.as_str(),
+                            <span class="prelude-val">None</span>,
+                            <span class="self">self</span>.ssh_key_path().as_path(),
+                            <span class="prelude-val">None</span>,
+                        )
+                        .<span class="kw">await</span><span class="question-mark">?</span>;
+
+                    <span class="prelude-val">Ok</span>(session)
+                },
+                <span class="number">10</span>,
+                Duration::from_secs(<span class="number">1</span>),
+            ),
         )
         .<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="kw">let </span>sftp = session.sftp().<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="prelude-val">Ok</span>(res)
+    }
+}
 
-        <span class="comment">// we may be deploying multiple binaries, so give each a unique name
-        </span><span class="kw">let </span>my_binary_counter = <span class="self">self
-            </span>.binary_counter
-            .fetch_add(<span class="number">1</span>, std::sync::atomic::Ordering::Relaxed);
+<span class="attr">#[derive(Debug)]
+</span><span class="kw">pub struct </span>GCPNetwork {
+    <span class="kw">pub </span>project: String,
+    <span class="kw">pub </span>existing_vpc: <span class="prelude-ty">Option</span>&lt;String&gt;,
+    id: String,
+}
 
-        <span class="kw">let </span>binary_path = PathBuf::from(<span class="macro">format!</span>(<span class="string">&quot;/home/hydro/hydro-{my_binary_counter}&quot;</span>));
+<span class="kw">impl </span>GCPNetwork {
+    <span class="kw">pub fn </span>new(project: String, existing_vpc: <span class="prelude-ty">Option</span>&lt;String&gt;) -&gt; <span class="self">Self </span>{
+        <span class="self">Self </span>{
+            project,
+            existing_vpc,
+            id: <span class="macro">nanoid!</span>(<span class="number">8</span>, <span class="kw-2">&amp;</span>TERRAFORM_ALPHABET),
+        }
+    }
 
-        <span class="kw">let </span><span class="kw-2">mut </span>created_file = sftp.create(<span class="kw-2">&amp;</span>binary_path).<span class="kw">await</span><span class="question-mark">?</span>;
-        created_file
-            .write_all(std::fs::read(binary).unwrap().as_slice())
-            .<span class="kw">await</span><span class="question-mark">?</span>;
+    <span class="kw">fn </span>collect_resources(<span class="kw-2">&amp;mut </span><span class="self">self</span>, resource_batch: <span class="kw-2">&amp;mut </span>ResourceBatch) -&gt; String {
+        resource_batch
+            .terraform
+            .terraform
+            .required_providers
+            .insert(
+                <span class="string">&quot;google&quot;</span>.to_string(),
+                TerraformProvider {
+                    source: <span class="string">&quot;hashicorp/google&quot;</span>.to_string(),
+                    version: <span class="string">&quot;4.53.1&quot;</span>.to_string(),
+                },
+            );
 
-        <span class="kw">let </span><span class="kw-2">mut </span>orig_file_stat = sftp.stat(<span class="kw-2">&amp;</span>binary_path).<span class="kw">await</span><span class="question-mark">?</span>;
-        orig_file_stat.perm = <span class="prelude-val">Some</span>(<span class="number">0o755</span>); <span class="comment">// allow the copied binary to be executed by anyone
-        </span>created_file.setstat(orig_file_stat).<span class="kw">await</span><span class="question-mark">?</span>;
-        created_file.close().<span class="kw">await</span><span class="question-mark">?</span>;
-        drop(created_file);
+        <span class="kw">let </span>vpc_network = <span class="macro">format!</span>(<span class="string">&quot;hydro-vpc-network-{}&quot;</span>, <span class="self">self</span>.id);
 
-        <span class="kw">let </span><span class="kw-2">mut </span>channel = session.channel_session().<span class="kw">await</span><span class="question-mark">?</span>;
-        channel.exec(binary_path.to_str().unwrap()).<span class="kw">await</span><span class="question-mark">?</span>;
+        <span class="kw">if let </span><span class="prelude-val">Some</span>(existing) = <span class="self">self</span>.existing_vpc.as_ref() {
+            <span class="kw">if </span>resource_batch
+                .terraform
+                .resource
+                .get(<span class="kw-2">&amp;</span><span class="string">&quot;google_compute_network&quot;</span>.to_string())
+                .unwrap_or(<span class="kw-2">&amp;</span>HashMap::new())
+                .contains_key(existing)
+            {
+                <span class="macro">format!</span>(<span class="string">&quot;google_compute_network.{existing}&quot;</span>)
+            } <span class="kw">else </span>{
+                resource_batch
+                    .terraform
+                    .data
+                    .entry(<span class="string">&quot;google_compute_network&quot;</span>.to_string())
+                    .or_default()
+                    .insert(
+                        vpc_network.clone(),
+                        <span class="macro">json!</span>({
+                            <span class="string">&quot;name&quot;</span>: existing,
+                            <span class="string">&quot;project&quot;</span>: <span class="self">self</span>.project,
+                        }),
+                    );
 
-        <span class="kw">let </span>(stdin_sender, <span class="kw-2">mut </span>stdin_receiver) = async_channel::unbounded::&lt;String&gt;();
-        <span class="kw">let </span><span class="kw-2">mut </span>stdin = channel.stream(<span class="number">0</span>); <span class="comment">// stream 0 is stdout/stdin, we use it for stdin
-        </span>tokio::spawn(<span class="kw">async move </span>{
-            <span class="kw">while let </span><span class="prelude-val">Some</span>(line) = stdin_receiver.next().<span class="kw">await </span>{
-                <span class="kw">if </span>stdin.write_all(line.as_bytes()).<span class="kw">await</span>.is_err() {
-                    <span class="kw">break</span>;
-                }
+                <span class="macro">format!</span>(<span class="string">&quot;data.google_compute_network.{vpc_network}&quot;</span>)
             }
-        });
+        } <span class="kw">else </span>{
+            resource_batch
+                .terraform
+                .resource
+                .entry(<span class="string">&quot;google_compute_network&quot;</span>.to_string())
+                .or_default()
+                .insert(
+                    vpc_network.clone(),
+                    <span class="macro">json!</span>({
+                        <span class="string">&quot;name&quot;</span>: vpc_network,
+                        <span class="string">&quot;project&quot;</span>: <span class="self">self</span>.project,
+                        <span class="string">&quot;auto_create_subnetworks&quot;</span>: <span class="bool-val">true
+                    </span>}),
+                );
 
-        <span class="kw">let </span>stdout_receivers = create_broadcast(channel.stream(<span class="number">0</span>), |s| <span class="macro">println!</span>(<span class="string">&quot;{s}&quot;</span>));
-        <span class="kw">let </span>stderr_receivers = create_broadcast(channel.stderr(), |s| <span class="macro">eprintln!</span>(<span class="string">&quot;{s}&quot;</span>));
+            <span class="kw">let </span>firewall_entries = resource_batch
+                .terraform
+                .resource
+                .entry(<span class="string">&quot;google_compute_firewall&quot;</span>.to_string())
+                .or_default();
 
-        <span class="prelude-val">Ok</span>(Arc::new(RwLock::new(LaunchedComputeEngineBinary {
-            _resource_result: <span class="self">self</span>.resource_result.clone(),
-            channel,
-            stdin_sender,
-            stdout_receivers,
-            stderr_receivers,
-        })))
+            <span class="comment">// allow all VMs to communicate with each other over internal IPs
+            </span>firewall_entries.insert(
+                <span class="macro">format!</span>(<span class="string">&quot;{vpc_network}-default-allow-internal&quot;</span>),
+                <span class="macro">json!</span>({
+                    <span class="string">&quot;name&quot;</span>: <span class="macro">format!</span>(<span class="string">&quot;{vpc_network}-default-allow-internal&quot;</span>),
+                    <span class="string">&quot;project&quot;</span>: <span class="self">self</span>.project,
+                    <span class="string">&quot;network&quot;</span>: <span class="macro">format!</span>(<span class="string">&quot;${{google_compute_network.{vpc_network}.name}}&quot;</span>),
+                    <span class="string">&quot;source_ranges&quot;</span>: [<span class="string">&quot;10.128.0.0/9&quot;</span>],
+                    <span class="string">&quot;allow&quot;</span>: [
+                        {
+                            <span class="string">&quot;protocol&quot;</span>: <span class="string">&quot;tcp&quot;</span>,
+                            <span class="string">&quot;ports&quot;</span>: [<span class="string">&quot;0-65535&quot;</span>]
+                        },
+                        {
+                            <span class="string">&quot;protocol&quot;</span>: <span class="string">&quot;udp&quot;</span>,
+                            <span class="string">&quot;ports&quot;</span>: [<span class="string">&quot;0-65535&quot;</span>]
+                        },
+                        {
+                            <span class="string">&quot;protocol&quot;</span>: <span class="string">&quot;icmp&quot;
+                        </span>}
+                    ]
+                }),
+            );
+
+            <span class="comment">// allow external pings to all VMs
+            </span>firewall_entries.insert(
+                <span class="macro">format!</span>(<span class="string">&quot;{vpc_network}-default-allow-ping&quot;</span>),
+                <span class="macro">json!</span>({
+                    <span class="string">&quot;name&quot;</span>: <span class="macro">format!</span>(<span class="string">&quot;{vpc_network}-default-allow-ping&quot;</span>),
+                    <span class="string">&quot;project&quot;</span>: <span class="self">self</span>.project,
+                    <span class="string">&quot;network&quot;</span>: <span class="macro">format!</span>(<span class="string">&quot;${{google_compute_network.{vpc_network}.name}}&quot;</span>),
+                    <span class="string">&quot;source_ranges&quot;</span>: [<span class="string">&quot;0.0.0.0/0&quot;</span>],
+                    <span class="string">&quot;allow&quot;</span>: [
+                        {
+                            <span class="string">&quot;protocol&quot;</span>: <span class="string">&quot;icmp&quot;
+                        </span>}
+                    ]
+                }),
+            );
+
+            <span class="self">self</span>.existing_vpc = <span class="prelude-val">Some</span>(vpc_network.clone());
+
+            <span class="macro">format!</span>(<span class="string">&quot;google_compute_network.{vpc_network}&quot;</span>)
+        }
     }
 }
 
@@ -670,6 +858,8 @@
     <span class="kw">pub </span>machine_type: String,
     <span class="kw">pub </span>image: String,
     <span class="kw">pub </span>region: String,
+    <span class="kw">pub </span>network: Arc&lt;RwLock&lt;GCPNetwork&gt;&gt;,
+    <span class="kw">pub </span>user: <span class="prelude-ty">Option</span>&lt;String&gt;,
     <span class="kw">pub </span>launched: <span class="prelude-ty">Option</span>&lt;Arc&lt;LaunchedComputeEngine&gt;&gt;,
     external_ports: Vec&lt;u16&gt;,
 }
@@ -681,6 +871,8 @@
         machine_type: String,
         image: String,
         region: String,
+        network: Arc&lt;RwLock&lt;GCPNetwork&gt;&gt;,
+        user: <span class="prelude-ty">Option</span>&lt;String&gt;,
     ) -&gt; <span class="self">Self </span>{
         <span class="self">Self </span>{
             id,
@@ -688,6 +880,8 @@
             machine_type,
             image,
             region,
+            network,
+            user,
             launched: <span class="prelude-val">None</span>,
             external_ports: <span class="macro">vec!</span>[],
         }
@@ -700,23 +894,64 @@
         HostTargetType::Linux
     }
 
-    <span class="kw">fn </span>request_port(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bind_type: <span class="kw-2">&amp;</span>BindType) {
+    <span class="kw">fn </span>request_port(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bind_type: <span class="kw-2">&amp;</span>ServerStrategy) {
         <span class="kw">match </span>bind_type {
-            BindType::UnixSocket =&gt; {}
-            BindType::InternalTcpPort =&gt; {}
-            BindType::ExternalTcpPort(port) =&gt; {
-                <span class="self">self</span>.external_ports.push(<span class="kw-2">*</span>port);
+            ServerStrategy::UnixSocket =&gt; {}
+            ServerStrategy::InternalTcpPort =&gt; {}
+            ServerStrategy::ExternalTcpPort(port) =&gt; {
+                <span class="kw">if </span>!<span class="self">self</span>.external_ports.contains(port) {
+                    <span class="kw">if </span><span class="self">self</span>.launched.is_some() {
+                        <span class="macro">todo!</span>(<span class="string">&quot;Cannot adjust firewall after host has been launched&quot;</span>);
+                    }
+
+                    <span class="self">self</span>.external_ports.push(<span class="kw-2">*</span>port);
+                }
             }
+            ServerStrategy::Demux(demux) =&gt; {
+                <span class="kw">for </span>bind_type <span class="kw">in </span>demux.values() {
+                    <span class="self">self</span>.request_port(bind_type);
+                }
+            }
+            ServerStrategy::Merge(merge) =&gt; {
+                <span class="kw">for </span>bind_type <span class="kw">in </span>merge {
+                    <span class="self">self</span>.request_port(bind_type);
+                }
+            }
+            ServerStrategy::Tagged(underlying, <span class="kw">_</span>) =&gt; {
+                <span class="self">self</span>.request_port(underlying);
+            }
+            ServerStrategy::Null =&gt; {}
         }
     }
 
     <span class="kw">fn </span>request_custom_binary(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.request_port(<span class="kw-2">&amp;</span>BindType::ExternalTcpPort(<span class="number">22</span>));
+        <span class="self">self</span>.request_port(<span class="kw-2">&amp;</span>ServerStrategy::ExternalTcpPort(<span class="number">22</span>));
     }
 
+    <span class="kw">fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.id
+    }
+
+    <span class="kw">fn </span>as_any(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>std::any::Any {
+        <span class="self">self
+    </span>}
+
+    <span class="kw">fn </span>as_any_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>std::any::Any {
+        <span class="self">self
+    </span>}
+
     <span class="kw">fn </span>collect_resources(<span class="kw-2">&amp;</span><span class="self">self</span>, resource_batch: <span class="kw-2">&amp;mut </span>ResourceBatch) {
+        <span class="kw">if </span><span class="self">self</span>.launched.is_some() {
+            <span class="kw">return</span>;
+        }
+
+        <span class="kw">let </span>vpc_path = <span class="self">self
+            </span>.network
+            .try_write()
+            .unwrap()
+            .collect_resources(resource_batch);
+
         <span class="kw">let </span>project = <span class="self">self</span>.project.as_str();
-        <span class="kw">let </span>id = <span class="self">self</span>.id;
 
         <span class="comment">// first, we import the providers we need
         </span>resource_batch
@@ -783,80 +1018,17 @@
                 </span>}),
             );
 
-        <span class="comment">// we use a single VPC for all VMs
-        </span><span class="kw">let </span>vpc_network = <span class="macro">format!</span>(<span class="string">&quot;vpc-network-{project}&quot;</span>);
-        resource_batch
-            .terraform
-            .resource
-            .entry(<span class="string">&quot;google_compute_network&quot;</span>.to_string())
-            .or_default()
-            .insert(
-                vpc_network.clone(),
-                <span class="macro">json!</span>({
-                    <span class="string">&quot;name&quot;</span>: vpc_network,
-                    <span class="string">&quot;project&quot;</span>: project,
-                    <span class="string">&quot;auto_create_subnetworks&quot;</span>: <span class="bool-val">true
-                </span>}),
-            );
-
-        <span class="kw">let </span>firewall_entries = resource_batch
-            .terraform
-            .resource
-            .entry(<span class="string">&quot;google_compute_firewall&quot;</span>.to_string())
-            .or_default();
-
-        <span class="comment">// allow all VMs to communicate with each other over internal IPs
-        </span>firewall_entries.insert(
-            <span class="macro">format!</span>(<span class="string">&quot;{vpc_network}-default-allow-internal&quot;</span>),
-            <span class="macro">json!</span>({
-                <span class="string">&quot;name&quot;</span>: <span class="macro">format!</span>(<span class="string">&quot;{vpc_network}-default-allow-internal&quot;</span>),
-                <span class="string">&quot;project&quot;</span>: project,
-                <span class="string">&quot;network&quot;</span>: <span class="macro">format!</span>(<span class="string">&quot;${{google_compute_network.{vpc_network}.name}}&quot;</span>),
-                <span class="string">&quot;source_ranges&quot;</span>: [<span class="string">&quot;10.128.0.0/9&quot;</span>],
-                <span class="string">&quot;allow&quot;</span>: [
-                    {
-                        <span class="string">&quot;protocol&quot;</span>: <span class="string">&quot;tcp&quot;</span>,
-                        <span class="string">&quot;ports&quot;</span>: [<span class="string">&quot;0-65535&quot;</span>]
-                    },
-                    {
-                        <span class="string">&quot;protocol&quot;</span>: <span class="string">&quot;udp&quot;</span>,
-                        <span class="string">&quot;ports&quot;</span>: [<span class="string">&quot;0-65535&quot;</span>]
-                    },
-                    {
-                        <span class="string">&quot;protocol&quot;</span>: <span class="string">&quot;icmp&quot;
-                    </span>}
-                ]
-            }),
-        );
-
-        <span class="comment">// allow external pings to all VMs
-        </span>firewall_entries.insert(
-            <span class="macro">format!</span>(<span class="string">&quot;{vpc_network}-default-allow-ping&quot;</span>),
-            <span class="macro">json!</span>({
-                <span class="string">&quot;name&quot;</span>: <span class="macro">format!</span>(<span class="string">&quot;{vpc_network}-default-allow-ping&quot;</span>),
-                <span class="string">&quot;project&quot;</span>: project,
-                <span class="string">&quot;network&quot;</span>: <span class="macro">format!</span>(<span class="string">&quot;${{google_compute_network.{vpc_network}.name}}&quot;</span>),
-                <span class="string">&quot;source_ranges&quot;</span>: [<span class="string">&quot;0.0.0.0/0&quot;</span>],
-                <span class="string">&quot;allow&quot;</span>: [
-                    {
-                        <span class="string">&quot;protocol&quot;</span>: <span class="string">&quot;icmp&quot;
-                    </span>}
-                ]
-            }),
-        );
-
-        <span class="kw">let </span>vm_instance = <span class="macro">format!</span>(<span class="string">&quot;vm-instance-{project}-{id}&quot;</span>);
+        <span class="kw">let </span>vm_key = <span class="macro">format!</span>(<span class="string">&quot;vm-instance-{}&quot;</span>, <span class="self">self</span>.id);
+        <span class="kw">let </span>vm_name = <span class="macro">format!</span>(<span class="string">&quot;hydro-vm-instance-{}&quot;</span>, <span class="macro">nanoid!</span>(<span class="number">8</span>, <span class="kw-2">&amp;</span>TERRAFORM_ALPHABET));
 
         <span class="kw">let </span><span class="kw-2">mut </span>tags = <span class="macro">vec!</span>[];
         <span class="kw">let </span><span class="kw-2">mut </span>external_interfaces = <span class="macro">vec!</span>[];
 
         <span class="kw">if </span><span class="self">self</span>.external_ports.is_empty() {
-            external_interfaces.push(<span class="macro">json!</span>({
-                <span class="string">&quot;network&quot;</span>: <span class="macro">format!</span>(<span class="string">&quot;${{google_compute_network.{vpc_network}.self_link}}&quot;</span>)
-            }));
+            external_interfaces.push(<span class="macro">json!</span>({ <span class="string">&quot;network&quot;</span>: <span class="macro">format!</span>(<span class="string">&quot;${{{vpc_path}.self_link}}&quot;</span>) }));
         } <span class="kw">else </span>{
             external_interfaces.push(<span class="macro">json!</span>({
-                <span class="string">&quot;network&quot;</span>: <span class="macro">format!</span>(<span class="string">&quot;${{google_compute_network.{vpc_network}.self_link}}&quot;</span>),
+                <span class="string">&quot;network&quot;</span>: <span class="macro">format!</span>(<span class="string">&quot;${{{vpc_path}.self_link}}&quot;</span>),
                 <span class="string">&quot;access_config&quot;</span>: [
                     {
                         <span class="string">&quot;network_tier&quot;</span>: <span class="string">&quot;STANDARD&quot;
@@ -865,50 +1037,58 @@
             }));
 
             <span class="comment">// open the external ports that were requested
-            </span><span class="kw">let </span>open_external_ports_rule = <span class="macro">format!</span>(<span class="string">&quot;{vm_instance}-open-external-ports&quot;</span>);
-            firewall_entries.insert(
-                open_external_ports_rule.clone(),
-                <span class="macro">json!</span>({
-                    <span class="string">&quot;name&quot;</span>: open_external_ports_rule,
-                    <span class="string">&quot;project&quot;</span>: project,
-                    <span class="string">&quot;network&quot;</span>: <span class="macro">format!</span>(<span class="string">&quot;${{google_compute_network.{vpc_network}.name}}&quot;</span>),
-                    <span class="string">&quot;target_tags&quot;</span>: [open_external_ports_rule],
-                    <span class="string">&quot;source_ranges&quot;</span>: [<span class="string">&quot;0.0.0.0/0&quot;</span>],
-                    <span class="string">&quot;allow&quot;</span>: [
-                        {
-                            <span class="string">&quot;protocol&quot;</span>: <span class="string">&quot;tcp&quot;</span>,
-                            <span class="string">&quot;ports&quot;</span>: <span class="self">self</span>.external_ports.iter().map(|p| p.to_string()).collect::&lt;Vec&lt;String&gt;&gt;()
-                        }
-                    ]
-                }),
-            );
+            </span><span class="kw">let </span>my_external_tags = <span class="self">self</span>.external_ports.iter().map(|port| {
+                <span class="kw">let </span>rule_id = <span class="macro">nanoid!</span>(<span class="number">8</span>, <span class="kw-2">&amp;</span>TERRAFORM_ALPHABET);
+                <span class="kw">let </span>firewall_rule = resource_batch
+                    .terraform
+                    .resource
+                    .entry(<span class="string">&quot;google_compute_firewall&quot;</span>.to_string())
+                    .or_default()
+                    .entry(<span class="macro">format!</span>(<span class="string">&quot;open-external-port-{}&quot;</span>, port))
+                    .or_insert(<span class="macro">json!</span>({
+                        <span class="string">&quot;name&quot;</span>: <span class="macro">format!</span>(<span class="string">&quot;open-external-port-{}-{}&quot;</span>, port, rule_id),
+                        <span class="string">&quot;project&quot;</span>: project,
+                        <span class="string">&quot;network&quot;</span>: <span class="macro">format!</span>(<span class="string">&quot;${{{vpc_path}.name}}&quot;</span>),
+                        <span class="string">&quot;target_tags&quot;</span>: [<span class="macro">format!</span>(<span class="string">&quot;open-external-port-tag-{}-{}&quot;</span>, port, rule_id)],
+                        <span class="string">&quot;source_ranges&quot;</span>: [<span class="string">&quot;0.0.0.0/0&quot;</span>],
+                        <span class="string">&quot;allow&quot;</span>: [
+                            {
+                                <span class="string">&quot;protocol&quot;</span>: <span class="string">&quot;tcp&quot;</span>,
+                                <span class="string">&quot;ports&quot;</span>: <span class="macro">vec!</span>[port.to_string()]
+                            }
+                        ]
+                    }));
 
-            tags.push(open_external_ports_rule);
+                firewall_rule[<span class="string">&quot;target_tags&quot;</span>].as_array().unwrap()[<span class="number">0</span>].clone()
+            });
+
+            tags.extend(my_external_tags);
 
             resource_batch.terraform.output.insert(
-                <span class="macro">format!</span>(<span class="string">&quot;{vm_instance}-public-ip&quot;</span>),
+                <span class="macro">format!</span>(<span class="string">&quot;{vm_key}-public-ip&quot;</span>),
                 TerraformOutput {
-                    value: <span class="macro">format!</span>(<span class="string">&quot;${{google_compute_instance.{vm_instance}.network_interface[0].access_config[0].nat_ip}}&quot;</span>)
+                    value: <span class="macro">format!</span>(<span class="string">&quot;${{google_compute_instance.{vm_key}.network_interface[0].access_config[0].nat_ip}}&quot;</span>)
                 }
             );
         }
 
+        <span class="kw">let </span>user = <span class="self">self</span>.user.as_ref().cloned().unwrap_or(<span class="string">&quot;hydro&quot;</span>.to_string());
         resource_batch
             .terraform
             .resource
             .entry(<span class="string">&quot;google_compute_instance&quot;</span>.to_string())
             .or_default()
             .insert(
-                vm_instance.clone(),
+                vm_key.clone(),
                 <span class="macro">json!</span>({
-                    <span class="string">&quot;name&quot;</span>: vm_instance,
+                    <span class="string">&quot;name&quot;</span>: vm_name,
                     <span class="string">&quot;project&quot;</span>: project,
                     <span class="string">&quot;machine_type&quot;</span>: <span class="self">self</span>.machine_type,
                     <span class="string">&quot;zone&quot;</span>: <span class="self">self</span>.region,
                     <span class="string">&quot;tags&quot;</span>: tags,
                     <span class="string">&quot;metadata&quot;</span>: {
-                    <span class="string">&quot;ssh-keys&quot;</span>: <span class="string">&quot;hydro:${tls_private_key.vm_instance_ssh_key.public_key_openssh}&quot;
-                    </span>},
+                        <span class="string">&quot;ssh-keys&quot;</span>: <span class="macro">format!</span>(<span class="string">&quot;{user}:${{tls_private_key.vm_instance_ssh_key.public_key_openssh}}&quot;</span>)
+                    },
                     <span class="string">&quot;boot_disk&quot;</span>: [
                         {
                             <span class="string">&quot;initialize_params&quot;</span>: [
@@ -923,24 +1103,29 @@
             );
 
         resource_batch.terraform.output.insert(
-            <span class="macro">format!</span>(<span class="string">&quot;{vm_instance}-internal-ip&quot;</span>),
+            <span class="macro">format!</span>(<span class="string">&quot;{vm_key}-internal-ip&quot;</span>),
             TerraformOutput {
                 value: <span class="macro">format!</span>(
-                    <span class="string">&quot;${{google_compute_instance.{vm_instance}.network_interface[0].network_ip}}&quot;
+                    <span class="string">&quot;${{google_compute_instance.{vm_key}.network_interface[0].network_ip}}&quot;
                 </span>),
             },
         );
     }
 
+    <span class="kw">fn </span>launched(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Arc&lt;<span class="kw">dyn </span>LaunchedHost&gt;&gt; {
+        <span class="self">self</span>.launched
+            .as_ref()
+            .map(|a| a.clone() <span class="kw">as </span>Arc&lt;<span class="kw">dyn </span>LaunchedHost&gt;)
+    }
+
     <span class="kw">async fn </span>provision(<span class="kw-2">&amp;mut </span><span class="self">self</span>, resource_result: <span class="kw-2">&amp;</span>Arc&lt;ResourceResult&gt;) -&gt; Arc&lt;<span class="kw">dyn </span>LaunchedHost&gt; {
         <span class="kw">if </span><span class="self">self</span>.launched.is_none() {
-            <span class="kw">let </span>project = <span class="self">self</span>.project.as_str();
             <span class="kw">let </span>id = <span class="self">self</span>.id;
 
             <span class="kw">let </span>internal_ip = resource_result
                 .terraform
                 .outputs
-                .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;vm-instance-{project}-{id}-internal-ip&quot;</span>))
+                .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;vm-instance-{id}-internal-ip&quot;</span>))
                 .unwrap()
                 .value
                 .clone();
@@ -948,35 +1133,55 @@
             <span class="kw">let </span>external_ip = resource_result
                 .terraform
                 .outputs
-                .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;vm-instance-{project}-{id}-public-ip&quot;</span>))
+                .get(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">&quot;vm-instance-{id}-public-ip&quot;</span>))
                 .map(|v| v.value.clone());
 
             <span class="self">self</span>.launched = <span class="prelude-val">Some</span>(Arc::new(LaunchedComputeEngine {
                 resource_result: resource_result.clone(),
+                user: <span class="self">self</span>.user.as_ref().cloned().unwrap_or(<span class="string">&quot;hydro&quot;</span>.to_string()),
                 internal_ip,
                 external_ip,
-                binary_counter: AtomicUsize::new(<span class="number">0</span>),
             }))
         }
 
         <span class="self">self</span>.launched.as_ref().unwrap().clone()
     }
 
-    <span class="kw">fn </span>get_bind_type(<span class="kw-2">&amp;</span><span class="self">self</span>, connection_from: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Host) -&gt; BindType {
-        <span class="kw">if </span>connection_from.can_connect_to(ConnectionType::UnixSocket(<span class="self">self</span>.id)) {
-            BindType::UnixSocket
-        } <span class="kw">else if </span>connection_from
-            .can_connect_to(ConnectionType::InternalTcpPort(<span class="self">self</span>.project.clone()))
-        {
-            BindType::InternalTcpPort
+    <span class="kw">fn </span>strategy_as_server&lt;<span class="lifetime">&#39;a</span>&gt;(
+        <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="self">self</span>,
+        client_host: <span class="kw-2">&amp;</span><span class="kw">dyn </span>Host,
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;(
+        ClientStrategy&lt;<span class="lifetime">&#39;a</span>&gt;,
+        Box&lt;<span class="kw">dyn </span>FnOnce(<span class="kw-2">&amp;mut </span><span class="kw">dyn </span>std::any::Any) -&gt; ServerStrategy&gt;,
+    )&gt; {
+        <span class="kw">if </span>client_host.can_connect_to(ClientStrategy::UnixSocket(<span class="self">self</span>.id)) {
+            <span class="prelude-val">Ok</span>((
+                ClientStrategy::UnixSocket(<span class="self">self</span>.id),
+                Box::new(|<span class="kw">_</span>| ServerStrategy::UnixSocket),
+            ))
+        } <span class="kw">else if </span>client_host.can_connect_to(ClientStrategy::InternalTcpPort(<span class="self">self</span>)) {
+            <span class="prelude-val">Ok</span>((
+                ClientStrategy::InternalTcpPort(<span class="self">self</span>),
+                Box::new(|<span class="kw">_</span>| ServerStrategy::InternalTcpPort),
+            ))
+        } <span class="kw">else if </span>client_host.can_connect_to(ClientStrategy::ForwardedTcpPort(<span class="self">self</span>)) {
+            <span class="prelude-val">Ok</span>((
+                ClientStrategy::ForwardedTcpPort(<span class="self">self</span>),
+                Box::new(|me| {
+                    me.downcast_mut::&lt;GCPComputeEngineHost&gt;()
+                        .unwrap()
+                        .request_port(<span class="kw-2">&amp;</span>ServerStrategy::ExternalTcpPort(<span class="number">22</span>)); <span class="comment">// needed to forward
+                    </span>ServerStrategy::InternalTcpPort
+                }),
+            ))
         } <span class="kw">else </span>{
-            <span class="macro">todo!</span>()
+            <span class="macro">anyhow::bail!</span>(<span class="string">&quot;Could not find a strategy to connect to GCP instance&quot;</span>)
         }
     }
 
-    <span class="kw">fn </span>can_connect_to(<span class="kw-2">&amp;</span><span class="self">self</span>, typ: ConnectionType) -&gt; bool {
+    <span class="kw">fn </span>can_connect_to(<span class="kw-2">&amp;</span><span class="self">self</span>, typ: ClientStrategy) -&gt; bool {
         <span class="kw">match </span>typ {
-            ConnectionType::UnixSocket(id) =&gt; {
+            ClientStrategy::UnixSocket(id) =&gt; {
                 <span class="attr">#[cfg(unix)]
                 </span>{
                     <span class="self">self</span>.id == id
@@ -988,9 +1193,17 @@
                     <span class="bool-val">false
                 </span>}
             }
-            ConnectionType::InternalTcpPort(id) =&gt; <span class="self">self</span>.project == id,
+            ClientStrategy::InternalTcpPort(target_host) =&gt; {
+                <span class="kw">if let </span><span class="prelude-val">Some</span>(gcp_target) =
+                    target_host.as_any().downcast_ref::&lt;GCPComputeEngineHost&gt;()
+                {
+                    <span class="self">self</span>.project == gcp_target.project
+                } <span class="kw">else </span>{
+                    <span class="bool-val">false
+                </span>}
+            }
+            ClientStrategy::ForwardedTcpPort(<span class="kw">_</span>) =&gt; <span class="bool-val">false</span>,
         }
     }
 }
-</code></pre></div>
-</section></main><div id="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hydro" data-themes="" data-resource-suffix="" data-rustdoc-version="1.69.0-nightly (31f858d9a 2023-02-28)" data-search-js="search-d5a6cd8418084717.js" data-settings-js="settings-f0c5c39777a9a2f6.js" data-settings-css="settings-0bcba95ff279c1db.css" ></div></body></html>
+</code></pre></div></section></main></body></html>
