@@ -21,19 +21,26 @@ on:
         default: false
 
 jobs:
-  release-job:
-    name: Release Job
-    timeout-minutes: 10
+  wait_ci:
+    name: Wait for CI success
+    timeout-minutes: 20
     runs-on: ubuntu-latest
     steps:
       - name: Wait for other checks to succeed
         uses: lewagon/wait-on-check-action@v1.3.1
         with:
           ref: ${{ github.ref }}
-          running-workflow-name: 'CI'
+          running-workflow-name: "CI"
           repo-token: ${{ secrets.GITHUB_TOKEN }}
           wait-interval: 10
 
+  release_job:
+    name: Release Job
+    needs: wait_ci
+    if: ${{ needs.wait_ci.result == 'success' }}
+    timeout-minutes: 10
+    runs-on: ubuntu-latest
+    steps:
       - run: |
           echo "Version bump: $BUMP"
           echo "Execute: $EXECUTE"
@@ -49,13 +56,6 @@ jobs:
         with:
           profile: minimal
           toolchain: nightly
-
-      # Double-check that tests pass (do we )
-      - name: Run cargo test
-        uses: actions-rs/cargo@v1
-        with:
-          command: test
-          args: --no-fail-fast
 
       - name: Install cargo-smart-release
         uses: actions-rs/cargo@v1
