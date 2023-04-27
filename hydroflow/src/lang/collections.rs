@@ -2,19 +2,8 @@ use std::array::IntoIter;
 use std::collections::{BTreeMap, BTreeSet, HashMap, HashSet};
 use std::hash::Hash;
 
-fn bool_to_option<'a>(value: bool) -> Option<&'a ()> {
-    if value {
-        Some(&())
-    } else {
-        None
-    }
-}
-fn bool_to_option_mut<'a>(value: bool) -> Option<&'a mut ()> {
-    if value {
-        Some(Box::leak(Box::new(())))
-    } else {
-        None
-    }
+fn mut_unit() -> &'static mut () {
+    Box::leak(Box::new(()))
 }
 
 pub trait Collection<K, V> {
@@ -44,10 +33,10 @@ pub trait Collection<K, V> {
 
 impl<K: 'static + Eq + Hash> Collection<K, ()> for HashSet<K> {
     fn get(&self, key: &K) -> Option<&()> {
-        bool_to_option(self.contains(key))
+        self.contains(key).then_some(&())
     }
     fn get_mut(&mut self, key: &K) -> Option<&mut ()> {
-        bool_to_option_mut(self.contains(key))
+        self.contains(key).then(mut_unit)
     }
     fn len(&self) -> usize {
         self.len()
@@ -71,10 +60,10 @@ impl<K: 'static + Eq + Hash> Collection<K, ()> for HashSet<K> {
 
 impl<K: 'static + Eq + Ord> Collection<K, ()> for BTreeSet<K> {
     fn get(&self, key: &K) -> Option<&()> {
-        bool_to_option(self.contains(key))
+        self.contains(key).then_some(&())
     }
     fn get_mut(&mut self, key: &K) -> Option<&mut ()> {
-        bool_to_option_mut(self.contains(key))
+        self.contains(key).then(mut_unit)
     }
     fn len(&self) -> usize {
         self.len()
@@ -98,10 +87,10 @@ impl<K: 'static + Eq + Ord> Collection<K, ()> for BTreeSet<K> {
 
 impl<K: 'static + Eq> Collection<K, ()> for Vec<K> {
     fn get(&self, key: &K) -> Option<&()> {
-        bool_to_option(self.contains(key))
+        self.contains(key).then_some(&())
     }
     fn get_mut(&mut self, key: &K) -> Option<&mut ()> {
-        bool_to_option_mut(self.contains(key))
+        self.contains(key).then(mut_unit)
     }
     fn len(&self) -> usize {
         self.len()
@@ -125,10 +114,10 @@ impl<K: 'static + Eq> Collection<K, ()> for Vec<K> {
 
 impl<K: 'static + Eq> Collection<K, ()> for Option<K> {
     fn get(&self, key: &K) -> Option<&()> {
-        bool_to_option(Some(key) == self.as_ref())
+        (Some(key) == self.as_ref()).then_some(&())
     }
     fn get_mut(&mut self, key: &K) -> Option<&mut ()> {
-        bool_to_option_mut(Some(key) == self.as_ref())
+        (Some(key) == self.as_ref()).then(mut_unit)
     }
     fn len(&self) -> usize {
         self.is_some().into()
@@ -152,10 +141,10 @@ impl<K: 'static + Eq> Collection<K, ()> for Option<K> {
 
 impl<K: 'static + Eq> Collection<K, ()> for Single<K> {
     fn get(&self, key: &K) -> Option<&()> {
-        bool_to_option(key == &self.0)
+        (key == &self.0).then_some(&())
     }
     fn get_mut(&mut self, key: &K) -> Option<&mut ()> {
-        bool_to_option_mut(key == &self.0)
+        (key == &self.0).then(mut_unit)
     }
     fn len(&self) -> usize {
         1
@@ -179,10 +168,10 @@ impl<K: 'static + Eq> Collection<K, ()> for Single<K> {
 
 impl<K: 'static + Eq, const N: usize> Collection<K, ()> for Array<K, N> {
     fn get(&self, key: &K) -> Option<&()> {
-        bool_to_option(self.0.contains(key))
+        self.0.contains(key).then_some(&())
     }
     fn get_mut(&mut self, key: &K) -> Option<&mut ()> {
-        bool_to_option_mut(self.0.contains(key))
+        self.0.contains(key).then(mut_unit)
     }
     fn len(&self) -> usize {
         N
@@ -206,20 +195,20 @@ impl<K: 'static + Eq, const N: usize> Collection<K, ()> for Array<K, N> {
 
 impl<K: 'static + Eq, const N: usize> Collection<K, ()> for MaskedArray<K, N> {
     fn get(&self, key: &K) -> Option<&()> {
-        bool_to_option(
-            self.mask
-                .iter()
-                .zip(self.vals.iter())
-                .any(|(mask, item)| *mask && item == key),
-        )
+        let found = self
+            .mask
+            .iter()
+            .zip(self.vals.iter())
+            .any(|(mask, item)| *mask && item == key);
+        found.then_some(&())
     }
     fn get_mut(&mut self, key: &K) -> Option<&mut ()> {
-        bool_to_option_mut(
-            self.mask
-                .iter()
-                .zip(self.vals.iter())
-                .any(|(mask, item)| *mask && item == key),
-        )
+        let found = self
+            .mask
+            .iter()
+            .zip(self.vals.iter())
+            .any(|(mask, item)| *mask && item == key);
+        found.then(mut_unit)
     }
     fn len(&self) -> usize {
         self.mask.iter().filter(|mask| **mask).count()
