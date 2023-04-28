@@ -25,10 +25,10 @@ use hydroflow::{assert_graphvis_snapshots, hydroflow_syntax};
 
 #[multiplatform_test]
 pub fn test_basic_2() {
-    let (out_send, mut out_recv) = hydroflow::util::unbounded_channel::<usize>();
+    let (out_send, mut out_recv) = hydroflow::util::unsync_channel::<usize>(None);
 
     let mut df = hydroflow_syntax! {
-        source_iter([1]) -> for_each(|v| out_send.send(v).unwrap());
+        source_iter([1]) -> for_each(|v| out_send.try_send(v).unwrap());
     };
     assert_graphvis_snapshots!(df);
     df.run_available();
@@ -38,10 +38,10 @@ pub fn test_basic_2() {
 
 #[multiplatform_test]
 pub fn test_basic_3() {
-    let (out_send, mut out_recv) = hydroflow::util::unbounded_channel::<usize>();
+    let (out_send, mut out_recv) = hydroflow::util::unsync_channel::<usize>(None);
 
     let mut df = hydroflow_syntax! {
-        source_iter([1]) -> map(|v| v + 1) -> for_each(|v| out_send.send(v).unwrap());
+        source_iter([1]) -> map(|v| v + 1) -> for_each(|v| out_send.try_send(v).unwrap());
     };
     assert_graphvis_snapshots!(df);
     df.run_available();
@@ -51,10 +51,10 @@ pub fn test_basic_3() {
 
 #[multiplatform_test]
 pub fn test_basic_merge() {
-    let (out_send, mut out_recv) = hydroflow::util::unbounded_channel::<usize>();
+    let (out_send, mut out_recv) = hydroflow::util::unsync_channel::<usize>(None);
 
     let mut df = hydroflow_syntax! {
-        m = merge() -> for_each(|v| out_send.send(v).unwrap());
+        m = merge() -> for_each(|v| out_send.try_send(v).unwrap());
         source_iter([1]) -> [0]m;
         source_iter([2]) -> [1]m;
     };
@@ -66,13 +66,13 @@ pub fn test_basic_merge() {
 
 #[multiplatform_test]
 pub fn test_basic_tee() {
-    let (out_send_a, mut out_recv) = hydroflow::util::unbounded_channel::<String>();
+    let (out_send_a, mut out_recv) = hydroflow::util::unsync_channel::<String>(None);
     let out_send_b = out_send_a.clone();
 
     let mut df = hydroflow_syntax! {
         t = source_iter([1]) -> tee();
-        t[0] -> for_each(|v| out_send_a.send(format!("A {}", v)).unwrap());
-        t[1] -> for_each(|v| out_send_b.send(format!("B {}", v)).unwrap());
+        t[0] -> for_each(|v| out_send_a.try_send(format!("A {}", v)).unwrap());
+        t[1] -> for_each(|v| out_send_b.try_send(format!("B {}", v)).unwrap());
     };
     df.run_available();
 
@@ -114,7 +114,7 @@ pub fn test_large_diamond() {
 /// Test that source_stream can handle "complex" expressions.
 #[multiplatform_test]
 pub fn test_recv_expr() {
-    let send_recv = hydroflow::util::unbounded_channel::<usize>();
+    let send_recv = hydroflow::util::unsync_channel::<usize>(None);
 
     let mut df = hydroflow_syntax! {
         source_stream(send_recv.1)
@@ -124,20 +124,20 @@ pub fn test_recv_expr() {
     df.run_available();
 
     let items_send = send_recv.0;
-    items_send.send(9).unwrap();
-    items_send.send(2).unwrap();
-    items_send.send(5).unwrap();
+    items_send.try_send(9).unwrap();
+    items_send.try_send(2).unwrap();
+    items_send.try_send(5).unwrap();
     df.run_available();
 }
 
 #[multiplatform_test]
 pub fn test_unzip() {
-    let (send0, mut recv0) = hydroflow::util::unbounded_channel::<&'static str>();
-    let (send1, mut recv1) = hydroflow::util::unbounded_channel::<&'static str>();
+    let (send0, mut recv0) = hydroflow::util::unsync_channel::<&'static str>(None);
+    let (send1, mut recv1) = hydroflow::util::unsync_channel::<&'static str>(None);
     let mut df = hydroflow_syntax! {
         my_unzip = source_iter(vec![("Hello", "Foo"), ("World", "Bar")]) -> unzip();
-        my_unzip[0] -> for_each(|v| send0.send(v).unwrap());
-        my_unzip[1] -> for_each(|v| send1.send(v).unwrap());
+        my_unzip[0] -> for_each(|v| send0.try_send(v).unwrap());
+        my_unzip[1] -> for_each(|v| send1.try_send(v).unwrap());
     };
 
     df.run_available();
@@ -168,10 +168,10 @@ pub fn test_multiset_join() {
     {
         use hydroflow::compiled::pull::HalfSetJoinState;
 
-        let (out_tx, mut out_rx) = hydroflow::util::unbounded_channel::<(usize, (usize, usize))>();
+        let (out_tx, mut out_rx) = hydroflow::util::unsync_channel::<(usize, (usize, usize))>(None);
 
         let mut df = hydroflow_syntax! {
-            my_join = join::<HalfSetJoinState>() -> for_each(|m| out_tx.send(m).unwrap());
+            my_join = join::<HalfSetJoinState>() -> for_each(|m| out_tx.try_send(m).unwrap());
             source_iter([(0, 1), (0, 1)]) -> [0]my_join;
             source_iter([(0, 2)]) -> [1]my_join;
         };
@@ -185,10 +185,10 @@ pub fn test_multiset_join() {
     // HalfMultisetJoinState lhs biased
     {
         use hydroflow::compiled::pull::HalfMultisetJoinState;
-        let (out_tx, mut out_rx) = hydroflow::util::unbounded_channel::<(usize, (usize, usize))>();
+        let (out_tx, mut out_rx) = hydroflow::util::unsync_channel::<(usize, (usize, usize))>(None);
 
         let mut df = hydroflow_syntax! {
-            my_join = join::<HalfMultisetJoinState>() -> for_each(|m| out_tx.send(m).unwrap());
+            my_join = join::<HalfMultisetJoinState>() -> for_each(|m| out_tx.try_send(m).unwrap());
             source_iter([(1, 1), (1, 1), (1, 1)]) -> [0]my_join;
             source_iter([(1, 2), (1, 2), (1, 2), (1, 2)]) -> [1]my_join;
         };
@@ -202,10 +202,10 @@ pub fn test_multiset_join() {
     // HalfMultisetJoinState rhs biased
     {
         use hydroflow::compiled::pull::HalfMultisetJoinState;
-        let (out_tx, mut out_rx) = hydroflow::util::unbounded_channel::<(usize, (usize, usize))>();
+        let (out_tx, mut out_rx) = hydroflow::util::unsync_channel::<(usize, (usize, usize))>(None);
 
         let mut df = hydroflow_syntax! {
-            my_join = join::<HalfMultisetJoinState>() -> for_each(|m| out_tx.send(m).unwrap());
+            my_join = join::<HalfMultisetJoinState>() -> for_each(|m| out_tx.try_send(m).unwrap());
             source_iter([(1, 1), (1, 1), (1, 1), (1, 1)]) -> [0]my_join;
             source_iter([(1, 2), (1, 2), (1, 2)]) -> [1]my_join;
         };
@@ -219,10 +219,10 @@ pub fn test_multiset_join() {
 
 #[multiplatform_test]
 pub fn test_cross_join() {
-    let (out_send, mut out_recv) = hydroflow::util::unbounded_channel::<(usize, &str)>();
+    let (out_send, mut out_recv) = hydroflow::util::unsync_channel::<(usize, &str)>(None);
 
     let mut df = hydroflow_syntax! {
-        cj = cross_join() -> for_each(|v| out_send.send(v).unwrap());
+        cj = cross_join() -> for_each(|v| out_send.try_send(v).unwrap());
         source_iter([1, 2, 3]) -> [0]cj;
         source_iter(["a", "b", "c"]) -> [1]cj;
     };
@@ -243,9 +243,9 @@ pub fn test_lattice_join() {
 
     // 'static, 'tick.
     {
-        let (out_tx, mut out_rx) = hydroflow::util::unbounded_channel::<(usize, (usize, usize))>();
-        let (lhs_tx, lhs_rx) = hydroflow::util::unbounded_channel::<(usize, usize)>();
-        let (rhs_tx, rhs_rx) = hydroflow::util::unbounded_channel::<(usize, usize)>();
+        let (out_tx, mut out_rx) = hydroflow::util::unsync_channel::<(usize, (usize, usize))>(None);
+        let (lhs_tx, lhs_rx) = hydroflow::util::unsync_channel::<(usize, usize)>(None);
+        let (rhs_tx, rhs_rx) = hydroflow::util::unsync_channel::<(usize, usize)>(None);
 
         let mut df = hydroflow_syntax! {
             my_join = lattice_join::<'static, 'tick, MaxRepr<usize>, MaxRepr<usize>>();
@@ -253,14 +253,14 @@ pub fn test_lattice_join() {
             source_stream(lhs_rx) -> [0]my_join;
             source_stream(rhs_rx) -> [1]my_join;
 
-            my_join -> for_each(|v| out_tx.send(v).unwrap());
+            my_join -> for_each(|v| out_tx.try_send(v).unwrap());
         };
 
         // Merges forward correctly, without going backward
-        lhs_tx.send((7, 3)).unwrap();
-        lhs_tx.send((7, 4)).unwrap();
-        rhs_tx.send((7, 6)).unwrap();
-        rhs_tx.send((7, 5)).unwrap();
+        lhs_tx.try_send((7, 3)).unwrap();
+        lhs_tx.try_send((7, 4)).unwrap();
+        rhs_tx.try_send((7, 6)).unwrap();
+        rhs_tx.try_send((7, 5)).unwrap();
 
         df.run_tick();
 
@@ -268,8 +268,8 @@ pub fn test_lattice_join() {
         assert_eq!(out, vec![(7, (4, 6))]);
 
         // Forgets rhs state
-        rhs_tx.send((7, 6)).unwrap();
-        rhs_tx.send((7, 5)).unwrap();
+        rhs_tx.try_send((7, 6)).unwrap();
+        rhs_tx.try_send((7, 5)).unwrap();
 
         df.run_tick();
 
@@ -279,9 +279,9 @@ pub fn test_lattice_join() {
 
     // 'static, 'static.
     {
-        let (out_tx, mut out_rx) = hydroflow::util::unbounded_channel::<(usize, (usize, usize))>();
-        let (lhs_tx, lhs_rx) = hydroflow::util::unbounded_channel::<(usize, usize)>();
-        let (rhs_tx, rhs_rx) = hydroflow::util::unbounded_channel::<(usize, usize)>();
+        let (out_tx, mut out_rx) = hydroflow::util::unsync_channel::<(usize, (usize, usize))>(None);
+        let (lhs_tx, lhs_rx) = hydroflow::util::unsync_channel::<(usize, usize)>(None);
+        let (rhs_tx, rhs_rx) = hydroflow::util::unsync_channel::<(usize, usize)>(None);
 
         let mut df = hydroflow_syntax! {
             my_join = lattice_join::<'static, 'static, MaxRepr<usize>, MaxRepr<usize>>();
@@ -289,21 +289,21 @@ pub fn test_lattice_join() {
             source_stream(lhs_rx) -> [0]my_join;
             source_stream(rhs_rx) -> [1]my_join;
 
-            my_join -> for_each(|v| out_tx.send(v).unwrap());
+            my_join -> for_each(|v| out_tx.try_send(v).unwrap());
         };
 
-        lhs_tx.send((7, 3)).unwrap();
-        lhs_tx.send((7, 4)).unwrap();
-        rhs_tx.send((7, 6)).unwrap();
-        rhs_tx.send((7, 5)).unwrap();
+        lhs_tx.try_send((7, 3)).unwrap();
+        lhs_tx.try_send((7, 4)).unwrap();
+        rhs_tx.try_send((7, 6)).unwrap();
+        rhs_tx.try_send((7, 5)).unwrap();
 
         df.run_tick();
         let out: Vec<_> = collect_ready(&mut out_rx);
         assert_eq!(out, vec![(7, (4, 6))]);
 
         // Doesn't produce unless a lattice has changed.
-        lhs_tx.send((7, 4)).unwrap();
-        rhs_tx.send((7, 5)).unwrap();
+        lhs_tx.try_send((7, 4)).unwrap();
+        rhs_tx.try_send((7, 5)).unwrap();
 
         df.run_tick();
         let out: Vec<_> = collect_ready(&mut out_rx);
@@ -313,22 +313,22 @@ pub fn test_lattice_join() {
 
 #[multiplatform_test]
 pub fn test_next_tick() {
-    let (inp_send, inp_recv) = hydroflow::util::unbounded_channel::<usize>();
-    let (out_send, mut out_recv) = hydroflow::util::unbounded_channel::<usize>();
+    let (inp_send, inp_recv) = hydroflow::util::unsync_channel::<usize>(None);
+    let (out_send, mut out_recv) = hydroflow::util::unsync_channel::<usize>(None);
     let mut flow = hydroflow::hydroflow_syntax! {
         inp = source_stream(inp_recv) -> tee();
-        diff = difference() -> for_each(|x| out_send.send(x).unwrap());
+        diff = difference() -> for_each(|x| out_send.try_send(x).unwrap());
         inp -> [pos]diff;
         inp -> next_tick() -> [neg]diff;
     };
 
     for x in [1, 2, 3, 4] {
-        inp_send.send(x).unwrap();
+        inp_send.try_send(x).unwrap();
     }
     flow.run_tick();
 
     for x in [3, 4, 5, 6] {
-        inp_send.send(x).unwrap();
+        inp_send.try_send(x).unwrap();
     }
     flow.run_tick();
 
@@ -339,22 +339,22 @@ pub fn test_next_tick() {
 
 #[multiplatform_test]
 pub fn test_anti_join() {
-    let (inp_send, inp_recv) = hydroflow::util::unbounded_channel::<(usize, usize)>();
-    let (out_send, mut out_recv) = hydroflow::util::unbounded_channel::<(usize, usize)>();
+    let (inp_send, inp_recv) = hydroflow::util::unsync_channel::<(usize, usize)>(None);
+    let (out_send, mut out_recv) = hydroflow::util::unsync_channel::<(usize, usize)>(None);
     let mut flow = hydroflow::hydroflow_syntax! {
         inp = source_stream(inp_recv) -> tee();
-        diff = anti_join() -> for_each(|x| out_send.send(x).unwrap());
+        diff = anti_join() -> for_each(|x| out_send.try_send(x).unwrap());
         inp -> [pos]diff;
         inp -> next_tick() -> map(|x: (usize, usize)| x.0) -> [neg]diff;
     };
 
     for x in [(1, 2), (2, 3), (3, 4), (4, 5)] {
-        inp_send.send(x).unwrap();
+        inp_send.try_send(x).unwrap();
     }
     flow.run_tick();
 
     for x in [(3, 2), (4, 3), (5, 4), (6, 5)] {
-        inp_send.send(x).unwrap();
+        inp_send.try_send(x).unwrap();
     }
     flow.run_tick();
 
@@ -367,9 +367,9 @@ pub fn test_anti_join() {
 pub fn test_repeat_fn() {
     // regular Fn closure
     {
-        let (out_send, mut out_recv) = hydroflow::util::unbounded_channel::<usize>();
+        let (out_send, mut out_recv) = hydroflow::util::unsync_channel::<usize>(None);
         let mut df = hydroflow::hydroflow_syntax! {
-            repeat_fn(3, || 1) -> for_each(|x| out_send.send(x).unwrap());
+            repeat_fn(3, || 1) -> for_each(|x| out_send.try_send(x).unwrap());
         };
 
         df.run_tick();
@@ -389,9 +389,9 @@ pub fn test_repeat_fn() {
     {
         let mut x = 0;
 
-        let (out_send, mut out_recv) = hydroflow::util::unbounded_channel::<usize>();
+        let (out_send, mut out_recv) = hydroflow::util::unsync_channel::<usize>(None);
         let mut df = hydroflow::hydroflow_syntax! {
-            repeat_fn(3, move || { x += 1; x }) -> for_each(|x| out_send.send(x).unwrap());
+            repeat_fn(3, move || { x += 1; x }) -> for_each(|x| out_send.try_send(x).unwrap());
         };
 
         df.run_tick();
@@ -410,9 +410,9 @@ pub fn test_repeat_fn() {
 
 #[multiplatform_test]
 pub fn test_batch() {
-    let (batch1_tx, batch1_rx) = hydroflow::util::unbounded_channel::<()>();
-    let (batch2_tx, batch2_rx) = hydroflow::util::unbounded_channel::<()>();
-    let (tx, mut rx) = hydroflow::util::unbounded_channel::<()>();
+    let (batch1_tx, batch1_rx) = hydroflow::util::unsync_channel::<()>(None);
+    let (batch2_tx, batch2_rx) = hydroflow::util::unsync_channel::<()>(None);
+    let (tx, mut rx) = hydroflow::util::unsync_channel::<()>(None);
     let mut df = hydroflow_syntax! {
         my_tee = tee();
 
@@ -420,22 +420,22 @@ pub fn test_batch() {
             -> batch(1, batch1_rx) // pull
             -> my_tee;
 
-        my_tee -> for_each(|x| tx.send(x).unwrap());
+        my_tee -> for_each(|x| tx.try_send(x).unwrap());
         my_tee
             -> batch(1, batch2_rx) // push
-            -> for_each(|x| tx.send(x).unwrap());
+            -> for_each(|x| tx.try_send(x).unwrap());
     };
 
     df.run_available();
     let out: Vec<_> = collect_ready(&mut rx);
     assert_eq!(out, Vec::<()>::new());
 
-    batch1_tx.send(()).unwrap();
+    batch1_tx.try_send(()).unwrap();
     df.run_available();
     let out: Vec<_> = collect_ready(&mut rx);
     assert_eq!(out, vec![()]);
 
-    batch2_tx.send(()).unwrap();
+    batch2_tx.try_send(()).unwrap();
     df.run_available();
     let out: Vec<_> = collect_ready(&mut rx);
     assert_eq!(out, vec![()]);
@@ -443,10 +443,10 @@ pub fn test_batch() {
 
 #[multiplatform_test]
 pub fn test_batch_exceed_limit() {
-    let (_, batch1_rx) = hydroflow::util::unbounded_channel::<()>();
-    let (_, batch2_rx) = hydroflow::util::unbounded_channel::<()>();
-    let (tx_in, rx_in) = hydroflow::util::unbounded_channel::<usize>();
-    let (tx_out, mut rx_out) = hydroflow::util::unbounded_channel::<usize>();
+    let (_, batch1_rx) = hydroflow::util::unsync_channel::<()>(None);
+    let (_, batch2_rx) = hydroflow::util::unsync_channel::<()>(None);
+    let (tx_in, rx_in) = hydroflow::util::unsync_channel::<usize>(None);
+    let (tx_out, mut rx_out) = hydroflow::util::unsync_channel::<usize>(None);
     let mut df = hydroflow_syntax! {
         my_tee = tee();
 
@@ -455,24 +455,24 @@ pub fn test_batch_exceed_limit() {
             -> my_tee;
 
         my_tee
-            -> for_each(|x| tx_out.send(x).unwrap());
+            -> for_each(|x| tx_out.try_send(x).unwrap());
 
         my_tee
             -> batch(1, batch2_rx) // push
-            -> for_each(|x| tx_out.send(x).unwrap());
+            -> for_each(|x| tx_out.try_send(x).unwrap());
     };
 
-    tx_in.send(0).unwrap();
+    tx_in.try_send(0).unwrap();
     df.run_available();
     let out: Vec<_> = collect_ready(&mut rx_out);
     assert_eq!(out, Vec::<usize>::new());
 
-    tx_in.send(1).unwrap();
+    tx_in.try_send(1).unwrap();
     df.run_available();
     let out: Vec<_> = collect_ready(&mut rx_out);
     assert_eq!(out, vec![0, 1, 0, 1]);
 
-    tx_in.send(2).unwrap();
+    tx_in.try_send(2).unwrap();
     df.run_available();
     let out: Vec<_> = collect_ready(&mut rx_out);
     assert_eq!(out, Vec::<usize>::new());
@@ -480,7 +480,7 @@ pub fn test_batch_exceed_limit() {
 
 #[multiplatform_test]
 pub fn test_sort() {
-    let (items_send, items_recv) = hydroflow::util::unbounded_channel::<usize>();
+    let (items_send, items_recv) = hydroflow::util::unsync_channel::<usize>(None);
 
     let mut df = hydroflow_syntax! {
         source_stream(items_recv)
@@ -492,18 +492,18 @@ pub fn test_sort() {
 
     print!("\nA: ");
 
-    items_send.send(9).unwrap();
-    items_send.send(2).unwrap();
-    items_send.send(5).unwrap();
+    items_send.try_send(9).unwrap();
+    items_send.try_send(2).unwrap();
+    items_send.try_send(5).unwrap();
     df.run_available();
 
     print!("\nB: ");
 
-    items_send.send(9).unwrap();
-    items_send.send(5).unwrap();
-    items_send.send(2).unwrap();
-    items_send.send(0).unwrap();
-    items_send.send(3).unwrap();
+    items_send.try_send(9).unwrap();
+    items_send.try_send(5).unwrap();
+    items_send.try_send(2).unwrap();
+    items_send.try_send(0).unwrap();
+    items_send.try_send(3).unwrap();
     df.run_available();
 
     println!();
@@ -529,7 +529,7 @@ fn test_sort_by_owned() {
         y: i8,
     }
 
-    let (out_send, mut out_recv) = hydroflow::util::unbounded_channel::<Dummy>();
+    let (out_send, mut out_recv) = hydroflow::util::unsync_channel::<Dummy>(None);
 
     let dummies: Vec<Dummy> = vec![
         Dummy {
@@ -544,7 +544,7 @@ fn test_sort_by_owned() {
     let mut dummies_saved = dummies.clone();
 
     let mut df = hydroflow_syntax! {
-        source_iter(dummies) -> sort_by(|d| &d.x) -> for_each(|d| out_send.send(d).unwrap());
+        source_iter(dummies) -> sort_by(|d| &d.x) -> for_each(|d| out_send.try_send(d).unwrap());
     };
     df.run_available();
     let results = collect_ready::<Vec<_>, _>(&mut out_recv);
@@ -625,10 +625,10 @@ pub fn test_demux_fizzbuzz_2() {
 
 #[multiplatform_test]
 pub fn test_channel_minimal() {
-    let (send, recv) = hydroflow::util::unbounded_channel::<usize>();
+    let (send, recv) = hydroflow::util::unsync_channel::<usize>(None);
 
     let mut df1 = hydroflow_syntax! {
-        source_iter([1, 2, 3]) -> for_each(|x| { send.send(x).unwrap(); });
+        source_iter([1, 2, 3]) -> for_each(|x| { send.try_send(x).unwrap(); });
     };
 
     let mut df2 = hydroflow_syntax! {
@@ -645,7 +645,7 @@ pub fn test_channel_minimal() {
 #[multiplatform_test]
 pub fn test_surface_syntax_reachability_generated() {
     // An edge in the input data = a pair of `usize` vertex IDs.
-    let (pairs_send, pairs_recv) = hydroflow::util::unbounded_channel::<(usize, usize)>();
+    let (pairs_send, pairs_recv) = hydroflow::util::unsync_channel::<(usize, usize)>(None);
 
     let mut df: Hydroflow = hydroflow_syntax! {
         reached_vertices = merge() -> map(|v| (v, ()));
@@ -661,20 +661,20 @@ pub fn test_surface_syntax_reachability_generated() {
     assert_graphvis_snapshots!(df);
     df.run_available();
 
-    pairs_send.send((0, 1)).unwrap();
+    pairs_send.try_send((0, 1)).unwrap();
     df.run_available();
 
-    pairs_send.send((2, 4)).unwrap();
-    pairs_send.send((3, 4)).unwrap();
+    pairs_send.try_send((2, 4)).unwrap();
+    pairs_send.try_send((3, 4)).unwrap();
     df.run_available();
 
-    pairs_send.send((1, 2)).unwrap();
+    pairs_send.try_send((1, 2)).unwrap();
     df.run_available();
 
-    pairs_send.send((0, 3)).unwrap();
+    pairs_send.try_send((0, 3)).unwrap();
     df.run_available();
 
-    pairs_send.send((0, 3)).unwrap();
+    pairs_send.try_send((0, 3)).unwrap();
     df.run_available();
 
     // Reached: 1
@@ -687,7 +687,7 @@ pub fn test_surface_syntax_reachability_generated() {
 #[multiplatform_test]
 pub fn test_transitive_closure() {
     // An edge in the input data = a pair of `usize` vertex IDs.
-    let (pairs_send, pairs_recv) = hydroflow::util::unbounded_channel::<(usize, usize)>();
+    let (pairs_send, pairs_recv) = hydroflow::util::unsync_channel::<(usize, usize)>(None);
 
     let mut df = hydroflow_syntax! {
         // edge(x,y) :- link(x,y)
@@ -706,20 +706,20 @@ pub fn test_transitive_closure() {
     assert_graphvis_snapshots!(df);
     df.run_available();
 
-    pairs_send.send((0, 1)).unwrap();
+    pairs_send.try_send((0, 1)).unwrap();
     df.run_available();
 
-    pairs_send.send((2, 4)).unwrap();
-    pairs_send.send((3, 4)).unwrap();
+    pairs_send.try_send((2, 4)).unwrap();
+    pairs_send.try_send((3, 4)).unwrap();
     df.run_available();
 
-    pairs_send.send((1, 2)).unwrap();
+    pairs_send.try_send((1, 2)).unwrap();
     df.run_available();
 
-    pairs_send.send((0, 3)).unwrap();
+    pairs_send.try_send((0, 3)).unwrap();
     df.run_available();
 
-    pairs_send.send((0, 3)).unwrap();
+    pairs_send.try_send((0, 3)).unwrap();
     df.run_available();
 
     // transitive closure: (0,1)
@@ -736,7 +736,7 @@ pub fn test_transitive_closure() {
 
 #[multiplatform_test]
 pub fn test_covid_tracing() {
-    use hydroflow::util::unbounded_channel;
+    use hydroflow::util::unsync_channel;
 
     const TRANSMISSIBLE_DURATION: usize = 14; // Days.
 
@@ -745,9 +745,9 @@ pub fn test_covid_tracing() {
     type Phone = &'static str;
     type DateTime = usize; // Days.
 
-    let (contacts_send, contacts_recv) = unbounded_channel::<(Pid, Pid, DateTime)>();
-    let (diagnosed_send, diagnosed_recv) = unbounded_channel::<(Pid, (DateTime, DateTime))>();
-    let (people_send, people_recv) = unbounded_channel::<(Pid, (Name, Phone))>();
+    let (contacts_send, contacts_recv) = unsync_channel::<(Pid, Pid, DateTime)>(None);
+    let (diagnosed_send, diagnosed_recv) = unsync_channel::<(Pid, (DateTime, DateTime))>(None);
+    let (people_send, people_recv) = unsync_channel::<(Pid, (Name, Phone))>(None);
 
     let mut hydroflow = hydroflow_syntax! {
         contacts = source_stream(contacts_recv) -> flat_map(|(pid_a, pid_b, time)| [(pid_a, (pid_b, time)), (pid_b, (pid_a, time))]);
@@ -783,22 +783,22 @@ pub fn test_covid_tracing() {
 
     {
         people_send
-            .send((101, ("Mingwei S", "+1 650 555 7283")))
+            .try_send((101, ("Mingwei S", "+1 650 555 7283")))
             .unwrap();
         people_send
-            .send((102, ("Justin J", "+1 519 555 3458")))
+            .try_send((102, ("Justin J", "+1 519 555 3458")))
             .unwrap();
         people_send
-            .send((103, ("Mae M", "+1 912 555 9129")))
+            .try_send((103, ("Mae M", "+1 912 555 9129")))
             .unwrap();
 
-        contacts_send.send((101, 102, 1031)).unwrap(); // Mingwei + Justin
-        contacts_send.send((101, 201, 1027)).unwrap(); // Mingwei + Joe
+        contacts_send.try_send((101, 102, 1031)).unwrap(); // Mingwei + Justin
+        contacts_send.try_send((101, 201, 1027)).unwrap(); // Mingwei + Joe
 
         let mae_diag_datetime = 1022;
 
         diagnosed_send
-            .send((
+            .try_send((
                 103, // Mae
                 (
                     mae_diag_datetime,
@@ -811,14 +811,14 @@ pub fn test_covid_tracing() {
         println!("A");
 
         contacts_send
-            .send((101, 103, mae_diag_datetime + 6))
+            .try_send((101, 103, mae_diag_datetime + 6))
             .unwrap(); // Mingwei + Mae
 
         hydroflow.run_available();
         println!("B");
 
         people_send
-            .send((103, ("Joe H", "+1 510 555 9999")))
+            .try_send((103, ("Joe H", "+1 510 555 9999")))
             .unwrap();
 
         hydroflow.run_available();
