@@ -59,3 +59,5 @@ mod booktest {
         hydroflow_macro::surface_booktest_operators!();
     }
 }
+
+pub fn noop() {}
