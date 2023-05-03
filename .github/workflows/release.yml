@@ -43,6 +43,7 @@ jobs:
         with:
           # Fetch all commit history so smart-release can generate changelogs.
           fetch-depth: 0
+          token: ${{ secrets.APP_CLIENT_SECRET }}
 
       - name: Install nightly toolchain
         uses: actions-rs/toolchain@v1
