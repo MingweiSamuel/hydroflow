@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `lattices/src/map_union.rs`."><title>map_union.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="lattices" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (9ecda8de8 2023-04-30)" data-search-js="search-618e954b235f6acc.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-6f6ffb5395b17c6e.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../lattices/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `lattices/src/map_union.rs`."><title>map_union.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-ba5701c5741a7b69.css" id="mainThemeStyle"><div id="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="lattices" data-themes="" data-resource-suffix="" data-rustdoc-version="1.71.0-nightly (a368898de 2023-05-02)" data-search-js="search-618e954b235f6acc.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-6f6ffb5395b17c6e.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ></div><script src="../../static.files/storage-62ce34ea385b278a.js"></script><script defer src="../../static.files/source-script-11255107d0a65077.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-f0540c1d82cde29b.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../lattices/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -178,57 +178,48 @@
 <a href="#178" id="178">178</a>
 <a href="#179" id="179">179</a>
 <a href="#180" id="180">180</a>
-<a href="#181" id="181">181</a>
-<a href="#182" id="182">182</a>
-<a href="#183" id="183">183</a>
-<a href="#184" id="184">184</a>
-<a href="#185" id="185">185</a>
-<a href="#186" id="186">186</a>
-<a href="#187" id="187">187</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Map-union compound lattice.
 //!
 //! Each key corresponds to a lattice value instance. Merging map-union lattices is done by
 //! unioning the keys and merging the values of intersecting keys.
 
 </span><span class="kw">use </span>std::cmp::Ordering;
+<span class="kw">use </span>std::collections::{BTreeMap, HashMap};
+<span class="kw">use </span>std::fmt::Debug;
 
-<span class="kw">use crate</span>::{collections::Collection, tag};
-
-<span class="kw">use super</span>::{Compare, ConvertFrom, Merge};
+<span class="kw">use </span><span class="kw">crate</span>::cc_traits::{GetMut, Keyed, Map, MapIter, SimpleKeyedRef};
+<span class="kw">use </span><span class="kw">crate</span>::collections::{ArrayMap, SingletonMap, VecMap};
+<span class="kw">use crate</span>::{Compare, ConvertFrom, Merge};
 
 <span class="doccomment">/// A map-union lattice.
 ///
 /// `Tag` specifies what datastructure to use, allowing us to deal with different datastructures
 /// generically.
 </span><span class="attr">#[repr(transparent)]
-</span><span class="kw">pub struct </span>MapUnion&lt;Tag, K, Val&gt;(<span class="kw">pub </span>Tag::Bind)
-<span class="kw">where
-    </span>Tag: tag::Tag2&lt;K, Val&gt;;
-<span class="kw">impl</span>&lt;Tag, K, Val&gt; MapUnion&lt;Tag, K, Val&gt;
-<span class="kw">where
-    </span>Tag: tag::Tag2&lt;K, Val&gt;,
-{
+#[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(serde::Serialize, serde::Deserialize))]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Hash)]
+</span><span class="kw">pub struct </span>MapUnion&lt;Map&gt;(<span class="kw">pub </span>Map);
+<span class="kw">impl</span>&lt;Map&gt; MapUnion&lt;Map&gt; {
     <span class="doccomment">/// Create a new `MapUnion` from a `Map`.
-    </span><span class="kw">pub fn </span>new(val: Tag::Bind) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub fn </span>new(val: Map) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>(val)
     }
 
     <span class="doccomment">/// Create a new `MapUnion` from an `Into&lt;Map&gt;`.
-    </span><span class="kw">pub fn </span>new_from(val: <span class="kw">impl </span>Into&lt;Tag::Bind&gt;) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub fn </span>new_from(val: <span class="kw">impl </span>Into&lt;Map&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>::new(val.into())
     }
 }
 
-<span class="kw">impl</span>&lt;TagSelf, TagOther, K, ValSelf, ValOther&gt; Merge&lt;MapUnion&lt;TagOther, K, ValOther&gt;&gt;
-    <span class="kw">for </span>MapUnion&lt;TagSelf, K, ValSelf&gt;
+<span class="kw">impl</span>&lt;MapSelf, MapOther, K, ValSelf, ValOther&gt; Merge&lt;MapUnion&lt;MapOther&gt;&gt; <span class="kw">for </span>MapUnion&lt;MapSelf&gt;
 <span class="kw">where
-    </span>TagSelf: tag::Tag2&lt;K, ValSelf&gt;,
-    TagOther: tag::Tag2&lt;K, ValOther&gt;,
-    TagSelf::Bind: Collection&lt;K, ValSelf&gt; + Extend&lt;(K, ValSelf)&gt;,
-    TagOther::Bind: IntoIterator&lt;Item = (K, ValOther)&gt;,
+    </span>MapSelf: Keyed&lt;Key = K, Item = ValSelf&gt;
+        + Extend&lt;(K, ValSelf)&gt;
+        + <span class="kw">for</span>&lt;<span class="lifetime">&#39;a</span>&gt; GetMut&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K, Item = ValSelf&gt;,
+    MapOther: IntoIterator&lt;Item = (K, ValOther)&gt;,
     ValSelf: Merge&lt;ValOther&gt; + ConvertFrom&lt;ValOther&gt;,
 {
-    <span class="kw">fn </span>merge(<span class="kw-2">&amp;mut </span><span class="self">self</span>, other: MapUnion&lt;TagOther, K, ValOther&gt;) -&gt; bool {
+    <span class="kw">fn </span>merge(<span class="kw-2">&amp;mut </span><span class="self">self</span>, other: MapUnion&lt;MapOther&gt;) -&gt; bool {
         <span class="kw">let </span><span class="kw-2">mut </span>changed = <span class="bool-val">false</span>;
         <span class="comment">// This vec collect is needed to prevent simultaneous mut references `self.0.extend` and
         // `self.0.get_mut`.
@@ -240,12 +231,15 @@
             .filter_map(|(k_other, val_other)| {
                 <span class="kw">match </span><span class="self">self</span>.<span class="number">0</span>.get_mut(<span class="kw-2">&amp;</span>k_other) {
                     <span class="comment">// Key collision, merge into `self`.
-                    </span><span class="prelude-val">Some</span>(val_self) =&gt; {
+                    </span><span class="prelude-val">Some</span>(<span class="kw-2">mut </span>val_self) =&gt; {
                         changed |= val_self.merge(val_other);
                         <span class="prelude-val">None
                     </span>}
                     <span class="comment">// New value, convert for extending.
-                    </span><span class="prelude-val">None </span>=&gt; <span class="prelude-val">Some</span>((k_other, ValSelf::from(val_other))),
+                    </span><span class="prelude-val">None </span>=&gt; {
+                        changed = <span class="bool-val">true</span>;
+                        <span class="prelude-val">Some</span>((k_other, ValSelf::from(val_other)))
+                    }
                 }
             })
             .collect();
@@ -254,41 +248,45 @@
     }
 }
 
-<span class="kw">impl</span>&lt;TagSelf, TagOther, K, ValSelf, ValOther&gt; ConvertFrom&lt;MapUnion&lt;TagOther, K, ValOther&gt;&gt;
-    <span class="kw">for </span>MapUnion&lt;TagSelf, K, ValSelf&gt;
+<span class="kw">impl</span>&lt;MapSelf, MapOther, K, ValSelf, ValOther&gt; ConvertFrom&lt;MapUnion&lt;MapOther&gt;&gt; <span class="kw">for </span>MapUnion&lt;MapSelf&gt;
 <span class="kw">where
-    </span>TagSelf: tag::Tag2&lt;K, ValSelf&gt;,
-    TagOther: tag::Tag2&lt;K, ValOther&gt;,
-    TagSelf::Bind: FromIterator&lt;(K, ValSelf)&gt;,
-    TagOther::Bind: Collection&lt;K, ValOther&gt;,
+    </span>MapSelf: Keyed&lt;Key = K, Item = ValSelf&gt; + FromIterator&lt;(K, ValSelf)&gt;,
+    MapOther: IntoIterator&lt;Item = (K, ValOther)&gt;,
     ValSelf: ConvertFrom&lt;ValOther&gt;,
 {
-    <span class="kw">fn </span>from(other: MapUnion&lt;TagOther, K, ValOther&gt;) -&gt; <span class="self">Self </span>{
+    <span class="kw">fn </span>from(other: MapUnion&lt;MapOther&gt;) -&gt; <span class="self">Self </span>{
         <span class="self">Self</span>(
             other
                 .<span class="number">0
-                </span>.into_entries()
+                </span>.into_iter()
                 .map(|(k_other, val_other)| (k_other, ConvertFrom::from(val_other)))
                 .collect(),
         )
     }
 }
 
-<span class="kw">impl</span>&lt;TagSelf, TagOther, K, ValSelf, ValOther&gt; Compare&lt;MapUnion&lt;TagOther, K, ValOther&gt;&gt;
-    <span class="kw">for </span>MapUnion&lt;TagSelf, K, ValSelf&gt;
+<span class="kw">impl</span>&lt;MapSelf, MapOther, K, ValSelf, ValOther&gt; Compare&lt;MapUnion&lt;MapOther&gt;&gt; <span class="kw">for </span>MapUnion&lt;MapSelf&gt;
 <span class="kw">where
-    </span>TagSelf: tag::Tag2&lt;K, ValSelf&gt;,
-    TagOther: tag::Tag2&lt;K, ValOther&gt;,
-    TagSelf::Bind: Collection&lt;K, ValSelf&gt;,
-    TagOther::Bind: Collection&lt;K, ValOther&gt;,
+    </span>MapSelf: Map&lt;K, ValSelf, Key = K, Item = ValSelf&gt; + MapIter + SimpleKeyedRef,
+    MapOther: Map&lt;K, ValOther, Key = K, Item = ValOther&gt; + MapIter + SimpleKeyedRef,
     ValSelf: Compare&lt;ValOther&gt;,
 {
-    <span class="kw">fn </span>compare(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>MapUnion&lt;TagOther, K, ValOther&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;std::cmp::Ordering&gt; {
+    <span class="kw">fn </span>compare(<span class="kw-2">&amp;</span><span class="self">self</span>, other: <span class="kw-2">&amp;</span>MapUnion&lt;MapOther&gt;) -&gt; <span class="prelude-ty">Option</span>&lt;std::cmp::Ordering&gt; {
         <span class="kw">let </span><span class="kw-2">mut </span>self_any_greater = <span class="bool-val">false</span>;
         <span class="kw">let </span><span class="kw-2">mut </span>other_any_greater = <span class="bool-val">false</span>;
-        <span class="kw">for </span>k <span class="kw">in </span><span class="self">self</span>.<span class="number">0</span>.keys().chain(other.<span class="number">0</span>.keys()) {
+        <span class="kw">for </span>k <span class="kw">in </span><span class="self">self
+            </span>.<span class="number">0
+            </span>.iter()
+            .map(|(k, _v)| &lt;MapSelf <span class="kw">as </span>SimpleKeyedRef&gt;::into_ref(k))
+            .chain(
+                other
+                    .<span class="number">0
+                    </span>.iter()
+                    .map(|(k, _v)| &lt;MapOther <span class="kw">as </span>SimpleKeyedRef&gt;::into_ref(k)),
+            )
+        {
             <span class="kw">match </span>(<span class="self">self</span>.<span class="number">0</span>.get(k), other.<span class="number">0</span>.get(k)) {
-                (<span class="prelude-val">Some</span>(self_value), <span class="prelude-val">Some</span>(other_value)) =&gt; <span class="kw">match </span>self_value.compare(other_value) {
+                (<span class="prelude-val">Some</span>(self_value), <span class="prelude-val">Some</span>(other_value)) =&gt; <span class="kw">match </span>self_value.compare(<span class="kw-2">&amp;*</span>other_value) {
                     <span class="prelude-val">None </span>=&gt; {
                         <span class="kw">return </span><span class="prelude-val">None</span>;
                     }
@@ -322,52 +320,40 @@
     }
 }
 
-<span class="kw">impl</span>&lt;Tag, K, Val&gt; Default <span class="kw">for </span>MapUnion&lt;Tag, K, Val&gt;
-<span class="kw">where
-    </span>Tag: tag::Tag2&lt;K, Val&gt;,
-    Tag::Bind: Default,
-{
-    <span class="kw">fn </span>default() -&gt; <span class="self">Self </span>{
-        <span class="self">Self</span>(Default::default())
-    }
-}
-
 <span class="doccomment">/// [`std::collections::HashMap`]-backed [`MapUnion`] lattice.
-</span><span class="kw">pub type </span>MapUnionHashMap&lt;K, Val&gt; = MapUnion&lt;tag::HASH_MAP, K, Val&gt;;
+</span><span class="kw">pub type </span>MapUnionHashMap&lt;K, Val&gt; = MapUnion&lt;HashMap&lt;K, Val&gt;&gt;;
 
 <span class="doccomment">/// [`std::collections::BTreeMap`]-backed [`MapUnion`] lattice.
-</span><span class="kw">pub type </span>MapUnionBTreeMap&lt;K, Val&gt; = MapUnion&lt;tag::BTREE_MAP, K, Val&gt;;
+</span><span class="kw">pub type </span>MapUnionBTreeMap&lt;K, Val&gt; = MapUnion&lt;BTreeMap&lt;K, Val&gt;&gt;;
 
 <span class="doccomment">/// [`Vec`]-backed [`MapUnion`] lattice.
-</span><span class="kw">pub type </span>MapUnionVec&lt;K, Val&gt; = MapUnion&lt;tag::VEC, K, Val&gt;;
+</span><span class="kw">pub type </span>MapUnionVec&lt;K, Val&gt; = MapUnion&lt;VecMap&lt;K, Val&gt;&gt;;
 
 <span class="doccomment">/// Array-backed [`MapUnion`] lattice.
-</span><span class="kw">pub type </span>MapUnionArray&lt;K, Val, <span class="kw">const </span>N: usize&gt; = MapUnion&lt;tag::ARRAY&lt;N&gt;, K, Val&gt;;
+</span><span class="kw">pub type </span>MapUnionArrayMap&lt;K, Val, <span class="kw">const </span>N: usize&gt; = MapUnion&lt;ArrayMap&lt;K, Val, N&gt;&gt;;
 
-<span class="doccomment">/// [`crate::collections::MaskedArray`]-backed [`MapUnion`] lattice.
-</span><span class="kw">pub type </span>MapUnionMaskedArray&lt;K, Val, <span class="kw">const </span>N: usize&gt; = MapUnion&lt;tag::MASKED_ARRAY&lt;N&gt;, K, Val&gt;;
-
-<span class="doccomment">/// [`crate::collections::Single`]-backed [`MapUnion`] lattice.
-</span><span class="kw">pub type </span>MapUnionSingle&lt;K, Val&gt; = MapUnion&lt;tag::SINGLE, K, Val&gt;;
+<span class="doccomment">/// [`crate::collections::SingletonMap`]-backed [`MapUnion`] lattice.
+</span><span class="kw">pub type </span>MapUnionSingletonMap&lt;K, Val&gt; = MapUnion&lt;SingletonMap&lt;K, Val&gt;&gt;;
 
 <span class="doccomment">/// [`Option`]-backed [`MapUnion`] lattice.
-</span><span class="kw">pub type </span>MapUnionOption&lt;K, Val&gt; = MapUnion&lt;tag::OPTION, K, Val&gt;;
+</span><span class="kw">pub type </span>MapUnionOption&lt;K, Val&gt; = MapUnion&lt;<span class="prelude-ty">Option</span>&lt;(K, Val)&gt;&gt;;
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test {
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
 
-    <span class="kw">use </span><span class="kw">crate</span>::collections::Single;
-    <span class="kw">use </span><span class="kw">crate</span>::set_union::{SetUnionHashSet, SetUnionSingle};
+    <span class="kw">use </span><span class="kw">crate</span>::collections::{SingletonMap, SingletonSet};
+    <span class="kw">use </span><span class="kw">crate</span>::set_union::{SetUnionHashSet, SetUnionSingletonSet};
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_map_union() {
         <span class="kw">let </span><span class="kw-2">mut </span>my_map_a = &lt;MapUnionHashMap&lt;<span class="kw-2">&amp;</span>str, SetUnionHashSet&lt;u64&gt;&gt;&gt;::default();
-        <span class="kw">let </span>my_map_b = &lt;MapUnionSingle&lt;<span class="kw-2">&amp;</span>str, SetUnionSingle&lt;u64&gt;&gt;&gt;::new(Single((
+        <span class="kw">let </span>my_map_b = &lt;MapUnionSingletonMap&lt;<span class="kw-2">&amp;</span>str, SetUnionSingletonSet&lt;u64&gt;&gt;&gt;::new(SingletonMap(
             <span class="string">&quot;hello&quot;</span>,
-            SetUnionSingle::new(Single(<span class="number">100</span>)),
-        )));
-        <span class="kw">let </span>my_map_c = MapUnionSingle::new_from((<span class="string">&quot;hello&quot;</span>, SetUnionHashSet::new_from([<span class="number">100</span>, <span class="number">200</span>])));
+            SetUnionSingletonSet::new(SingletonSet(<span class="number">100</span>)),
+        ));
+        <span class="kw">let </span>my_map_c =
+            MapUnionSingletonMap::new_from((<span class="string">&quot;hello&quot;</span>, SetUnionHashSet::new_from([<span class="number">100</span>, <span class="number">200</span>])));
         my_map_a.merge(my_map_b);
         my_map_a.merge(my_map_c);
     }
