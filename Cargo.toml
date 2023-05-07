@@ -19,6 +19,7 @@ members = [
     "hydroflow_lang",
     "hydroflow_macro",
     "lattices",
+    "lattices_derive",
     "multiplatform_test",
     "pusherator",
     "relalg",

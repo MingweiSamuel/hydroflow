@@ -1599,8 +1599,19 @@ name = "lattices"
 version = "0.0.0"
 dependencies = [
  "cc-traits",
+ "lattices_derive",
  "sealed",
  "serde",
+]
+
+[[package]]
+name = "lattices_derive"
+version = "0.0.0"
+dependencies = [
+ "proc-macro-crate",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.14",
 ]
 
 [[package]]

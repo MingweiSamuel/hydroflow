@@ -1,0 +1,17 @@
+[package]
+name = "lattices_derive"
+publish = true
+version = "0.0.0"
+edition = "2021"
+license = "Apache-2.0"
+documentation = "https://docs.rs/lattices_derive/"
+description = "Derive macros for the `lattices` crate."
+
+[lib]
+proc-macro = true
+
+[dependencies]
+proc-macro2 = "1.0.0"
+proc-macro-crate = "1.1.0"
+quote = "1.0.0"
+syn = { version = "2.0.0", features = [ "parsing", "extra-traits" ] }

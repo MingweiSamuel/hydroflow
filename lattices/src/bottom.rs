@@ -10,7 +10,7 @@ use crate::LatticeOrd;
 
 /// Bottom wrapper.
 #[repr(transparent)]
-#[derive(Copy, Clone, Debug, Eq)]
+#[derive(Copy, Clone, Debug, Eq, LatticeOrd)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct Bottom<Inner>(pub Option<Inner>);
 impl<Inner> Bottom<Inner> {
@@ -69,7 +69,6 @@ where
         }
     }
 }
-impl<Inner, Other> LatticeOrd<Bottom<Other>> for Bottom<Inner> where Self: PartialOrd<Bottom<Other>> {}
 
 impl<Inner, Other> PartialEq<Bottom<Other>> for Bottom<Inner>
 where

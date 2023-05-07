@@ -12,10 +12,10 @@ pub fn datalog(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let hydroflow_crate = proc_macro_crate::crate_name("hydroflow")
         .expect("hydroflow should be present in `Cargo.toml`");
     let root = match hydroflow_crate {
-        proc_macro_crate::FoundCrate::Itself => quote! { hydroflow },
+        proc_macro_crate::FoundCrate::Itself => quote! { :: hydroflow },
         proc_macro_crate::FoundCrate::Name(name) => {
             let ident = syn::Ident::new(&name, Span::call_site());
-            quote! { #ident }
+            quote! { :: #ident }
         }
     };
 
