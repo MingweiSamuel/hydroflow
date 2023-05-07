@@ -113,7 +113,7 @@ where
 /// Do not convert non-lattice (AKA scalar) types if you implement this trait.
 pub trait ConvertFrom<Other> {
     /// Convert from the `Other` lattice into `Self`.
-    fn from(other: Other) -> Self;
+    fn convert_from(other: Other) -> Self;
 }
 
 #[cfg(test)]

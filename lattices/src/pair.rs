@@ -47,10 +47,10 @@ where
     LatASelf: ConvertFrom<LatAOther>,
     LatBSelf: ConvertFrom<LatBOther>,
 {
-    fn from(other: Pair<LatAOther, LatBOther>) -> Self {
+    fn convert_from(other: Pair<LatAOther, LatBOther>) -> Self {
         Self {
-            a: ConvertFrom::from(other.a),
-            b: ConvertFrom::from(other.b),
+            a: ConvertFrom::convert_from(other.a),
+            b: ConvertFrom::convert_from(other.b),
         }
     }
 }

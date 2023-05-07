@@ -58,7 +58,7 @@ where
                     // New value, convert for extending.
                     None => {
                         changed = true;
-                        Some((k_other, ValSelf::from(val_other)))
+                        Some((k_other, ValSelf::convert_from(val_other)))
                     }
                 }
             })
@@ -74,12 +74,12 @@ where
     MapOther: IntoIterator<Item = (K, ValOther)>,
     ValSelf: ConvertFrom<ValOther>,
 {
-    fn from(other: MapUnion<MapOther>) -> Self {
+    fn convert_from(other: MapUnion<MapOther>) -> Self {
         Self(
             other
                 .0
                 .into_iter()
-                .map(|(k_other, val_other)| (k_other, ConvertFrom::from(val_other)))
+                .map(|(k_other, val_other)| (k_other, ConvertFrom::convert_from(val_other)))
                 .collect(),
         )
     }

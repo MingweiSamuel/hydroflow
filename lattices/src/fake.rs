@@ -35,7 +35,7 @@ where
 }
 
 impl<T> ConvertFrom<Fake<T>> for Fake<T> {
-    fn from(other: Fake<T>) -> Self {
+    fn convert_from(other: Fake<T>) -> Self {
         other
     }
 }

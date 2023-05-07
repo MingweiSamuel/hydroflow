@@ -46,7 +46,7 @@ where
     SetSelf: FromIterator<Item>,
     SetOther: IntoIterator<Item = Item>,
 {
-    fn from(other: SetUnion<SetOther>) -> Self {
+    fn convert_from(other: SetUnion<SetOther>) -> Self {
         Self(other.0.into_iter().collect())
     }
 }

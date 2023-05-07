@@ -42,7 +42,7 @@ where
             (None, None) => false,
             (Some(_), None) => false,
             (this @ None, Some(other_inner)) => {
-                *this = Some(ConvertFrom::from(other_inner));
+                *this = Some(ConvertFrom::convert_from(other_inner));
                 true
             }
             (Some(self_inner), Some(other_inner)) => self_inner.merge(other_inner),
@@ -51,7 +51,7 @@ where
 }
 
 impl<Inner> ConvertFrom<Bottom<Inner>> for Bottom<Inner> {
-    fn from(other: Bottom<Inner>) -> Self {
+    fn convert_from(other: Bottom<Inner>) -> Self {
         other
     }
 }

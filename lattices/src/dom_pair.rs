@@ -48,7 +48,7 @@ where
             }
             Some(Equal) => self.val.merge(other.val),
             Some(Less) => {
-                *self = ConvertFrom::from(other);
+                *self = ConvertFrom::convert_from(other);
                 true
             }
             Some(Greater) => false,
@@ -62,10 +62,10 @@ where
     KeySelf: ConvertFrom<KeyOther>,
     ValSelf: ConvertFrom<ValOther>,
 {
-    fn from(other: DomPair<KeyOther, ValOther>) -> Self {
+    fn convert_from(other: DomPair<KeyOther, ValOther>) -> Self {
         Self {
-            key: ConvertFrom::from(other.key),
-            val: ConvertFrom::from(other.val),
+            key: ConvertFrom::convert_from(other.key),
+            val: ConvertFrom::convert_from(other.val),
         }
     }
 }

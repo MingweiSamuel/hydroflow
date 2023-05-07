@@ -39,7 +39,7 @@ where
 }
 
 impl<T> ConvertFrom<Max<T>> for Max<T> {
-    fn from(other: Max<T>) -> Self {
+    fn convert_from(other: Max<T>) -> Self {
         other
     }
 }
@@ -78,7 +78,7 @@ where
 }
 
 impl<T> ConvertFrom<Min<T>> for Min<T> {
-    fn from(other: Min<T>) -> Self {
+    fn convert_from(other: Min<T>) -> Self {
         other
     }
 }

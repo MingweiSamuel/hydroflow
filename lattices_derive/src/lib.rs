@@ -54,6 +54,33 @@ pub fn derive_lattice_ord(input: proc_macro::TokenStream) -> proc_macro::TokenSt
     }.into()
 }
 
-// #[proc_macro_derive(LatticePartialOrd)]
-// pub fn derive_lattice_partial_ord(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-// }
+/// Derives `ConvertFrom` for a nested lattice type (e.g. `DomPair` or `PairLattice`).
+#[proc_macro_derive(ConvertFrom)]
+pub fn derive_convert_from(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let root = root();
+    let input = parse_macro_input!(input as DeriveInput);
+    let input_ident = input.ident;
+
+    quote! {
+        impl #root::ConvertFrom for #input_ident {
+            fn convert_from(other: Other) -> Self {
+                
+            }
+        }
+    }
+    .into()
+}
+
+/// Derives `Merge` and `PartialOrd` for a simple product lattice type (e.g. `PairLattice`).
+#[proc_macro_derive(Merge)]
+pub fn derive_merge(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let root = root();
+    let input = parse_macro_input!(input as DeriveInput);
+    let input_ident = input.ident;
+
+    quote! {
+        impl #root::Merge for #input_ident {
+        }
+    }
+    .into()
+}
