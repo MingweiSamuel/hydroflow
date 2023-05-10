@@ -1,24 +1,27 @@
 use crate::protocol::Msg;
 
+use std::fmt::Debug;
 use std::time::Duration;
 
+use bytes::{Bytes, BytesMut};
 use chrono::prelude::*;
-use hydroflow::futures::{Stream, StreamExt};
+use hydroflow::futures::{Sink, Stream, StreamExt};
 use hydroflow::hydroflow_syntax;
-use hydroflow::tokio::sync::mpsc::UnboundedSender;
 use hydroflow::tokio_stream::wrappers::IntervalStream;
 use rand::Rng;
 
-#[tokio::main]
-pub(crate) async fn run_client(
-    inbound: impl 'static + Stream<Item = Msg>,
-    outbound: UnboundedSender<Msg>,
-) {
+pub(crate) async fn run_client<In, Out>(inbound: In, outbound: Out)
+where
+    In: 'static + Stream<Item = BytesMut>,
+    Out: 'static + Sink<Bytes> + Send + Unpin,
+    Out::Error: Debug,
+{
     // // server_addr is required for client
     // let server_addr = opts.server_addr.expect("Client requires a server address");
     println!("Client live!");
 
     let input = IntervalStream::new(tokio::time::interval(Duration::from_millis(10)))
+        .take(1_000)
         .map(|_| rand::thread_rng().gen_range(0..=40) as u64)
         .enumerate()
         .map(|(idx, val)| Msg {
@@ -30,8 +33,12 @@ pub(crate) async fn run_client(
 
     let mut flow = hydroflow_syntax! {
         // Define shared inbound and outbound channels
-        inbound_chan = source_stream(inbound);
-        outbound_chan = for_each(|msg| outbound.send(msg).unwrap());
+        inbound_chan = source_stream(inbound)
+            -> map(hydroflow::util::deserialize_from_bytes)
+            -> map(Result::unwrap);
+        outbound_chan = // for_each(|msg| outbound.send(msg).unwrap());
+            map(hydroflow::util::serialize_to_bytes)
+            -> dest_sink(outbound);
 
         // Print all messages for debugging purposes
         inbound_chan

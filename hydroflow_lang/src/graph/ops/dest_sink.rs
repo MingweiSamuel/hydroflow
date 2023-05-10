@@ -115,10 +115,24 @@ pub const DEST_SINK: OperatorConstraints = OperatorConstraints {
 
         let send_ident = wc.make_ident("item_send");
         let recv_ident = wc.make_ident("item_recv");
+        let count_ident_send = wc.make_ident("count_send");
+        let count_ident_recv = wc.make_ident("count_recv");
 
         let missing_runtime_msg = make_missing_runtime_msg(op_name);
 
+        #[cfg(feature = "diagnostics")]
+        let file_lit = proc_macro2::Literal::string(&*format!(
+            "{}:{}:{}",
+            op_span.unwrap().source_file().path().display().to_string(),
+            op_span.start().line,
+            op_span.start().column
+        ));
+        #[cfg(not(feature = "diagnostics"))]
+        let file_lit = proc_macro2::Literal::string("unknown");
+
         let write_prologue = quote_spanned! {op_span=>
+            let #count_ident_send = ::std::sync::Arc::new(::std::sync::atomic::AtomicUsize::new(0));
+            let #count_ident_recv = ::std::sync::Arc::clone(&#count_ident_send);
             let (#send_ident, #recv_ident) = #root::tokio::sync::mpsc::unbounded_channel();
             {
                 /// Function is needed so `Item` is so no ambiguity for what `Item` is used
@@ -126,25 +140,30 @@ pub const DEST_SINK: OperatorConstraints = OperatorConstraints {
                 async fn sink_feed_flush<Sink, Item>(
                     mut recv: #root::tokio::sync::mpsc::UnboundedReceiver<Item>,
                     mut sink: Sink,
+                    count: ::std::sync::Arc<::std::sync::atomic::AtomicUsize>,
                 ) where
                     Sink: ::std::marker::Unpin + #root::futures::Sink<Item>,
                     Sink::Error: ::std::fmt::Debug,
                 {
                     use #root::futures::SinkExt;
                     while let Some(item) = recv.recv().await {
+                        count.fetch_sub(1, ::std::sync::atomic::Ordering::Relaxed);
                         sink.feed(item)
                             .await
                             .expect("Error processing async sink item.");
                         while let Ok(item) = recv.try_recv() {
+                            count.fetch_sub(1, ::std::sync::atomic::Ordering::Relaxed);
                             sink.feed(item)
                                 .await
                                 .expect("Error processing async sink item.");
                         }
                         sink.flush().await.expect("Failed to flush sink.");
+
+                        println!("{} COUNT RECV: {}", #file_lit, count.load(::std::sync::atomic::Ordering::Relaxed));
                     }
                 }
                 #hydroflow
-                    .spawn_task(sink_feed_flush(#recv_ident, #sink_arg))
+                    .spawn_task(sink_feed_flush(#recv_ident, #sink_arg, #count_ident_recv))
                     .expect(#missing_runtime_msg);
             }
         };
@@ -154,6 +173,8 @@ pub const DEST_SINK: OperatorConstraints = OperatorConstraints {
                 if let Err(err) = #send_ident.send(item) {
                     panic!("Failed to send async write item for processing.: {}", err);
                 }
+                #count_ident_send.fetch_add(1, ::std::sync::atomic::Ordering::Relaxed);
+                println!("{} COUNT SEND: {}", #file_lit, #count_ident_send.load(::std::sync::atomic::Ordering::Relaxed));
             });
         };
 
