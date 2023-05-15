@@ -11,6 +11,7 @@ use syn::{parse_quote_spanned, Token};
 
 use crate::diagnostic::Diagnostic;
 use crate::parse::{Operator, PortIndex};
+use crate::pretty_span::PrettySpan;
 
 use super::{GraphNodeId, GraphSubgraphId, Node, OpInstGenerics, OperatorInstance, PortIndexValue};
 use serde::{Deserialize, Serialize};
@@ -404,6 +405,6 @@ pub enum Persistence {
     Static,
 }
 
-fn make_missing_runtime_msg(op_name: &str) -> Literal {
-    Literal::string(&*format!("`{}()` must be used within a Tokio runtime. For example, use `#[tokio::main]` on your main method.", op_name))
+fn make_missing_runtime_msg(op_name: &str, op_span: Span) -> Literal {
+    Literal::string(&*format!("`{}()` ({}) must be used within a Tokio runtime. For example, use `#[tokio::main]` on your main method.", op_name, PrettySpan(op_span)))
 }

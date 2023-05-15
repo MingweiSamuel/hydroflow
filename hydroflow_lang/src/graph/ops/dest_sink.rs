@@ -119,7 +119,7 @@ pub const DEST_SINK: OperatorConstraints = OperatorConstraints {
         let send_ident = wc.make_ident("item_send");
         let recv_ident = wc.make_ident("item_recv");
 
-        let missing_runtime_msg = make_missing_runtime_msg(op_name);
+        let missing_runtime_msg = make_missing_runtime_msg(op_name, op_span);
 
         let write_prologue = quote_spanned! {op_span=>
             let (#send_ident, #recv_ident) = #root::tokio::sync::mpsc::unbounded_channel();
