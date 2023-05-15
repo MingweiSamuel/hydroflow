@@ -1,9 +1,15 @@
+#![deny(missing_docs)]
+//! Module containing the Hydroflow core API `Context` struct.
+
 use std::any::Any;
 use std::marker::PhantomData;
 
 use std::future::Future;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
 use tokio::runtime::{Handle, TryCurrentError};
 use tokio::sync::mpsc::UnboundedSender;
+use tokio::sync::Notify;
 use tokio::task::JoinHandle;
 
 use super::graph::StateData;
@@ -34,8 +40,29 @@ pub struct Context {
 
     /// Join handles for spawned tasks.
     pub(crate) task_join_handles: Vec<JoinHandle<()>>,
+
+    /// Number of backpressure events triggered. Backpressure is binary: if anything triggers
+    /// backpressure the graph will block until all backpressure triggers are released.
+    pub(crate) backpresure_count: Arc<BackpressureInner>,
 }
 impl Context {
+    pub(crate) fn new(event_queue_send: UnboundedSender<(SubgraphId, bool)>) -> Self {
+        Self {
+            states: Vec::new(),
+
+            event_queue_send,
+
+            current_stratum: 0,
+            current_tick: 0,
+
+            subgraph_id: SubgraphId(0),
+
+            task_join_handles: Vec::new(),
+
+            backpresure_count: Default::default(),
+        }
+    }
+
     /// Gets the current tick (local time) count.
     pub fn current_tick(&self) -> usize {
         self.current_tick
@@ -60,7 +87,6 @@ impl Context {
     /// Waker events are considered to be extenral.
     pub fn waker(&self) -> std::task::Waker {
         use futures::task::ArcWake;
-        use std::sync::Arc;
 
         struct ContextWaker {
             subgraph_id: SubgraphId,
@@ -136,6 +162,7 @@ impl Context {
             .expect("StateHandle wrong type T for casting.")
     }
 
+    /// Span a background async task. Currently just defers to Tokio.
     pub fn spawn_task<Fut>(&mut self, future: Fut) -> Result<(), TryCurrentError>
     where
         Fut: Future<Output = ()> + Send + 'static,
@@ -143,13 +170,48 @@ impl Context {
         Handle::try_current().map(|handle| self.task_join_handles.push(handle.spawn(future)))
     }
 
+    /// Aborts all background tasks.
     pub fn abort_tasks(&mut self) {
         for task in self.task_join_handles.drain(..) {
             task.abort();
         }
     }
 
+    /// Waits for all background tasks to complete. Probably not what you want.
     pub async fn join_tasks(&mut self) {
         futures::future::join_all(self.task_join_handles.drain(..)).await;
+    }
+
+    /// Return a handle to a [`BackpressureValve`] for triggering (and later releasing) backpressure.
+    pub fn backpressure_valve(&self) -> BackpressureValve {
+        BackpressureValve {
+            backpresure_count: Arc::clone(&self.backpresure_count),
+        }
+    }
+}
+
+#[derive(Default)]
+pub(crate) struct BackpressureInner {
+    pub(crate) notify: Notify,
+    pub(crate) count: AtomicUsize,
+}
+
+/// Represents control over backpressure for a Hydroflow instance.
+#[derive(Clone)]
+pub struct BackpressureValve {
+    backpresure_count: Arc<BackpressureInner>,
+}
+
+impl BackpressureValve {
+    /// Trigger backpressure. It is an error to call this if backpressure is currently triggered.
+    pub fn trigger(&self) {
+        self.backpresure_count.count.fetch_add(1, Ordering::Relaxed);
+    }
+
+    /// Release backpressure. It is an error to call this if backpressure is not currently triggered.
+    pub fn release(&self) {
+        if 0 == self.backpresure_count.count.fetch_sub(1, Ordering::Relaxed) {
+            self.backpresure_count.notify.notify_one();
+        }
     }
 }
