@@ -99,7 +99,7 @@ mod test {
 
     use super::*;
     use crate::set_union::SetUnionHashSet;
-    use crate::test::{assert_lattice_identities, assert_partial_ord_identities};
+    use crate::test::{check_lattice_properties, check_partial_ord_properties};
 
     #[test]
     fn consistency() {
@@ -114,7 +114,7 @@ mod test {
             }
         }
 
-        assert_partial_ord_identities(&test_vec);
-        assert_lattice_identities(&test_vec);
+        check_partial_ord_properties(&test_vec);
+        check_lattice_properties(&test_vec);
     }
 }

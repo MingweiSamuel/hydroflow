@@ -19,6 +19,8 @@ pub mod map_union;
 pub mod ord;
 pub mod pair;
 pub mod set_union;
+#[cfg(test)]
+pub mod test;
 
 /// Re-export of the [`cc_traits`](::cc_traits) crate with [`SimpleKeyedRef`](cc_traits::SimpleKeyedRef) added.
 pub mod cc_traits {
@@ -114,6 +116,3 @@ pub trait ConvertFrom<Other> {
     /// Convert from the `Other` lattice into `Self`.
     fn from(other: Other) -> Self;
 }
-
-#[cfg(test)]
-mod test;
