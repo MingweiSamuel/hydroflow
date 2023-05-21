@@ -214,10 +214,11 @@
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test {
+    <span class="kw">use </span>std::collections::HashSet;
+
     <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use </span><span class="kw">crate</span>::set_union::SetUnionHashSet;
-    <span class="kw">use </span><span class="kw">crate</span>::test::{assert_lattice_identities, assert_partial_ord_identities};
-    <span class="kw">use </span>std::collections::HashSet;
+    <span class="kw">use </span><span class="kw">crate</span>::test::check_all;
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>consistency() {
@@ -232,8 +233,7 @@
             }
         }
 
-        assert_partial_ord_identities(<span class="kw-2">&amp;</span>test_vec);
-        assert_lattice_identities(<span class="kw-2">&amp;</span>test_vec);
+        check_all(<span class="kw-2">&amp;</span>test_vec);
     }
 }
 </code></pre></div></section></main></body></html>

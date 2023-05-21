@@ -136,21 +136,12 @@
 <a href="#136" id="136">136</a>
 <a href="#137" id="137">137</a>
 <a href="#138" id="138">138</a>
-<a href="#139" id="139">139</a>
-<a href="#140" id="140">140</a>
-<a href="#141" id="141">141</a>
-<a href="#142" id="142">142</a>
-<a href="#143" id="143">143</a>
-<a href="#144" id="144">144</a>
-</pre></div><pre class="rust"><code><span class="doccomment">//! Totally-ordered lattices, [`Max`] and [`Min`].
-//!
-//! Uses [std::cmp::Ord`].
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::cmp::Ordering;
 
-</span><span class="kw">use super</span>::{ConvertFrom, Merge};
+<span class="kw">use super</span>::{ConvertFrom, Merge};
 <span class="kw">use </span><span class="kw">crate</span>::LatticeOrd;
-<span class="kw">use </span>std::cmp::Ordering;
 
-<span class="doccomment">/// A totally ordered max lattice. Merging takes the larger value.
+<span class="doccomment">/// A totally ordered max lattice. Merging returns the larger value.
 </span><span class="attr">#[repr(transparent)]
 #[derive(Copy, Clone, Debug, Default, PartialOrd, Ord, PartialEq, Eq)]
 #[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(serde::Serialize, serde::Deserialize))]
@@ -189,7 +180,10 @@
 
 <span class="kw">impl</span>&lt;T&gt; LatticeOrd&lt;<span class="self">Self</span>&gt; <span class="kw">for </span>Max&lt;T&gt; <span class="kw">where </span><span class="self">Self</span>: PartialOrd&lt;<span class="self">Self</span>&gt; {}
 
-<span class="doccomment">/// A totally ordered min lattice. Merging takes the smaller value.
+<span class="doccomment">/// A totally ordered min lattice. Merging returns the smaller value.
+///
+/// This means the lattice order is the reverse of what you might naturally expect: 0 is greater
+/// than 1.
 </span><span class="attr">#[repr(transparent)]
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
 #[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(serde::Serialize, serde::Deserialize))]
@@ -247,9 +241,10 @@
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test {
-    <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use </span><span class="kw">crate</span>::test::{assert_lattice_identities, assert_partial_ord_identities};
     <span class="kw">use </span>std::cmp::Ordering::<span class="kw-2">*</span>;
+
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::test::check_all;
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>ordering() {
@@ -275,15 +270,8 @@
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>consistency() {
-        <span class="kw">let </span>test_vec = <span class="macro">vec!</span>[Max::new(<span class="number">0</span>), Max::new(<span class="number">1</span>)];
-
-        assert_partial_ord_identities(<span class="kw-2">&amp;</span>test_vec);
-        assert_lattice_identities(<span class="kw-2">&amp;</span>test_vec);
-
-        <span class="kw">let </span>test_vec = <span class="macro">vec!</span>[Min::new(<span class="number">0</span>), Min::new(<span class="number">1</span>)];
-
-        assert_partial_ord_identities(<span class="kw-2">&amp;</span>test_vec);
-        assert_lattice_identities(<span class="kw-2">&amp;</span>test_vec);
+        check_all(<span class="kw-2">&amp;</span>[Max::new(<span class="number">0</span>), Max::new(<span class="number">1</span>)]);
+        check_all(<span class="kw-2">&amp;</span>[Min::new(<span class="number">0</span>), Min::new(<span class="number">1</span>)]);
     }
 }
 </code></pre></div></section></main></body></html>

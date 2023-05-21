@@ -154,20 +154,27 @@
 <a href="#154" id="154">154</a>
 <a href="#155" id="155">155</a>
 <a href="#156" id="156">156</a>
-</pre></div><pre class="rust"><code><span class="doccomment">//! Dominating pair compound lattice.
-//!
-//! When merging if one `Key` (usually a timestamp) fully dominates (is greater than) the other,
-//! then both that `Key` and corresponding `Val` are selected. If the `Key`s are equal or
-//! incomparable, then both the `Key`s and `Val`s are merged.
-
-</span><span class="kw">use </span>std::cmp::Ordering::{<span class="self">self</span>, <span class="kw-2">*</span>};
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+</pre></div><pre class="rust"><code><span class="kw">use </span>std::cmp::Ordering::{<span class="self">self</span>, <span class="kw-2">*</span>};
 
 <span class="kw">use super</span>::{ConvertFrom, Merge};
 <span class="kw">use </span><span class="kw">crate</span>::LatticeOrd;
 
-<span class="doccomment">/// Dominating pair lattice.
+<span class="doccomment">/// Dominating pair compound lattice.
+///
+/// When merging if one `Key` (usually a timestamp) fully dominates (is greater than) the other,
+/// then both that `Key` and corresponding `Val` are selected. If the `Key`s are equal or
+/// incomparable, then both the `Key`s and `Val`s are merged.
 ///
 /// `Key` specifies the key lattice (usually a timestamp), and `Val` specifies the value lattice.
+///
+/// Note that this is not a proper lattice, it fails associativity. However it will behave like a
+/// proper lattice if `Key` is a totally ordered lattice or a properly formed vector clock lattice.
+/// The exact meaning of &quot;properly formed&quot; is still TBD, but each node always incrementing its
+/// entry for each operation sent should be sufficient.
 </span><span class="attr">#[derive(Copy, Clone, Debug, Default, Eq)]
 #[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(serde::Serialize, serde::Deserialize))]
 </span><span class="kw">pub struct </span>DomPair&lt;Key, Val&gt; {
@@ -267,13 +274,14 @@
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test {
-    <span class="kw">use super</span>::<span class="kw-2">*</span>;
-    <span class="kw">use crate</span>::{
-        ord::Max,
-        set_union::SetUnionHashSet,
-        test::{assert_lattice_identities, assert_partial_ord_identities},
-    };
     <span class="kw">use </span>std::collections::HashSet;
+
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span><span class="kw">crate</span>::ord::Max;
+    <span class="kw">use </span><span class="kw">crate</span>::set_union::SetUnionHashSet;
+    <span class="kw">use </span><span class="kw">crate</span>::test::{
+        check_all, check_lattice_ord, check_lattice_properties, check_partial_ord_properties,
+    };
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>consistency() {
@@ -288,9 +296,10 @@
             }
         }
 
-        assert_partial_ord_identities(<span class="kw-2">&amp;</span>test_vec);
+        check_lattice_ord(<span class="kw-2">&amp;</span>test_vec);
+        check_partial_ord_properties(<span class="kw-2">&amp;</span>test_vec);
         <span class="comment">// DomPair is not actually a lattice.
-        </span><span class="macro">assert!</span>(std::panic::catch_unwind(|| assert_lattice_identities(<span class="kw-2">&amp;</span>test_vec)).is_err());
+        </span><span class="macro">assert!</span>(std::panic::catch_unwind(|| check_lattice_properties(<span class="kw-2">&amp;</span>test_vec)).is_err());
     }
 
     <span class="attr">#[test]
@@ -306,8 +315,7 @@
             }
         }
 
-        assert_partial_ord_identities(<span class="kw-2">&amp;</span>test_vec);
-        assert_lattice_identities(<span class="kw-2">&amp;</span>test_vec);
+        check_all(<span class="kw-2">&amp;</span>test_vec);
     }
 }
 </code></pre></div></section></main></body></html>

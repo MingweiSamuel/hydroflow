@@ -244,14 +244,7 @@
 <a href="#244" id="244">244</a>
 <a href="#245" id="245">245</a>
 <a href="#246" id="246">246</a>
-<a href="#247" id="247">247</a>
-<a href="#248" id="248">248</a>
-<a href="#249" id="249">249</a>
-<a href="#250" id="250">250</a>
-</pre></div><pre class="rust"><code><span class="doccomment">//! Map-union compound lattice.
-//!
-//! Each key corresponds to a lattice value instance. Merging map-union lattices is done by
-//! unioning the keys and merging the values of intersecting keys.
+</pre></div><pre class="rust"><code><span class="doccomment">//! Module containing the [`MapUnion`] lattice and aliases for different datastructures.
 
 </span><span class="kw">use </span>std::cmp::Ordering::<span class="kw-2">*</span>;
 <span class="kw">use </span>std::collections::{BTreeMap, HashMap};
@@ -261,10 +254,10 @@
 <span class="kw">use </span><span class="kw">crate</span>::collections::{ArrayMap, SingletonMap, VecMap};
 <span class="kw">use crate</span>::{ConvertFrom, LatticeOrd, Merge};
 
-<span class="doccomment">/// A map-union lattice.
+<span class="doccomment">/// Map-union compound lattice.
 ///
-/// `Tag` specifies what datastructure to use, allowing us to deal with different datastructures
-/// generically.
+/// Each key corresponds to a lattice value instance. Merging map-union lattices is done by
+/// unioning the keys and merging the values of intersecting keys.
 </span><span class="attr">#[repr(transparent)]
 #[derive(Copy, Clone, Debug, Default)]
 #[cfg_attr(feature = <span class="string">&quot;serde&quot;</span>, derive(serde::Serialize, serde::Deserialize))]
@@ -461,12 +454,12 @@
 
 <span class="attr">#[cfg(test)]
 </span><span class="kw">mod </span>test {
-    <span class="kw">use super</span>::<span class="kw-2">*</span>;
+    <span class="kw">use </span>std::collections::HashSet;
 
+    <span class="kw">use super</span>::<span class="kw-2">*</span>;
     <span class="kw">use </span><span class="kw">crate</span>::collections::{SingletonMap, SingletonSet};
     <span class="kw">use </span><span class="kw">crate</span>::set_union::{SetUnionHashSet, SetUnionSingletonSet};
-    <span class="kw">use </span><span class="kw">crate</span>::test::{assert_lattice_identities, assert_partial_ord_identities};
-    <span class="kw">use </span>std::collections::HashSet;
+    <span class="kw">use </span><span class="kw">crate</span>::test::check_all;
 
     <span class="attr">#[test]
     </span><span class="kw">fn </span>test_map_union() {
@@ -494,8 +487,7 @@
             }
         }
 
-        assert_partial_ord_identities(<span class="kw-2">&amp;</span>test_vec);
-        assert_lattice_identities(<span class="kw-2">&amp;</span>test_vec);
+        check_all(<span class="kw-2">&amp;</span>test_vec);
     }
 }
 </code></pre></div></section></main></body></html>
