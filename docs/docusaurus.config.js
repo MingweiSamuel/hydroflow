@@ -6,6 +6,7 @@ const darkCodeTheme = require('prism-react-renderer/themes/dracula');
 
 const math = require('remark-math');
 const katex = require('rehype-katex');
+const rustdoc = require('./remark-rustdoc.js');
 
 /** @type {import('@docusaurus/types').Config} */
 const config = {
@@ -64,7 +65,7 @@ const config = {
           // Remove this to remove the "edit this page" links.
           editUrl:
             'https://github.com/hydro-project/hydroflow/tree/main/docs/',
-          remarkPlugins: [math],
+          remarkPlugins: [rustdoc, math],
           rehypePlugins: [katex],
         },
         // blog: {

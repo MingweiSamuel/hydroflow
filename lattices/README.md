@@ -26,7 +26,7 @@ Take a look at the [`lattice` rustdocs](https://hydro-project.github.io/hydroflo
 ## Lattices
 
 `lattices` provides implementations of common lattice types:
-* [`Min<T>`] and [`Max<T>`] - totally-orderd lattices.
+* [`Min<T>`] and [`Max<T>`] - totally-ordered lattices.
 * [`set_union::SetUnion`] - set-union lattice of scalar values.
 * [`map_union::MapUnion`] - scalar keys with nested lattice values.
 * [`Bottom<Lat>`] - wraps a lattice in `Option` with `None` as the new bottom value.
