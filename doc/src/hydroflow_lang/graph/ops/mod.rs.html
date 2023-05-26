@@ -406,6 +406,8 @@
 <a href="#406" id="406">406</a>
 <a href="#407" id="407">407</a>
 <a href="#408" id="408">408</a>
+<a href="#409" id="409">409</a>
+<a href="#410" id="410">410</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::fmt::{Debug, Display};
 <span class="kw">use </span>std::ops::{Bound, RangeBounds};
@@ -626,7 +628,7 @@
 
 <span class="macro">macro_rules! </span>declare_ops {
     ( $( <span class="macro-nonterminal">$</span><span class="kw">mod</span>:<span class="macro-nonterminal">ident </span>:: <span class="macro-nonterminal">$op</span>:ident, )* ) =&gt; {
-        $( <span class="kw">mod </span><span class="macro-nonterminal">$</span><span class="kw">mod</span>; )*
+        $( <span class="kw">pub</span>(<span class="kw">crate</span>) <span class="kw">mod </span><span class="macro-nonterminal">$</span><span class="kw">mod</span>; )*
         <span class="kw">pub const </span><span class="macro-nonterminal">OPERATORS</span>: <span class="kw-2">&amp;</span>[OperatorConstraints] = <span class="kw-2">&amp;</span>[
             $( <span class="macro-nonterminal">$</span><span class="kw">mod </span>:: <span class="macro-nonterminal">$op</span>, )*
         ];
@@ -648,18 +650,18 @@
     flatten::FLATTEN,
     fold::FOLD,
     for_each::FOR_EACH,
-    group_by::GROUP_BY,
     identity::IDENTITY,
     initialize::INITIALIZE,
     inspect::INSPECT,
     join::JOIN,
-    keyed_fold::KEYED_FOLD,
-    keyed_reduce::KEYED_REDUCE,
+    fold_keyed::FOLD_KEYED,
+    reduce_keyed::REDUCE_KEYED,
     lattice_batch::LATTICE_BATCH,
     lattice_join::LATTICE_JOIN,
     lattice_merge::LATTICE_MERGE,
     map::MAP,
-    merge::MERGE,
+    union::UNION,
+    multiset_delta::MULTISET_DELTA,
     next_stratum::NEXT_STRATUM,
     next_tick::NEXT_TICK,
     null::NULL,
@@ -669,7 +671,7 @@
     repeat_iter::REPEAT_ITER,
     repeat_iter_external::REPEAT_ITER_EXTERNAL,
     sort::SORT,
-    sort_by::SORT_BY,
+    sort_by_key::SORT_BY_KEY,
     source_file::SOURCE_FILE,
     source_interval::SOURCE_INTERVAL,
     source_iter::SOURCE_ITER,
@@ -680,6 +682,8 @@
     tee::TEE,
     unique::UNIQUE,
     unzip::UNZIP,
+    zip::ZIP,
+    zip_longest::ZIP_LONGEST,
 ];
 
 <span class="kw">pub fn </span>operator_lookup() -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>HashMap&lt;<span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>str, <span class="kw-2">&amp;</span><span class="lifetime">&#39;static </span>OperatorConstraints&gt; {
