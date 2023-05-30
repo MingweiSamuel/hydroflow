@@ -27,4 +27,8 @@ pub fn test_multiset_delta() {
     flow.run_tick();
     // First two "3"s are removed due to previous tick.
     assert_eq!(&[5, 3], &*collect_ready::<Vec<_>, _>(&mut result_recv));
+
+
+    flow.run_tick();
+    assert!(collect_ready::<Vec<_>, _>(&mut result_recv).is_empty());
 }
