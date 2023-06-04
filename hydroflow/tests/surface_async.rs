@@ -15,6 +15,8 @@ use tokio::net::{TcpListener, TcpStream, UdpSocket};
 use tokio::task::LocalSet;
 use tokio_util::codec::{BytesCodec, FramedWrite, LinesCodec};
 
+hydroflow::setup_tracing!();
+
 #[hydroflow::test]
 pub async fn test_echo_udp() -> Result<(), Box<dyn Error>> {
     let local = LocalSet::new();
