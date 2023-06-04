@@ -8,12 +8,13 @@ documentation = "https://docs.rs/hydroflow/"
 description = "Hydro's low-level dataflow runtime and IR"
 
 [features]
-default = [ "async", "macros" ]
+default = [ "async", "macros", "tracing" ]
 async = [ "dep:futures" ]
 macros = [ "hydroflow_macro", "hydroflow_datalog" ]
 hydroflow_macro = [ "dep:hydroflow_macro" ]
 hydroflow_datalog = [ "dep:hydroflow_datalog" ]
 cli_integration = [ "dep:hydroflow_cli_integration" ]
+tracing = [ "dep:tracing" ]
 
 [dependencies]
 bincode = "1.3"
