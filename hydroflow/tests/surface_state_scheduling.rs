@@ -156,6 +156,8 @@ pub fn test_resume_external_event() {
         source_stream(in_recv) -> fold::<'static>(0, <usize as std::ops::Add<usize>>::add) -> for_each(|v| out_send.send(v).unwrap());
     };
 
+    println!("{}", df.meta_graph().unwrap().to_mermaid());
+
     assert_eq!((0, 0), (df.current_tick(), df.current_stratum()));
     assert_eq!(&[] as &[usize], &*collect_ready::<Vec<_>, _>(&mut out_recv));
 
@@ -174,6 +176,9 @@ pub fn test_resume_external_event() {
     df.run_available();
     assert_eq!((4, 0), (df.current_tick(), df.current_stratum()));
     assert_eq!(&[0], &*collect_ready::<Vec<_>, _>(&mut out_recv));
+
+    #[cfg(feature = "tracing")]
+    tracing::info!("BEFORE SEND");
 
     in_send.send(1).unwrap();
     df.run_tick();

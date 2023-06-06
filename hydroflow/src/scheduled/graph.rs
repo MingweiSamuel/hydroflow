@@ -253,18 +253,25 @@ impl Hydroflow {
             self.try_recv_events();
         }
 
+        // If we are still looking on the current tick.
+        let mut current_tick = true;
+        // If we have received any external events.
+        let mut events_has_external = false;
+
         // The stratum we will stop searching at, i.e. made a full loop around.
         let mut end_stratum = self.context.current_stratum;
 
         loop {
-            // If current stratum has work, return true.
+            // If current stratum has work...
             if !self.stratum_queues[self.context.current_stratum].is_empty() {
                 #[cfg(feature = "tracing")]
                 tracing::trace!(
                     stratum = self.context.current_stratum,
                     "Work found on stratum."
                 );
-                return true;
+
+                // Return true if we are on the current tick, or if we received external events.
+                return true; // current_tick || events_has_external;
             }
 
             // Increment stratum counter.
@@ -280,11 +287,16 @@ impl Hydroflow {
                     self.events_received_tick = false;
                     return false;
                 } else {
+                    current_tick = false;
                     let (_num_events, has_external) = self.try_recv_events();
                     if has_external {
+                        events_has_external = true;
                         // Do a full loop more to find where events have been added.
                         end_stratum = 0;
                         continue;
+                    } else {
+                        self.events_received_tick = false;
+                        return false;
                     }
                 }
             }
