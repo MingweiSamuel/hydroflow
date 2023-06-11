@@ -224,7 +224,8 @@ mod test {
     use super::*;
     use crate::collections::{SingletonMap, SingletonSet};
     use crate::set_union::{SetUnionHashSet, SetUnionSingletonSet};
-    use crate::test::{cartesian_power, check_all};
+    use crate::test::{as_hasse_diagram_mermaid, cartesian_power, check_all};
+    use crate::Max;
 
     #[test]
     fn test_map_union() {
@@ -263,5 +264,22 @@ mod test {
         }
 
         check_all(&test_vec);
+    }
+
+    #[test]
+    fn hasse_diagram() {
+        let items = &[
+            MapUnionBTreeMap::new(BTreeMap::new()),
+            MapUnionBTreeMap::new(BTreeMap::from_iter([(0, Max(0))])),
+            MapUnionBTreeMap::new(BTreeMap::from_iter([(1, Max(0))])),
+            MapUnionBTreeMap::new(BTreeMap::from_iter([(0, Max(1))])),
+            MapUnionBTreeMap::new(BTreeMap::from_iter([(1, Max(1))])),
+            MapUnionBTreeMap::new(BTreeMap::from_iter([(0, Max(0)), (1, Max(0))])),
+            MapUnionBTreeMap::new(BTreeMap::from_iter([(0, Max(0)), (1, Max(1))])),
+            MapUnionBTreeMap::new(BTreeMap::from_iter([(0, Max(1)), (1, Max(0))])),
+            MapUnionBTreeMap::new(BTreeMap::from_iter([(0, Max(1)), (1, Max(1))])),
+        ];
+
+        println!("{}", as_hasse_diagram_mermaid(items));
     }
 }

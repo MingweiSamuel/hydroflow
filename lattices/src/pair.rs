@@ -116,8 +116,8 @@ mod test {
 
     use super::*;
     use crate::set_union::SetUnionHashSet;
-    use crate::test::{check_all, check_lattice_top};
-    use crate::WithTop;
+    use crate::test::{as_hasse_diagram_mermaid, cartesian_power, check_all, check_lattice_top};
+    use crate::{Max, WithTop};
 
     #[test]
     fn consistency() {
@@ -162,5 +162,14 @@ mod test {
 
         check_all(&test_vec);
         check_lattice_top(&test_vec);
+    }
+
+    #[test]
+    fn hasse_diagram() {
+        let inner: Vec<_> = (0..2).map(Max::new).collect();
+        let items: Vec<_> = cartesian_power(&inner)
+            .map(|[a, b]| Pair::new(a, b))
+            .collect();
+        println!("{}", as_hasse_diagram_mermaid(&items));
     }
 }

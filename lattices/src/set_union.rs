@@ -130,7 +130,7 @@ pub type SetUnionOption<Item> = SetUnion<Option<Item>>;
 mod test {
     use super::*;
     use crate::collections::SingletonSet;
-    use crate::test::check_all;
+    use crate::test::{as_hasse_diagram_mermaid, check_all};
 
     #[test]
     fn test_set_union() {
@@ -175,5 +175,22 @@ mod test {
             SetUnionHashSet::new_from([1]),
             SetUnionHashSet::new_from([0, 1]),
         ]);
+    }
+
+    #[test]
+    fn hasse_diagram() {
+        println!(
+            "{}",
+            as_hasse_diagram_mermaid(&[
+                SetUnionHashSet::new_from([]),
+                SetUnionHashSet::new_from([0]),
+                SetUnionHashSet::new_from([1]),
+                SetUnionHashSet::new_from([2]),
+                SetUnionHashSet::new_from([0, 1]),
+                SetUnionHashSet::new_from([0, 2]),
+                SetUnionHashSet::new_from([1, 2]),
+                SetUnionHashSet::new_from([0, 1, 2]),
+            ])
+        );
     }
 }

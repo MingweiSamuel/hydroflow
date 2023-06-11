@@ -259,3 +259,66 @@ fn test_cartesian_power_empty() {
     assert_eq!(0, iter.len());
     assert_eq!(None, iter.next());
 }
+
+/// Returns edges for a Hasse diagram. Specifically returns the indexes of all indexes for
+/// [covering pairs](https://en.wikipedia.org/wiki/Covering_relation) among the domain of the
+/// provided `items`.
+pub fn make_hasse_diagram_edges<T>(items: &[T]) -> Vec<(usize, usize)>
+where
+    T: LatticeOrd,
+{
+    let mut out = Vec::new();
+    for (i, x) in items.iter().enumerate() {
+        for (j, y) in items.iter().enumerate() {
+            if x < y && !items.iter().any(|z| x < z && z < y) {
+                out.push((i, j));
+            }
+        }
+    }
+    out
+}
+
+/// Write the Hasse diagram as mermaid into `write`.
+pub fn write_hasse_diagram_mermaid<T>(
+    items: &[T],
+    mut write: impl std::fmt::Write,
+) -> std::fmt::Result
+where
+    T: LatticeOrd + Debug,
+{
+    writeln!(write, "flowchart BT")?;
+    for (i, item) in items.iter().enumerate() {
+        let name = format!("{:?}", item)
+            .replace('&', "&amp;")
+            .replace('<', "&lt;")
+            .replace('>', "&gt;")
+            .replace('"', "&quot;")
+            // Mermaid entity codes
+            // https://mermaid.js.org/syntax/flowchart.html#entity-codes-to-escape-characters
+            .replace('#', "&num;")
+            // Not really needed, newline literals seem to work
+            .replace('\n', "<br>")
+            // Mermaid font awesome fa
+            // https://github.com/mermaid-js/mermaid/blob/e4d2118d4bfa023628a020b7ab1f8c491e6dc523/packages/mermaid/src/diagrams/flowchart/flowRenderer-v2.js#L62
+            .replace("fa:fa", "fa:<wbr>fa")
+            .replace("fab:fa", "fab:<wbr>fa")
+            .replace("fal:fa", "fal:<wbr>fa")
+            .replace("far:fa", "far:<wbr>fa")
+            .replace("fas:fa", "fas:<wbr>fa");
+        writeln!(write, "  {}(\"{}\")", i, name)?;
+    }
+    for (i, j) in make_hasse_diagram_edges(items) {
+        writeln!(write, "  {} --> {}", i, j)?;
+    }
+    Ok(())
+}
+
+/// Generate the Hass diagram as a mermaid string.
+pub fn as_hasse_diagram_mermaid<T>(items: &[T]) -> String
+where
+    T: LatticeOrd + Debug,
+{
+    let mut out = String::new();
+    write_hasse_diagram_mermaid(items, &mut out).unwrap();
+    out
+}
