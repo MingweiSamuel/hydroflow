@@ -9,10 +9,12 @@ use super::{
 /// > 1 input stream, 1 output stream
 ///
 /// > Arguments: an initial value, and a closure which itself takes two arguments:
-/// an 'accumulator', and an element. The closure returns the value that the accumulator should have for the next iteration.
+/// an 'accumulator', and an element. The accumulator is an `&mut` references which can be modified
+/// with the item. The closure does not return any value.
 ///
-/// Akin to Rust's built-in fold operator. Folds every element into an accumulator by applying a closure,
-/// returning the final result.
+/// Akin to Rust's built-in fold operator. Folds every element into an accumulator by applying a
+/// closure, returning the final result. Note the closure supplied is different from the one in
+/// [`std::iter::Iterator::fold`], which takes in two owned values and returns a combined value.
 ///
 /// > Note: The closure has access to the [`context` object](surface_flows.md#the-context-object).
 ///
@@ -25,9 +27,8 @@ use super::{
 /// ```hydroflow
 /// // should print `Reassembled vector [1,2,3,4,5]`
 /// source_iter([1,2,3,4,5])
-///     -> fold::<'tick>(Vec::new(), |mut accum, elem| {
+///     -> fold::<'tick>(Vec::new(), |accum, elem| {
 ///         accum.push(elem);
-///         accum
 ///     })
 ///     -> for_each(|e| println!("Ressembled vector {:?}", e));
 /// ```

@@ -9,19 +9,21 @@ use crate::graph::{OpInstGenerics, OperatorInstance};
 /// > 1 input stream, 1 output stream
 ///
 /// > Arguments: a closure which itself takes two arguments:
-/// an ‘accumulator’, and an element. The closure returns the value that the accumulator should have for the next iteration.
+/// an 'accumulator', and an element. The accumulator is an `&mut` reference which can be modified
+/// with the item. The closure does not return any value.
 ///
-/// Akin to Rust's built-in reduce operator. Folds every element into an accumulator by applying a closure,
-/// returning the final result.
+/// Akin to Rust's built-in reduce operator. Combines all elements together into an accumulatted
+/// value by applying the closure, returning the final result. Note the closure supplied is
+/// different from the one in [`std::iter::Iterator::reduce`], which takes in two owned values and
+/// returns a combined value.
 ///
 /// > Note: The closure has access to the [`context` object](surface_flows.md#the-context-object).
 ///
 /// ```hydroflow
 /// // should print 120 (i.e., 1*2*3*4*5)
 /// source_iter([1,2,3,4,5])
-///     -> reduce(|mut accum, elem| {
+///     -> reduce(|accum, elem| {
 ///         accum *= elem;
-///         accum
 ///     })
 ///     -> for_each(|e| println!("{}", e));
 /// ```
@@ -79,7 +81,10 @@ pub const REDUCE: OperatorConstraints = OperatorConstraints {
             Persistence::Tick => (
                 Default::default(),
                 quote_spanned! {op_span=>
-                    let #ident = #input.reduce(#func).into_iter();
+                    let #ident = #input.reduce(|mut acc, item| {
+                        (#func)(&mut acc, item);
+                        acc
+                }).into_iter();
                 },
                 Default::default(),
             ),
@@ -93,8 +98,14 @@ pub const REDUCE: OperatorConstraints = OperatorConstraints {
                     let #ident = {
                         let opt = #context.state_ref(#reducedata_ident).take();
                         let opt = match opt {
-                            Some(accum) => Some(#input.fold(accum, #func)),
-                            None => #input.reduce(#func),
+                            Some(accum) => Some(#input.fold(accum, |mut acc, item| {
+                                (#func)(&mut acc, item);
+                                acc
+                            })),
+                            None => #input.reduce(|mut acc, item| {
+                                (#func)(&mut acc, item);
+                                acc
+                            }),
                         };
                         #context.state_ref(#reducedata_ident).set(::std::clone::Clone::clone(&opt));
                         opt.into_iter()
