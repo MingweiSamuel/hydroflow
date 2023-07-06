@@ -174,8 +174,10 @@ pub const SWITCH: OperatorConstraints = OperatorConstraints {
 
         let write_iterator = quote_spanned! {op_span=>
             let #ident = {
-                #[allow(unused_imports)] use #root::pusherator::Pusherator;
-                #root::pusherator::demux::Demux::new(#func, #root::var_expr!( #( #sorted_outputs ),* ))
+                #root::pusherator::demux::Demux::new(|__item, __varargs| {
+                    let mut selected = (#func)(&__item, __varargs);
+                    #root::pusherator::Pusherator::give(selected, __item);
+                }, #root::var_expr!( #( #sorted_outputs ),* ))
             };
         };
 

@@ -267,6 +267,7 @@ declare_ops![
     py_udf::PY_UDF,
     reduce::REDUCE,
     spin::SPIN,
+    switch::SWITCH,
     sort::SORT,
     sort_by_key::SORT_BY_KEY,
     source_file::SOURCE_FILE,
