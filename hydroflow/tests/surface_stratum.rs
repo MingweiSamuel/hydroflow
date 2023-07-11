@@ -36,7 +36,7 @@ pub fn test_difference_a() {
 
 /// More complex different test.
 /// Take the difference of each tick of items and subtract the previous tick's items.
-#[multiplatform_test]
+#[multiplatform_test(test, env_tracing)]
 pub fn test_difference_b() -> Result<(), SendError<&'static str>> {
     let (inp_send, inp_recv) = hydroflow::util::unbounded_channel::<&'static str>();
 
@@ -50,6 +50,7 @@ pub fn test_difference_b() -> Result<(), SendError<&'static str>> {
         b[0] -> next_tick() -> [neg]a;
         b[1] -> for_each(|x| output_inner.borrow_mut().push(x));
     };
+    println!("{}", df.meta_graph().unwrap().to_mermaid());
     assert_graphvis_snapshots!(df);
 
     inp_send.send("01")?;

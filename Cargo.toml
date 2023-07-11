@@ -18,6 +18,7 @@ members = [
     "hydroflow_datalog_core",
     "hydroflow_lang",
     "hydroflow_macro",
+    "hydroflow_properties",
     "lattices",
     "multiplatform_test",
     "pusherator",
