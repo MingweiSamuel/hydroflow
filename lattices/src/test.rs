@@ -2,7 +2,7 @@
 
 use std::fmt::Debug;
 
-use crate::{Atomize, IsBot, IsTop, Lattice, LatticeOrd, Merge, NaiveLatticeOrd};
+use crate::{Atomize, IsBot, IsTop, Lattice, LatticeOrd, Merge, NaiveLatticeOrd, Unmerge};
 
 /// Helper which calls many other `check_*` functions in this module. See source code for which
 /// functions are called.
@@ -164,6 +164,50 @@ pub fn check_lattice_is_top<T: IsTop + LatticeOrd + Debug>(items: &[T]) {
 /// Asserts that [`IsBot`] is true for [`Default::default()`].
 pub fn check_lattice_default_is_bot<T: IsBot + Default>() {
     assert!(T::is_bot(&T::default()));
+}
+
+/// Checks that [`Unmerge`] is implemented correctly for all pairs of items.
+pub fn check_unmerge<T: Unmerge<T> + Merge<T> + Clone + LatticeOrd + Debug>(items: &[T]) {
+    for [x, y] in cartesian_power(items) {
+        let mut z = x.clone();
+        let changed_unmerge = z.unmerge(y);
+        if changed_unmerge {
+            assert!(
+                &z < x,
+                "Result must be less than original (changed_unmerge `true`). Original {:?}, subtraction {:?}, result {:?}",
+                x,
+                y,
+                z
+            );
+        } else {
+            assert_eq!(&z, x,
+                "Result should be unchanged (changed_unmerge `false`). Original {:?}, subtraction {:?}, result {:?}",
+                x,
+                y,
+                z);
+        }
+        let changed_merge = z.merge(y.clone());
+
+        if !(y <= x) {
+            // Subtraction not less than, contains extra fields, so no equality.
+            assert!(
+                changed_merge,
+                "Subtract was not less than or equal to original, merge should've returned true (changed). Original {:?}, subtraction {:?}, re-merged result {:?} unchanged.",
+                x, y, z
+            );
+            let w = x.clone().merge_owned(y.clone());
+            assert_eq!(w, z);
+        } else {
+            assert_eq!(
+                changed_unmerge, changed_merge,
+                "changed_unmerge {} should be the same as changed_merge {}. Original {:?}, subtraction {:?}, re-merged result {:?}.",
+                changed_unmerge, changed_merge, x, y, z
+            );
+            assert_eq!(x, &z,
+                "Re-merged result should equal original. Original {:?}, subtraction {:?}, re-merged result {:?}.",
+                x, y, z);
+        }
+    }
 }
 
 /// Check that the atomized lattice points re-merge to form the same original lattice point, for each item in `items`.

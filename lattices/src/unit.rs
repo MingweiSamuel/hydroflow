@@ -1,4 +1,4 @@
-use crate::{Atomize, IsBot, IsTop, LatticeFrom, LatticeOrd, Merge};
+use crate::{IsBot, IsTop, LatticeFrom, LatticeOrd, Merge, Atomize};
 
 impl Merge<Self> for () {
     fn merge(&mut self, _other: Self) -> bool {

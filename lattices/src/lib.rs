@@ -49,12 +49,12 @@ pub trait Merge<Other> {
     fn merge(&mut self, other: Other) -> bool;
 
     /// Merge `this` and `delta` together, returning the new value.
-    fn merge_owned(mut this: Self, delta: Other) -> Self
+    fn merge_owned(mut self, delta: Other) -> Self
     where
         Self: Sized,
     {
-        Self::merge(&mut this, delta);
-        this
+        Self::merge(&mut self, delta);
+        self
     }
 }
 
@@ -117,6 +117,19 @@ pub trait IsTop {
     ///
     /// Must be consistent with equality, any element equal to top is also considered to be top.
     fn is_top(&self) -> bool;
+}
+
+/// Trait for "un-merging" (subtracting or differentiating) lattices.
+pub trait Unmerge<Other> {
+    fn unmerge(&mut self, other: &Other) -> bool;
+
+    fn unmerge_owned(mut self, other: &Other) -> Self
+    where
+        Self: Sized,
+    {
+        Self::unmerge(&mut self, other);
+        self
+    }
 }
 
 /// Trait to atomize a lattice into individual elements. For example, a [`set_union::SetUnion`]
