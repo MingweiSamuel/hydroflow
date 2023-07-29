@@ -1,5 +1,5 @@
 {
-  "lastUpdate": 1690516745670,
+  "lastUpdate": 1690603053160,
   "repoUrl": "https://github.com/MingweiSamuel/hydroflow",
   "entries": {
     "Benchmark": [
@@ -63119,6 +63119,214 @@
             "name": "micro/ops/group_by",
             "value": 12489,
             "range": "± 437",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "zzlk",
+            "username": "zzlk",
+            "email": "2418897+zzlk@users.noreply.github.com"
+          },
+          "committer": {
+            "name": "zzlk",
+            "username": "zzlk",
+            "email": "2418897+zzlk@users.noreply.github.com"
+          },
+          "id": "39b43cdb2cf9b60ab1dd744098a6cc1e9f1ee5b0",
+          "message": "fix: fix examples docker image build",
+          "timestamp": "2023-07-12T22:35:34Z",
+          "url": "https://github.com/MingweiSamuel/hydroflow/commit/39b43cdb2cf9b60ab1dd744098a6cc1e9f1ee5b0"
+        },
+        "date": 1690603053144,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "arithmetic/hydroflow/compiled",
+            "value": 375607,
+            "range": "± 2644",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "arithmetic/hydroflow/compiled_no_cheating",
+            "value": 16478593,
+            "range": "± 42000",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "arithmetic/hydroflow/surface",
+            "value": 16497889,
+            "range": "± 9591",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/hydroflow",
+            "value": 141698430,
+            "range": "± 872854",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/hydroflow/surface",
+            "value": 179019761,
+            "range": "± 413421",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/scheduled",
+            "value": 83948727,
+            "range": "± 686872",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/hydroflow/surface",
+            "value": 7402341,
+            "range": "± 25972",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow",
+            "value": 8245632,
+            "range": "± 23707",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/hydroflow_builder",
+            "value": 8373966,
+            "range": "± 97671",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow",
+            "value": 16274649,
+            "range": "± 124513",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow/compiled",
+            "value": 14684575,
+            "range": "± 5921",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/hydroflow/surface",
+            "value": 14939707,
+            "range": "± 55662",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/scheduled",
+            "value": 2440559,
+            "range": "± 1802",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow",
+            "value": 2365471,
+            "range": "± 2659",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/surface",
+            "value": 6963833,
+            "range": "± 26270",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/hydroflow/surface_cheating",
+            "value": 2012313,
+            "range": "± 6172",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/identity",
+            "value": 7404,
+            "range": "± 26",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/unique",
+            "value": 77213,
+            "range": "± 109",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/map",
+            "value": 7417,
+            "range": "± 29",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/flat_map",
+            "value": 27888,
+            "range": "± 70",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/join",
+            "value": 129517,
+            "range": "± 433",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/difference",
+            "value": 95361,
+            "range": "± 1236",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/union",
+            "value": 35505,
+            "range": "± 67",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/tee",
+            "value": 10841,
+            "range": "± 20",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/fold",
+            "value": 33977,
+            "range": "± 1778",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/sort",
+            "value": 145927,
+            "range": "± 1842",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/crossjoin",
+            "value": 139125,
+            "range": "± 518",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/anti_join",
+            "value": 13915,
+            "range": "± 114",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/next_tick/small",
+            "value": 78876,
+            "range": "± 3051",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/next_tick/big",
+            "value": 87967,
+            "range": "± 4718",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/group_by",
+            "value": 11084,
+            "range": "± 328",
             "unit": "ns/iter"
           }
         ]
