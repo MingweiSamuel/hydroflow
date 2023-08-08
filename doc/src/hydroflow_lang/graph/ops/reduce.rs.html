@@ -150,6 +150,12 @@
 <a href="#150" id="150">150</a>
 <a href="#151" id="151">151</a>
 <a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>quote::quote_spanned;
 
 <span class="kw">use super</span>::{
@@ -169,12 +175,18 @@
 ///
 /// &gt; Note: The closure has access to the [`context` object](surface_flows.md#the-context-object).
 ///
+/// `reduce` can also be provided with one generic lifetime persistence argument, either
+/// `&#39;tick` or `&#39;static`, to specify how data persists. With `&#39;tick`, elements will only be collected
+/// within the same tick. With `&#39;static`, the accumulator will be remembered across ticks and elements
+/// are aggregated with elements arriving in later ticks. When not explicitly specified persistence
+/// defaults to `&#39;tick`.
+///
 /// ```hydroflow
 /// source_iter([1,2,3,4,5])
 ///     -&gt; reduce::&lt;&#39;tick&gt;(|accum: &amp;mut _, elem| {
 ///         *accum *= elem;
 ///     })
-///     -&gt; assert([120]);
+///     -&gt; assert_eq([120]);
 /// ```
 </span><span class="kw">pub const </span>REDUCE: OperatorConstraints = OperatorConstraints {
     name: <span class="string">&quot;reduce&quot;</span>,
@@ -217,7 +229,7 @@
         <span class="macro">assert!</span>(is_pull);
 
         <span class="kw">let </span>persistence = <span class="kw">match </span>persistence_args[..] {
-            [] =&gt; Persistence::Static,
+            [] =&gt; Persistence::Tick,
             [a] =&gt; a,
             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         };

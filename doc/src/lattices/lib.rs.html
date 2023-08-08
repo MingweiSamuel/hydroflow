@@ -107,6 +107,38 @@
 <a href="#107" id="107">107</a>
 <a href="#108" id="108">108</a>
 <a href="#109" id="109">109</a>
+<a href="#110" id="110">110</a>
+<a href="#111" id="111">111</a>
+<a href="#112" id="112">112</a>
+<a href="#113" id="113">113</a>
+<a href="#114" id="114">114</a>
+<a href="#115" id="115">115</a>
+<a href="#116" id="116">116</a>
+<a href="#117" id="117">117</a>
+<a href="#118" id="118">118</a>
+<a href="#119" id="119">119</a>
+<a href="#120" id="120">120</a>
+<a href="#121" id="121">121</a>
+<a href="#122" id="122">122</a>
+<a href="#123" id="123">123</a>
+<a href="#124" id="124">124</a>
+<a href="#125" id="125">125</a>
+<a href="#126" id="126">126</a>
+<a href="#127" id="127">127</a>
+<a href="#128" id="128">128</a>
+<a href="#129" id="129">129</a>
+<a href="#130" id="130">130</a>
+<a href="#131" id="131">131</a>
+<a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
+<a href="#140" id="140">140</a>
+<a href="#141" id="141">141</a>
 </pre></div><pre class="rust"><code><span class="attr">#![warn(missing_docs)]
 #![doc = <span class="macro">include_str!</span>(<span class="string">&quot;../README.md&quot;</span>)]
 
@@ -122,10 +154,10 @@
 <span class="kw">mod </span>ord;
 <span class="kw">mod </span>pair;
 <span class="kw">mod </span>point;
-<span class="kw">mod </span>seq;
 <span class="kw">pub mod </span>set_union;
 <span class="kw">pub mod </span>test;
 <span class="kw">mod </span>unit;
+<span class="kw">mod </span>vec_union;
 <span class="kw">mod </span>with_bot;
 <span class="kw">mod </span>with_top;
 
@@ -134,9 +166,15 @@
 <span class="kw">pub use </span>ord::{Max, Min};
 <span class="kw">pub use </span>pair::Pair;
 <span class="kw">pub use </span>point::Point;
-<span class="kw">pub use </span>seq::Seq;
+<span class="kw">pub use </span>vec_union::VecUnion;
 <span class="kw">pub use </span>with_bot::WithBot;
 <span class="kw">pub use </span>with_top::WithTop;
+
+<span class="doccomment">/// Alias trait for lattice types.
+</span><span class="attr">#[sealed]
+</span><span class="kw">pub trait </span>Lattice: Sized + Merge&lt;<span class="self">Self</span>&gt; + LatticeOrd + NaiveLatticeOrd + IsBot + IsTop {}
+<span class="attr">#[sealed]
+</span><span class="kw">impl</span>&lt;T&gt; Lattice <span class="kw">for </span>T <span class="kw">where </span>T: Sized + Merge&lt;<span class="self">Self</span>&gt; + LatticeOrd + NaiveLatticeOrd + IsBot + IsTop {}
 
 <span class="doccomment">/// Trait for lattice merge (AKA &quot;join&quot; or &quot;least upper bound&quot;).
 </span><span class="kw">pub trait </span>Merge&lt;Other&gt; {
@@ -208,12 +246,38 @@
 <span class="doccomment">/// Trait to check if a lattice instance is bottom (⊥).
 </span><span class="kw">pub trait </span>IsBot {
     <span class="doccomment">/// Returns if `self` is lattice bottom (⊥).
+    ///
+    /// Must be consistent with equality, any element equal to bottom is also considered to be bottom.
     </span><span class="kw">fn </span>is_bot(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool;
 }
 
 <span class="doccomment">/// Trait to check if a lattice instance is top (⊤) and therefore cannot change any futher.
 </span><span class="kw">pub trait </span>IsTop {
     <span class="doccomment">/// Returns if `self` is lattice top (⊤).
+    ///
+    /// Must be consistent with equality, any element equal to top is also considered to be top.
     </span><span class="kw">fn </span>is_top(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; bool;
+}
+
+<span class="doccomment">/// Trait to atomize a lattice into individual elements. For example, a [`set_union::SetUnion`]
+/// will be broken up into individual singleton elements.
+///
+/// Formally, breaks up `Self` into an set of lattice points forming a (strong) [antichain](https://en.wikipedia.org/wiki/Antichain).
+/// &quot;Strong&quot; in the sense that any pair of lattice points in the antichain should have a greatest
+/// lower bound (GLB or &quot;meet&quot;) of bottom.
+</span><span class="kw">pub trait </span>Atomize: Merge&lt;<span class="self">Self</span>::Atom&gt; {
+    <span class="doccomment">/// The type of atoms for this lattice.
+    </span><span class="kw">type </span>Atom: <span class="lifetime">&#39;static </span>+ IsBot;
+
+    <span class="doccomment">/// The iter type iterating the antichain atoms.
+    </span><span class="kw">type </span>AtomIter: <span class="lifetime">&#39;static </span>+ Iterator&lt;Item = <span class="self">Self</span>::Atom&gt;;
+
+    <span class="doccomment">/// Atomize self: convert into an iter of atoms.
+    ///
+    /// The returned iterator should be empty if and only if `self.is_bot()` is true.
+    /// All atoms in the returned iterator should have `self.is_bot()` be false.
+    ///
+    /// Returned values must merge to reform a value equal to the original `self`.
+    </span><span class="kw">fn </span>atomize(<span class="self">self</span>) -&gt; <span class="self">Self</span>::AtomIter;
 }
 </code></pre></div></section></main></body></html>
