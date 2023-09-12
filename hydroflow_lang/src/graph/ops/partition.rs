@@ -13,7 +13,7 @@ use crate::diagnostic::{Diagnostic, Level};
 use crate::graph::{OperatorInstance, PortIndexValue};
 use crate::pretty_span::PrettySpan;
 
-// TODO(mingwei): Fix this
+// TODO(mingwei): update docs.
 
 // TODO(mingwei): Preprocess rustdoc links in mdbook or in the `operator_docgen` macro.
 /// > Arguments: A Rust closure, the first argument is a received item and the
@@ -31,18 +31,18 @@ use crate::pretty_span::PrettySpan;
 /// > Note: The closure has access to the [`context` object](surface_flows.md#the-context-object).
 ///
 /// ```hydroflow
-/// my_demux = source_iter(1..=100) -> demux(|v, var_args!(fzbz, fizz, buzz, vals)|
-///     match (v % 3, v % 5) {
-///         (0, 0) => fzbz.give(v),
-///         (0, _) => fizz.give(v),
-///         (_, 0) => buzz.give(v),
-///         (_, _) => vals.give(v),
+/// my_partition = source_iter(1..=100) -> partition(|v, [fzbz, fizz, buzz, vals]: [usize; 4]|
+///     match (*v % 3, *v % 5) {
+///         (0, 0) => fzbz,
+///         (0, _) => fizz,
+///         (_, 0) => buzz,
+///         (_, _) => rest,
 ///     }
 /// );
-/// my_demux[fzbz] -> for_each(|v| println!("{}: fizzbuzz", v));
-/// my_demux[fizz] -> for_each(|v| println!("{}: fizz", v));
-/// my_demux[buzz] -> for_each(|v| println!("{}: buzz", v));
-/// my_demux[vals] -> for_each(|v| println!("{}", v));
+/// my_partition[fzbz] -> for_each(|v| println!("{}: fizzbuzz", v));
+/// my_partition[fizz] -> for_each(|v| println!("{}: fizz", v));
+/// my_partition[buzz] -> for_each(|v| println!("{}: buzz", v));
+/// my_partition[rest] -> for_each(|v| println!("{}", v));
 /// ```
 pub const PARTITION: OperatorConstraints = OperatorConstraints {
     name: "partition",
@@ -84,19 +84,19 @@ pub const PARTITION: OperatorConstraints = OperatorConstraints {
         let func = &arguments[0];
         let Expr::Closure(func) = func else {
             diagnostics.push(Diagnostic::spanned(
-                op_span,
+                func.span(),
                 Level::Error,
-                "Second argument must be a two-argument closure expression"),
+                "Argument must be a two-argument closure expression"),
             );
             return Err(());
         };
         if 2 != func.inputs.len() {
             diagnostics.push(Diagnostic::spanned(
-                op_span,
+                func.span(),
                 Level::Error,
                 &*format!(
-                    "Closure provided as second argument to `{}` must have a second \
-                    input argument listing ports, `var_args!(port_a, port_b, ...)`.",
+                    "Closure provided to `{}(..)` must have two arguments: \
+                    the first argument is the item, and the second argument lists ports, e.g. `var_args!(port_a, port_b, ..)`.",
                     op_name
                 ),
             ));
