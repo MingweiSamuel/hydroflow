@@ -31,7 +31,7 @@ use crate::pretty_span::PrettySpan;
 /// > Note: The closure has access to the [`context` object](surface_flows.md#the-context-object).
 ///
 /// ```hydroflow
-/// my_partition = source_iter(1..=100) -> partition(|v, [fzbz, fizz, buzz, vals]: [usize; 4]|
+/// my_partition = source_iter(1..=100) -> partition(|v, [fzbz, fizz, buzz, vals]: [_; 4]|
 ///     match (*v % 3, *v % 5) {
 ///         (0, 0) => fzbz,
 ///         (0, _) => fizz,
@@ -190,7 +190,10 @@ pub const PARTITION: OperatorConstraints = OperatorConstraints {
     },
 };
 
-fn extract_closure_idents(arg2: &Pat) -> HashMap<Ident, usize> {
+fn extract_closure_idents(mut arg2: &Pat) -> HashMap<Ident, usize> {
+    if let Pat::Ident(pat_ident) = arg2 {
+        arg2 = &*pat_ident.subpat.as_ref().expect("TODO(mingwei): EXPECTED SUBPAT").1;
+    }
     let tokens = if let Pat::Macro(pat_macro) = arg2 {
         pat_macro.mac.tokens.clone()
     } else {
