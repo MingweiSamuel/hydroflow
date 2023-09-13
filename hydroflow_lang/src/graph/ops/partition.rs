@@ -1,17 +1,13 @@
-use std::collections::HashMap;
-
-use proc_macro2::{Ident, TokenTree};
-use quote::{quote, quote_spanned, ToTokens};
+use quote::{quote_spanned, ToTokens};
 use syn::spanned::Spanned;
-use syn::{Expr, Pat};
+use syn::{parse_quote_spanned, Expr, LitInt, Pat, PatType, Token};
 
 use super::{
-    FlowProperties, FlowPropertyVal, OperatorCategory, OperatorConstraints, OperatorWriteOutput,
-    PortListSpec, WriteContextArgs, RANGE_0, RANGE_1,
+    FlowProperties, FlowPropertyVal, OperatorCategory, OperatorConstraints, PortListSpec,
+    WriteContextArgs, RANGE_0, RANGE_1,
 };
 use crate::diagnostic::{Diagnostic, Level};
-use crate::graph::{OperatorInstance, PortIndexValue};
-use crate::pretty_span::PrettySpan;
+use crate::graph::OperatorInstance;
 
 // TODO(mingwei): update docs.
 
@@ -64,25 +60,17 @@ pub const PARTITION: OperatorConstraints = OperatorConstraints {
     },
     input_delaytype_fn: |_| None,
     flow_prop_fn: None,
-    write_fn: |&WriteContextArgs {
-                   root,
+    write_fn: |wc @ &WriteContextArgs {
                    op_span,
-                   ident,
-                   outputs,
                    is_pull,
                    op_name,
-                   op_inst:
-                       OperatorInstance {
-                           output_ports,
-                           arguments,
-                           ..
-                       },
+                   op_inst: op_inst @ OperatorInstance { arguments, .. },
                    ..
                },
                diagnostics| {
         assert!(!is_pull);
-        let func = &arguments[0];
-        let Expr::Closure(func) = func else {
+        let func = arguments[0].clone();
+        let Expr::Closure(mut func) = func else {
             diagnostics.push(Diagnostic::spanned(
                 func.span(),
                 Level::Error,
@@ -104,119 +92,67 @@ pub const PARTITION: OperatorConstraints = OperatorConstraints {
         }
 
         // Port idents specified in the closure's second argument.
-        let arg2 = &func.inputs[1];
-        let closure_idents = extract_closure_idents(arg2);
-
-        // Port idents supplied via port connections in the surface syntax.
-        let port_idents: Vec<_> = output_ports
-            .iter()
-            .filter_map(|output_port| {
-                let PortIndexValue::Path(port_expr) = output_port else {
-                    diagnostics.push(Diagnostic::spanned(
-                        output_port.span(),
-                        Level::Error,
-                        format!(
-                            "Output port from `{}(..)` must be specified and must be a valid identifier.",
-                            op_name,
-                        ),
-                    ));
-                    return None;
-                };
-                let port_ident = syn::parse2::<Ident>(quote! { #port_expr })
-                    .map_err(|err| diagnostics.push(err.into()))
-                    .ok()?;
-
-                if !closure_idents.contains_key(&port_ident) {
-                    // TODO(mingwei): Use MultiSpan when `proc_macro2` supports it.
-                    diagnostics.push(Diagnostic::spanned(
-                        arg2.span(),
-                        Level::Error,
-                        format!(
-                            "Argument specifying the output ports in `{0}(..)` does not contain extra port `{1}`: ({2}) (1/2).",
-                            op_name, port_ident, PrettySpan(output_port.span()),
-                        ),
-                    ));
-                    diagnostics.push(Diagnostic::spanned(
-                        output_port.span(),
-                        Level::Error,
-                        format!(
-                            "Port `{1}` not found in the arguments specified in `{0}(..)`'s closure: ({2}) (2/2).",
-                            op_name, port_ident, PrettySpan(arg2.span()),
-                        ),
-                    ));
-                    return None;
-                }
-
-                Some(port_ident)
-            })
-            .collect();
-
-        for closure_ident in closure_idents.keys() {
-            if !port_idents.contains(closure_ident) {
-                diagnostics.push(Diagnostic::spanned(
-                    closure_ident.span(),
-                    Level::Error,
-                    format!(
-                        "`{}(..)` closure argument `{}` missing corresponding output port.",
-                        op_name, closure_ident,
-                    ),
-                ));
+        let mut arg2 = &mut func.inputs[1];
+        let closure_idents = {
+            if let Pat::Ident(pat_ident) = arg2 {
+                arg2 = &mut *pat_ident
+                    .subpat
+                    .as_mut()
+                    .expect("TODO(mingwei): EXPECTED SUBPAT")
+                    .1;
             }
-        }
-
-        if diagnostics.iter().any(Diagnostic::is_error) {
-            return Err(());
-        }
-
-        assert_eq!(outputs.len(), port_idents.len());
-        assert_eq!(outputs.len(), closure_idents.len());
-
-        let mut sort_permute: Vec<_> = (0..outputs.len()).collect();
-        sort_permute.sort_by_key(|&i| closure_idents[&port_idents[i]]);
-
-        let sorted_outputs = sort_permute.iter().map(|&i| &outputs[i]);
-
-        let write_iterator = quote_spanned! {op_span=>
-            let #ident = {
-                #[allow(unused_imports)] use #root::pusherator::Pusherator;
-                #root::pusherator::demux::Demux::new(#func, #root::var_expr!( #( #sorted_outputs ),* ))
+            let Pat::Slice(pat_slice) = arg2 else {
+                panic!("TODO(mingwei) extpected slice pat");
             };
+            pat_slice
+                .elems
+                .iter()
+                .map(|pat| {
+                    let Pat::Ident(pat_ident) = pat else {
+                        panic!("TODO(mingwei) expected ident pat");
+                    };
+                    pat_ident.ident.clone()
+                })
+                .collect::<Vec<_>>()
+        };
+        let len = LitInt::new(&closure_idents.len().to_string(), op_span);
+        let x: PatType = PatType {
+            attrs: vec![],
+            pat: Box::new(arg2.clone()),
+            colon_token: parse_quote_spanned! {op_span=> : },
+            ty: parse_quote_spanned! {op_span=> [usize; #len ] },
+        };
+        // let x: PatType = parse_quote_spanned! {op_span=>
+        //     #arg2 : [usize; #len ]
+        // };
+        eprintln!("{:?}", x.to_token_stream().to_string());
+        *arg2 = Pat::Type(x);
+        eprintln!("HELLO WORLD");
+
+        let idxs = (0..closure_idents.len())
+            .map(|i| LitInt::new(&format!("{}_usize", i), op_span))
+            .collect::<Vec<_>>();
+        let arguments = parse_quote_spanned! { op_span=>
+            |__item, var_args!( #( #closure_idents ),* )| {
+                let __idx = (#func)(&__item, [ #( #idxs ),* ]);
+                match __idx {
+                    #(
+                        #idxs => #closure_idents.give(__item),
+                    )*
+                    __unknown => panic!("Returned index {} is out-of-bounds.", __unknown),
+                };
+            }
         };
 
-        Ok(OperatorWriteOutput {
-            write_iterator,
-            ..Default::default()
-        })
+        (super::demux::DEMUX.write_fn)(
+            &WriteContextArgs {
+                op_inst: &OperatorInstance {
+                    arguments,
+                    ..op_inst.clone()
+                },
+                ..wc.clone()
+            },
+            diagnostics,
+        )
     },
 };
-
-fn extract_closure_idents(mut arg2: &Pat) -> HashMap<Ident, usize> {
-    if let Pat::Ident(pat_ident) = arg2 {
-        arg2 = &*pat_ident.subpat.as_ref().expect("TODO(mingwei): EXPECTED SUBPAT").1;
-    }
-    let tokens = if let Pat::Macro(pat_macro) = arg2 {
-        pat_macro.mac.tokens.clone()
-    } else {
-        arg2.to_token_stream()
-    };
-
-    let mut idents = HashMap::new();
-    let mut stack: Vec<_> = tokens.into_iter().collect();
-    stack.reverse();
-    while let Some(tt) = stack.pop() {
-        match tt {
-            TokenTree::Group(group) => {
-                let a = stack.len();
-                stack.extend(group.stream());
-                let b = stack.len();
-                stack[a..b].reverse();
-            }
-            TokenTree::Ident(ident) => {
-                idents.insert(ident, idents.len());
-            }
-            TokenTree::Punct(_) => (),
-            TokenTree::Literal(_) => (),
-        }
-    }
-    idents
-}
