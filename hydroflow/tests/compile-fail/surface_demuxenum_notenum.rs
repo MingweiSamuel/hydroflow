@@ -9,7 +9,7 @@ fn main() {
         my_demux = source_iter([
             Shape { area: 10.0 },
             Shape { area: 9.0 },
-        ]) -> demux_enum::<Shape>();
+        ]) -> demux::<Shape>();
         my_demux[Rectangle] -> for_each(std::mem::drop);
         my_demux[Circle] -> for_each(std::mem::drop);
         my_demux[Square] -> for_each(std::mem::drop);

@@ -1,25 +1,25 @@
-//! Traits for the `demux_enum` derive and operator.
+//! Traits for the enum `demux` derive and operator.
 
-pub use hydroflow_macro::DemuxEnum;
+pub use hydroflow_macro::Demux;
 use pusherator::demux::PusheratorList;
 use pusherator::Pusherator;
 use variadics::Variadic;
 
-/// Trait for use with the `demux_enum` operator.
+/// Trait for use with the enum `demux` operator.
 ///
 /// This trait is meant to be derived: `#[derive(DemuEnum)]`.
-pub trait DemuxEnum<Nexts>: DemuxEnumItems
+pub trait Demux<Nexts>: DemuxItems
 where
     Nexts: PusheratorListForItems<Self::Items>,
 {
     /// Pushes self into the corresponding output pusherator.
-    fn demux_enum(self, outputs: &mut Nexts);
+    fn demux(self, outputs: &mut Nexts);
 }
 
 /// Fixed output item list for [`DemuxEnum`].
 ///
 /// This trait is meant to be derived: `#[derive(DemuEnum)]`.
-pub trait DemuxEnumItems {
+pub trait DemuxItems {
     /// A `var_type!(...)` list of items corresponding to each variant's output type.
     type Items: Variadic;
 }

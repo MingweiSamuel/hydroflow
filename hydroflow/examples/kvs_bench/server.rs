@@ -17,9 +17,10 @@ use serde::Serialize;
 use tokio::task;
 use tokio_stream::StreamExt;
 
-use crate::buffer_pool::BufferPool;
+use crate::buffer_pool::{AutoReturnBuffer, BufferPool};
 use crate::protocol::{
-    KvsRequest, KvsRequestDeserializer, KvsResponse, MyLastWriteWins, MySetUnion, NodeId,
+    KvsRequest, KvsRequestDemux, KvsRequestDeserializer, KvsResponse, MyLastWriteWins, MySetUnion,
+    NodeId,
 };
 use crate::Topology;
 
@@ -173,47 +174,44 @@ pub fn run_server<RX>(
 
                 client_input = union_puts_and_gossip_requests
                     -> enumerate::<'tick>()
-                    -> demux(|(e, (req, addr)): (usize, (KvsRequest<BUFFER_SIZE>, NodeId)), var_args!(gets, store, broadcast)| {
-                        match req {
-                            KvsRequest::Put {key, value} => {
-                                throughput_internal += 1;
-                                const GATE: usize = 2 * 1024;
-                                if std::intrinsics::unlikely(throughput_internal % GATE == 0) {
-                                    throughput.fetch_add(GATE, Ordering::SeqCst);
-                                }
-                                let marker = create_unique_id(server_id as u128, context.current_tick(), e as u128);
-
-                                broadcast.give((key, MyLastWriteWins::new(
-                                    Max::new(marker),
-                                    WithBot::new_from(Point::new(value.clone())),
-                                )));
-
-                                store.give((key, MyLastWriteWins::new(
-                                    Max::new(marker),
-                                    WithBot::new_from(Point::new(value)),
-                                )));
-                            },
-                            KvsRequest::Gossip {map} => {
-                                for (key, reg) in map.into_reveal() {
-                                    store.give((key, reg));
-                                }
-                            },
-                            KvsRequest::Get {key} => gets.give((key, addr)),
-                            KvsRequest::Delete {key} => {
-                                let marker = create_unique_id(server_id as u128, context.current_tick(), e as u128);
-
-                                broadcast.give((key, MyLastWriteWins::new(
-                                    Max::new(marker),
-                                    WithBot::default(),
-                                )));
-
-                                store.give((key, MyLastWriteWins::new(
-                                    Max::new(marker),
-                                    WithBot::default(),
-                                )));
-                            }
+                    -> map(|(tick_idx, (req, addr)): (usize, (KvsRequest<BUFFER_SIZE>, NodeId))| KvsRequestDemux::from_kvs_request(req, addr, tick_idx))
+                    -> demux::<KvsRequestDemux<BUFFER_SIZE>>();
+                puts = client_input[Put]
+                    -> map(|(tick_idx, key, value): (usize, u64, AutoReturnBuffer<BUFFER_SIZE>)| {
+                        throughput_internal += 1;
+                        const GATE: usize = 2 * 1024;
+                        if std::intrinsics::unlikely(throughput_internal % GATE == 0) {
+                            throughput.fetch_add(GATE, Ordering::SeqCst);
                         }
-                    });
+                        let marker = create_unique_id(server_id as u128, context.current_tick(), tick_idx as u128);
+
+                        (
+                            key,
+                            MyLastWriteWins::new(
+                                Max::new(marker),
+                                WithBot::new_from(Point::new(value.clone())),
+                            )
+                        )
+                    })
+                    -> tee();
+                puts -> broadcast;
+                puts -> store;
+                client_input[Gossip] -> flat_map(|(map,)| map.into_reveal()) -> store;
+                deletes = client_input[Delete]
+                    -> map(|(tick_idx, key)| {
+                        let marker = create_unique_id(server_id as u128, context.current_tick(), tick_idx as u128);
+
+                        (
+                            key,
+                            MyLastWriteWins::new(
+                                Max::new(marker),
+                                WithBot::default(),
+                            )
+                        )
+                    })
+                    -> tee();
+                deletes -> broadcast;
+                deletes -> store;
 
                 peers = cross_join::<'static, 'tick, HalfMultisetJoinState>();
                 source_iter(topology.lookup) -> [0]peers;
@@ -222,7 +220,7 @@ pub fn run_server<RX>(
                     -> [signal]batcher;
 
                 // broadcast out locally generated changes to other nodes.
-                client_input[broadcast]
+                broadcast = union()
                     -> map(|(key, reg)| MapUnionSingletonMap::new_from((key, reg)))
                     -> [input]batcher;
 
@@ -246,12 +244,12 @@ pub fn run_server<RX>(
                 // join for lookups
                 lookup = _lattice_join_fused_join::<'static, 'tick, MyLastWriteWins<BUFFER_SIZE>, MySetUnion>();
 
-                client_input[store]
+                store = union()
                     // -> inspect(|x| println!("{server_id}:{:5}: stores-into-lookup: {x:?}", context.current_tick()))
                     -> [0]lookup;
 
                 // Feed gets into the join to make them do the actual matching.
-                client_input[gets]
+                client_input[Get]
                     -> enumerate() // Ensure that two requests from the same client on the same tick do not get merged into a single request.
                     -> map(|(id, (key, addr))| {
                         (key, SetUnionSingletonSet::new_from((addr, id)))

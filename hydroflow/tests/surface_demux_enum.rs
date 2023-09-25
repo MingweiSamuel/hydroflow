@@ -1,4 +1,4 @@
-use hydroflow::util::demux_enum::{DemuxEnum, DemuxEnumItems};
+use hydroflow::util::demux::{Demux, DemuxItem};
 use hydroflow::{hydroflow_syntax, var_args, var_expr, var_type};
 use multiplatform_test::multiplatform_test;
 use pusherator::for_each::ForEach;
@@ -12,16 +12,16 @@ fn test_manual_impl() {
         Rectangle { w: usize, h: usize },
         Circle { r: usize },
     }
-    impl DemuxEnumItems for Shape {
+    impl DemuxItem for Shape {
         type Items = var_type!(usize, (usize, usize), (usize,));
     }
-    impl<Square, Rectangle, Circle> DemuxEnum<var_type!(Square, Rectangle, Circle)> for Shape
+    impl<Square, Rectangle, Circle> Demux<var_type!(Square, Rectangle, Circle)> for Shape
     where
         Square: Pusherator<Item = usize>,
         Rectangle: Pusherator<Item = (usize, usize)>,
         Circle: Pusherator<Item = (usize,)>,
     {
-        fn demux_enum(self, var_args!(sq, re, ci): &mut var_type!(Square, Rectangle, Circle)) {
+        fn demux(self, var_args!(sq, re, ci): &mut var_type!(Square, Rectangle, Circle)) {
             match self {
                 Self::Square(s) => sq.give(s),
                 Self::Rectangle { w, h } => re.give((w, h)),
@@ -41,13 +41,13 @@ fn test_manual_impl() {
         ForEach::new(|x| println!("3 {:?}", x)),
     );
     for val in vals {
-        val.demux_enum(&mut nexts);
+        val.demux(&mut nexts);
     }
 }
 
 #[multiplatform_test]
 fn test_derive() {
-    #[derive(DemuxEnum)]
+    #[derive(Demux)]
     enum Shape {
         Square(usize),
         Rectangle { w: usize, h: usize },
@@ -65,13 +65,13 @@ fn test_derive() {
         ForEach::new(|x| println!("3 {:?}", x)),
     );
     for val in vals {
-        val.demux_enum(&mut nexts);
+        val.dmuex(&mut nexts);
     }
 }
 
 #[multiplatform_test]
-pub fn test_demux_enum() {
-    #[derive(DemuxEnum)]
+pub fn test_enum_demux() {
+    #[derive(Demux)]
     enum Shape {
         Square(f64),
         Rectangle { w: f64, h: f64 },
@@ -83,7 +83,7 @@ pub fn test_demux_enum() {
             Shape::Square(9.0),
             Shape::Rectangle { w: 10.0, h: 8.0 },
             Shape::Circle { r: 5.0 },
-        ]) -> demux_enum::<Shape>();
+        ]) -> demux::<Shape>();
 
         my_demux[Square] -> map(|s| s * s) -> out;
         my_demux[Circle] -> map(|(r,)| std::f64::consts::PI * r * r) -> out;

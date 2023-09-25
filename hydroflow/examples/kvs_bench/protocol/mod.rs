@@ -3,6 +3,7 @@ mod serialization;
 #[cfg(test)]
 mod test;
 
+use hydroflow_macro::Demux;
 use lattices::map_union::MapUnionHashMap;
 use lattices::set_union::SetUnionHashSet;
 use lattices::{DomPair, Max, Point, WithBot};
@@ -25,12 +26,46 @@ pub enum KvsRequest<const SIZE: usize> {
     Get {
         key: u64,
     },
-    Gossip {
-        map: MapUnionHashMap<u64, MyLastWriteWins<SIZE>>,
-    },
     Delete {
         key: u64,
     },
+    Gossip {
+        map: MapUnionHashMap<u64, MyLastWriteWins<SIZE>>,
+    },
+}
+
+#[derive(Clone, Debug, Demux)]
+pub enum KvsRequestDemux<const SIZE: usize> {
+    Put {
+        tick_idx: usize,
+        key: u64,
+        value: AutoReturnBuffer<SIZE>,
+    },
+    Get {
+        key: u64,
+        address: NodeId,
+    },
+    Delete {
+        tick_idx: usize,
+        key: u64,
+    },
+    Gossip {
+        map: MapUnionHashMap<u64, MyLastWriteWins<SIZE>>,
+    },
+}
+impl<const SIZE: usize> KvsRequestDemux<SIZE> {
+    pub fn from_kvs_request(req: KvsRequest<SIZE>, address: NodeId, tick_idx: usize) -> Self {
+        match req {
+            KvsRequest::Put { key, value } => Self::Put {
+                tick_idx,
+                key,
+                value,
+            },
+            KvsRequest::Get { key } => Self::Get { key, address },
+            KvsRequest::Delete { key } => Self::Delete { tick_idx, key },
+            KvsRequest::Gossip { map } => Self::Gossip { map },
+        }
+    }
 }
 
 #[derive(Clone, Debug)]

@@ -6,7 +6,7 @@ use hydroflow::scheduled::graph::Hydroflow;
 use hydroflow::util::{UdpSink, UdpStream};
 
 use crate::helpers::decide;
-use crate::protocol::{CoordMsg, MsgType, SubordResponse};
+use crate::protocol::Message;
 use crate::{Addresses, GraphType};
 
 pub(crate) async fn run_subordinate(
@@ -30,40 +30,41 @@ pub(crate) async fn run_subordinate(
         outbound_chan = union() -> [0]server_addr_join -> tee();
         outbound_chan[0] -> dest_sink_serde(outbound);
         inbound_chan = source_stream_serde(inbound) -> map(Result::unwrap) -> map(|(m, _a)| m) -> tee();
-        msgs = inbound_chan[0] ->  demux(|m:CoordMsg, var_args!(prepares, p2, ends, errs)| match m.mtype {
-            MsgType::Prepare => prepares.give(m),
-            MsgType::Abort => p2.give(m),
-            MsgType::Commit => p2.give(m),
-            MsgType::End {..} => ends.give(m),
-            _ => errs.give(m),
-        });
-        msgs[errs] -> for_each(|m| println!("Received unexpected message type: {:?}", m));
+        msgs = inbound_chan[0]
+            -> demux::<Message>();
+            // -> demux(|m:CoordMsg, var_args!(prepares, p2, ends, errs)| match m.mtype {
+            //     MsgType::Prepare => prepares.give(m),
+            //     MsgType::Abort => p2.give(m),
+            //     MsgType::Commit => p2.give(m),
+            //     MsgType::End {..} => ends.give(m),
+            //     _ => errs.give(m),
+            // });
+        msgs[AckP2] -> for_each(|xid| println!("Received unexpected `AckP2` message, xid: {}", xid));
+        msgs[Ended] -> for_each(|xid| println!("Received unexpected `Ended` message, xid: {}", xid));
+        msgs[Err] -> for_each(|xid| println!("Received unexpected `Err` message, xid: {}", xid));
 
         // we log all messages (in this prototype we just print)
         inbound_chan[1] -> for_each(|m| println!("Received {:?}", m));
         outbound_chan[1] -> for_each(|m| println!("Sending {:?}", m));
 
-
         // handle p1 message: choose vote and respond
         // in this prototype we choose randomly whether to abort via decide()
-        report_chan = msgs[prepares] -> map(|m: CoordMsg| SubordResponse {
-            xid: m.xid,
-            mtype: if decide(67) { MsgType::Commit } else { MsgType::Abort }
-        });
-        report_chan -> [0]outbound_chan;
+        report_chan = msgs[Prepare]
+            -> map(|xid: u16| {
+                if decide(67) {
+                    Message::Commit(xid)
+                } else {
+                    Message::Abort(xid)
+                }
+            })
+            -> [0]outbound_chan;
 
         // handle p2 message: acknowledge (and print)
-        p2_response = map(|(m, t)| SubordResponse {
-            xid: m.xid,
-            mtype: t,
-        }) -> [1]outbound_chan;
-        msgs[p2] -> map(|m:CoordMsg| (m, MsgType::AckP2)) -> p2_response;
+        msgs[Commit] -> map(|xid| Message::AckP2(xid)) -> [1]outbound_chan;
+        msgs[Abort] -> map(|xid| Message::AckP2(xid)) -> [2]outbound_chan;
 
         // handle end message: acknowledge (and print)
-        msgs[ends] -> map(|m:CoordMsg| SubordResponse {
-            xid: m.xid,
-            mtype: MsgType::Ended,
-        }) -> [2]outbound_chan;
+        msgs[End] -> map(|xid: u16| Message::Ended(xid)) -> [3]outbound_chan;
     };
 
     if let Some(graph) = graph {

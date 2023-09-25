@@ -2,7 +2,7 @@
 //! Helper utilities for the Hydroflow surface syntax.
 
 pub mod clear;
-pub mod demux_enum;
+pub mod demux;
 pub mod monotonic_map;
 pub mod multiset;
 pub mod sparse_vec;

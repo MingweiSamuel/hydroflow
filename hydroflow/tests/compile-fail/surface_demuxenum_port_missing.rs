@@ -1,4 +1,4 @@
-use hydroflow::util::demux_enum::DemuxEnum;
+use hydroflow::util::demux::Demux;
 use hydroflow::{hydroflow_syntax, var_args};
 
 fn main() {
@@ -14,7 +14,7 @@ fn main() {
             Shape::Rectangle { w: 10.0, h: 8.0 },
             Shape::Square(9.0),
             Shape::Circle { r: 5.0 },
-        ]) -> demux_enum::<Shape>();
+        ]) -> demux::<Shape>();
         my_demux[Rectangle] -> for_each(std::mem::drop);
         my_demux[Circle] -> for_each(std::mem::drop);
     };

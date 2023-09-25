@@ -1,46 +1,40 @@
-use std::collections::HashMap;
-
-use proc_macro2::{Ident, TokenTree};
-use quote::{quote_spanned, ToTokens};
+use proc_macro2::Ident;
+use quote::{quote, quote_spanned};
 use syn::spanned::Spanned;
-use syn::{Expr, Pat};
 
 use super::{
     FlowProperties, FlowPropertyVal, OperatorCategory, OperatorConstraints, OperatorWriteOutput,
     PortListSpec, WriteContextArgs, RANGE_0, RANGE_1,
 };
 use crate::diagnostic::{Diagnostic, Level};
-use crate::graph::{OperatorInstance, PortIndexValue};
-use crate::pretty_span::PrettySpan;
+use crate::graph::{OpInstGenerics, OperatorInstance, PortIndexValue};
 
-// TODO(mingwei): Preprocess rustdoc links in mdbook or in the `operator_docgen` macro.
-/// > Arguments: A Rust closure, the first argument is a received item and the
-/// > second argument is a variadic [`var_args!` tuple list](https://hydro-project.github.io/hydroflow/doc/hydroflow/macro.var_args.html)
-/// > where each item name is an output port.
+/// > Generic Argument: A enum type which has `#[derive(DemuxEnum)]`. Must match the items in the input stream.
 ///
-/// Takes the input stream and allows the user to determine which items to
-/// deliver to any number of output streams.
+/// Takes an input stream of enum instances and splits them into their variants.
 ///
-/// > Note: Downstream operators may need explicit type annotations.
+/// ```rustdoc
+/// #[derive(DemuxEnum)]
+/// enum Shape {
+///     Square(f64),
+///     Rectangle { w: f64, h: f64 },
+///     Circle { r: f64 },
+/// }
 ///
-/// > Note: The [`Pusherator`](https://hydro-project.github.io/hydroflow/doc/pusherator/trait.Pusherator.html)
-/// > trait is automatically imported to enable the [`.give(...)` method](https://hydro-project.github.io/hydroflow/doc/pusherator/trait.Pusherator.html#tymethod.give).
+/// let mut df = hydroflow_syntax! {
+///     my_demux = source_iter([
+///         Shape::Square(9.0),
+///         Shape::Rectangle { w: 10.0, h: 8.0 },
+///         Shape::Circle { r: 5.0 },
+///     ]) -> demux::<Shape>();
 ///
-/// > Note: The closure has access to the [`context` object](surface_flows.md#the-context-object).
+///     my_demux[Square] -> map(|s| s * s) -> out;
+///     my_demux[Circle] -> map(|(r,)| std::f64::consts::PI * r * r) -> out;
+///     my_demux[Rectangle] -> map(|(w, h)| w * h) -> out;
 ///
-/// ```hydroflow
-/// my_demux = source_iter(1..=100) -> demux(|v, var_args!(fzbz, fizz, buzz, rest)|
-///     match (v % 3, v % 5) {
-///         (0, 0) => fzbz.give(v),
-///         (0, _) => fizz.give(v),
-///         (_, 0) => buzz.give(v),
-///         (_, _) => rest.give(v),
-///     }
-/// );
-/// my_demux[fzbz] -> for_each(|v| println!("{}: fizzbuzz", v));
-/// my_demux[fizz] -> for_each(|v| println!("{}: fizz", v));
-/// my_demux[buzz] -> for_each(|v| println!("{}: buzz", v));
-/// my_demux[rest] -> for_each(|v| println!("{}", v));
+///     out = union() -> for_each(|area| println!("Area: {}", area));
+/// };
+/// df.run_available();
 /// ```
 pub const DEMUX: OperatorConstraints = OperatorConstraints {
     name: "demux",
@@ -49,9 +43,9 @@ pub const DEMUX: OperatorConstraints = OperatorConstraints {
     soft_range_inn: RANGE_1,
     hard_range_out: &(2..),
     soft_range_out: &(2..),
-    num_args: 1,
+    num_args: 0,
     persistence_args: RANGE_0,
-    type_args: RANGE_0,
+    type_args: RANGE_1,
     is_external_input: false,
     ports_inn: None,
     ports_out: Some(|| PortListSpec::Variadic),
@@ -72,39 +66,15 @@ pub const DEMUX: OperatorConstraints = OperatorConstraints {
                    op_inst:
                        OperatorInstance {
                            output_ports,
-                           arguments,
+                           generics: OpInstGenerics { type_args, .. },
                            ..
                        },
                    ..
                },
                diagnostics| {
         assert!(!is_pull);
-        let func = &arguments[0];
-        let Expr::Closure(func) = func else {
-            diagnostics.push(Diagnostic::spanned(
-                func.span(),
-                Level::Error,
-                "Argument must be a two-argument closure expression"),
-            );
-            return Err(());
-        };
-        if 2 != func.inputs.len() {
-            diagnostics.push(Diagnostic::spanned(
-                func.span(),
-                Level::Error,
-                &*format!(
-                    "Closure provided to `{}(..)` must have two arguments: \
-                    the first argument is the item, and the second argument lists ports. \
-                    E.g. the second argument could be `var_args!(port_a, port_b, ..)`.",
-                    op_name
-                ),
-            ));
-            return Err(());
-        }
 
-        // Port idents specified in the closure's second argument.
-        let arg2 = &func.inputs[1];
-        let closure_idents = extract_closure_idents(arg2);
+        let enum_type = &type_args[0];
 
         // Port idents supplied via port connections in the surface syntax.
         let port_idents: Vec<_> = output_ports
@@ -121,98 +91,63 @@ pub const DEMUX: OperatorConstraints = OperatorConstraints {
                     ));
                     return None;
                 };
-                let port_ident = syn::parse2::<Ident>(quote_spanned! {op_span=> #port_expr })
+                let port_ident = syn::parse2::<Ident>(quote! { #port_expr })
                     .map_err(|err| diagnostics.push(err.into()))
                     .ok()?;
-
-                if !closure_idents.contains_key(&port_ident) {
-                    // TODO(mingwei): Use MultiSpan when `proc_macro2` supports it.
-                    diagnostics.push(Diagnostic::spanned(
-                        arg2.span(),
-                        Level::Error,
-                        format!(
-                            "Argument specifying the output ports in `{0}(..)` does not contain extra port `{1}`: ({2}) (1/2).",
-                            op_name, port_ident, PrettySpan(output_port.span()),
-                        ),
-                    ));
-                    diagnostics.push(Diagnostic::spanned(
-                        output_port.span(),
-                        Level::Error,
-                        format!(
-                            "Port `{1}` not found in the arguments specified in `{0}(..)`'s closure: ({2}) (2/2).",
-                            op_name, port_ident, PrettySpan(arg2.span()),
-                        ),
-                    ));
-                    return None;
-                }
 
                 Some(port_ident)
             })
             .collect();
-
-        for closure_ident in closure_idents.keys() {
-            if !port_idents.contains(closure_ident) {
-                diagnostics.push(Diagnostic::spanned(
-                    closure_ident.span(),
-                    Level::Error,
-                    format!(
-                        "`{}(..)` closure argument `{}` missing corresponding output port.",
-                        op_name, closure_ident,
-                    ),
-                ));
+        let port_variant_check_match_arms = port_idents.iter().map(|port_ident| {
+            quote_spanned! {port_ident.span()=>
+                Enum::#port_ident { .. } => ()
             }
-        }
+        });
 
-        if diagnostics.iter().any(Diagnostic::is_error) {
-            return Err(());
-        }
-
-        assert_eq!(outputs.len(), port_idents.len());
-        assert_eq!(outputs.len(), closure_idents.len());
-
-        let mut sort_permute: Vec<_> = (0..outputs.len()).collect();
-        sort_permute.sort_by_key(|&i| closure_idents[&port_idents[i]]);
+        let mut sort_permute: Vec<_> = (0..port_idents.len()).collect();
+        sort_permute.sort_by_key(|&i| &port_idents[i]);
 
         let sorted_outputs = sort_permute.iter().map(|&i| &outputs[i]);
 
+        // The entire purpose of this closure and match statement is to generate readable error messages:
+        // "missing match arm: `Variant(_)` not covered."
+        // Or "no variant named `Variant` found for enum `Shape`"
+        // Note this uses the `enum_type`'s span.
+        let write_prologue = quote_spanned! {enum_type.span()=>
+            let _ = |__val: #enum_type| {
+                fn check_impl_demux<T: ?Sized + #root::util::demux::DemuxItems>(_: &T) {}
+                check_impl_demux(&__val);
+                type Enum = #enum_type;
+                match __val {
+                    #(
+                        #port_variant_check_match_arms,
+                    )*
+                };
+            };
+        };
         let write_iterator = quote_spanned! {op_span=>
             let #ident = {
-                #[allow(unused_imports)] use #root::pusherator::Pusherator;
-                #root::pusherator::demux::Demux::new(#func, #root::var_expr!( #( #sorted_outputs ),* ))
+                fn __typeguard_demux_fn<__EnumType, __Outputs>(__outputs: __Outputs)
+                    -> impl #root::pusherator::Pusherator<Item = __EnumType>
+                where
+                    __Outputs: #root::util::demux::PusheratorListForItems<<__EnumType as #root::util::demux::DemuxItems>::Items>,
+                    __EnumType: #root::util::demux::Demux::<__Outputs>,
+                {
+                    #root::pusherator::demux::Demux::new(
+                        <__EnumType as #root::util::demux::Demux::<__Outputs>>::demux,
+                        __outputs,
+                    )
+                }
+                __typeguard_demux_fn::<#enum_type, _>(
+                    #root::var_expr!( #( #sorted_outputs ),* )
+                )
             };
         };
 
         Ok(OperatorWriteOutput {
+            write_prologue,
             write_iterator,
             ..Default::default()
         })
     },
 };
-
-fn extract_closure_idents(arg2: &Pat) -> HashMap<Ident, usize> {
-    let tokens = if let Pat::Macro(pat_macro) = arg2 {
-        pat_macro.mac.tokens.clone()
-    } else {
-        arg2.to_token_stream()
-    };
-
-    let mut idents = HashMap::new();
-    let mut stack: Vec<_> = tokens.into_iter().collect();
-    stack.reverse();
-    while let Some(tt) = stack.pop() {
-        match tt {
-            TokenTree::Group(group) => {
-                let a = stack.len();
-                stack.extend(group.stream());
-                let b = stack.len();
-                stack[a..b].reverse();
-            }
-            TokenTree::Ident(ident) => {
-                idents.insert(ident, idents.len());
-            }
-            TokenTree::Punct(_) => (),
-            TokenTree::Literal(_) => (),
-        }
-    }
-    idents
-}
