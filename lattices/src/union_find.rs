@@ -1,12 +1,13 @@
 //! Module containing the [`UnionFind`] lattice and aliases for different datastructures.
 
+use std::cell::Cell;
 use std::cmp::Ordering::{self, *};
 use std::collections::{BTreeMap, HashMap};
 use std::fmt::Debug;
 
-use cc_traits::{Iter, Len, MapMut, SimpleCollectionRef};
-
-use crate::cc_traits::{GetMut, Keyed, Map, MapIter, SimpleKeyedRef};
+use crate::cc_traits::{
+    GetMut, Iter, Keyed, Len, Map, MapIter, MapMut, SimpleCollectionRef, SimpleKeyedRef,
+};
 use crate::collections::{ArrayMap, OptionMap, SingletonMap, VecMap};
 use crate::{Atomize, IsBot, IsTop, LatticeFrom, LatticeOrd, Max, Merge, Min, NaiveLatticeOrd};
 
@@ -44,23 +45,11 @@ impl<Map> UnionFind<Map> {
     }
 }
 
-impl<Map, T> UnionFind<Map>
+impl<MapSelf, T> UnionFind<MapSelf>
 where
-    Map: MapMut<T, T, Key = T, Item = T>,
+    MapSelf: MapMut<T, Cell<T>, Key = T, Item = Cell<T>>,
     T: Copy + Ord,
 {
-    /// Returns if `a` and `b` are in the same set.
-    ///
-    /// This method is monotonic: once this returns true it will always return true for the same
-    /// `a` and `b`, therefore it returns a `Max<bool>` lattice.
-    pub fn same(&mut self, a: T, b: T) -> Max<bool> {
-        Max::new(self.find(a) == self.find(b))
-    }
-
-    pub fn same_ref(&self, a: T, b: T) -> Max<bool> {
-        Max::new(self.find_ref(a) == self.find_ref(b))
-    }
-
     /// Union the sets containg `a` and `b`.
     ///
     /// Returns true if the sets changed, false if `a` and `b` were already in the same set. Once
@@ -75,36 +64,56 @@ where
         if b_root < a_root {
             (a_root, b_root) = (b_root, a_root);
         }
-        self.0.insert(b_root, a_root);
+        self.0.insert(b_root, Cell::new(a_root));
         Min::new(true)
+    }
+}
+
+impl<MapSelf, T> UnionFind<MapSelf>
+where
+    MapSelf: Map<T, Cell<T>, Key = T, Item = Cell<T>>,
+    T: Copy + Ord,
+{
+    /// Returns if `a` and `b` are in the same set.
+    ///
+    /// This method is monotonic: once this returns true it will always return true for the same
+    /// `a` and `b`, therefore it returns a `Max<bool>` lattice.
+    pub fn same(&self, a: T, b: T) -> Max<bool> {
+        Max::new(self.find(a) == self.find(b))
     }
 
     /// Finds the representative root node for `item`.
     ///
     /// Ties are broken by choosing the minimum element, therefore this returns a `Min<T>` lattice.
-    pub fn find(&mut self, mut item: T) -> Min<T> {
-        let root = self.find_ref(item).into_reveal();
+    pub fn find(&self, mut item: T) -> Min<T> {
+        let mut root = item;
+        while let Some(parent) = self.0.get(&root) {
+            if parent.get() == root {
+                break;
+            }
+            root = parent.get();
+        }
         while item != root {
-            item = self.0.insert(item, root).unwrap();
+            item = self.0.get(&item).unwrap().replace(root);
         }
         Min::new(item)
     }
 
-    pub fn find_ref(&self, mut item: T) -> Min<T> {
-        while let Some(&parent) = self.0.get(&item).as_deref() {
-            if parent == item {
-                break;
-            }
-            item = parent;
-        }
-        Min::new(item)
-    }
+    // pub fn find_ref(&self, mut item: T) -> Min<T> {
+    //     while let Some(&parent) = self.0.get(&item).as_deref() {
+    //         if parent == item {
+    //             break;
+    //         }
+    //         item = parent;
+    //     }
+    //     Min::new(item)
+    // }
 }
 
 impl<MapSelf, MapOther, T> Merge<UnionFind<MapOther>> for UnionFind<MapSelf>
 where
-    MapSelf: MapMut<T, T, Key = T, Item = T>,
-    MapOther: IntoIterator<Item = (T, T)>,
+    MapSelf: MapMut<T, Cell<T>, Key = T, Item = Cell<T>>,
+    MapOther: IntoIterator<Item = (T, Cell<T>)>,
 
     T: Copy + Ord,
 {
@@ -112,7 +121,7 @@ where
         let mut changed = false;
         for (item, parent) in other.0.into_iter() {
             // Do not short circuit.
-            changed |= self.union(item, parent).into_reveal();
+            changed |= self.union(item, parent.get()).into_reveal();
         }
         changed
     }
@@ -120,8 +129,8 @@ where
 
 impl<MapSelf, MapOther, T> LatticeFrom<UnionFind<MapOther>> for UnionFind<MapSelf>
 where
-    MapSelf: Keyed<Key = T, Item = T> + FromIterator<(T, T)>,
-    MapOther: IntoIterator<Item = (T, T)>,
+    MapSelf: Keyed<Key = T, Item = Cell<T>> + FromIterator<(T, Cell<T>)>,
+    MapOther: IntoIterator<Item = (T, Cell<T>)>,
     T: Copy + Ord,
 {
     fn lattice_from(other: UnionFind<MapOther>) -> Self {
@@ -131,13 +140,13 @@ where
 
 // impl<MapSelf, MapOther, T> PartialOrd<UnionFind<MapOther>> for UnionFind<MapSelf>
 // where
-//     MapSelf: MapMut<T, T, Key = T, Item = T> + MapIter + SimpleKeyedRef,
-//     MapOther: MapMut<T, T, Key = T, Item = T> + MapIter + SimpleKeyedRef,
+//     MapSelf: MapMut<T, Cell<T>, Key = T, Item = Cell<T>> + MapIter + SimpleKeyedRef,
+//     MapOther: MapMut<T, Cell<T>, Key = T, Item = Cell<T>> + MapIter + SimpleKeyedRef,
 //     T: Copy + Ord,
 //     // TODO(mingwei).
 //     Self: Clone + Merge<UnionFind<MapOther>> + Merge<UnionFind<MapOther>>,
 //     UnionFind<MapOther>: Clone + Merge<Self>,
-//     MapSelf: IntoIterator<Item = (T, T)>,
+//     MapSelf: IntoIterator<Item = (T, Cell<T>)>,
 // {
 //     fn partial_cmp(&self, other: &UnionFind<MapOther>) -> Option<Ordering> {
 //         // TODO(mingwei); (fix trait bounds)
@@ -159,18 +168,18 @@ impl<MapSelf, MapOther> LatticeOrd<UnionFind<MapOther>> for UnionFind<MapSelf> w
 
 impl<MapSelf, MapOther, T> PartialEq<UnionFind<MapOther>> for UnionFind<MapSelf>
 where
-    MapSelf: MapMut<T, T, Key = T, Item = T> + MapIter + SimpleKeyedRef,
-    MapOther: MapMut<T, T, Key = T, Item = T> + MapIter + SimpleKeyedRef,
+    MapSelf: MapMut<T, Cell<T>, Key = T, Item = Cell<T>> + MapIter + SimpleKeyedRef,
+    MapOther: MapMut<T, Cell<T>, Key = T, Item = Cell<T>> + MapIter + SimpleKeyedRef,
     T: Copy + Ord,
 {
     fn eq(&self, other: &UnionFind<MapOther>) -> bool {
         for (item, parent) in self.0.iter() {
-            if !other.same_ref(*item, *parent).into_reveal() {
+            if !other.same(*item, parent.get()).into_reveal() {
                 return false;
             }
         }
         for (item, parent) in other.0.iter() {
-            if !self.same_ref(*item, *parent).into_reveal() {
+            if !self.same(*item, parent.get()).into_reveal() {
                 return false;
             }
         }
@@ -181,11 +190,11 @@ impl<MapSelf> Eq for UnionFind<MapSelf> where Self: PartialEq {}
 
 impl<Map, T> IsBot for UnionFind<Map>
 where
-    Map: MapIter<Key = T, Item = T>,
-    T: Ord,
+    Map: MapIter<Key = T, Item = Cell<T>>,
+    T: Copy + Ord,
 {
     fn is_bot(&self) -> bool {
-        self.0.iter().all(|(a, b)| &*a == &*b)
+        self.0.iter().all(|(a, b)| *a == b.get())
     }
 }
 
@@ -220,22 +229,22 @@ impl<Map> IsTop for UnionFind<Map> {
 // }
 
 /// [`std::collections::HashMap`]-backed [`UnionFind`] lattice.
-pub type UnionFindHashMap<T> = UnionFind<HashMap<T, T>>;
+pub type UnionFindHashMap<T> = UnionFind<HashMap<T, Cell<T>>>;
 
 /// [`std::collections::BTreeMap`]-backed [`UnionFind`] lattice.
-pub type UnionFindBTreeMap<T> = UnionFind<BTreeMap<T, T>>;
+pub type UnionFindBTreeMap<T> = UnionFind<BTreeMap<T, Cell<T>>>;
 
 /// [`Vec`]-backed [`UnionFind`] lattice.
-pub type UnionFindVec<T> = UnionFind<VecMap<T, T>>;
+pub type UnionFindVec<T> = UnionFind<VecMap<T, Cell<T>>>;
 
 /// Array-backed [`UnionFind`] lattice.
-pub type UnionFindArrayMap<T, const N: usize> = UnionFind<ArrayMap<T, T, N>>;
+pub type UnionFindArrayMap<T, const N: usize> = UnionFind<ArrayMap<T, Cell<T>, N>>;
 
 /// [`crate::collections::SingletonMap`]-backed [`UnionFind`] lattice.
-pub type UnionFindSingletonMap<T> = UnionFind<SingletonMap<T, T>>;
+pub type UnionFindSingletonMap<T> = UnionFind<SingletonMap<T, Cell<T>>>;
 
 /// [`Option`]-backed [`UnionFind`] lattice.
-pub type UnionFindOptionMap<T> = UnionFind<OptionMap<T, T>>;
+pub type UnionFindOptionMap<T> = UnionFind<OptionMap<T, Cell<T>>>;
 
 #[cfg(test)]
 mod test {
@@ -252,8 +261,9 @@ mod test {
     #[test]
     fn test_basic() {
         let mut my_map_a = <UnionFindHashMap<&str>>::default();
-        let my_map_b = <UnionFindSingletonMap<&str>>::new(SingletonMap("hello", "world"));
-        let my_map_c = UnionFindSingletonMap::new_from(("hello", "goodbye"));
+        let my_map_b =
+            <UnionFindSingletonMap<&str>>::new(SingletonMap("hello", Cell::new("world")));
+        let my_map_c = UnionFindSingletonMap::new_from(("hello", Cell::new("goodbye")));
 
         assert!(!my_map_a.same("hello", "world").into_reveal());
         assert!(!my_map_a.same("hello", "goodbye").into_reveal());
@@ -279,12 +289,12 @@ mod test {
     fn consistency() {
         let items = &[
             <UnionFindHashMap<char>>::default(),
-            <UnionFindHashMap<_>>::new_from([('a', 'a')]),
-            <UnionFindHashMap<_>>::new_from([('a', 'a'), ('b', 'a')]),
-            <UnionFindHashMap<_>>::new_from([('b', 'a')]),
-            <UnionFindHashMap<_>>::new_from([('b', 'a'), ('c', 'b')]),
-            <UnionFindHashMap<_>>::new_from([('b', 'a'), ('c', 'b')]),
-            <UnionFindHashMap<_>>::new_from([('d', 'b')]),
+            <UnionFindHashMap<_>>::new_from([('a', Cell::new('a'))]),
+            <UnionFindHashMap<_>>::new_from([('a', Cell::new('a')), ('b', Cell::new('a'))]),
+            <UnionFindHashMap<_>>::new_from([('b', Cell::new('a'))]),
+            <UnionFindHashMap<_>>::new_from([('b', Cell::new('a')), ('c', Cell::new('b'))]),
+            <UnionFindHashMap<_>>::new_from([('b', Cell::new('a')), ('c', Cell::new('b'))]),
+            <UnionFindHashMap<_>>::new_from([('d', Cell::new('b'))]),
         ];
 
         check_all(items);
