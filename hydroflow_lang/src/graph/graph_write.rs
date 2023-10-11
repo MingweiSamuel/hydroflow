@@ -96,7 +96,7 @@ where
             "classDef otherClass fill:#fdc,stroke:#000,text-align:left,white-space:pre",
         )?;
 
-        writeln!(self.write, "linkStyle default stroke:#aaa")?;
+        writeln!(self.write, "linkStyle default stroke:#aaa,stroke-width:4px")?;
         Ok(())
     }
 
@@ -187,7 +187,7 @@ where
         if delay_type.is_some() || lattice_flow_type.is_some() {
             write!(
                 self.write,
-                "; linkStyle {} stroke:{}",
+                "; linkStyle {} stroke:{},stroke-width:4px",
                 self.link_count,
                 match (delay_type, lattice_flow_type) {
                     (None, None) => unreachable!(),
