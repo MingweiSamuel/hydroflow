@@ -372,6 +372,7 @@ declare_ops![
     reduce_keyed::REDUCE_KEYED,
     _lattice_fold_batch::_LATTICE_FOLD_BATCH,
     lattice_fold::LATTICE_FOLD,
+    lattice_fold_ref::LATTICE_FOLD_REF,
     _lattice_join_fused_join::_LATTICE_JOIN_FUSED_JOIN,
     lattice_reduce::LATTICE_REDUCE,
     map::MAP,
