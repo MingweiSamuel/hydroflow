@@ -147,7 +147,7 @@ fn test_basic() {
                                     ::std::clone::Clone::clone(&sg_2v1_node_3v1_accumulator),
                                 ),
                             );
-                        ::std::iter::once(sg_2v1_node_3v1_accumulator)
+                        ::std::iter::once(&sg_2v1_node_3v1_accumulator)
                     };
                     let op_3v1 = {
                         #[allow(non_snake_case)]
@@ -181,7 +181,7 @@ fn test_basic() {
                         op_3v1__lattice_fold__loc_unknown_start_0_0_end_0_0(op_3v1)
                     };
                     let op_4v1 = ::hydroflow::pusherator::for_each::ForEach::new(|
-                        x: Max<u32>|
+                        x: &Max<u32>|
                     {
                         print!("Least upper bound: {0:?}\n", x);
                     });
