@@ -1,0 +1,7 @@
+error: `varg!` can only have the `...` spread syntax on the last field.
+ --> tests/compile-fail/varg_spread_middle.rs:4:9
+  |
+4 |     let varg!(a, ...b, c) = var!(1, 2.0, "three", false);
+  |         ^^^^^^^^^^^^^^^^^
+  |
+  = note: this error originates in the macro `$crate::varg` which comes from the expansion of the macro `varg` (in Nightly builds, run with -Z macro-backtrace for more info)

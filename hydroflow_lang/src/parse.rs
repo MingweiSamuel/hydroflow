@@ -523,7 +523,7 @@ mod test {
     #[test]
     fn test_operator_to_pretty_string() {
         let op: Operator = parse_quote! {
-            demux(|(msg, addr), var_args!(clients, msgs, errs)|
+            demux(|(msg, addr), varg!(clients, msgs, errs)|
                 match msg {
                     Message::ConnectRequest => clients.give(addr),
                     Message::ChatMsg {..} => msgs.give(msg),
@@ -533,7 +533,7 @@ mod test {
         };
         assert_eq!(
             r"
-demux(|(msg, addr), var_args!(clients, msgs, errs)| match msg {
+demux(|(msg, addr), varg!(clients, msgs, errs)| match msg {
     Message::ConnectRequest => clients.give(addr),
     Message::ChatMsg { .. } => msgs.give(msg),
     _ => errs.give(msg),

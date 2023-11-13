@@ -15,7 +15,7 @@ use crate::pretty_span::PrettySpan;
 
 // TODO(mingwei): Preprocess rustdoc links in mdbook or in the `operator_docgen` macro.
 /// > Arguments: A Rust closure, the first argument is a received item and the
-/// > second argument is a variadic [`var_args!` tuple list](https://hydro-project.github.io/hydroflow/doc/hydroflow/macro.var_args.html)
+/// > second argument is a variadic [`varg!` tuple list](https://hydro-project.github.io/hydroflow/doc/hydroflow/macro.varg.html)
 /// > where each item name is an output port.
 ///
 /// Takes the input stream and allows the user to determine which items to
@@ -29,7 +29,7 @@ use crate::pretty_span::PrettySpan;
 /// > Note: The closure has access to the [`context` object](surface_flows.md#the-context-object).
 ///
 /// ```hydroflow
-/// my_demux = source_iter(1..=100) -> demux(|v, var_args!(fzbz, fizz, buzz, rest)|
+/// my_demux = source_iter(1..=100) -> demux(|v, varg!(fzbz, fizz, buzz, rest)|
 ///     match (v % 3, v % 5) {
 ///         (0, 0) => fzbz.give(v),
 ///         (0, _) => fizz.give(v),
@@ -90,7 +90,7 @@ pub const DEMUX: OperatorConstraints = OperatorConstraints {
                 &*format!(
                     "Closure provided to `{}(..)` must have two arguments: \
                     the first argument is the item, and the second argument lists ports. \
-                    E.g. the second argument could be `var_args!(port_a, port_b, ..)`.",
+                    E.g. the second argument could be `varg!(port_a, port_b, ..)`.",
                     op_name
                 ),
             ));
@@ -173,7 +173,7 @@ pub const DEMUX: OperatorConstraints = OperatorConstraints {
         let write_iterator = quote_spanned! {op_span=>
             let #ident = {
                 #[allow(unused_imports)] use #root::pusherator::Pusherator;
-                #root::pusherator::demux::Demux::new(#func, #root::var_expr!( #( #sorted_outputs ),* ))
+                #root::pusherator::demux::Demux::new(#func, #root::var!( #( #sorted_outputs ),* ))
             };
         };
 

@@ -137,7 +137,7 @@ pub const DEMUX_ENUM: OperatorConstraints = OperatorConstraints {
                     )
                 }
                 __typeguard_demux_enum_fn::<#enum_type, _>(
-                    #root::var_expr!( #( #sorted_outputs ),* )
+                    #root::var!( #( #sorted_outputs ),* )
                 )
             };
         };

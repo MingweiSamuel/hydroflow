@@ -31,7 +31,7 @@ pub(crate) async fn run_coordinator(outbound: UdpSink, inbound: UdpStream, opts:
         outbound_chan = tee();
         outbound_chan[0] -> dest_sink_serde(outbound);
         inbound_chan = source_stream_serde(inbound) -> map(Result::unwrap) -> map(|(m, _a)| m) -> tee();
-        msgs = inbound_chan[0] ->  demux(|m:SubordResponse, var_args!(commits, aborts, acks, endeds, errs)| match m.mtype {
+        msgs = inbound_chan[0] ->  demux(|m:SubordResponse, varg!(commits, aborts, acks, endeds, errs)| match m.mtype {
                     MsgType::Commit => commits.give(m),
                     MsgType::Abort => aborts.give(m),
                     MsgType::AckP2 {..} => acks.give(m),

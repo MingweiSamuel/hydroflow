@@ -1,5 +1,5 @@
 use hydroflow::util::demux_enum::{DemuxEnum, DemuxEnumItems};
-use hydroflow::{hydroflow_syntax, var_args, var_expr, var_type};
+use hydroflow::{hydroflow_syntax, var, varg, Var};
 use multiplatform_test::multiplatform_test;
 use pusherator::for_each::ForEach;
 
@@ -13,15 +13,15 @@ fn test_manual_impl() {
         Circle { r: usize },
     }
     impl DemuxEnumItems for Shape {
-        type Items = var_type!(usize, (usize, usize), (usize,));
+        type Items = Var!(usize, (usize, usize), (usize,));
     }
-    impl<Square, Rectangle, Circle> DemuxEnum<var_type!(Square, Rectangle, Circle)> for Shape
+    impl<Square, Rectangle, Circle> DemuxEnum<Var!(Square, Rectangle, Circle)> for Shape
     where
         Square: Pusherator<Item = usize>,
         Rectangle: Pusherator<Item = (usize, usize)>,
         Circle: Pusherator<Item = (usize,)>,
     {
-        fn demux_enum(self, var_args!(sq, re, ci): &mut var_type!(Square, Rectangle, Circle)) {
+        fn demux_enum(self, varg!(sq, re, ci): &mut Var!(Square, Rectangle, Circle)) {
             match self {
                 Self::Square(s) => sq.give(s),
                 Self::Rectangle { w, h } => re.give((w, h)),
@@ -35,7 +35,7 @@ fn test_manual_impl() {
         Shape::Rectangle { w: 5, h: 6 },
         Shape::Circle { r: 6 },
     ];
-    let mut nexts = var_expr!(
+    let mut nexts = var!(
         ForEach::new(|x| println!("1 {:?}", x)),
         ForEach::new(|x| println!("2 {:?}", x)),
         ForEach::new(|x| println!("3 {:?}", x)),
@@ -59,7 +59,7 @@ fn test_derive() {
         Shape::Rectangle { w: 5, h: 6 },
         Shape::Circle { r: 6 },
     ];
-    let mut nexts = var_expr!(
+    let mut nexts = var!(
         ForEach::new(|x| println!("1 {:?}", x)),
         ForEach::new(|x| println!("2 {:?}", x)),
         ForEach::new(|x| println!("3 {:?}", x)),

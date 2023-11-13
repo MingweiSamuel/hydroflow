@@ -25,7 +25,7 @@ pub(crate) async fn run_subordinate(outbound: UdpSink, inbound: UdpStream, opts:
         outbound_chan = union() -> [0]server_addr_join -> tee();
         outbound_chan[0] -> dest_sink_serde(outbound);
         inbound_chan = source_stream_serde(inbound) -> map(Result::unwrap) -> map(|(m, _a)| m) -> tee();
-        msgs = inbound_chan[0] ->  demux(|m:CoordMsg, var_args!(prepares, p2, ends, errs)| match m.mtype {
+        msgs = inbound_chan[0] ->  demux(|m:CoordMsg, varg!(prepares, p2, ends, errs)| match m.mtype {
             MsgType::Prepare => prepares.give(m),
             MsgType::Abort => p2.give(m),
             MsgType::Commit => p2.give(m),

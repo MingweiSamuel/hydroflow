@@ -7,7 +7,7 @@ use hydroflow::scheduled::graph::Hydroflow;
 use hydroflow::scheduled::graph_ext::GraphExt;
 use hydroflow::scheduled::handoff::VecHandoff;
 use hydroflow::scheduled::port::{RecvCtx, SendCtx};
-use hydroflow::{var_args, var_expr};
+use hydroflow::{var, varg};
 use multiplatform_test::multiplatform_test;
 
 #[multiplatform_test]
@@ -27,9 +27,9 @@ fn map_filter() {
     let data = [1, 2, 3, 4];
     df.add_subgraph(
         "source",
-        var_expr!(),
-        var_expr!(source),
-        move |_ctx, var_args!(), var_args!(send)| {
+        var!(),
+        var!(source),
+        move |_ctx, varg!(), varg!(send)| {
             for x in data.into_iter() {
                 send.give(Some(x));
             }
@@ -38,9 +38,9 @@ fn map_filter() {
 
     df.add_subgraph(
         "map",
-        var_expr!(map_in),
-        var_expr!(map_out),
-        |_ctx, var_args!(recv), var_args!(send)| {
+        var!(map_in),
+        var!(map_out),
+        |_ctx, varg!(recv), varg!(send)| {
             for x in recv.take_inner().into_iter() {
                 send.give(Some(3 * x + 1));
             }
@@ -49,9 +49,9 @@ fn map_filter() {
 
     df.add_subgraph(
         "filter",
-        var_expr!(filter_in),
-        var_expr!(filter_out),
-        |_ctx, var_args!(recv), var_args!(send)| {
+        var!(filter_in),
+        var!(filter_out),
+        |_ctx, varg!(recv), varg!(send)| {
             for x in recv.take_inner().into_iter() {
                 if x % 2 == 0 {
                     send.give(Some(x));
@@ -64,9 +64,9 @@ fn map_filter() {
     let inner_outputs = outputs.clone();
     df.add_subgraph(
         "sink",
-        var_expr!(sink),
-        var_expr!(),
-        move |_ctx, var_args!(recv), var_args!()| {
+        var!(sink),
+        var!(),
+        move |_ctx, varg!(recv), varg!()| {
             for x in recv.take_inner().into_iter() {
                 (*inner_outputs).borrow_mut().push(x);
             }

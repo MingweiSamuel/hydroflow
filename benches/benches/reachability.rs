@@ -119,7 +119,7 @@ fn benchmark_differential(c: &mut Criterion) {
 fn benchmark_hydroflow_scheduled(c: &mut Criterion) {
     use hydroflow::scheduled::graph::Hydroflow;
     use hydroflow::scheduled::handoff::{Iter, VecHandoff};
-    use hydroflow::{var_args, var_expr};
+    use hydroflow::{var, varg};
 
     let edges = &*EDGES;
     let reachable = &*REACHABLE;
@@ -148,9 +148,9 @@ fn benchmark_hydroflow_scheduled(c: &mut Criterion) {
             let seen_handle = df.add_state::<RefCell<HashSet<usize>>>(Default::default());
             df.add_subgraph(
                 "distinct",
-                var_expr!(distinct_in),
-                var_expr!(distinct_out),
-                move |context, var_args!(recv), var_args!(send)| {
+                var!(distinct_in),
+                var!(distinct_out),
+                move |context, varg!(recv), varg!(send)| {
                     let mut seen_state = context.state_ref(seen_handle).borrow_mut();
                     let iter = recv
                         .take_inner()
@@ -215,7 +215,7 @@ fn benchmark_hydroflow(c: &mut Criterion) {
     use hydroflow::pusherator::{IteratorToPusherator, PusheratorBuild};
     use hydroflow::scheduled::graph::Hydroflow;
     use hydroflow::scheduled::handoff::VecHandoff;
-    use hydroflow::{var_args, var_expr};
+    use hydroflow::{var, varg};
 
     let edges = &*EDGES;
     let reachable = &*REACHABLE;
@@ -243,11 +243,9 @@ fn benchmark_hydroflow(c: &mut Criterion) {
 
             df.add_subgraph(
                 "main",
-                var_expr!(origins_in, possible_reach_in),
-                var_expr!(did_reach_out, output_out),
-                move |context,
-                      var_args!(origins, did_reach_recv),
-                      var_args!(did_reach_send, output)| {
+                var!(origins_in, possible_reach_in),
+                var!(did_reach_out, output_out),
+                move |context, varg!(origins, did_reach_recv), varg!(did_reach_send, output)| {
                     let origins = origins.take_inner().into_iter();
                     let possible_reach = did_reach_recv
                         .take_inner()

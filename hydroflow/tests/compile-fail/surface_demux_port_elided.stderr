@@ -5,15 +5,15 @@ error: Output port from `demux(..)` must be specified and must be a valid identi
    |         ^^^^^^^^
 
 error: `demux(..)` closure argument `odds` missing corresponding output port.
- --> tests/compile-fail/surface_demux_port_elided.rs:5:72
+ --> tests/compile-fail/surface_demux_port_elided.rs:5:68
   |
-5 |         my_demux = source_iter(0..10) -> demux(|item, var_args!(evens, odds)| {
-  |                                                                        ^^^^
+5 |         my_demux = source_iter(0..10) -> demux(|item, varg!(evens, odds)| {
+  |                                                                    ^^^^
 
-warning: unused import: `var_args`
+warning: unused import: `varg`
  --> tests/compile-fail/surface_demux_port_elided.rs:1:35
   |
-1 | use hydroflow::{hydroflow_syntax, var_args};
-  |                                   ^^^^^^^^
+1 | use hydroflow::{hydroflow_syntax, varg};
+  |                                   ^^^^
   |
   = note: `#[warn(unused_imports)]` on by default

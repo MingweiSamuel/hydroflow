@@ -20,13 +20,13 @@ where
 ///
 /// This trait is meant to be derived: `#[derive(DemuEnum)]`.
 pub trait DemuxEnumItems {
-    /// A `var_type!(...)` list of items corresponding to each variant's output type.
+    /// A `Var!(...)` list of items corresponding to each variant's output type.
     type Items: Variadic;
 }
 
 /// Helper trait to bound a [`PusheratorList`] variadic to some coresponding item list variadic.
 ///
-/// A pusherator list `var_type!(PushA, PushB, PushC)` implements `PusheratorListForItems<var_type!(ItemA, ItemB, ItemC)>`,
+/// A pusherator list `Var!(PushA, PushB, PushC)` implements `PusheratorListForItems<Var!(ItemA, ItemB, ItemC)>`,
 /// where `PushA: Pusherator<Item = ItemA>`, etc.
 pub trait PusheratorListForItems<Items>: PusheratorList
 where

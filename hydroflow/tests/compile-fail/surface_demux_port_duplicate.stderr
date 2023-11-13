@@ -10,10 +10,10 @@ error: Output connection conflicts with above ($DIR/tests/compile-fail/surface_d
 15 |         my_demux[c] -> for_each(std::mem::drop);
    |                  ^
 
-warning: unused import: `var_args`
+warning: unused import: `varg`
  --> tests/compile-fail/surface_demux_port_duplicate.rs:1:35
   |
-1 | use hydroflow::{hydroflow_syntax, var_args};
-  |                                   ^^^^^^^^
+1 | use hydroflow::{hydroflow_syntax, varg};
+  |                                   ^^^^
   |
   = note: `#[warn(unused_imports)]` on by default

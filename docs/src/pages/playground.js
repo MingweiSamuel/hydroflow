@@ -70,7 +70,7 @@ source_iter(0..10)
 // Define shared inbound and outbound channels
 outbound_chan = union() -> dest_sink_serde(outbound);
 inbound_chan = source_stream_serde(inbound)
-    ->  demux(|(msg, addr), var_args!(clients, msgs, errs)|
+    ->  demux(|(msg, addr), varg!(clients, msgs, errs)|
             match msg {
                 Message::ConnectRequest => clients.give(addr),
                 Message::ChatMsg {..} => msgs.give(msg),
@@ -91,7 +91,7 @@ inbound_chan[msgs] -> [0]broadcast;
 // set up channels
 outbound_chan = union() -> dest_sink_serde(outbound);
 inbound_chan = source_stream_serde(inbound) -> map(|(m, _)| m)
-    ->  demux(|m, var_args!(acks, msgs, errs)|
+    ->  demux(|m, varg!(acks, msgs, errs)|
             match m {
                 Message::ConnectResponse => acks.give(m),
                 Message::ChatMsg {..} => msgs.give(m),

@@ -1008,10 +1008,10 @@ impl HydroflowGraph {
                     #hf.add_subgraph_stratified(
                         #hoff_name,
                         #stratum,
-                        var_expr!( #( #recv_ports ),* ),
-                        var_expr!( #( #send_ports ),* ),
+                        var!( #( #recv_ports ),* ),
+                        var!( #( #send_ports ),* ),
                         #laziness,
-                        move |#context, var_args!( #( #recv_ports ),* ), var_args!( #( #send_ports ),* )| {
+                        move |#context, varg!( #( #recv_ports ),* ), varg!( #( #send_ports ),* )| {
                             #( #recv_port_code )*
                             #( #send_port_code )*
                             #( #subgraph_op_iter_code )*
@@ -1043,7 +1043,7 @@ impl HydroflowGraph {
                 {
                     #prefix
 
-                    use #root::{var_expr, var_args};
+                    use #root::{var, varg};
 
                     let mut #hf = #root::scheduled::graph::Hydroflow::new();
                     #hf.__assign_meta_graph(#meta_graph_json);

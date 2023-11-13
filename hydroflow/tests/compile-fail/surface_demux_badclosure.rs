@@ -1,8 +1,8 @@
-use hydroflow::{hydroflow_syntax, var_args};
+use hydroflow::{hydroflow_syntax, varg};
 
 fn main() {
     let mut df = hydroflow_syntax! {
-        my_demux = source_iter(0..10) -> demux(|var_args!(a, b, c)| {
+        my_demux = source_iter(0..10) -> demux(|varg!(a, b, c)| {
             match item % 3 {
                 0 => a.give(item),
                 1 => b.give(item),

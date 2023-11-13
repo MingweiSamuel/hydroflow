@@ -1,7 +1,7 @@
-error: Closure provided to `demux(..)` must have two arguments: the first argument is the item, and the second argument lists ports. E.g. the second argument could be `var_args!(port_a, port_b, ..)`.
+error: Closure provided to `demux(..)` must have two arguments: the first argument is the item, and the second argument lists ports. E.g. the second argument could be `varg!(port_a, port_b, ..)`.
   --> tests/compile-fail/surface_demux_badclosure.rs:5:48
    |
-5  |           my_demux = source_iter(0..10) -> demux(|var_args!(a, b, c)| {
+5  |           my_demux = source_iter(0..10) -> demux(|varg!(a, b, c)| {
    |  ________________________________________________^
 6  | |             match item % 3 {
 7  | |                 0 => a.give(item),
@@ -11,10 +11,10 @@ error: Closure provided to `demux(..)` must have two arguments: the first argume
 11 | |         });
    | |_________^
 
-warning: unused import: `var_args`
+warning: unused import: `varg`
  --> tests/compile-fail/surface_demux_badclosure.rs:1:35
   |
-1 | use hydroflow::{hydroflow_syntax, var_args};
-  |                                   ^^^^^^^^
+1 | use hydroflow::{hydroflow_syntax, varg};
+  |                                   ^^^^
   |
   = note: `#[warn(unused_imports)]` on by default

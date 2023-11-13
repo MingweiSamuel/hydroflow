@@ -58,7 +58,7 @@ fn run_topolotree(
         parsed_input = source_stream(input_recv)
             -> map(Result::unwrap)
             -> map(|(src, x)| (NodeID(src), deserialize_from_bytes::<TopolotreeMessage>(&x).unwrap()))
-            -> demux(|(src, msg), var_args!(payload, ping, pong)| {
+            -> demux(|(src, msg), varg!(payload, ping, pong)| {
                 match msg {
                     TopolotreeMessage::Payload(p) => payload.give((src, p)),
                     TopolotreeMessage::Ping() => ping.give((src, ())),

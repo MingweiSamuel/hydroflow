@@ -146,7 +146,7 @@ pub const PARTITION: OperatorConstraints = OperatorConstraints {
         let write_iterator = quote_spanned! {op_span=>
             let #ident = {
                 #root::pusherator::demux::Demux::new(
-                    |#ident_item, #root::var_args!( #( #output_idents ),* )| {
+                    |#ident_item, #root::varg!( #( #output_idents ),* )| {
                         #[allow(unused_imports)]
                         use #root::pusherator::Pusherator;
 
@@ -161,7 +161,7 @@ pub const PARTITION: OperatorConstraints = OperatorConstraints {
                             #ident_unknown => panic!(#err_str, #ident_unknown),
                         };
                     },
-                    #root::var_expr!( #( #sorted_outputs ),* ),
+                    #root::var!( #( #sorted_outputs ),* ),
                 )
             };
         };

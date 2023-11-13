@@ -30,7 +30,7 @@ pub mod util;
 pub use pyo3;
 #[cfg(feature = "tracing")]
 pub use tracing;
-pub use variadics::{self, var_args, var_expr, var_type};
+pub use variadics::{self, var, varg, Var};
 pub use {
     bincode, bytes, futures, hydroflow_lang as lang, instant, itertools, lattices, pusherator,
     rustc_hash, serde, serde_json, tokio, tokio_stream, tokio_util,

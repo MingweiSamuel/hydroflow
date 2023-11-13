@@ -13,4 +13,4 @@ error[E0308]: mismatched types
    |
    = note:  expected tuple `(_, ())`
            found unit type `()`
-   = note: this error originates in the macro `$crate::var_expr` which comes from the expansion of the macro `hydroflow_syntax` (in Nightly builds, run with -Z macro-backtrace for more info)
+   = note: this error originates in the macro `$crate::var` which comes from the expansion of the macro `hydroflow_syntax` (in Nightly builds, run with -Z macro-backtrace for more info)

@@ -65,7 +65,7 @@ will carry the addresses of clients that have connected to the server. The `msgs
 The `errs` channel will carry any other messages that clients send to the server.
 
 Note the structure of the `demux` operator: it takes a closure on
-`(Message, SocketAddr)` pairs, and a variadic tuple (`var_args!`) of the output channel names—in this case `clients`, `msgs`, and `errs`. The closure is basically a big
+`(Message, SocketAddr)` pairs, and a variadic tuple (`varg!`) of the output channel names—in this case `clients`, `msgs`, and `errs`. The closure is basically a big
 Rust pattern [`match`](https://doc.rust-lang.org/book/ch06-02-match.html), with one arm for each output channel name given in the variadic tuple. Note
 that each output channel can have its own message type! Note also that we destructure the incoming `Message` types into component fields. (If we didn't we'd have to write boilerplate code to handle every possible `Message` type in every downstream pipeline!)
 
@@ -113,7 +113,7 @@ end
 subgraph sg_2v1 ["sg_2v1 stratum 0"]
     3v1[\"(3v1) <code>source_stream_serde(inbound)</code>"/]:::pullClass
     4v1[\"(4v1) <code>map(Result::unwrap)</code>"/]:::pullClass
-    5v1[/"<div style=text-align:center>(5v1)</div> <code>demux(|(msg, addr), var_args!(clients, msgs, errs)| match msg {<br>    Message::ConnectRequest =&gt; clients.give(addr),<br>    Message::ChatMsg { .. } =&gt; msgs.give(msg),<br>    _ =&gt; errs.give(msg),<br>})</code>"\]:::pushClass
+    5v1[/"<div style=text-align:center>(5v1)</div> <code>demux(|(msg, addr), varg!(clients, msgs, errs)| match msg {<br>    Message::ConnectRequest =&gt; clients.give(addr),<br>    Message::ChatMsg { .. } =&gt; msgs.give(msg),<br>    _ =&gt; errs.give(msg),<br>})</code>"\]:::pushClass
     6v1[/"(6v1) <code>tee()</code>"\]:::pushClass
     7v1[/"(7v1) <code>for_each(|m| println!(&quot;Received unexpected message type: {:?}&quot;, m))</code>"\]:::pushClass
     3v1--->4v1
@@ -227,7 +227,7 @@ subgraph sg_2v1 ["sg_2v1 stratum 0"]
     3v1[\"(3v1) <code>source_stream_serde(inbound)</code>"/]:::pullClass
     4v1[\"(4v1) <code>map(Result::unwrap)</code>"/]:::pullClass
     5v1[\"(5v1) <code>map(|(m, _)| m)</code>"/]:::pullClass
-    6v1[/"<div style=text-align:center>(6v1)</div> <code>demux(|m, var_args!(acks, msgs, errs)| match m {<br>    Message::ConnectResponse =&gt; acks.give(m),<br>    Message::ChatMsg { .. } =&gt; msgs.give(m),<br>    _ =&gt; errs.give(m),<br>})</code>"\]:::pushClass
+    6v1[/"<div style=text-align:center>(6v1)</div> <code>demux(|m, varg!(acks, msgs, errs)| match m {<br>    Message::ConnectResponse =&gt; acks.give(m),<br>    Message::ChatMsg { .. } =&gt; msgs.give(m),<br>    _ =&gt; errs.give(m),<br>})</code>"\]:::pushClass
     7v1[/"(7v1) <code>for_each(|m| println!(&quot;Received unexpected message type: {:?}&quot;, m))</code>"\]:::pushClass
     14v1[/"(14v1) <code>for_each(pretty_print_msg)</code>"\]:::pushClass
     3v1--->4v1

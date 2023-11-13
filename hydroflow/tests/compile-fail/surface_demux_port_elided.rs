@@ -1,8 +1,8 @@
-use hydroflow::{hydroflow_syntax, var_args};
+use hydroflow::{hydroflow_syntax, varg};
 
 fn main() {
     let mut df = hydroflow_syntax! {
-        my_demux = source_iter(0..10) -> demux(|item, var_args!(evens, odds)| {
+        my_demux = source_iter(0..10) -> demux(|item, varg!(evens, odds)| {
             if 0 == item % 2 {
                 evens.give(item);
             }

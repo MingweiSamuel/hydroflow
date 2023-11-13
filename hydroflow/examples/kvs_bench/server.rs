@@ -175,7 +175,7 @@ pub fn run_server<RX>(
 
                 client_input = union_puts_and_gossip_requests
                     -> enumerate::<'tick>()
-                    -> demux(|(e, (req, addr)): (usize, (KvsRequest<BUFFER_SIZE>, NodeId)), var_args!(gets, store, broadcast)| {
+                    -> demux(|(e, (req, addr)): (usize, (KvsRequest<BUFFER_SIZE>, NodeId)), varg!(gets, store, broadcast)| {
                         match req {
                             KvsRequest::Put {key, value} => {
                                 throughput_internal += 1;
