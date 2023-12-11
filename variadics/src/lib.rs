@@ -2,6 +2,7 @@
 #![warn(missing_docs)]
 
 use sealed::sealed;
+pub use variadics_macro::*;
 
 /// Macro creating a variadic tuple value from a list of expressions.
 ///

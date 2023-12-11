@@ -3606,6 +3606,19 @@ version = "0.0.2"
 dependencies = [
  "sealed",
  "trybuild",
+ "variadics_macro",
+]
+
+[[package]]
+name = "variadics_macro"
+version = "0.0.2"
+dependencies = [
+ "hydroflow_lang",
+ "itertools",
+ "proc-macro-crate",
+ "proc-macro2",
+ "quote",
+ "syn 2.0.14",
 ]
 
 [[package]]
