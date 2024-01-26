@@ -93,13 +93,23 @@ junk you mistakenly pushed.
 ## Addendum: Adding new crates
 
 When adding a new crate which is published, you need to:
-1. Commit an (empty) file `my_crate/CHANGELOG.md`.
-2. Ensure `publish = true` and other required fields (`license`, `description`, `documentation`,
+1. Ensure `publish = true` and other required fields (`license`, `description`, `documentation`,
    etc.), are set in `my_crate/Cargo.toml`
    https://doc.rust-lang.org/cargo/reference/publishing.html#before-publishing-a-new-crate
-3. Ensure any `path` dependencies to/from `my_crate` also include `version = "^0.1.0"`
+2. Ensure any `path` dependencies to/from `my_crate` also include `version = "^0.1.0"`
    (substitute correct version).
 Then just run the release workflow as normal.
+
+Previously this section also required creating an empty changelog file: "Commit an (empty) file
+`my_crate/CHANGELOG.md`." However it seems this is no longer necessary.
+
+## Addendum: Moving crates
+
+`cargo-smart-release` automatically generates changelogs. However it only looks for changes in the
+package's _current_ directory, so if you move a package to a different directory then the changelog
+may lose old commit info if you're not careful.
+
+TODO MINGWEI
 
 ## Addendum: The GitHub App account
 
