@@ -109,6 +109,12 @@ Previously this section also required creating an empty changelog file: "Commit 
 package's _current_ directory, so if you move a package to a different directory then the changelog
 may lose old commit info if you're not careful.
 
+On the commit immediately _before_ you move the package(s) and run the following:
+```
+cargo changelog --write <crate_to_be_moved> <other_crate_to_be_moved> ...
+```
+And commit the resulting changes. (If you are going back in history to generate the changelog you will need to go back to your working branch and cherry-pick this commit back up).
+
 TODO MINGWEI
 
 ## Addendum: The GitHub App account
