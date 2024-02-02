@@ -124,8 +124,23 @@ pub const STATE_JOIN: OperatorConstraints = OperatorConstraints {
 
         let write_iterator = quote_spanned! {op_span=>
             let #ident = {
+                type __StateHandle<Map> = #root::scheduled::state::StateHandle<::std::cell::RefCell<#root::lattices::map_union::MapUnion<Map>>>;
                 // Limit error propagation by bounding locally, erasing output iterator type.
-                fn check_inputs<'a
+                #[inline(always)]
+                fn check_inputs<'a, LhsState, RhsState, Key, LhsVal, RhsVal, RhsIter, LhsIter>(
+                    context: &'a #root::scheduled::context::Context,
+                    lhs_state_handle: __StateHandle<LhsState>,
+                    rhs_state_handle: __StateHandle<RhsState>,
+                    lhs_iter: LhsIter,
+                    rhs_iter: RhsIter,
+                ) -> impl 'a + Iterator<Item = ()>
+                where
+                    LhsState: #root::lattices::cc_traits::MapMut<Key, LhsVal, Key=Key, Item=LhsVal>,
+                    RhsState: #root::lattices::cc_traits::MapMut<Key, RhsVal, Key=Key, Item=RhsVal>,
+                {
+                    ::std::iter::empty()
+                }
+                check_inputs(&context, #lhs_state, #rhs_state)
             };
         };
 
