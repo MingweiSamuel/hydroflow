@@ -47,24 +47,24 @@ pub const STATE_JOIN: OperatorConstraints = OperatorConstraints {
                    ..
                },
                _| {
-        let join_type =
-            type_args
-                .first()
-                .map(ToTokens::to_token_stream)
-                .unwrap_or(quote_spanned!(op_span=>
-                    #root::compiled::pull::HalfSetJoinState
-                ));
+        // let join_type =
+        //     type_args
+        //         .first()
+        //         .map(ToTokens::to_token_stream)
+        //         .unwrap_or(quote_spanned!(op_span=>
+        //             #root::compiled::pull::HalfSetJoinState
+        //         ));
 
-        // TODO: This is really bad.
-        // This will break if the user aliases HalfSetJoinState to something else. Temporary hacky solution.
-        // Note that cross_join() depends on the implementation here as well.
-        let additional_trait_bounds = if join_type.to_string().contains("HalfSetJoinState") {
-            quote_spanned!(op_span=>
-                + ::std::cmp::Eq
-            )
-        } else {
-            quote_spanned!(op_span=>)
-        };
+        // // TODO: This is really bad.
+        // // This will break if the user aliases HalfSetJoinState to something else. Temporary hacky solution.
+        // // Note that cross_join() depends on the implementation here as well.
+        // let additional_trait_bounds = if join_type.to_string().contains("HalfSetJoinState") {
+        //     quote_spanned!(op_span=>
+        //         + ::std::cmp::Eq
+        //     )
+        // } else {
+        //     quote_spanned!(op_span=>)
+        // };
 
         // let mut make_joindata = |persistence, side| {
         //     let joindata_ident = wc.make_ident(format!("joindata_{}", side));
@@ -119,41 +119,48 @@ pub const STATE_JOIN: OperatorConstraints = OperatorConstraints {
         let lhs_state = &inputs[2];
         let rhs_state = &inputs[3];
 
-        let lhs_borrow_ident = wc.make_ident("joindata_lhs_borrow");
-        let rhs_borrow_ident = wc.make_ident("joindata_rhs_borrow");
+        // let lhs_borrow_ident = wc.make_ident("joindata_lhs_borrow");
+        // let rhs_borrow_ident = wc.make_ident("joindata_rhs_borrow");
 
         let write_iterator = quote_spanned! {op_span=>
-            let mut #lhs_borrow_ident = #context.state_ref(#lhs_state).borrow_mut();
-            let mut #rhs_borrow_ident = #context.state_ref(#rhs_state).borrow_mut();
             let #ident = {
                 // Limit error propagation by bounding locally, erasing output iterator type.
-                #[inline(always)]
-                fn check_inputs<'a, K, I1, V1, I2, V2>(
-                    lhs: I1,
-                    rhs: I2,
-                    lhs_state: &'a mut #join_type<K, V1, V2>,
-                    rhs_state: &'a mut #join_type<K, V2, V1>,
-                    is_new_tick: bool,
-                ) -> impl 'a + Iterator<Item = (K, (V1, V2))>
-                where
-                    K: Eq + std::hash::Hash + Clone,
-                    V1: Clone #additional_trait_bounds,
-                    V2: Clone #additional_trait_bounds,
-                    I1: 'a + Iterator<Item = (K, V1)>,
-                    I2: 'a + Iterator<Item = (K, V2)>,
-                {
-                    #root::compiled::pull::symmetric_hash_join_into_iter(lhs, rhs, lhs_state, rhs_state, is_new_tick)
-                }
-
-                check_inputs(
-                    #lhs_items,
-                    #rhs_items,
-                    &mut *#lhs_borrow_ident,
-                    &mut *#rhs_borrow_ident,
-                    #context.is_first_run_this_tick(),
-                )
+                fn check_inputs<'a
             };
         };
+
+        // let write_iterator = quote_spanned! {op_span=>
+        //     let mut #lhs_borrow_ident = #context.state_ref(#lhs_state).borrow_mut();
+        //     let mut #rhs_borrow_ident = #context.state_ref(#rhs_state).borrow_mut();
+        //     let #ident = {
+        //         // Limit error propagation by bounding locally, erasing output iterator type.
+        //         #[inline(always)]
+        //         fn check_inputs<'a, K, I1, V1, I2, V2>(
+        //             lhs: I1,
+        //             rhs: I2,
+        //             lhs_state: &'a mut #join_type<K, V1, V2>,
+        //             rhs_state: &'a mut #join_type<K, V2, V1>,
+        //             is_new_tick: bool,
+        //         ) -> impl 'a + Iterator<Item = (K, (V1, V2))>
+        //         where
+        //             K: Eq + std::hash::Hash + Clone,
+        //             V1: Clone #additional_trait_bounds,
+        //             V2: Clone #additional_trait_bounds,
+        //             I1: 'a + Iterator<Item = (K, V1)>,
+        //             I2: 'a + Iterator<Item = (K, V2)>,
+        //         {
+        //             #root::compiled::pull::symmetric_hash_join_into_iter(lhs, rhs, lhs_state, rhs_state, is_new_tick)
+        //         }
+
+        //         check_inputs(
+        //             #lhs_items,
+        //             #rhs_items,
+        //             &mut *#lhs_borrow_ident,
+        //             &mut *#rhs_borrow_ident,
+        //             #context.is_first_run_this_tick(),
+        //         )
+        //     };
+        // };
 
         // let write_iterator_after =
         // if persistences[0] == Persistence::Static || persistences[1] == Persistence::Static {
