@@ -4,6 +4,7 @@ mod multiset;
 mod multiset2;
 mod reduce;
 mod set;
+mod lattice;
 
 use std::collections::hash_map::Iter;
 use std::slice;
