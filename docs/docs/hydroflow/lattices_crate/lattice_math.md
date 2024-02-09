@@ -172,6 +172,14 @@ Lattice morphisms are a special kind of monotonic function which are _differenti
 Because merge distributes over a morphism, we can evaluate the morphisms on a small "delta" of data
 and merge that delta into the existing result rather than recompute the entire morphism on all data.
 
+### Lattice Bimorphism
+
+A function $f: R\times S\rightarrow T$ is a _lattice bimorphism_ if it acts like a lattice morphism separately in both of its arguments. For all $a, \delta a \in R$ and $b, \delta b \in S$:
+$$
+    f(a \sqcup_R \delta a,\ b) \quad=\quad f(a,\ b)\ \sqcup_T\ f(\delta a,\ b) \\
+    f(a,\ b \sqcup_S \delta b) \quad=\quad f(a,\ b)\ \sqcup_T\ f(a,\ \delta b) \\
+$$
+
 ### Further Reading
 
 * [Hydroflow Thesis (2021)](https://hydro.run/papers/hydroflow-thesis.pdf)

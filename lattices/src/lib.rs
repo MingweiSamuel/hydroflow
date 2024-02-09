@@ -9,6 +9,7 @@ use sealed::sealed;
 pub mod collections;
 mod conflict;
 mod dom_pair;
+pub mod functions;
 pub mod map_union;
 pub mod map_union_with_tombstones;
 mod ord;
