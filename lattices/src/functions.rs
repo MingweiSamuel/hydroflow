@@ -1,15 +1,18 @@
 //! Module containing special functions (maps) for lattices.
 
+use std::convert::Infallible;
 use std::fmt::Debug;
 use std::hash::Hash;
+use std::marker::PhantomData;
 
-use cc_traits::{GetKeyValue, Insert, MapIter, SimpleCollectionRef, SimpleKeyedRef};
+use cc_traits::{GetKeyValue, Insert, Iter, MapIter, SimpleCollectionRef, SimpleKeyedRef};
 
 use crate::map_union::{MapUnion, MapUnionHashMap};
+use crate::set_union::SetUnion;
 use crate::test::cartesian_power;
 use crate::{Merge, Pair};
 
-// TODO: docs. Semilattice homomorphism.
+// TODO: docs. Semilattice binary homomorphism.
 pub trait LatticeBimorphism<LatA, LatB> {
     type Output;
     fn call(&mut self, lat_a: LatA, lat_b: LatB) -> Self::Output;
@@ -45,17 +48,17 @@ where
 //     struct KeyLatticeBimorphism<Func>(Func);
 // }
 struct KeyLatticeBimorphism<Func>(Func);
-impl<MapA, MapB, Key, ValA, ValB, ValFunc> LatticeBimorphism<MapUnion<MapA>, MapUnion<MapB>>
+impl<MapA, MapB, ValFunc> LatticeBimorphism<MapUnion<MapA>, MapUnion<MapB>>
     for KeyLatticeBimorphism<ValFunc>
 where
-    ValFunc: LatticeBimorphism<ValA, ValB>,
-    MapA: MapIter<Key = Key, Item = ValA> + SimpleKeyedRef + SimpleCollectionRef,
-    MapB: for<'a> GetKeyValue<&'a Key, Key = Key, Item = ValB> + SimpleCollectionRef,
-    Key: Clone + Eq + Hash,
-    ValA: Clone,
-    ValB: Clone,
+    ValFunc: LatticeBimorphism<MapA::Item, MapB::Item>,
+    MapA: MapIter + SimpleKeyedRef + SimpleCollectionRef,
+    MapB: for<'a> GetKeyValue<&'a MapA::Key, Key = MapA::Key> + SimpleCollectionRef,
+    MapA::Key: Clone + Eq + Hash,
+    MapA::Item: Clone,
+    MapB::Item: Clone,
 {
-    type Output = MapUnionHashMap<Key, ValFunc::Output>;
+    type Output = MapUnionHashMap<MapA::Key, ValFunc::Output>;
 
     fn call(&mut self, lat_a: MapUnion<MapA>, lat_b: MapUnion<MapB>) -> Self::Output {
         let mut output = MapUnionHashMap::default();
@@ -120,11 +123,53 @@ pub fn check_lattice_bimorphism<LatA, LatB, Func>(
     }
 }
 
+pub struct CartesianProductFn<SetOut> {
+    _phantom: PhantomData<fn() -> SetOut>,
+}
+impl<SetOut> Default for CartesianProductFn<SetOut> {
+    fn default() -> Self {
+        Self {
+            _phantom: Default::default(),
+        }
+    }
+}
+
+impl<SetA, SetB, SetOut> LatticeBimorphism<SetUnion<SetA>, SetUnion<SetB>>
+    for CartesianProductFn<SetOut>
+where
+    SetA: IntoIterator,
+    SetB: Iter + SimpleCollectionRef,
+    SetA::Item: Clone,
+    SetB::Item: Clone,
+    SetOut: FromIterator<(SetA::Item, SetB::Item)>,
+{
+    type Output = SetUnion<SetOut>;
+
+    fn call(&mut self, lat_a: SetUnion<SetA>, lat_b: SetUnion<SetB>) -> Self::Output {
+        let set_a = lat_a.into_reveal();
+        let set_b = lat_b.into_reveal();
+        let set_out = set_a
+            .into_iter()
+            .flat_map(|a_item| {
+                set_b
+                    .iter()
+                    .map(<SetB as SimpleCollectionRef>::into_ref)
+                    .cloned()
+                    .map(move |b_item| (a_item.clone(), b_item))
+            })
+            .collect::<SetOut>();
+        SetUnion::new(set_out)
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use std::collections::HashSet;
 
-    use super::{check_lattice_bimorphism, wrap_closure_lattice_bimorphism, KeyLatticeBimorphism};
+    use super::{
+        check_lattice_bimorphism, wrap_closure_lattice_bimorphism, CartesianProductFn,
+        KeyLatticeBimorphism,
+    };
     use crate::map_union::{MapUnionHashMap, MapUnionSingletonMap};
     use crate::set_union::{SetUnionHashSet, SetUnionSingletonSet};
     use crate::Pair;
@@ -177,18 +222,18 @@ mod tests {
                 SetUnionHashSet::new_from(["goodbye", "farewell"]),
             )]),
         ];
-        let cartesian_product = wrap_closure_lattice_bimorphism(
-            |l: SetUnionHashSet<&'static str>, r: SetUnionHashSet<&'static str>| {
-                let l = l.into_reveal();
-                let r = r.into_reveal();
-                let out = l
-                    .into_iter()
-                    .flat_map(|l_item| r.iter().cloned().map(move |r_item| (l_item, r_item)))
-                    .collect::<HashSet<_>>();
-                SetUnionHashSet::new(out)
-            },
-        );
-        let func = KeyLatticeBimorphism(cartesian_product);
+        // let cartesian_product = wrap_closure_lattice_bimorphism(
+        //     |l: SetUnionHashSet<&'static str>, r: SetUnionHashSet<&'static str>| {
+        //         let l = l.into_reveal();
+        //         let r = r.into_reveal();
+        //         let out = l
+        //             .into_iter()
+        //             .flat_map(|l_item| r.iter().cloned().map(move |r_item| (l_item, r_item)))
+        //             .collect::<HashSet<_>>();
+        //         SetUnionHashSet::new(out)
+        //     },
+        // );
+        let func = KeyLatticeBimorphism(CartesianProductFn::<HashSet<_>>::default());
 
         check_lattice_bimorphism(func, items_a, items_b);
     }
