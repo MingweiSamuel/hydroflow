@@ -98,13 +98,13 @@ fn check_inputs<'a, Func, LhsIter, RhsIter, LhsState, RhsState, Output>(
     context: &'a hydroflow::scheduled::context::Context,
 ) -> impl 'a + Iterator<Item = Output>
 where
-    Func: 'static
+    Func: 'a
         + LatticeBimorphism<LhsState, RhsIter::Item, Output = Output>
         + LatticeBimorphism<LhsIter::Item, RhsState, Output = Output>,
-    LhsIter: 'static + Iterator,
-    RhsIter: 'static + Iterator,
-    LhsState: 'static + Clone,
-    RhsState: 'static + Clone,
+    LhsIter: 'a + Iterator,
+    RhsIter: 'a + Iterator,
+    LhsState: 'a + Clone,
+    RhsState: 'a + Clone,
     // LhsMapState:
     //     'static + hydroflow::lattices::cc_traits::MapMut<Key, LhsVal, Key = Key, Item = LhsVal>,
     // RhsMapState:
