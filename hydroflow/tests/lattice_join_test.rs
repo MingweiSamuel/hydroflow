@@ -73,9 +73,12 @@
 //     }
 // }
 
+use std::cell::RefCell;
 use std::ops::{Deref, DerefMut};
 
-use lattices::cc_traits::{Get, GetMut, Insert};
+use hydroflow::scheduled::state::StateHandle;
+use lattices::cc_traits::{Get, GetMut, Insert, Iter};
+use lattices::functions::LatticeBimorphism;
 use lattices::map_union::{MapUnion, MapUnionSingletonMap};
 use lattices::set_union::SetUnionSingletonSet;
 use lattices::Merge;
@@ -84,58 +87,47 @@ type __StateHandle<Map> = hydroflow::scheduled::state::StateHandle<
     ::std::cell::RefCell<hydroflow::lattices::map_union::MapUnion<Map>>,
 >;
 
-// // Limit error propagation by bounding locally, erasing output iterator type.
-// #[inline(always)]
-// fn check_inputs<
-//     'a,
-//     Key,
-//     LhsMapState,
-//     RhsMapState,
-//     LhsVal,
-//     RhsVal,
-//     LhsIter,
-//     RhsIter,
-//     LhsMap,
-//     RhsMap,
-//     LhsItem,
-//     RhsItem,
-// >(
-//     context: &'a hydroflow::scheduled::context::Context,
-//     lhs_state_handle: __StateHandle<LhsMapState>,
-//     rhs_state_handle: __StateHandle<RhsMapState>,
-//     lhs_iter: LhsIter,
-//     rhs_iter: RhsIter,
-// ) -> impl 'a + Iterator<Item = MapUnionSingletonMap<Key, SetUnionSingletonSet<(LhsVal, RhsVal)>>>
-// where
-//     LhsMapState:
-//         'static + hydroflow::lattices::cc_traits::MapMut<Key, LhsVal, Key = Key, Item = LhsVal>,
-//     RhsMapState:
-//         'static + hydroflow::lattices::cc_traits::MapMut<Key, RhsVal, Key = Key, Item = RhsVal>,
-//     LhsIter: Iterator<Item = MapUnion<LhsMap>>,
-//     RhsIter: Iterator<Item = MapUnion<RhsMap>>,
-//     MapUnion<LhsMapState>: Merge<MapUnion<LhsMap>>,
-//     MapUnion<RhsMapState>: Merge<MapUnion<RhsMap>>,
-//     LhsMap: Clone + IntoIterator<Item = (Key, LhsVal)>,
-//     RhsMap: Clone + IntoIterator<Item = (Key, RhsVal)>,
-// {
-//     // for lhs_iter
+// Limit error propagation by bounding locally, erasing output iterator type.
+#[inline(always)]
+fn check_inputs<'a, Func, LhsIter, RhsIter, LhsState, RhsState, Output>(
+    mut func: Func,
+    lhs_iter: LhsIter,
+    rhs_iter: RhsIter,
+    lhs_state_handle: StateHandle<RefCell<LhsState>>,
+    rhs_state_handle: StateHandle<RefCell<RhsState>>,
+    context: &'a hydroflow::scheduled::context::Context,
+) -> impl 'a + Iterator<Item = Output>
+where
+    Func: 'static
+        + LatticeBimorphism<LhsState, RhsIter::Item, Output = Output>
+        + LatticeBimorphism<LhsIter::Item, RhsState, Output = Output>,
+    LhsIter: 'static + Iterator,
+    RhsIter: 'static + Iterator,
+    LhsState: 'static + Clone,
+    RhsState: 'static + Clone,
+    // LhsMapState:
+    //     'static + hydroflow::lattices::cc_traits::MapMut<Key, LhsVal, Key = Key, Item = LhsVal>,
+    // RhsMapState:
+    //     'static + hydroflow::lattices::cc_traits::MapMut<Key, RhsVal, Key = Key, Item = RhsVal>,
+    // LhsIter: Iterator<Item = MapUnion<LhsMap>>,
+    // RhsIter: Iterator<Item = MapUnion<RhsMap>>,
+    // MapUnion<LhsMapState>: Merge<MapUnion<LhsMap>>,
+    // MapUnion<RhsMapState>: Merge<MapUnion<RhsMap>>,
+    // LhsMap: Clone + IntoIterator<Item = (Key, LhsVal)>,
+    // RhsMap: Clone + IntoIterator<Item = (Key, RhsVal)>,
+{
+    // for lhs_iter
 
-//     let mut lhs_state = context.state_ref(lhs_state_handle);
-//     let mut rhs_state = context.state_ref(rhs_state_handle);
+    let lhs_state = context.state_ref(lhs_state_handle);
+    let rhs_state = context.state_ref(rhs_state_handle);
 
-//     let lhs_iter_out = {
-//         lhs_iter
-//             .flat_map(|lhs_map| {
-//                 Merge::merge(lhs_state.borrow_mut().deref_mut(), lhs_map.clone());
-//                 lhs_map.into_reveal().into_iter()
-//             })
-//             .flat_map(|(lhs_key, lhs_val)| {
-//                 //rhs_state.borrow().deref().as_reveal_ref().get(&lhs_key).iter()
-//             })
-//     };
+    let lhs_iter_out =
+        lhs_iter.map(move |lhs_item| func.call(lhs_item, rhs_state.borrow().deref().clone()));
+    let rhs_iter_out =
+        rhs_iter.map(move |rhs_item| func.call(lhs_state.borrow().deref().clone(), rhs_item));
 
-//     ::std::iter::empty()
-// }
+    lhs_iter_out.chain(rhs_iter_out)
+}
 
 // fn lattice_join_check_inputs<'a>(
 //     context: &'a
