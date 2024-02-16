@@ -74,18 +74,10 @@
 // }
 
 use std::cell::RefCell;
-use std::ops::{Deref, DerefMut};
+use std::ops::Deref;
 
 use hydroflow::scheduled::state::StateHandle;
-use lattices::cc_traits::{Get, GetMut, Insert, Iter};
 use lattices::functions::LatticeBimorphism;
-use lattices::map_union::{MapUnion, MapUnionSingletonMap};
-use lattices::set_union::SetUnionSingletonSet;
-use lattices::Merge;
-
-type __StateHandle<Map> = hydroflow::scheduled::state::StateHandle<
-    ::std::cell::RefCell<hydroflow::lattices::map_union::MapUnion<Map>>,
->;
 
 // Limit error propagation by bounding locally, erasing output iterator type.
 #[inline(always)]
@@ -99,12 +91,13 @@ fn check_inputs<'a, Func, LhsIter, RhsIter, LhsState, RhsState, Output>(
 ) -> impl 'a + Iterator<Item = Output>
 where
     Func: 'a
-        + LatticeBimorphism<LhsState, RhsIter::Item, Output = Output>
-        + LatticeBimorphism<LhsIter::Item, RhsState, Output = Output>,
+        + Clone
+        + for<'l> LatticeBimorphism<&'l LhsState, RhsIter::Item, Output = Output>
+        + for<'r> LatticeBimorphism<LhsIter::Item, &'r RhsState, Output = Output>,
     LhsIter: 'a + Iterator,
     RhsIter: 'a + Iterator,
-    LhsState: 'a + Clone,
-    RhsState: 'a + Clone,
+    LhsState: 'static + Clone,
+    RhsState: 'static + Clone,
     // LhsMapState:
     //     'static + hydroflow::lattices::cc_traits::MapMut<Key, LhsVal, Key = Key, Item = LhsVal>,
     // RhsMapState:
@@ -116,15 +109,15 @@ where
     // LhsMap: Clone + IntoIterator<Item = (Key, LhsVal)>,
     // RhsMap: Clone + IntoIterator<Item = (Key, RhsVal)>,
 {
-    // for lhs_iter
-
-    let lhs_state = context.state_ref(lhs_state_handle);
-    let rhs_state = context.state_ref(rhs_state_handle);
-
-    let lhs_iter_out =
-        lhs_iter.map(move |lhs_item| func.call(lhs_item, rhs_state.borrow().deref().clone()));
-    let rhs_iter_out =
-        rhs_iter.map(move |rhs_item| func.call(lhs_state.borrow().deref().clone(), rhs_item));
+    let mut func2 = func.clone();
+    let lhs_iter_out = lhs_iter.map(move |lhs_item| {
+        let rhs_state = context.state_ref(rhs_state_handle);
+        func2.call(lhs_item, rhs_state.borrow().deref())
+    });
+    let rhs_iter_out = rhs_iter.map(move |rhs_item| {
+        let lhs_state = context.state_ref(lhs_state_handle);
+        func.call(lhs_state.borrow().deref(), rhs_item)
+    });
 
     lhs_iter_out.chain(rhs_iter_out)
 }
