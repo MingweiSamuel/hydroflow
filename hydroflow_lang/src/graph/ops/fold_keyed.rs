@@ -79,7 +79,8 @@ pub const FOLD_KEYED: OperatorConstraints = OperatorConstraints {
     has_singleton_output: false,
     ports_inn: None,
     ports_out: None,
-    input_delaytype_fn: |_| Some(DelayType::Stratum),    flow_prop_fn: None,
+    input_delaytype_fn: |_| Some(DelayType::Stratum),
+    flow_prop_fn: None,
     write_fn: |wc @ &WriteContextArgs {
                    hydroflow,
                    context,
@@ -203,10 +204,7 @@ pub const FOLD_KEYED: OperatorConstraints = OperatorConstraints {
                             }
 
                             for kv in check_input(#input) {
-                                if #context.is_first_run_this_tick() {
-                                    // #[allow(unknown_lints, noop_method_call, clippy::clone_on_copy)]
-                                    #keyset_ident.insert(::std::clone::Clone::clone(&kv.0));
-                                }
+                                #keyset_ident.insert(::std::clone::Clone::clone(&kv.0));
                                 // TODO(mingwei): remove `unknown_lints` when `clippy::unwrap_or_default` is stabilized.
                                 #[allow(unknown_lints, clippy::unwrap_or_default)]
                                 let entry = #hashtable_ident.entry(kv.0).or_insert_with(#initfn);
@@ -236,51 +234,6 @@ pub const FOLD_KEYED: OperatorConstraints = OperatorConstraints {
                                     })
                             )
                         };
-
-                        // let mut #hashtable_ident = #context.state_ref(#groupbydata_ident).borrow_mut();
-
-                        // let #ident = {
-                        //     let replay_iter = if #context.is_first_run_this_tick() {
-                        //         // Note that this means streaming keys will get double-emited on the first run in the tick...
-                        //         #root::itertools::Either::Left(#hashtable_ident.iter())
-                        //     } else {
-                        //         #root::itertools::Either::Right(::std::iter::empty())
-                        //     };
-
-                        //     let new_items_iter = {
-                        //         #[inline(always)]
-                        //         fn check_input<Iter, A, B>(iter: Iter) -> impl ::std::iter::Iterator<Item = (A, B)>
-                        //         where
-                        //             Iter: std::iter::Iterator<Item = (A, B)>,
-                        //             A: ::std::clone::Clone,
-                        //             B: ::std::clone::Clone
-                        //         {
-                        //             iter
-                        //         }
-
-                        //         check_input(#input).map(|(key, val)| {
-                        //             /// A: accumulator type
-                        //             /// T: iterator item type
-                        //             /// O: output type
-                        //             #[inline(always)]
-                        //             fn call_comb_type<A, T, O>(a: &mut A, t: T, f: impl Fn(&mut A, T) -> O) -> O {
-                        //                 (f)(a, t)
-                        //             }
-
-                        //             // TODO(mingwei): remove `unknown_lints` when `clippy::unwrap_or_default` is stabilized.
-                        //             #[allow(unknown_lints, clippy::unwrap_or_default)]
-                        //             let entry = #hashtable_ident.entry(key.clone()).or_insert_with(#initfn);
-                        //             #[allow(clippy::redundant_closure_call)]
-                        //             call_comb_type(entry, val, #aggfn);
-                        //             (key, entry.clone())
-                        //         })
-                        //     };
-
-                        //     replay_iter
-                        //         // TODO(mingwei): remove `unknown_lints` when `suspicious_double_ref_op` is stabilized.
-                        //         .map(#[allow(unknown_lints, suspicious_double_ref_op, clippy::clone_on_copy)] |(k, v)| (k.clone(), v.clone()))
-                        //         .chain(new_items_iter)
-                        // };
                     },
                     quote_spanned! {op_span=>
                         #context.schedule_subgraph(#context.current_subgraph(), false);
