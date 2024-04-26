@@ -234,9 +234,6 @@ fn main() {
                     let mut sg_2v1_node_17v1_hashtable = context
                         .state_ref(sg_2v1_node_17v1_groupbydata)
                         .borrow_mut();
-                    let mut sg_2v1_node_17v1_keyset = hydroflow::rustc_hash::FxHashSet::<
-                        (),
-                    >::default();
                     {
                         #[inline(always)]
                         fn check_input<Iter, A, B>(
@@ -261,8 +258,6 @@ fn main() {
                             (f)(a, t)
                         }
                         for kv in check_input(hoff_9v3_recv) {
-                            sg_2v1_node_17v1_keyset
-                                .insert(::std::clone::Clone::clone(&kv.0));
                             #[allow(unknown_lints, clippy::unwrap_or_default)]
                             let entry = sg_2v1_node_17v1_hashtable
                                 .entry(kv.0)
