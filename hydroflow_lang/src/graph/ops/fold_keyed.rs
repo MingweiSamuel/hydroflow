@@ -212,28 +212,21 @@ pub const FOLD_KEYED: OperatorConstraints = OperatorConstraints {
                             }
                         }
 
-                        let #ident = if #context.is_first_run_this_tick() {
-                            #root::itertools::Either::Left(
-                                #hashtable_ident
-                                    .iter()
-                                    // TODO(mingwei): remove `unknown_lints` when `suspicious_double_ref_op` is stabilized.
-                                    .map(
-                                        #[allow(unknown_lints, suspicious_double_ref_op, clippy::clone_on_copy)]
-                                        |(k, v)| (
-                                            ::std::clone::Clone::clone(k),
-                                            ::std::clone::Clone::clone(v),
-                                        )
-                                    )
-                            )
-                        } else {
-                            #root::itertools::Either::Right(
-                                #keyset_ident.into_iter()
-                                    .map(|k| {
-                                        let v = #hashtable_ident.get(&k).unwrap();
-                                        (k, ::std::clone::Clone::clone(v))
-                                    })
-                            )
-                        };
+                        // Play everything but only on the first run of this tick/stratum.
+                        // (We know we won't have any more inputs, so it is fine to only play once.
+                        // Because of the `DelayType::Stratum` or `DelayType::MonotoneAccum`).
+                        let #ident = #context
+                            .is_first_run_this_tick()
+                            .then_some(#hashtable_ident.iter())
+                            .into_iter()
+                            .flatten()
+                            .map(
+                                #[allow(unknown_lints, suspicious_double_ref_op, clippy::clone_on_copy)]
+                                |(k, v)| (
+                                    ::std::clone::Clone::clone(k),
+                                    ::std::clone::Clone::clone(v),
+                                )
+                            );
                     },
                     quote_spanned! {op_span=>
                         #context.schedule_subgraph(#context.current_subgraph(), false);
