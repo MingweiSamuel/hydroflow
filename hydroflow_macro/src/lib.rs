@@ -6,6 +6,7 @@
 
 use std::path::PathBuf;
 
+use hydroflow_lang::compile::hydroflow_root;
 use hydroflow_lang::diagnostic::{Diagnostic, Level};
 use hydroflow_lang::graph::{build_hfcode, partition_graph, FlatGraphBuilder};
 use hydroflow_lang::parse::HfCode;
@@ -35,32 +36,8 @@ pub fn hydroflow_syntax_noemit(input: proc_macro::TokenStream) -> proc_macro::To
     hydroflow_syntax_internal(input, None)
 }
 
-fn root() -> proc_macro2::TokenStream {
-    use std::env::{var as env_var, VarError};
-
-    let hydroflow_crate = proc_macro_crate::crate_name("hydroflow")
-        .expect("hydroflow should be present in `Cargo.toml`");
-    match hydroflow_crate {
-        proc_macro_crate::FoundCrate::Itself => {
-            if Err(VarError::NotPresent) == env_var("CARGO_BIN_NAME")
-                && Err(VarError::NotPresent) != env_var("CARGO_PRIMARY_PACKAGE")
-                && Ok("hydroflow") == env_var("CARGO_CRATE_NAME").as_deref()
-            {
-                // In the crate itself, including unit tests.
-                quote! { crate }
-            } else {
-                // In an integration test, example, bench, etc.
-                quote! { ::hydroflow }
-            }
-        }
-        proc_macro_crate::FoundCrate::Name(name) => {
-            let ident: Ident = Ident::new(&name, Span::call_site());
-            quote! { ::#ident }
-        }
-    }
-}
-
-// May panic
+/// If `feature = "diagnostics"` is enabled, gets the file path of the call_site span.
+/// Otherwise tries to use the `CARGO_MANIFEST_DIR` env var as a fallback. Will panic if not set.
 fn macro_invocation_path() -> PathBuf {
     #[cfg(feature = "diagnostics")]
     {
@@ -74,44 +51,6 @@ fn macro_invocation_path() -> PathBuf {
                     .expect("Failed to determine fallback env var CARGO_MANIFEST_DIR."),
             )
         })
-    }
-}
-
-fn hydroflow_syntax_internal(
-    input: proc_macro::TokenStream,
-    min_diagnostic_level: Option<Level>,
-) -> proc_macro::TokenStream {
-    let macro_invocation_path = macro_invocation_path();
-
-    let input = parse_macro_input!(input as HfCode);
-    let root = root();
-    let (graph_code_opt, diagnostics) = build_hfcode(input, &root, macro_invocation_path);
-    let tokens = graph_code_opt
-        .map(|(_graph, code)| code)
-        .unwrap_or_else(|| quote! { #root::scheduled::graph::Hydroflow::new() });
-
-    let diagnostics = diagnostics
-        .iter()
-        .filter(|diag: &&Diagnostic| Some(diag.level) <= min_diagnostic_level);
-
-    #[cfg(feature = "diagnostics")]
-    {
-        diagnostics.for_each(Diagnostic::emit);
-        tokens.into()
-    }
-
-    #[cfg(not(feature = "diagnostics"))]
-    {
-        let diagnostics = diagnostics.map(Diagnostic::to_tokens);
-        quote! {
-            {
-                #(
-                    #diagnostics
-                )*
-                #tokens
-            }
-        }
-        .into()
     }
 }
 
@@ -170,10 +109,58 @@ pub fn surface_booktest_operators(input: proc_macro::TokenStream) -> proc_macro:
     out.into()
 }
 
+/// Checks that the given closure is a morphism. For now does nothing.
+#[proc_macro]
+pub fn morphism(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    // TODO(mingwei): some sort of code analysis?
+    item
+}
+
+/// Checks that the given closure is a monotonic function. For now does nothing.
+#[proc_macro]
+pub fn monotonic_fn(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    // TODO(mingwei): some sort of code analysis?
+    item
+}
+
+/// Marks the function as a `#[test]` and includes Hydroflow/tokio async setup.
+#[proc_macro_attribute]
+pub fn hydroflow_test(
+    args: proc_macro::TokenStream,
+    item: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    let root = hydroflow_root();
+    let args_2: proc_macro2::TokenStream = args.into();
+
+    hydroflow_wrap(
+        item,
+        parse_quote!(
+            #[#root::tokio::test(flavor = "current_thread", #args_2)]
+        ),
+    )
+}
+
+/// Marks the function as `#[main]` and includes Hydroflow/tokio async setup.
+#[proc_macro_attribute]
+pub fn hydroflow_main(
+    _: proc_macro::TokenStream,
+    item: proc_macro::TokenStream,
+) -> proc_macro::TokenStream {
+    let root = hydroflow_root();
+
+    hydroflow_wrap(
+        item,
+        parse_quote!(
+            #[#root::tokio::main(flavor = "current_thread")]
+        ),
+    )
+}
+
+/// Wraps the fn's block in a tokio localset and adds the attribute.
 fn hydroflow_wrap(item: proc_macro::TokenStream, attribute: Attribute) -> proc_macro::TokenStream {
     use quote::ToTokens;
 
-    let root = root();
+    let root = hydroflow_root();
 
     let mut input: syn::ItemFn = match syn::parse(item) {
         Ok(it) => it,
@@ -193,54 +180,9 @@ fn hydroflow_wrap(item: proc_macro::TokenStream, attribute: Attribute) -> proc_m
     input.into_token_stream().into()
 }
 
-/// Checks that the given closure is a morphism. For now does nothing.
-#[proc_macro]
-pub fn morphism(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    // TODO(mingwei): some sort of code analysis?
-    item
-}
-
-/// Checks that the given closure is a monotonic function. For now does nothing.
-#[proc_macro]
-pub fn monotonic_fn(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    // TODO(mingwei): some sort of code analysis?
-    item
-}
-
-#[proc_macro_attribute]
-pub fn hydroflow_test(
-    args: proc_macro::TokenStream,
-    item: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    let root = root();
-    let args_2: proc_macro2::TokenStream = args.into();
-
-    hydroflow_wrap(
-        item,
-        parse_quote!(
-            #[#root::tokio::test(flavor = "current_thread", #args_2)]
-        ),
-    )
-}
-
-#[proc_macro_attribute]
-pub fn hydroflow_main(
-    _: proc_macro::TokenStream,
-    item: proc_macro::TokenStream,
-) -> proc_macro::TokenStream {
-    let root = root();
-
-    hydroflow_wrap(
-        item,
-        parse_quote!(
-            #[#root::tokio::main(flavor = "current_thread")]
-        ),
-    )
-}
-
 #[proc_macro_derive(DemuxEnum)]
 pub fn derive_answer_fn(item: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let root = root();
+    let root = hydroflow_root();
 
     let ItemEnum {
         ident,

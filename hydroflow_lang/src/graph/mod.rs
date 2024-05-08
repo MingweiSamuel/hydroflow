@@ -389,12 +389,13 @@ impl Display for PortIndexValue {
 }
 
 /// The main function of this module. Compiles a [`HfCode`] AST into a [`HydroflowGraph`] and
-/// source code, or [`Diagnostic`] errors.
+/// source code, and [`Diagnostic`] errors.
 pub fn build_hfcode(
     hf_code: HfCode,
-    root: &TokenStream,
     macro_invocation_path: PathBuf,
 ) -> (Option<(HydroflowGraph, TokenStream)>, Vec<Diagnostic>) {
+    let root = hydroflow_root();
+
     let flat_graph_builder = FlatGraphBuilder::from_hfcode(hf_code, macro_invocation_path);
     let (mut flat_graph, uses, mut diagnostics) = flat_graph_builder.build();
     if !diagnostics.iter().any(Diagnostic::is_error) {
