@@ -16,3 +16,5 @@ cc-traits = "2.0.0"
 sealed = "0.5"
 serde = { version = "1.0.160", features = ["derive"], optional = true }
 variadics = { path = "../variadics", version = "^0.0.4" }
+trybuild = "1.0.80"
+lattices_macro = { path = "../lattices_macro", version = "^0.5.5" }
