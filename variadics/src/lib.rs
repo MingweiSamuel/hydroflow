@@ -158,24 +158,6 @@ pub trait VariadicExt: Variadic {
     /// Convert an exclusive (`mut`) reference to this variadic into a variadic of exclusive
     /// (`mut`) references.
     fn as_mut_var(&mut self) -> Self::AsMutVar<'_>;
-
-    /// Iterator type returned by [`Self::iter_any_ref`].
-    type IterAnyRef<'a>: Iterator<Item = &'a dyn Any>
-    where
-        Self: 'static;
-    /// Iterate this variadic as `&dyn Any` references.
-    fn iter_any_ref(&self) -> Self::IterAnyRef<'_>
-    where
-        Self: 'static;
-
-    /// Iterator type returned by [`Self::iter_any_mut`].
-    type IterAnyMut<'a>: Iterator<Item = &'a mut dyn Any>
-    where
-        Self: 'static;
-    /// Iterate this variadic as `&mut dyn Any` exclusive references.
-    fn iter_any_mut(&mut self) -> Self::IterAnyMut<'_>
-    where
-        Self: 'static;
 }
 #[sealed]
 impl<Item, Rest> VariadicExt for (Item, Rest)
@@ -238,30 +220,6 @@ where
         let (item, rest) = self;
         (item, rest.as_mut_var())
     }
-
-    type IterAnyRef<'a> = std::iter::Chain<std::iter::Once<&'a dyn Any>, Rest::IterAnyRef<'a>>
-    where
-        Self: 'static;
-    fn iter_any_ref(&self) -> Self::IterAnyRef<'_>
-    where
-        Self: 'static,
-    {
-        let var_args!(item, ...rest) = self;
-        let item: &dyn Any = item;
-        std::iter::once(item).chain(rest.iter_any_ref())
-    }
-
-    type IterAnyMut<'a> = std::iter::Chain<std::iter::Once<&'a mut dyn Any>, Rest::IterAnyMut<'a>>
-    where
-        Self: 'static;
-    fn iter_any_mut(&mut self) -> Self::IterAnyMut<'_>
-    where
-        Self: 'static,
-    {
-        let var_args!(item, ...rest) = self;
-        let item: &mut dyn Any = item;
-        std::iter::once(item).chain(rest.iter_any_mut())
-    }
 }
 #[sealed]
 impl VariadicExt for () {
@@ -277,60 +235,6 @@ impl VariadicExt for () {
 
     type Reverse = ();
     fn reverse(self) -> Self::Reverse {}
-
-    type AsRefVar<'a> = ();
-    fn as_ref_var(&self) -> Self::AsRefVar<'_> {}
-
-    type AsMutVar<'a> = ();
-    fn as_mut_var(&mut self) -> Self::AsMutVar<'_> {}
-
-    type IterAnyRef<'a> = std::iter::Empty<&'a dyn Any>
-    where
-        Self: 'static;
-    fn iter_any_ref(&self) -> Self::IterAnyRef<'_>
-    where
-        Self: 'static,
-    {
-        std::iter::empty()
-    }
-
-    type IterAnyMut<'a> = std::iter::Empty<&'a mut dyn Any>
-    where
-        Self: 'static;
-    fn iter_any_mut(&mut self) -> Self::IterAnyMut<'_>
-    where
-        Self: 'static,
-    {
-        std::iter::empty()
-    }
-}
-
-/// Convert from a variadic of references back into the original variadic. The inverse of
-/// `AsRefVariadic` or `AsMutVariadic`.
-///
-/// This is a sealed trait.
-#[sealed]
-pub trait UnrefVariadic: Variadic {
-    /// The un-referenced variadic. Each item will have one layer of references removed.
-    type Unref: VariadicExt;
-}
-#[sealed]
-impl<Item, Rest> UnrefVariadic for (&Item, Rest)
-where
-    Rest: UnrefVariadic,
-{
-    type Unref = (Item, Rest::Unref);
-}
-#[sealed]
-impl<Item, Rest> UnrefVariadic for (&mut Item, Rest)
-where
-    Rest: UnrefVariadic,
-{
-    type Unref = (Item, Rest::Unref);
-}
-#[sealed]
-impl UnrefVariadic for () {
-    type Unref = ();
 
     type AsRefVar<'a> = ();
     fn as_ref_var(&self) -> Self::AsRefVar<'_> {}
