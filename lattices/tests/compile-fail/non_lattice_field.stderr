@@ -8,11 +8,11 @@ error[E0277]: the trait bound `String: Merge<String>` is not satisfied
             <() as Merge<()>>
             <Conflict<T> as Merge<Conflict<O>>>
             <DomPair<KeySelf, ValSelf> as Merge<DomPair<KeyOther, ValOther>>>
+            <GHT<KeyType, ValType, Inner> as Merge<GHT<KeyType, ValType, Inner>>>
+            <GhtInner<Head, Node> as Merge<GhtInner<Head, Node>>>
+            <GhtLeaf<T> as Merge<GhtLeaf<T>>>
             <MapUnion<MapSelf> as Merge<MapUnion<MapOther>>>
             <MapUnionWithTombstones<MapSelf, TombstoneSetSelf> as Merge<MapUnionWithTombstones<MapOther, TombstoneSetOther>>>
-            <Max<T> as Merge<Max<T>>>
-            <Min<T> as Merge<Min<T>>>
-            <NotALattice as Merge<NotALattice>>
           and $N others
   = help: see issue #48214
   = note: this error originates in the derive macro `Lattice` (in Nightly builds, run with -Z macro-backtrace for more info)
@@ -31,11 +31,11 @@ error[E0277]: the trait bound `String: IsBot` is not satisfied
             ()
             Conflict<T>
             DomPair<Key, Val>
+            GHT<KeyType, ValType, Inner>
+            GhtInner<Head, Node>
+            GhtLeaf<T>
             MapUnion<Map>
             MapUnionWithTombstones<Map, TombstoneSet>
-            Max<()>
-            Max<bool>
-            Max<char>
           and $N others
   = help: see issue #48214
   = note: this error originates in the derive macro `Lattice` (in Nightly builds, run with -Z macro-backtrace for more info)
@@ -54,11 +54,11 @@ error[E0277]: the trait bound `String: IsTop` is not satisfied
             ()
             Conflict<T>
             DomPair<Key, Val>
+            GHT<KeyType, ValType, Inner>
+            GhtInner<Head, Node>
+            GhtLeaf<T>
             MapUnion<Map>
             MapUnionWithTombstones<Map, TombstoneSet>
-            Max<()>
-            Max<bool>
-            Max<char>
           and $N others
   = help: see issue #48214
   = note: this error originates in the derive macro `Lattice` (in Nightly builds, run with -Z macro-backtrace for more info)
