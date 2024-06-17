@@ -126,21 +126,6 @@ pub trait VariadicExt: Variadic {
     /// Reverses this variadic value.
     fn reverse(self) -> Self::Reverse;
 
-    /// This as a variadic of references.
-    type AsRefVar<'a>: Copy + UnrefVariadic<Unref = Self>
-    where
-        Self: 'a;
-    /// Convert a reference to this variadic into a variadic of references.
-    fn as_ref_var(&self) -> Self::AsRefVar<'_>;
-
-    /// This as a variadic of exclusive (`mut`) references.
-    type AsMutVar<'a>: Variadic
-    where
-        Self: 'a;
-    /// Convert an exclusive (`mut`) reference to this variadic into a variadic of exclusive
-    /// (`mut`) references.
-    fn as_mut_var(&mut self) -> Self::AsMutVar<'_>;
-
     /// Iterator type returned by [`Self::iter_any_ref`].
     type IterAnyRef<'a>: Iterator<Item = &'a dyn Any>
     where
@@ -158,6 +143,21 @@ pub trait VariadicExt: Variadic {
     fn iter_any_mut(&mut self) -> Self::IterAnyMut<'_>
     where
         Self: 'static;
+
+    /// This as a variadic of references.
+    type AsRefVar<'a>: Copy + UnrefVariadic<Unref = Self>
+    where
+        Self: 'a;
+    /// Convert a reference to this variadic into a variadic of references.
+    fn as_ref_var(&self) -> Self::AsRefVar<'_>;
+
+    /// This as a variadic of exclusive (`mut`) references.
+    type AsMutVar<'a>: Variadic
+    where
+        Self: 'a;
+    /// Convert an exclusive (`mut`) reference to this variadic into a variadic of exclusive
+    /// (`mut`) references.
+    fn as_mut_var(&mut self) -> Self::AsMutVar<'_>;
 }
 #[sealed]
 impl<Item, Rest> VariadicExt for (Item, Rest)
@@ -179,22 +179,6 @@ where
     fn reverse(self) -> Self::Reverse {
         let (item, rest) = self;
         rest.reverse().extend((item, ()))
-    }
-
-    type AsRefVar<'a> = (&'a Item, Rest::AsRefVar<'a>)
-    where
-        Self: 'a;
-    fn as_ref_var(&self) -> Self::AsRefVar<'_> {
-        let (item, rest) = self;
-        (item, rest.as_ref_var())
-    }
-
-    type AsMutVar<'a> = (&'a mut Item, Rest::AsMutVar<'a>)
-    where
-        Self: 'a;
-    fn as_mut_var(&mut self) -> Self::AsMutVar<'_> {
-        let (item, rest) = self;
-        (item, rest.as_mut_var())
     }
 
     type IterAnyRef<'a> = std::iter::Chain<std::iter::Once<&'a dyn Any>, Rest::IterAnyRef<'a>>
@@ -219,6 +203,22 @@ where
         let var_args!(item, ...rest) = self;
         let item: &mut dyn Any = item;
         std::iter::once(item).chain(rest.iter_any_mut())
+    }
+
+    type AsRefVar<'a> = (&'a Item, Rest::AsRefVar<'a>)
+    where
+        Self: 'a;
+    fn as_ref_var(&self) -> Self::AsRefVar<'_> {
+        let (item, rest) = self;
+        (item, rest.as_ref_var())
+    }
+
+    type AsMutVar<'a> = (&'a mut Item, Rest::AsMutVar<'a>)
+    where
+        Self: 'a;
+    fn as_mut_var(&mut self) -> Self::AsMutVar<'_> {
+        let (item, rest) = self;
+        (item, rest.as_mut_var())
     }
 }
 #[sealed]
