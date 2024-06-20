@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow_lang/src/graph/ops/enumerate.rs`."><title>enumerate.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-a23c9d150ad85d8b.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="hydroflow_lang" data-themes="" data-resource-suffix="" data-rustdoc-version="1.72.0-nightly (330727467 2023-06-29)" data-channel="nightly" data-search-js="search-91b58767224854cb.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ><script src="../../../../static.files/storage-59fd9b8ccb335783.js"></script><script defer src="../../../../static.files/source-script-106908c7a7964ba4.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../hydroflow_lang/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow_lang/src/graph/ops/enumerate.rs`."><title>enumerate.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="hydroflow_lang" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (d7f6ebace 2024-06-16)" data-channel="nightly" data-search-js="search-0fe7219eb170c82e.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -107,49 +107,30 @@
 <a href="#107" id="107">107</a>
 <a href="#108" id="108">108</a>
 <a href="#109" id="109">109</a>
-<a href="#110" id="110">110</a>
-<a href="#111" id="111">111</a>
-<a href="#112" id="112">112</a>
-<a href="#113" id="113">113</a>
-<a href="#114" id="114">114</a>
-<a href="#115" id="115">115</a>
-<a href="#116" id="116">116</a>
-<a href="#117" id="117">117</a>
-<a href="#118" id="118">118</a>
-<a href="#119" id="119">119</a>
-<a href="#120" id="120">120</a>
-<a href="#121" id="121">121</a>
-<a href="#122" id="122">122</a>
-<a href="#123" id="123">123</a>
-<a href="#124" id="124">124</a>
-<a href="#125" id="125">125</a>
-<a href="#126" id="126">126</a>
-<a href="#127" id="127">127</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>quote::quote_spanned;
 
 <span class="kw">use super</span>::{
-    FlowProperties, FlowPropertyVal, OperatorCategory, OperatorConstraints, OperatorInstance,
+    OpInstGenerics, OperatorCategory, OperatorConstraints, OperatorInstance,
     OperatorWriteOutput, Persistence, WriteContextArgs, RANGE_0, RANGE_1,
 };
 <span class="kw">use </span><span class="kw">crate</span>::diagnostic::{Diagnostic, Level};
-<span class="kw">use </span><span class="kw">crate</span>::graph::OpInstGenerics;
 
 <span class="doccomment">/// &gt; 1 input stream of type `T`, 1 output stream of type `(usize, T)`
 ///
 /// For each item passed in, enumerate it with its index: `(0, x_0)`, `(1, x_1)`, etc.
 ///
 /// `enumerate` can also be provided with one generic lifetime persistence argument, either
-/// `&#39;tick` or `&#39;static`, to specify if indexing resets. If `&#39;tick` (the default) is specified, indexing will
-/// restart at zero at the start of each tick. Otherwise `&#39;static` will never reset
+/// `'tick` or `'static`, to specify if indexing resets. If `'tick` (the default) is specified, indexing will
+/// restart at zero at the start of each tick. Otherwise `'static` will never reset
 /// and count monotonically upwards.
 ///
 /// ```hydroflow
-/// source_iter(vec![&quot;hello&quot;, &quot;world&quot;])
+/// source_iter(vec!["hello", "world"])
 ///     -&gt; enumerate()
-///     -&gt; assert_eq([(0, &quot;hello&quot;), (1, &quot;world&quot;)]);
+///     -&gt; assert_eq([(0, "hello"), (1, "world")]);
 /// ```
 </span><span class="kw">pub const </span>ENUMERATE: OperatorConstraints = OperatorConstraints {
-    name: <span class="string">&quot;enumerate&quot;</span>,
+    name: <span class="string">"enumerate"</span>,
     categories: <span class="kw-2">&amp;</span>[OperatorCategory::Map],
     hard_range_inn: RANGE_1,
     soft_range_inn: RANGE_1,
@@ -159,15 +140,11 @@
     persistence_args: <span class="kw-2">&amp;</span>(<span class="number">0</span>..=<span class="number">1</span>),
     type_args: RANGE_0,
     is_external_input: <span class="bool-val">false</span>,
+    has_singleton_output: <span class="bool-val">false</span>,
     ports_inn: <span class="prelude-val">None</span>,
     ports_out: <span class="prelude-val">None</span>,
-    properties: FlowProperties {
-        <span class="comment">// TODO(mingwei)
-        </span>deterministic: FlowPropertyVal::No,
-        monotonic: FlowPropertyVal::No,
-        inconsistency_tainted: <span class="bool-val">true</span>,
-    },
     input_delaytype_fn: |<span class="kw">_</span>| <span class="prelude-val">None</span>,
+    flow_prop_fn: <span class="prelude-val">None</span>,
     write_fn: |wc @ <span class="kw-2">&amp;</span>WriteContextArgs {
                    root,
                    op_span,
@@ -190,6 +167,14 @@
                diagnostics| {
         <span class="kw">let </span>persistence = <span class="kw">match </span>persistence_args[..] {
             [] =&gt; Persistence::Tick,
+            [Persistence::Mutable] =&gt; {
+                diagnostics.push(Diagnostic::spanned(
+                    op_span,
+                    Level::Error,
+                    <span class="string">"An implementation of 'mutable does not exist"</span>,
+                ));
+                Persistence::Tick
+            },
             [a] =&gt; a,
             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         };
@@ -197,50 +182,29 @@
         <span class="kw">let </span>input = <span class="kw-2">&amp;</span>inputs[<span class="number">0</span>];
         <span class="kw">let </span>output = <span class="kw-2">&amp;</span>outputs[<span class="number">0</span>];
 
-        <span class="kw">let </span>counter_ident = wc.make_ident(<span class="string">&quot;counterdata&quot;</span>);
+        <span class="kw">let </span>counter_ident = wc.make_ident(<span class="string">"counterdata"</span>);
 
-        <span class="kw">let </span>(write_prologue, get_counter) = <span class="kw">match </span>persistence {
-            Persistence::Tick =&gt; (
-                <span class="macro">quote_spanned! </span>{op_span=&gt;
-                    <span class="kw">let </span>#counter_ident = #hydroflow.add_state(::std::cell::RefCell::new(
-                        #root::util::monotonic_map::MonotonicMap::new_init(<span class="number">0</span>..),
-                    ));
-                },
-                <span class="macro">quote_spanned! </span>{op_span=&gt;
-                    <span class="kw">let </span><span class="kw-2">mut </span>borrow = #context.state_ref(#counter_ident).borrow_mut();
-                    <span class="kw">let </span>counter = borrow.get_mut_with((#context.current_tick(), #context.current_stratum()), || <span class="number">0</span>..);
-                },
-            ),
-            Persistence::Static =&gt; (
-                <span class="macro">quote_spanned! </span>{op_span=&gt;
-                    <span class="kw">let </span>#counter_ident = #hydroflow.add_state(::std::cell::RefCell::new(<span class="number">0</span>..));
-                },
-                <span class="macro">quote_spanned! </span>{op_span=&gt;
-                    <span class="kw">let </span><span class="kw-2">mut </span>counter = #context.state_ref(#counter_ident).borrow_mut();
-                },
-            ),
-            Persistence::Mutable =&gt; {
-                diagnostics.push(Diagnostic::spanned(
-                    op_span,
-                    Level::Error,
-                    <span class="string">&quot;An implementation of &#39;mutable does not exist&quot;</span>,
-                ));
-                <span class="kw">return </span><span class="prelude-val">Err</span>(());
-            }
+        <span class="kw">let </span><span class="kw-2">mut </span>write_prologue = <span class="macro">quote_spanned!</span> {op_span=&gt;
+            <span class="kw">let </span>#counter_ident = #hydroflow.add_state(::std::cell::RefCell::new(<span class="number">0</span>..));
         };
+        <span class="kw">if </span>Persistence::Tick == persistence {
+            write_prologue.extend(<span class="macro">quote_spanned!</span> {op_span=&gt;
+                #hydroflow.set_state_tick_hook(#counter_ident, |rcell| { rcell.replace(<span class="number">0</span>..); });
+            });
+        }
 
-        <span class="kw">let </span>map_fn = <span class="macro">quote_spanned! </span>{op_span=&gt;
+        <span class="kw">let </span>map_fn = <span class="macro">quote_spanned!</span> {op_span=&gt;
             |item| {
-                #get_counter
+                <span class="kw">let </span><span class="kw-2">mut </span>counter = #context.state_ref(#counter_ident).borrow_mut();
                 (counter.next().unwrap(), item)
             }
         };
         <span class="kw">let </span>write_iterator = <span class="kw">if </span>is_pull {
-            <span class="macro">quote_spanned! </span>{op_span=&gt;
+            <span class="macro">quote_spanned!</span> {op_span=&gt;
                 <span class="kw">let </span>#ident = ::std::iter::Iterator::map(#input, #map_fn);
             }
         } <span class="kw">else </span>{
-            <span class="macro">quote_spanned! </span>{op_span=&gt;
+            <span class="macro">quote_spanned!</span> {op_span=&gt;
                 <span class="kw">let </span>#ident = #root::pusherator::map::Map::new(#map_fn, #output);
             }
         };

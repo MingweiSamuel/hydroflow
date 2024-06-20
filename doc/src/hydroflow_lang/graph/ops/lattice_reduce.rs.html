@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow_lang/src/graph/ops/lattice_reduce.rs`."><title>lattice_reduce.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-a23c9d150ad85d8b.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="hydroflow_lang" data-themes="" data-resource-suffix="" data-rustdoc-version="1.72.0-nightly (330727467 2023-06-29)" data-channel="nightly" data-search-js="search-91b58767224854cb.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ><script src="../../../../static.files/storage-59fd9b8ccb335783.js"></script><script defer src="../../../../static.files/source-script-106908c7a7964ba4.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../hydroflow_lang/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow_lang/src/graph/ops/lattice_reduce.rs`."><title>lattice_reduce.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="hydroflow_lang" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (d7f6ebace 2024-06-16)" data-channel="nightly" data-search-js="search-0fe7219eb170c82e.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -93,57 +93,38 @@
 <a href="#93" id="93">93</a>
 <a href="#94" id="94">94</a>
 <a href="#95" id="95">95</a>
-<a href="#96" id="96">96</a>
-<a href="#97" id="97">97</a>
-<a href="#98" id="98">98</a>
-<a href="#99" id="99">99</a>
-<a href="#100" id="100">100</a>
-<a href="#101" id="101">101</a>
-<a href="#102" id="102">102</a>
-<a href="#103" id="103">103</a>
-<a href="#104" id="104">104</a>
-<a href="#105" id="105">105</a>
-<a href="#106" id="106">106</a>
-<a href="#107" id="107">107</a>
-<a href="#108" id="108">108</a>
-<a href="#109" id="109">109</a>
-<a href="#110" id="110">110</a>
-<a href="#111" id="111">111</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>quote::quote_spanned;
 <span class="kw">use </span>syn::parse_quote_spanned;
-<span class="kw">use </span>syn::spanned::Spanned;
 
 <span class="kw">use super</span>::{
-    DelayType, FlowProperties, FlowPropertyVal, OpInstGenerics, OperatorCategory,
-    OperatorConstraints, OperatorInstance, WriteContextArgs, RANGE_1,
+    DelayType, OperatorCategory, OperatorConstraints, OperatorWriteOutput,
+    WriteContextArgs, LATTICE_FOLD_REDUCE_FLOW_PROP_FN, RANGE_0, RANGE_1,
 };
-<span class="kw">use </span><span class="kw">crate</span>::graph::ops::OperatorWriteOutput;
 
 <span class="doccomment">/// &gt; 1 input stream, 1 output stream
 ///
-/// &gt; Generic parameters: A `Lattice` type, must implement [`Merge&lt;Self&gt;`](https://hydro-project.github.io/hydroflow/doc/lattices/trait.Merge.html)
-/// type.
-///
 /// A specialized operator for merging lattices together into an accumulated value. Like [`reduce()`](#reduce)
-/// but specialized for lattice types. `lattice_reduce::&lt;MyLattice&gt;()` is equivalent to `reduce(hydroflow::lattices::Merge::merge_owned)`.
+/// but specialized for lattice types. `lattice_reduce()` is equivalent to `reduce(hydroflow::lattices::Merge::merge)`.
 ///
 /// `lattice_reduce` can also be provided with one generic lifetime persistence argument, either
-/// `&#39;tick` or `&#39;static`, to specify how data persists. With `&#39;tick`, values will only be collected
-/// within the same tick. With `&#39;static`, values will be remembered across ticks and will be
+/// `'tick` or `'static`, to specify how data persists. With `'tick`, values will only be collected
+/// within the same tick. With `'static`, values will be remembered across ticks and will be
 /// aggregated with pairs arriving in later ticks. When not explicitly specified persistence
-/// defaults to `&#39;tick`.
+/// defaults to `'tick`.
 ///
-/// `lattice_reduce` is differentiated from `lattice_fold` in that `lattice_reduce` does not require the accumulating type to implement `Default`.
+/// `lattice_reduce` is differentiated from `lattice_fold` in that `lattice_reduce` does not require the accumulating type to have a sensible default value.
 /// But it also means that the accumulating function inputs and the accumulating type must be the same.
 ///
 /// ```hydroflow
-/// source_iter([1,2,3,4,5])
-///     -&gt; map(hydroflow::lattices::Max::new)
-///     -&gt; lattice_reduce::&lt;&#39;static, hydroflow::lattices::Max&lt;usize&gt;&gt;()
-///     -&gt; assert_eq([hydroflow::lattices::Max::new(5)]);
+/// use hydroflow::lattices::Max;
+///
+/// source_iter([1, 2, 3, 4, 5])
+///     -&gt; map(Max::new)
+///     -&gt; lattice_reduce()
+///     -&gt; assert_eq([Max::new(5)]);
 /// ```
 </span><span class="kw">pub const </span>LATTICE_REDUCE: OperatorConstraints = OperatorConstraints {
-    name: <span class="string">&quot;lattice_reduce&quot;</span>,
+    name: <span class="string">"lattice_reduce"</span>,
     categories: <span class="kw-2">&amp;</span>[OperatorCategory::LatticeFold],
     hard_range_inn: RANGE_1,
     soft_range_inn: RANGE_1,
@@ -151,44 +132,28 @@
     soft_range_out: RANGE_1,
     num_args: <span class="number">0</span>,
     persistence_args: <span class="kw-2">&amp;</span>(<span class="number">0</span>..=<span class="number">1</span>),
-    type_args: RANGE_1,
+    type_args: RANGE_0,
     is_external_input: <span class="bool-val">false</span>,
+    has_singleton_output: <span class="bool-val">false</span>,
     ports_inn: <span class="prelude-val">None</span>,
     ports_out: <span class="prelude-val">None</span>,
-    properties: FlowProperties {
-        deterministic: FlowPropertyVal::Preserve,
-        monotonic: FlowPropertyVal::Yes,
-        inconsistency_tainted: <span class="bool-val">false</span>,
-    },
-    input_delaytype_fn: |<span class="kw">_</span>| <span class="prelude-val">Some</span>(DelayType::Stratum),
+    input_delaytype_fn: |<span class="kw">_</span>| <span class="prelude-val">Some</span>(DelayType::MonotoneAccum),
+    flow_prop_fn: <span class="prelude-val">Some</span>(LATTICE_FOLD_REDUCE_FLOW_PROP_FN),
     write_fn: |wc @ <span class="kw-2">&amp;</span>WriteContextArgs {
                    root,
                    inputs,
+                   op_span,
                    is_pull,
-                   op_inst:
-                       op_inst @ OperatorInstance {
-                           generics: OpInstGenerics { type_args, .. },
-                           ..
-                       },
                    ..
                },
                diagnostics| {
         <span class="macro">assert!</span>(is_pull);
 
-        <span class="macro">assert_eq!</span>(<span class="number">1</span>, inputs.len());
-        <span class="kw">let </span>input = <span class="kw-2">&amp;</span>inputs[<span class="number">0</span>];
-
-        <span class="macro">assert_eq!</span>(<span class="number">1</span>, type_args.len());
-        <span class="kw">let </span>lat_type = <span class="kw-2">&amp;</span>type_args[<span class="number">0</span>];
-
-        <span class="kw">let </span>arguments = <span class="macro">parse_quote_spanned! </span>{lat_type.span()=&gt; <span class="comment">// Uses `lat_type.span()`!
-            </span>#root::lattices::Merge::&lt;#lat_type&gt;::merge
+        <span class="kw">let </span>arguments = <span class="kw-2">&amp;</span><span class="macro">parse_quote_spanned!</span> {op_span=&gt;
+            |acc, item| { #root::lattices::Merge::&lt;<span class="kw">_</span>&gt;::merge(acc, item); }
         };
         <span class="kw">let </span>wc = WriteContextArgs {
-            op_inst: <span class="kw-2">&amp;</span>OperatorInstance {
-                arguments,
-                ..op_inst.clone()
-            },
+            arguments,
             ..wc.clone()
         };
 
@@ -197,10 +162,13 @@
             write_iterator,
             write_iterator_after,
         } = (<span class="kw">super</span>::reduce::REDUCE.write_fn)(<span class="kw-2">&amp;</span>wc, diagnostics)<span class="question-mark">?</span>;
-        <span class="kw">let </span>write_iterator = <span class="macro">quote_spanned! </span>{lat_type.span()=&gt; <span class="comment">// Uses `lat_type.span()`!
-            </span><span class="kw">let </span>#input = {
-                <span class="doccomment">/// Improve errors with `#lat_type` trait bound.
-                </span><span class="attr">#[inline(always)]
+
+        <span class="macro">assert_eq!</span>(<span class="number">1</span>, inputs.len());
+        <span class="kw">let </span>input = <span class="kw-2">&amp;</span>inputs[<span class="number">0</span>];
+
+        <span class="kw">let </span>write_iterator = <span class="macro">quote_spanned!</span> {op_span=&gt;
+            <span class="kw">let </span>#input = {
+                <span class="attr">#[inline(always)]
                 </span><span class="kw">fn </span>check_inputs&lt;Lat&gt;(
                     input: <span class="kw">impl </span>::std::iter::Iterator&lt;Item = Lat&gt;
                 ) -&gt; <span class="kw">impl </span>::std::iter::Iterator&lt;Item = Lat&gt;
@@ -209,7 +177,7 @@
                 {
                     input
                 }
-                check_inputs::&lt;#lat_type&gt;(#input)
+                check_inputs::&lt;<span class="kw">_</span>&gt;(#input)
             };
             #write_iterator
         };

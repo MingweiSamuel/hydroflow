@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow/src/scheduled/net/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-a23c9d150ad85d8b.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="hydroflow" data-themes="" data-resource-suffix="" data-rustdoc-version="1.72.0-nightly (330727467 2023-06-29)" data-channel="nightly" data-search-js="search-91b58767224854cb.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ><script src="../../../../static.files/storage-59fd9b8ccb335783.js"></script><script defer src="../../../../static.files/source-script-106908c7a7964ba4.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../hydroflow/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow/src/scheduled/net/mod.rs`."><title>mod.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="hydroflow" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (d7f6ebace 2024-06-16)" data-channel="nightly" data-search-js="search-0fe7219eb170c82e.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -163,20 +163,20 @@
 <a href="#163" id="163">163</a>
 <a href="#164" id="164">164</a>
 <a href="#165" id="165">165</a>
-</pre></div><pre class="rust"><code><span class="attr">#![cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+</pre></div><pre class="rust"><code><span class="attr">#![cfg(not(target_arch = <span class="string">"wasm32"</span>))]
 #![allow(missing_docs)]
 
 </span><span class="doccomment">//! This module contiains networking code.
 //!
 //! ## How Tokio interacts with Hydroflow (Mingwei 2021-12-07)
 //!
-//! [Tokio](https://tokio.rs/) is a Rust async runtime. In Rust&#39;s async/await
+//! [Tokio](https://tokio.rs/) is a Rust async runtime. In Rust's async/await
 //! system, `Future`s must be spawned or sent to an async runtime in order to
 //! run. Tokio is the most popular provider of one of these runtimes, with
 //! [async-std](https://async.rs/) (mirrors std lib) and [smol](https://github.com/smol-rs/smol)
 //! (minimal runtime) as commonly used alternatives.
 //!
-//! Fundamentally, an async runtime&#39;s job is to poll futures (read: run tasks)
+//! Fundamentally, an async runtime's job is to poll futures (read: run tasks)
 //! when they are ready to make progress. However async runtimes also provide a
 //! `Future`s abstraction for async events such as timers, network IO, and
 //! filesystem IO. To do this, [Tokio](https://tokio.rs/) uses [Mio](https://github.com/tokio-rs/mio)
@@ -201,25 +201,25 @@
 //! In order to add networking to Hydroflow, in our current implementation we
 //! use Tokio and have a compatibility mechanism for working with `Future`s.
 //! A `Future` provides a `Waker` mechanism to notify when it had work to do,
-//! so we have hooked these Wakers up with Hydroflow&#39;s threadsafe external
+//! so we have hooked these Wakers up with Hydroflow's threadsafe external
 //! scheduling channel. This essentially turns Hydroflow into a simple async
 //! runtime.
 //!
 //! However in some situations, we still need to run futures outside of
-//! Hydroflow&#39;s basic runtime. It&#39;s not a goal for Hydroflow to provide all
+//! Hydroflow's basic runtime. It's not a goal for Hydroflow to provide all
 //! the features of a full runtime like Tokio. Currently for this situation we
-//! run Hydroflow as a task (`Future`) within the Tokio runtime. In Hydroflow&#39;s
+//! run Hydroflow as a task (`Future`) within the Tokio runtime. In Hydroflow's
 //! event loop we do all available work, then rather than block and wait for
 //! external events to schedule more tasks, we temporarily yield back to the
 //! Tokio runtime. Tokio will then respond to any outstanding events it has
 //! before once again running the Hydroflow scheduler task.
 //!
-//! This works perfectly well but maybe isn&#39;t the best solution long-term.
+//! This works perfectly well but maybe isn't the best solution long-term.
 //! In the future we may want to remove the extra Tokio runtime layer and
 //! interface with Mio directly. In this case we would have to do our own
-//! socket-style polling within the Hydroflow scheduler&#39;s event loop, which
+//! socket-style polling within the Hydroflow scheduler's event loop, which
 //! would require some extra work and thought. But for now interfacing with
-//! Tokio works and I don&#39;t think the overhead of the extra runtime loop is
+//! Tokio works and I don't think the overhead of the extra runtime loop is
 //! significant.
 
 </span><span class="kw">use </span>std::collections::VecDeque;
@@ -240,7 +240,7 @@
 
 <span class="kw">const </span>ADDRESS_LEN: usize = <span class="number">4</span>;
 
-<span class="comment">// TODO(justin): I don&#39;t think we should include the address here, that should
+<span class="comment">// TODO(justin): I don't think we should include the address here, that should
 // just be a part of the bytes being sent.
 </span><span class="attr">#[derive(Clone, Debug, PartialEq, Eq)]
 </span><span class="kw">pub struct </span>Message {
@@ -261,12 +261,12 @@
     }
 }
 
-<span class="kw">impl </span>Hydroflow {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; Hydroflow&lt;<span class="lifetime">'a</span>&gt; {
     <span class="kw">fn </span>register_read_tcp_stream(<span class="kw-2">&amp;mut </span><span class="self">self</span>, reader: OwnedReadHalf) -&gt; RecvPort&lt;VecHandoff&lt;Message&gt;&gt; {
         <span class="kw">let </span>reader = FramedRead::new(reader, LengthDelimitedCodec::new());
-        <span class="kw">let </span>(send_port, recv_port) = <span class="self">self</span>.make_edge(<span class="string">&quot;tcp ingress handoff&quot;</span>);
+        <span class="kw">let </span>(send_port, recv_port) = <span class="self">self</span>.make_edge(<span class="string">"tcp ingress handoff"</span>);
         <span class="self">self</span>.add_input_from_stream(
-            <span class="string">&quot;tcp ingress&quot;</span>,
+            <span class="string">"tcp ingress"</span>,
             send_port,
             reader.map(|buf| <span class="prelude-val">Some</span>(&lt;Message&gt;::decode(buf.unwrap().into()))),
         );
@@ -281,8 +281,8 @@
         <span class="kw">let </span><span class="kw-2">mut </span>message_queue = VecDeque::new();
 
         <span class="kw">let </span>(input_port, output_port) =
-            <span class="self">self</span>.make_edge::&lt;<span class="kw">_</span>, VecHandoff&lt;Message&gt;&gt;(<span class="string">&quot;tcp egress handoff&quot;</span>);
-        <span class="self">self</span>.add_subgraph_sink(<span class="string">&quot;tcp egress&quot;</span>, output_port, <span class="kw">move </span>|ctx, recv| {
+            <span class="self">self</span>.make_edge::&lt;<span class="kw">_</span>, VecHandoff&lt;Message&gt;&gt;(<span class="string">"tcp egress handoff"</span>);
+        <span class="self">self</span>.add_subgraph_sink(<span class="string">"tcp egress"</span>, output_port, <span class="kw">move </span>|ctx, recv| {
             <span class="kw">let </span>waker = ctx.waker();
             <span class="kw">let </span><span class="kw-2">mut </span>cx = std::task::Context::from_waker(<span class="kw-2">&amp;</span>waker);
 

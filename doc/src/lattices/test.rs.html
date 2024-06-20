@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `lattices/src/test.rs`."><title>test.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-a23c9d150ad85d8b.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="lattices" data-themes="" data-resource-suffix="" data-rustdoc-version="1.72.0-nightly (330727467 2023-06-29)" data-channel="nightly" data-search-js="search-91b58767224854cb.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ><script src="../../static.files/storage-59fd9b8ccb335783.js"></script><script defer src="../../static.files/source-script-106908c7a7964ba4.js"></script><script defer src="../../source-files.js"></script><script defer src="../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../lattices/index.html"><img class="rust-logo" src="../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `lattices/src/test.rs`."><title>test.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="lattices" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (d7f6ebace 2024-06-16)" data-channel="nightly" data-search-js="search-0fe7219eb170c82e.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -290,34 +290,116 @@
 <a href="#290" id="290">290</a>
 <a href="#291" id="291">291</a>
 <a href="#292" id="292">292</a>
+<a href="#293" id="293">293</a>
+<a href="#294" id="294">294</a>
+<a href="#295" id="295">295</a>
+<a href="#296" id="296">296</a>
+<a href="#297" id="297">297</a>
+<a href="#298" id="298">298</a>
+<a href="#299" id="299">299</a>
+<a href="#300" id="300">300</a>
+<a href="#301" id="301">301</a>
+<a href="#302" id="302">302</a>
+<a href="#303" id="303">303</a>
+<a href="#304" id="304">304</a>
+<a href="#305" id="305">305</a>
+<a href="#306" id="306">306</a>
+<a href="#307" id="307">307</a>
+<a href="#308" id="308">308</a>
+<a href="#309" id="309">309</a>
+<a href="#310" id="310">310</a>
+<a href="#311" id="311">311</a>
+<a href="#312" id="312">312</a>
+<a href="#313" id="313">313</a>
+<a href="#314" id="314">314</a>
+<a href="#315" id="315">315</a>
+<a href="#316" id="316">316</a>
+<a href="#317" id="317">317</a>
+<a href="#318" id="318">318</a>
+<a href="#319" id="319">319</a>
+<a href="#320" id="320">320</a>
+<a href="#321" id="321">321</a>
+<a href="#322" id="322">322</a>
+<a href="#323" id="323">323</a>
+<a href="#324" id="324">324</a>
+<a href="#325" id="325">325</a>
+<a href="#326" id="326">326</a>
+<a href="#327" id="327">327</a>
+<a href="#328" id="328">328</a>
+<a href="#329" id="329">329</a>
+<a href="#330" id="330">330</a>
+<a href="#331" id="331">331</a>
+<a href="#332" id="332">332</a>
+<a href="#333" id="333">333</a>
+<a href="#334" id="334">334</a>
+<a href="#335" id="335">335</a>
+<a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
+<a href="#339" id="339">339</a>
+<a href="#340" id="340">340</a>
+<a href="#341" id="341">341</a>
+<a href="#342" id="342">342</a>
+<a href="#343" id="343">343</a>
+<a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
+<a href="#360" id="360">360</a>
+<a href="#361" id="361">361</a>
+<a href="#362" id="362">362</a>
+<a href="#363" id="363">363</a>
+<a href="#364" id="364">364</a>
+<a href="#365" id="365">365</a>
+<a href="#366" id="366">366</a>
+<a href="#367" id="367">367</a>
+<a href="#368" id="368">368</a>
+<a href="#369" id="369">369</a>
+<a href="#370" id="370">370</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Helper test utils to test lattice implementation correctness.
 
 </span><span class="kw">use </span>std::fmt::Debug;
 
-<span class="kw">use crate</span>::{Atomize, IsBot, IsTop, Lattice, LatticeOrd, Merge, NaiveLatticeOrd};
+<span class="kw">use crate</span>::{
+    Atomize, IsBot, IsTop, Lattice, LatticeBimorphism, LatticeMorphism, LatticeOrd, Merge,
+    NaiveLatticeOrd,
+};
 
-<span class="doccomment">/// Helper which calls [`check_lattice_ord`], [`check_partial_ord_properties`],
-/// [`check_lattice_properties`], and [`check_lattice_bot`].
-</span><span class="kw">pub fn </span>check_all&lt;T: Lattice + Clone + Eq + Debug&gt;(items: <span class="kw-2">&amp;</span>[T]) {
+<span class="doccomment">/// Helper which calls many other `check_*` functions in this module. See source code for which
+/// functions are called.
+</span><span class="kw">pub fn </span>check_all&lt;T: Lattice + Clone + Eq + Debug + Default&gt;(items: <span class="kw-2">&amp;</span>[T]) {
     check_lattice_ord(items);
     check_partial_ord_properties(items);
     check_lattice_properties(items);
-    check_lattice_bot(items);
-    check_lattice_top(items);
+    check_lattice_is_bot(items);
+    check_lattice_is_top(items);
+    check_lattice_default_is_bot::&lt;T&gt;();
 }
 
-<span class="doccomment">/// Check that the lattice&#39;s `PartialOrd` implementation agrees with the `NaiveLatticeOrd` partial
+<span class="doccomment">/// Check that the lattice's `PartialOrd` implementation agrees with the `NaiveLatticeOrd` partial
 /// order derived from `Merge`.
 </span><span class="kw">pub fn </span>check_lattice_ord&lt;T: LatticeOrd + NaiveLatticeOrd + Debug&gt;(items: <span class="kw-2">&amp;</span>[T]) {
     <span class="comment">// `NaiveLatticeOrd` is a better source of truth, as it is based on the `Merge` impl. But it
-    // is inefficient. It also could be wrong if `Merge` doesn&#39;t properly return true/false
+    // is inefficient. It also could be wrong if `Merge` doesn't properly return true/false
     // iff the merge changed things.
     </span><span class="kw">for </span>[a, b] <span class="kw">in </span>cartesian_power(items) {
-        <span class="macro">assert_eq!</span>(a.naive_cmp(b), a.partial_cmp(b), <span class="string">&quot;`{:?}`, `{:?}`&quot;</span>, a, b);
+        <span class="macro">assert_eq!</span>(a.naive_cmp(b), a.partial_cmp(b), <span class="string">"`{:?}`, `{:?}`"</span>, a, b);
     }
 }
 
-<span class="doccomment">/// Checks `PartialOrd`, `PartialEq`, and `Eq`&#39;s reflexivity, symmetry, transitivity, and duality.
+<span class="doccomment">/// Checks `PartialOrd`, `PartialEq`, and `Eq`'s reflexivity, symmetry, transitivity, and duality.
 </span><span class="attr">#[allow(clippy::eq_op)]
 #[allow(clippy::double_comparisons)]
 </span><span class="kw">pub fn </span>check_partial_ord_properties&lt;T: PartialOrd + Eq + Debug&gt;(items: <span class="kw-2">&amp;</span>[T]) {
@@ -326,16 +408,16 @@
     <span class="comment">// Eq:
     // reflexive: a == a;
     </span><span class="kw">for </span>a <span class="kw">in </span>items {
-        <span class="macro">assert!</span>(a == a, <span class="string">&quot;`{:?}`&quot;</span>, a);
+        <span class="macro">assert!</span>(a == a, <span class="string">"Reflexivity: `{:?}` should equal itself."</span>, a);
     }
     <span class="comment">// symmetric: a == b implies b == a; and
     </span><span class="kw">for </span>[a, b] <span class="kw">in </span>cartesian_power(items) {
-        <span class="macro">assert_eq!</span>(a == b, b == a, <span class="string">&quot;`{:?}`, `{:?}`&quot;</span>, a, b);
+        <span class="macro">assert_eq!</span>(a == b, b == a, <span class="string">"`{:?}`, `{:?}`"</span>, a, b);
     }
     <span class="comment">// transitive: a == b and b == c implies a == c.
     </span><span class="kw">for </span>[a, b, c] <span class="kw">in </span>cartesian_power(items) {
         <span class="kw">if </span>a == b &amp;&amp; b == c {
-            <span class="macro">assert_eq!</span>(a == b &amp;&amp; b == c, a == c, <span class="string">&quot;`{:?}`, `{:?}`, `{:?}`&quot;</span>, a, b, c);
+            <span class="macro">assert_eq!</span>(a == b &amp;&amp; b == c, a == c, <span class="string">"`{:?}`, `{:?}`, `{:?}`"</span>, a, b, c);
         }
     }
 
@@ -345,7 +427,7 @@
         </span><span class="macro">assert_eq!</span>(
             a == b,
             a.partial_cmp(b) == <span class="prelude-val">Some</span>(Equal),
-            <span class="string">&quot;`{:?}`, `{:?}`&quot;</span>,
+            <span class="string">"`{:?}`, `{:?}`"</span>,
             a,
             b,
         );
@@ -353,7 +435,7 @@
         </span><span class="macro">assert_eq!</span>(
             a &lt; b,
             a.partial_cmp(b) == <span class="prelude-val">Some</span>(Less),
-            <span class="string">&quot;`{:?}`, `{:?}`&quot;</span>,
+            <span class="string">"`{:?}`, `{:?}`"</span>,
             a,
             b,
         );
@@ -361,33 +443,36 @@
         </span><span class="macro">assert_eq!</span>(
             a &gt; b,
             a.partial_cmp(b) == <span class="prelude-val">Some</span>(Greater),
-            <span class="string">&quot;`{:?}`, `{:?}`&quot;</span>,
+            <span class="string">"`{:?}`, `{:?}`"</span>,
             a,
             b,
         );
         <span class="comment">// a &lt;= b if and only if a &lt; b || a == b
-        </span><span class="macro">assert_eq!</span>(a &lt;= b, a &lt; b || a == b, <span class="string">&quot;`{:?}`, `{:?}`&quot;</span>, a, b);
+        </span><span class="macro">assert_eq!</span>(a &lt;= b, a &lt; b || a == b, <span class="string">"`{:?}`, `{:?}`"</span>, a, b);
         <span class="comment">// a &gt;= b if and only if a &gt; b || a == b
-        </span><span class="macro">assert_eq!</span>(a &gt;= b, a &gt; b || a == b, <span class="string">&quot;`{:?}`, `{:?}`&quot;</span>, a, b);
+        </span><span class="macro">assert_eq!</span>(a &gt;= b, a &gt; b || a == b, <span class="string">"`{:?}`, `{:?}`"</span>, a, b);
         <span class="comment">// PartialEq:
         // a != b if and only if !(a == b).
-        </span><span class="macro">assert_eq!</span>(a != b, !(a == b), <span class="string">&quot;`{:?}`, `{:?}`&quot;</span>, a, b);
+        </span><span class="attr">#[allow(clippy::nonminimal_bool)]
+        </span>{
+            <span class="macro">assert_eq!</span>(a != b, !(a == b), <span class="string">"`{:?}`, `{:?}`"</span>, a, b);
+        }
     }
     <span class="comment">// transitivity: a &lt; b and b &lt; c implies a &lt; c. The same must hold for both == and &gt;.
     </span><span class="kw">for </span>[a, b, c] <span class="kw">in </span>cartesian_power(items) {
         <span class="kw">if </span>a &lt; b &amp;&amp; b &lt; c {
-            <span class="macro">assert!</span>(a &lt; c, <span class="string">&quot;`{:?}`, `{:?}`, `{:?}`&quot;</span>, a, b, c);
+            <span class="macro">assert!</span>(a &lt; c, <span class="string">"`{:?}`, `{:?}`, `{:?}`"</span>, a, b, c);
         }
         <span class="kw">if </span>a == b &amp;&amp; b == c {
-            <span class="macro">assert!</span>(a == c, <span class="string">&quot;`{:?}`, `{:?}`, `{:?}`&quot;</span>, a, b, c);
+            <span class="macro">assert!</span>(a == c, <span class="string">"`{:?}`, `{:?}`, `{:?}`"</span>, a, b, c);
         }
         <span class="kw">if </span>a &gt; b &amp;&amp; b &gt; c {
-            <span class="macro">assert!</span>(a &gt; c, <span class="string">&quot;`{:?}`, `{:?}`, `{:?}`&quot;</span>, a, b, c);
+            <span class="macro">assert!</span>(a &gt; c, <span class="string">"`{:?}`, `{:?}`, `{:?}`"</span>, a, b, c);
         }
     }
     <span class="comment">// duality: a &lt; b if and only if b &gt; a.
     </span><span class="kw">for </span>[a, b] <span class="kw">in </span>cartesian_power(items) {
-        <span class="macro">assert_eq!</span>(a &lt; b, b &gt; a, <span class="string">&quot;`{:?}`, `{:?}`&quot;</span>, a, b);
+        <span class="macro">assert_eq!</span>(a &lt; b, b &gt; a, <span class="string">"`{:?}`, `{:?}`"</span>, a, b);
     }
 }
 
@@ -399,7 +484,7 @@
         <span class="macro">assert_eq!</span>(
             Merge::merge_owned(x.clone(), x.clone()),
             x.clone(),
-            <span class="string">&quot;`{:?}`&quot;</span>,
+            <span class="string">"`{:?}`"</span>,
             x,
         );
     }
@@ -410,7 +495,7 @@
         <span class="macro">assert_eq!</span>(
             Merge::merge_owned(x.clone(), y.clone()),
             Merge::merge_owned(y.clone(), x.clone()),
-            <span class="string">&quot;`{:?}`, `{:?}`&quot;</span>,
+            <span class="string">"`{:?}`, `{:?}`"</span>,
             x,
             y,
         );
@@ -422,7 +507,7 @@
         <span class="macro">assert_eq!</span>(
             Merge::merge_owned(x.clone(), Merge::merge_owned(y.clone(), z.clone())),
             Merge::merge_owned(Merge::merge_owned(x.clone(), y.clone()), z.clone()),
-            <span class="string">&quot;`{:?}`, `{:?}`, `{:?}`&quot;</span>,
+            <span class="string">"`{:?}`, `{:?}`, `{:?}`"</span>,
             x,
             y,
             z,
@@ -431,25 +516,30 @@
 }
 
 <span class="doccomment">/// Checks that the item which is bot is less than (or equal to) all other items.
-</span><span class="kw">pub fn </span>check_lattice_bot&lt;T: IsBot + LatticeOrd + Debug&gt;(items: <span class="kw-2">&amp;</span>[T]) {
+</span><span class="kw">pub fn </span>check_lattice_is_bot&lt;T: IsBot + LatticeOrd + Debug&gt;(items: <span class="kw-2">&amp;</span>[T]) {
     <span class="kw">let </span><span class="prelude-val">Some</span>(bot) = items.iter().find(|<span class="kw-2">&amp;</span>x| IsBot::is_bot(x)) <span class="kw">else </span>{
         <span class="kw">return</span>;
     };
     <span class="kw">for </span>x <span class="kw">in </span>items {
         <span class="macro">assert!</span>(bot &lt;= x);
-        <span class="macro">assert_eq!</span>(bot == x, x.is_bot(), <span class="string">&quot;{:?}&quot;</span>, x);
+        <span class="macro">assert_eq!</span>(bot == x, x.is_bot(), <span class="string">"{:?}"</span>, x);
     }
 }
 
 <span class="doccomment">/// Checks that the item which is top is greater than (or equal to) all other items.
-</span><span class="kw">pub fn </span>check_lattice_top&lt;T: IsTop + LatticeOrd + Debug&gt;(items: <span class="kw-2">&amp;</span>[T]) {
+</span><span class="kw">pub fn </span>check_lattice_is_top&lt;T: IsTop + LatticeOrd + Debug&gt;(items: <span class="kw-2">&amp;</span>[T]) {
     <span class="kw">let </span><span class="prelude-val">Some</span>(top) = items.iter().find(|<span class="kw-2">&amp;</span>x| IsTop::is_top(x)) <span class="kw">else </span>{
         <span class="kw">return</span>;
     };
     <span class="kw">for </span>x <span class="kw">in </span>items {
         <span class="macro">assert!</span>(x &lt;= top);
-        <span class="macro">assert_eq!</span>(top == x, x.is_top(), <span class="string">&quot;{:?}&quot;</span>, x);
+        <span class="macro">assert_eq!</span>(top == x, x.is_top(), <span class="string">"{:?}"</span>, x);
     }
+}
+
+<span class="doccomment">/// Asserts that [`IsBot`] is true for [`Default::default()`].
+</span><span class="kw">pub fn </span>check_lattice_default_is_bot&lt;T: IsBot + Default&gt;() {
+    <span class="macro">assert!</span>(T::is_bot(<span class="kw-2">&amp;</span>T::default()));
 }
 
 <span class="doccomment">/// Check that the atomized lattice points re-merge to form the same original lattice point, for each item in `items`.
@@ -466,7 +556,7 @@
         <span class="macro">assert_eq!</span>(
             atoms.peek().is_none(),
             item.is_bot(),
-            <span class="string">&quot;`{:?}` atomize should return empty iterator ({}) if and only if item is bot ({}).&quot;</span>,
+            <span class="string">"`{:?}` atomize should return empty iterator ({}) if and only if item is bot ({})."</span>,
             item,
             atoms.peek().is_none(),
             item.is_bot()
@@ -474,13 +564,79 @@
         <span class="kw">for </span>atom <span class="kw">in </span>atoms {
             <span class="macro">assert!</span>(
                 !atom.is_bot(),
-                <span class="string">&quot;`{:?}` atomize illegally returned a bottom atom `{:?}`.&quot;</span>,
+                <span class="string">"`{:?}` atomize illegally returned a bottom atom `{:?}`."</span>,
                 item,
                 atom,
             );
             reformed.merge(atom);
         }
-        <span class="macro">assert_eq!</span>(item, <span class="kw-2">&amp;</span>reformed, <span class="string">&quot;`{:?}` atomize failed to reform&quot;</span>, item);
+        <span class="macro">assert_eq!</span>(item, <span class="kw-2">&amp;</span>reformed, <span class="string">"`{:?}` atomize failed to reform"</span>, item);
+    }
+}
+
+<span class="doccomment">/// Checks that the [`LatticeMorphism`] is valid, i.e. that merge distributes over it.
+</span><span class="kw">pub fn </span>check_lattice_morphism&lt;LatIn, Func&gt;(<span class="kw-2">mut </span>func: Func, items: <span class="kw-2">&amp;</span>[LatIn])
+<span class="kw">where
+    </span>Func: LatticeMorphism&lt;LatIn&gt;,
+    LatIn: Merge&lt;LatIn&gt; + Clone + Eq + Debug,
+    Func::Output: Merge&lt;Func::Output&gt; + Clone + Eq + Debug,
+{
+    <span class="kw">for </span>[a, b] <span class="kw">in </span>cartesian_power(items) {
+        <span class="macro">assert_eq!</span>(
+            func.call(Merge::merge_owned(a.clone(), b.clone())),
+            Merge::merge_owned(func.call(a.clone()), func.call(b.clone())),
+            <span class="string">"Func not a morphism: `f(a ⊔ b) != f(a) ⊔ f(b)`
+            \n`a = {:?}`, `b = {:?}`"</span>,
+            a,
+            b
+        )
+    }
+}
+
+<span class="doccomment">/// Checks that the [`LatticeBimorphism`] is valid, i.e. that merge distributes over both arguments of it.
+</span><span class="kw">pub fn </span>check_lattice_bimorphism&lt;LatA, LatB, Func&gt;(
+    <span class="kw-2">mut </span>func: Func,
+    items_a: <span class="kw-2">&amp;</span>[LatA],
+    items_b: <span class="kw-2">&amp;</span>[LatB],
+) <span class="kw">where
+    </span>Func: LatticeBimorphism&lt;LatA, LatB&gt;,
+    LatA: Merge&lt;LatA&gt; + Clone + Eq + Debug,
+    LatB: Merge&lt;LatB&gt; + Clone + Eq + Debug,
+    Func::Output: Merge&lt;Func::Output&gt; + Clone + Eq + Debug,
+{
+    <span class="comment">// Morphism LHS, fixed RHS:
+    </span><span class="kw">for </span>b <span class="kw">in </span>items_b {
+        <span class="kw">for </span>[a, da] <span class="kw">in </span>cartesian_power(items_a) {
+            <span class="macro">assert_eq!</span>(
+                func.call(Merge::merge_owned(a.clone(), da.clone()), b.clone()),
+                Merge::merge_owned(
+                    func.call(a.clone(), b.clone()),
+                    func.call(da.clone(), b.clone())
+                ),
+                <span class="string">"Left arg not a morphism: `f(a ⊔ da, b) != f(a, b) ⊔ f(da, b)`
+                \n`a = {:?}`, `da = {:?}`, `b = {:?}`"</span>,
+                a,
+                da,
+                b,
+            );
+        }
+    }
+    <span class="comment">// Fixed LHS, morphism RHS:
+    </span><span class="kw">for </span>a <span class="kw">in </span>items_a {
+        <span class="kw">for </span>[b, db] <span class="kw">in </span>cartesian_power(items_b) {
+            <span class="macro">assert_eq!</span>(
+                func.call(a.clone(), Merge::merge_owned(b.clone(), db.clone())),
+                Merge::merge_owned(
+                    func.call(a.clone(), b.clone()),
+                    func.call(a.clone(), db.clone())
+                ),
+                <span class="string">"Right arg not a morphism: `f(a, b ⊔ db) != f(a, b) ⊔ f(a, db)`
+                \n`a = {:?}`, `b = {:?}`, `db = {:?}`"</span>,
+                a,
+                b,
+                db,
+            );
+        }
     }
 }
 
@@ -489,13 +645,13 @@
 /// product of `items` with itself `N` times.
 </span><span class="kw">pub fn </span>cartesian_power&lt;T, <span class="kw">const </span>N: usize&gt;(
     items: <span class="kw-2">&amp;</span>[T],
-) -&gt; <span class="kw">impl </span>Iterator&lt;Item = [<span class="kw-2">&amp;</span>T; N]&gt; + ExactSizeIterator + Clone {
-    <span class="kw">struct </span>CartesianPower&lt;<span class="lifetime">&#39;a</span>, T, <span class="kw">const </span>N: usize&gt; {
-        items: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>[T],
-        iters: [std::iter::Peekable&lt;std::slice::Iter&lt;<span class="lifetime">&#39;a</span>, T&gt;&gt;; N],
+) -&gt; <span class="kw">impl </span>ExactSizeIterator&lt;Item = [<span class="kw-2">&amp;</span>T; N]&gt; + Clone {
+    <span class="kw">struct </span>CartesianPower&lt;<span class="lifetime">'a</span>, T, <span class="kw">const </span>N: usize&gt; {
+        items: <span class="kw-2">&amp;</span><span class="lifetime">'a </span>[T],
+        iters: [std::iter::Peekable&lt;std::slice::Iter&lt;<span class="lifetime">'a</span>, T&gt;&gt;; N],
     }
-    <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T, <span class="kw">const </span>N: usize&gt; Iterator <span class="kw">for </span>CartesianPower&lt;<span class="lifetime">&#39;a</span>, T, N&gt; {
-        <span class="kw">type </span>Item = [<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T; N];
+    <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T, <span class="kw">const </span>N: usize&gt; Iterator <span class="kw">for </span>CartesianPower&lt;<span class="lifetime">'a</span>, T, N&gt; {
+        <span class="kw">type </span>Item = [<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T; N];
 
         <span class="kw">fn </span>next(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="self">Self</span>::Item&gt; {
             <span class="kw">if </span><span class="self">self</span>.items.is_empty() {
@@ -509,7 +665,7 @@
                 <span class="kw">if </span>go_next {
                     iter.next();
                     <span class="kw">if </span>iter.peek().is_none() {
-                        <span class="comment">// &quot;Carry&quot; the `go_next` to the next entry.
+                        <span class="comment">// "Carry" the `go_next` to the next entry.
                         </span><span class="kw-2">*</span>iter = <span class="self">self</span>.items.iter().peekable();
                     } <span class="kw">else </span>{
                         go_next = <span class="bool-val">false</span>;
@@ -538,8 +694,8 @@
             (size, <span class="prelude-val">Some</span>(size))
         }
     }
-    <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T, <span class="kw">const </span>N: usize&gt; ExactSizeIterator <span class="kw">for </span>CartesianPower&lt;<span class="lifetime">&#39;a</span>, T, N&gt; {}
-    <span class="kw">impl</span>&lt;<span class="lifetime">&#39;a</span>, T, <span class="kw">const </span>N: usize&gt; Clone <span class="kw">for </span>CartesianPower&lt;<span class="lifetime">&#39;a</span>, T, N&gt; {
+    <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T, <span class="kw">const </span>N: usize&gt; ExactSizeIterator <span class="kw">for </span>CartesianPower&lt;<span class="lifetime">'a</span>, T, N&gt; {}
+    <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, T, <span class="kw">const </span>N: usize&gt; Clone <span class="kw">for </span>CartesianPower&lt;<span class="lifetime">'a</span>, T, N&gt; {
         <span class="kw">fn </span>clone(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self </span>{
             <span class="self">Self </span>{
                 items: <span class="self">self</span>.items,

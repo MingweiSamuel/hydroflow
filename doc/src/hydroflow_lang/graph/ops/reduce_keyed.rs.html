@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow_lang/src/graph/ops/reduce_keyed.rs`."><title>reduce_keyed.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-a23c9d150ad85d8b.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="hydroflow_lang" data-themes="" data-resource-suffix="" data-rustdoc-version="1.72.0-nightly (330727467 2023-06-29)" data-channel="nightly" data-search-js="search-91b58767224854cb.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ><script src="../../../../static.files/storage-59fd9b8ccb335783.js"></script><script defer src="../../../../static.files/source-script-106908c7a7964ba4.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../hydroflow_lang/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow_lang/src/graph/ops/reduce_keyed.rs`."><title>reduce_keyed.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="hydroflow_lang" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (d7f6ebace 2024-06-16)" data-channel="nightly" data-search-js="search-0fe7219eb170c82e.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -209,66 +209,86 @@
 <a href="#209" id="209">209</a>
 <a href="#210" id="210">210</a>
 <a href="#211" id="211">211</a>
+<a href="#212" id="212">212</a>
+<a href="#213" id="213">213</a>
+<a href="#214" id="214">214</a>
+<a href="#215" id="215">215</a>
+<a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
+<a href="#226" id="226">226</a>
+<a href="#227" id="227">227</a>
+<a href="#228" id="228">228</a>
+<a href="#229" id="229">229</a>
+<a href="#230" id="230">230</a>
+<a href="#231" id="231">231</a>
+<a href="#232" id="232">232</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>quote::{quote_spanned, ToTokens};
 
 <span class="kw">use super</span>::{
-    DelayType, FlowProperties, FlowPropertyVal, OperatorCategory, OperatorConstraints,
-    OperatorWriteOutput, Persistence, WriteContextArgs, RANGE_1,
+    DelayType, OpInstGenerics, OperatorCategory, OperatorConstraints,
+    OperatorInstance, OperatorWriteOutput, Persistence, WriteContextArgs, RANGE_1,
 };
 <span class="kw">use </span><span class="kw">crate</span>::diagnostic::{Diagnostic, Level};
-<span class="kw">use </span><span class="kw">crate</span>::graph::{OpInstGenerics, OperatorInstance};
 
 <span class="doccomment">/// &gt; 1 input stream of type `(K, V)`, 1 output stream of type `(K, V)`.
-/// The output will have one tuple for each distinct `K`, with an accumulated (reduced) value of
-/// type `V`.
+/// &gt; The output will have one tuple for each distinct `K`, with an accumulated (reduced) value of
+/// &gt; type `V`.
 ///
 /// If you need the accumulated value to have a different type than the input, use [`fold_keyed`](#keyed_fold).
 ///
-/// &gt; Arguments: one Rust closures. The closure takes two arguments: an `&amp;mut` &#39;accumulator&#39;, and
-/// an element. Accumulator should be updated based on the element.
+/// &gt; Arguments: one Rust closures. The closure takes two arguments: an `&amp;mut` 'accumulator', and
+/// &gt; an element. Accumulator should be updated based on the element.
 ///
-/// A special case of `reduce`, in the spirit of SQL&#39;s GROUP BY and aggregation constructs. The input
+/// A special case of `reduce`, in the spirit of SQL's GROUP BY and aggregation constructs. The input
 /// is partitioned into groups by the first field, and for each group the values in the second
 /// field are accumulated via the closures in the arguments.
 ///
-/// &gt; Note: The closures have access to the [`context` object](surface_flows.md#the-context-object).
+/// &gt; Note: The closures have access to the [`context` object](surface_flows.mdx#the-context-object).
 ///
 /// `reduce_keyed` can also be provided with one generic lifetime persistence argument, either
-/// `&#39;tick` or `&#39;static`, to specify how data persists. With `&#39;tick`, values will only be collected
-/// within the same tick. With `&#39;static`, values will be remembered across ticks and will be
+/// `'tick` or `'static`, to specify how data persists. With `'tick`, values will only be collected
+/// within the same tick. With `'static`, values will be remembered across ticks and will be
 /// aggregated with pairs arriving in later ticks. When not explicitly specified persistence
-/// defaults to `&#39;tick`.
+/// defaults to `'tick`.
 ///
 /// `reduce_keyed` can also be provided with two type arguments, the key and value type. This is
-/// required when using `&#39;static` persistence if the compiler cannot infer the types.
+/// required when using `'static` persistence if the compiler cannot infer the types.
 ///
 /// ```hydroflow
-/// source_iter([(&quot;toy&quot;, 1), (&quot;toy&quot;, 2), (&quot;shoe&quot;, 11), (&quot;shoe&quot;, 35), (&quot;haberdashery&quot;, 7)])
+/// source_iter([("toy", 1), ("toy", 2), ("shoe", 11), ("shoe", 35), ("haberdashery", 7)])
 ///     -&gt; reduce_keyed(|old: &amp;mut u32, val: u32| *old += val)
-///     -&gt; assert_eq([(&quot;toy&quot;, 3), (&quot;shoe&quot;, 46), (&quot;haberdashery&quot;, 7)]);
+///     -&gt; assert_eq([("toy", 3), ("shoe", 46), ("haberdashery", 7)]);
 /// ```
 ///
-/// Example using `&#39;tick` persistence and type arguments:
+/// Example using `'tick` persistence and type arguments:
 /// ```rustbook
 /// let (input_send, input_recv) = hydroflow::util::unbounded_channel::&lt;(&amp;str, &amp;str)&gt;();
 /// let mut flow = hydroflow::hydroflow_syntax! {
 ///     source_stream(input_recv)
-///         -&gt; reduce_keyed::&lt;&#39;tick, &amp;str&gt;(|old: &amp;mut _, val| *old = std::cmp::max(*old, val))
-///         -&gt; for_each(|(k, v)| println!(&quot;({:?}, {:?})&quot;, k, v));
+///         -&gt; reduce_keyed::&lt;'tick, &amp;str&gt;(|old: &amp;mut _, val| *old = std::cmp::max(*old, val))
+///         -&gt; for_each(|(k, v)| println!("({:?}, {:?})", k, v));
 /// };
 ///
-/// input_send.send((&quot;hello&quot;, &quot;oakland&quot;)).unwrap();
-/// input_send.send((&quot;hello&quot;, &quot;berkeley&quot;)).unwrap();
-/// input_send.send((&quot;hello&quot;, &quot;san francisco&quot;)).unwrap();
+/// input_send.send(("hello", "oakland")).unwrap();
+/// input_send.send(("hello", "berkeley")).unwrap();
+/// input_send.send(("hello", "san francisco")).unwrap();
 /// flow.run_available();
-/// // (&quot;hello&quot;, &quot;oakland, berkeley, san francisco, &quot;)
+/// // ("hello", "oakland, berkeley, san francisco, ")
 ///
-/// input_send.send((&quot;hello&quot;, &quot;palo alto&quot;)).unwrap();
+/// input_send.send(("hello", "palo alto")).unwrap();
 /// flow.run_available();
-/// // (&quot;hello&quot;, &quot;palo alto, &quot;)
+/// // ("hello", "palo alto, ")
 /// ```
 </span><span class="kw">pub const </span>REDUCE_KEYED: OperatorConstraints = OperatorConstraints {
-    name: <span class="string">&quot;reduce_keyed&quot;</span>,
+    name: <span class="string">"reduce_keyed"</span>,
     categories: <span class="kw-2">&amp;</span>[OperatorCategory::KeyedFold],
     hard_range_inn: RANGE_1,
     soft_range_inn: RANGE_1,
@@ -278,14 +298,14 @@
     persistence_args: <span class="kw-2">&amp;</span>(<span class="number">0</span>..=<span class="number">1</span>),
     type_args: <span class="kw-2">&amp;</span>(<span class="number">0</span>..=<span class="number">2</span>),
     is_external_input: <span class="bool-val">false</span>,
+    <span class="comment">// If this is set to true, the state will need to be cleared using `#context.set_state_tick_hook`
+    // to prevent reading uncleared data if this subgraph doesn't run.
+    // https://github.com/hydro-project/hydroflow/issues/1298
+    </span>has_singleton_output: <span class="bool-val">false</span>,
     ports_inn: <span class="prelude-val">None</span>,
     ports_out: <span class="prelude-val">None</span>,
-    properties: FlowProperties {
-        deterministic: FlowPropertyVal::DependsOnArgs,
-        monotonic: FlowPropertyVal::DependsOnArgs,
-        inconsistency_tainted: <span class="bool-val">false</span>,
-    },
     input_delaytype_fn: |<span class="kw">_</span>| <span class="prelude-val">Some</span>(DelayType::Stratum),
+    flow_prop_fn: <span class="prelude-val">None</span>,
     write_fn: |wc @ <span class="kw-2">&amp;</span>WriteContextArgs {
                    hydroflow,
                    context,
@@ -296,7 +316,6 @@
                    root,
                    op_inst:
                        OperatorInstance {
-                           arguments,
                            generics:
                                OpInstGenerics {
                                    persistence_args,
@@ -305,6 +324,7 @@
                                },
                            ..
                        },
+                   arguments,
                    ..
                },
                diagnostics| {
@@ -318,7 +338,7 @@
 
         <span class="kw">let </span>generic_type_args = [
             type_args
-                .get(<span class="number">0</span>)
+                .first()
                 .map(ToTokens::to_token_stream)
                 .unwrap_or(<span class="macro">quote_spanned!</span>(op_span=&gt; <span class="kw">_</span>)),
             type_args
@@ -332,14 +352,14 @@
 
         <span class="kw">let </span>(write_prologue, write_iterator, write_iterator_after) = <span class="kw">match </span>persistence {
             Persistence::Tick =&gt; {
-                <span class="kw">let </span>groupbydata_ident = wc.make_ident(<span class="string">&quot;groupbydata&quot;</span>);
-                <span class="kw">let </span>hashtable_ident = wc.make_ident(<span class="string">&quot;hashtable&quot;</span>);
+                <span class="kw">let </span>groupbydata_ident = wc.make_ident(<span class="string">"groupbydata"</span>);
+                <span class="kw">let </span>hashtable_ident = wc.make_ident(<span class="string">"hashtable"</span>);
 
                 (
-                    <span class="macro">quote_spanned! </span>{op_span=&gt;
+                    <span class="macro">quote_spanned!</span> {op_span=&gt;
                         <span class="kw">let </span>#groupbydata_ident = #hydroflow.add_state(::std::cell::RefCell::new(#root::rustc_hash::FxHashMap::&lt;#( #generic_type_args ),<span class="kw-2">*</span>&gt;::default()));
                     },
-                    <span class="macro">quote_spanned! </span>{op_span=&gt;
+                    <span class="macro">quote_spanned!</span> {op_span=&gt;
                         <span class="kw">let </span><span class="kw-2">mut </span>#hashtable_ident = #context.state_ref(#groupbydata_ident).borrow_mut();
 
                         {
@@ -347,13 +367,20 @@
                             </span><span class="kw">fn </span>check_input&lt;Iter: ::std::iter::Iterator&lt;Item = (A, B)&gt;, A: ::std::clone::Clone, B: ::std::clone::Clone&gt;(iter: Iter)
                                 -&gt; <span class="kw">impl </span>::std::iter::Iterator&lt;Item = (A, B)&gt; { iter }
 
+                            <span class="attr">#[inline(always)]
+                            </span><span class="doccomment">/// A: accumulator type
+                            /// O: output type
+                            </span><span class="kw">fn </span>call_comb_type&lt;A, O&gt;(acc: <span class="kw-2">&amp;mut </span>A, item: A, f: <span class="kw">impl </span>Fn(<span class="kw-2">&amp;mut </span>A, A) -&gt; O) -&gt; O {
+                                f(acc, item)
+                            }
+
                             <span class="kw">for </span>kv <span class="kw">in </span>check_input(#input) {
                                 <span class="kw">match </span>#hashtable_ident.entry(kv.<span class="number">0</span>) {
                                     ::std::collections::hash_map::Entry::Vacant(vacant) =&gt; {
                                         vacant.insert(kv.<span class="number">1</span>);
                                     }
                                     ::std::collections::hash_map::Entry::Occupied(<span class="kw-2">mut </span>occupied) =&gt; {
-                                        <span class="attr">#[allow(clippy::redundant_closure_call)] </span>(#aggfn)(occupied.get_mut(), kv.<span class="number">1</span>);
+                                        <span class="attr">#[allow(clippy::redundant_closure_call)] </span>call_comb_type(occupied.get_mut(), kv.<span class="number">1</span>, #aggfn);
                                     }
                                 }
                             }
@@ -365,14 +392,14 @@
                 )
             }
             Persistence::Static =&gt; {
-                <span class="kw">let </span>groupbydata_ident = wc.make_ident(<span class="string">&quot;groupbydata&quot;</span>);
-                <span class="kw">let </span>hashtable_ident = wc.make_ident(<span class="string">&quot;hashtable&quot;</span>);
+                <span class="kw">let </span>groupbydata_ident = wc.make_ident(<span class="string">"groupbydata"</span>);
+                <span class="kw">let </span>hashtable_ident = wc.make_ident(<span class="string">"hashtable"</span>);
 
                 (
-                    <span class="macro">quote_spanned! </span>{op_span=&gt;
+                    <span class="macro">quote_spanned!</span> {op_span=&gt;
                         <span class="kw">let </span>#groupbydata_ident = #hydroflow.add_state(::std::cell::RefCell::new(#root::rustc_hash::FxHashMap::&lt;#( #generic_type_args ),<span class="kw-2">*</span>&gt;::default()));
                     },
-                    <span class="macro">quote_spanned! </span>{op_span=&gt;
+                    <span class="macro">quote_spanned!</span> {op_span=&gt;
                         <span class="kw">let </span><span class="kw-2">mut </span>#hashtable_ident = #context.state_ref(#groupbydata_ident).borrow_mut();
 
                         {
@@ -380,24 +407,39 @@
                             </span><span class="kw">fn </span>check_input&lt;Iter: ::std::iter::Iterator&lt;Item = (A, B)&gt;, A: ::std::clone::Clone, B: ::std::clone::Clone&gt;(iter: Iter)
                                 -&gt; <span class="kw">impl </span>::std::iter::Iterator&lt;Item = (A, B)&gt; { iter }
 
+                            <span class="attr">#[inline(always)]
+                            </span><span class="doccomment">/// A: accumulator type
+                            /// O: output type
+                            </span><span class="kw">fn </span>call_comb_type&lt;A, O&gt;(acc: <span class="kw-2">&amp;mut </span>A, item: A, f: <span class="kw">impl </span>Fn(<span class="kw-2">&amp;mut </span>A, A) -&gt; O) -&gt; O {
+                                f(acc, item)
+                            }
+
                             <span class="kw">for </span>kv <span class="kw">in </span>check_input(#input) {
                                 <span class="kw">match </span>#hashtable_ident.entry(kv.<span class="number">0</span>) {
                                     ::std::collections::hash_map::Entry::Vacant(vacant) =&gt; {
                                         vacant.insert(kv.<span class="number">1</span>);
                                     }
                                     ::std::collections::hash_map::Entry::Occupied(<span class="kw-2">mut </span>occupied) =&gt; {
-                                        <span class="attr">#[allow(clippy::redundant_closure_call)] </span>(#aggfn)(occupied.get_mut(), kv.<span class="number">1</span>);
+                                        <span class="attr">#[allow(clippy::redundant_closure_call)] </span>call_comb_type(occupied.get_mut(), kv.<span class="number">1</span>, #aggfn);
                                     }
                                 }
                             }
                         }
 
-                        <span class="kw">let </span>#ident = #hashtable_ident
-                            .iter()
-                            <span class="comment">// TODO(mingwei): remove `unknown_lints` when `suspicious_double_ref_op` is stabilized.
-                            </span>.map(<span class="attr">#[allow(unknown_lints, suspicious_double_ref_op, clippy::clone_on_copy)] </span>|(k, v)| (k.clone(), v.clone()));
+                        <span class="kw">let </span>#ident = #context.is_first_run_this_tick()
+                            .then_some(#hashtable_ident.iter())
+                            .into_iter()
+                            .flatten()
+                            .map(
+                                <span class="comment">// TODO(mingwei): remove `unknown_lints` when `suspicious_double_ref_op` is stabilized.
+                                </span><span class="attr">#[allow(unknown_lints, suspicious_double_ref_op, clippy::clone_on_copy)]
+                                </span>|(k, v)| (
+                                    ::std::clone::Clone::clone(k),
+                                    ::std::clone::Clone::clone(v),
+                                )
+                            );
                     },
-                    <span class="macro">quote_spanned! </span>{op_span=&gt;
+                    <span class="macro">quote_spanned!</span> {op_span=&gt;
                         #context.schedule_subgraph(#context.current_subgraph(), <span class="bool-val">false</span>);
                     },
                 )
@@ -407,7 +449,7 @@
                 diagnostics.push(Diagnostic::spanned(
                     op_span,
                     Level::Error,
-                    <span class="string">&quot;An implementation of &#39;mutable does not exist&quot;</span>,
+                    <span class="string">"An implementation of 'mutable does not exist"</span>,
                 ));
                 <span class="kw">return </span><span class="prelude-val">Err</span>(());
             }

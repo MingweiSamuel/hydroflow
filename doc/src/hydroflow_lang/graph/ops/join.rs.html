@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow_lang/src/graph/ops/join.rs`."><title>join.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-a23c9d150ad85d8b.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="hydroflow_lang" data-themes="" data-resource-suffix="" data-rustdoc-version="1.72.0-nightly (330727467 2023-06-29)" data-channel="nightly" data-search-js="search-91b58767224854cb.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ><script src="../../../../static.files/storage-59fd9b8ccb335783.js"></script><script defer src="../../../../static.files/source-script-106908c7a7964ba4.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../hydroflow_lang/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow_lang/src/graph/ops/join.rs`."><title>join.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="hydroflow_lang" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (d7f6ebace 2024-06-16)" data-channel="nightly" data-search-js="search-0fe7219eb170c82e.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -223,55 +223,47 @@
 <a href="#223" id="223">223</a>
 <a href="#224" id="224">224</a>
 <a href="#225" id="225">225</a>
-<a href="#226" id="226">226</a>
-<a href="#227" id="227">227</a>
-<a href="#228" id="228">228</a>
-<a href="#229" id="229">229</a>
-<a href="#230" id="230">230</a>
-<a href="#231" id="231">231</a>
-<a href="#232" id="232">232</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>quote::{quote_spanned, ToTokens};
 <span class="kw">use </span>syn::parse_quote;
 
 <span class="kw">use super</span>::{
-    FlowProperties, FlowPropertyVal, OperatorCategory, OperatorConstraints, OperatorWriteOutput,
-    Persistence, WriteContextArgs, RANGE_1,
+    OpInstGenerics, OperatorCategory, OperatorConstraints, OperatorInstance, OperatorWriteOutput,
+    Persistence, WriteContextArgs, JOIN_CROSS_JOIN_FLOW_PROP_FN, RANGE_1,
 };
 <span class="kw">use </span><span class="kw">crate</span>::diagnostic::{Diagnostic, Level};
-<span class="kw">use </span><span class="kw">crate</span>::graph::{OpInstGenerics, OperatorInstance};
 
 <span class="doccomment">/// &gt; 2 input streams of type &lt;(K, V1)&gt; and &lt;(K, V2)&gt;, 1 output stream of type &lt;(K, (V1, V2))&gt;
 ///
 /// Forms the equijoin of the tuples in the input streams by their first (key) attribute. Note that the result nests the 2nd input field (values) into a tuple in the 2nd output field.
 ///
 /// ```hydroflow
-/// source_iter(vec![(&quot;hello&quot;, &quot;world&quot;), (&quot;stay&quot;, &quot;gold&quot;), (&quot;hello&quot;, &quot;world&quot;)]) -&gt; [0]my_join;
-/// source_iter(vec![(&quot;hello&quot;, &quot;cleveland&quot;)]) -&gt; [1]my_join;
+/// source_iter(vec![("hello", "world"), ("stay", "gold"), ("hello", "world")]) -&gt; [0]my_join;
+/// source_iter(vec![("hello", "cleveland")]) -&gt; [1]my_join;
 /// my_join = join()
-///     -&gt; assert_eq([(&quot;hello&quot;, (&quot;world&quot;, &quot;cleveland&quot;))]);
+///     -&gt; assert_eq([("hello", ("world", "cleveland"))]);
 /// ```
 ///
 /// `join` can also be provided with one or two generic lifetime persistence arguments, either
-/// `&#39;tick` or `&#39;static`, to specify how join data persists. With `&#39;tick`, pairs will only be
-/// joined with corresponding pairs within the same tick. With `&#39;static`, pairs will be remembered
+/// `'tick` or `'static`, to specify how join data persists. With `'tick`, pairs will only be
+/// joined with corresponding pairs within the same tick. With `'static`, pairs will be remembered
 /// across ticks and will be joined with pairs arriving in later ticks. When not explicitly
 /// specified persistence defaults to `tick.
 ///
 /// When two persistence arguments are supplied the first maps to port `0` and the second maps to
 /// port `1`.
 /// When a single persistence argument is supplied, it is applied to both input ports.
-/// When no persistence arguments are applied it defaults to `&#39;tick` for both.
+/// When no persistence arguments are applied it defaults to `'tick` for both.
 ///
 /// The syntax is as follows:
 /// ```hydroflow,ignore
 /// join(); // Or
-/// join::&lt;&#39;static&gt;();
+/// join::&lt;'static&gt;();
 ///
-/// join::&lt;&#39;tick&gt;();
+/// join::&lt;'tick&gt;();
 ///
-/// join::&lt;&#39;static, &#39;tick&gt;();
+/// join::&lt;'static, 'tick&gt;();
 ///
-/// join::&lt;&#39;tick, &#39;static&gt;();
+/// join::&lt;'tick, 'static&gt;();
 /// // etc.
 /// ```
 ///
@@ -284,16 +276,16 @@
 /// ```rustbook
 /// let (input_send, input_recv) = hydroflow::util::unbounded_channel::&lt;(&amp;str, &amp;str)&gt;();
 /// let mut flow = hydroflow::hydroflow_syntax! {
-///     source_iter([(&quot;hello&quot;, &quot;world&quot;)]) -&gt; [0]my_join;
+///     source_iter([("hello", "world")]) -&gt; [0]my_join;
 ///     source_stream(input_recv) -&gt; [1]my_join;
-///     my_join = join::&lt;&#39;tick&gt;() -&gt; for_each(|(k, (v1, v2))| println!(&quot;({}, ({}, {}))&quot;, k, v1, v2));
+///     my_join = join::&lt;'tick&gt;() -&gt; for_each(|(k, (v1, v2))| println!("({}, ({}, {}))", k, v1, v2));
 /// };
-/// input_send.send((&quot;hello&quot;, &quot;oakland&quot;)).unwrap();
+/// input_send.send(("hello", "oakland")).unwrap();
 /// flow.run_tick();
-/// input_send.send((&quot;hello&quot;, &quot;san francisco&quot;)).unwrap();
+/// input_send.send(("hello", "san francisco")).unwrap();
 /// flow.run_tick();
 /// ```
-/// Prints out `&quot;(hello, (world, oakland))&quot;` since `source_iter([(&quot;hello&quot;, &quot;world&quot;)])` is only
+/// Prints out `"(hello, (world, oakland))"` since `source_iter([("hello", "world")])` is only
 /// included in the first tick, then forgotten.
 ///
 /// ---
@@ -301,19 +293,19 @@
 /// ```rustbook
 /// let (input_send, input_recv) = hydroflow::util::unbounded_channel::&lt;(&amp;str, &amp;str)&gt;();
 /// let mut flow = hydroflow::hydroflow_syntax! {
-///     source_iter([(&quot;hello&quot;, &quot;world&quot;)]) -&gt; [0]my_join;
+///     source_iter([("hello", "world")]) -&gt; [0]my_join;
 ///     source_stream(input_recv) -&gt; [1]my_join;
-///     my_join = join::&lt;&#39;static&gt;() -&gt; for_each(|(k, (v1, v2))| println!(&quot;({}, ({}, {}))&quot;, k, v1, v2));
+///     my_join = join::&lt;'static&gt;() -&gt; for_each(|(k, (v1, v2))| println!("({}, ({}, {}))", k, v1, v2));
 /// };
-/// input_send.send((&quot;hello&quot;, &quot;oakland&quot;)).unwrap();
+/// input_send.send(("hello", "oakland")).unwrap();
 /// flow.run_tick();
-/// input_send.send((&quot;hello&quot;, &quot;san francisco&quot;)).unwrap();
+/// input_send.send(("hello", "san francisco")).unwrap();
 /// flow.run_tick();
 /// ```
-/// Prints out `&quot;(hello, (world, oakland))&quot;` and `&quot;(hello, (world, san francisco))&quot;` since the
+/// Prints out `"(hello, (world, oakland))"` and `"(hello, (world, san francisco))"` since the
 /// inputs are peristed across ticks.
 </span><span class="kw">pub const </span>JOIN: OperatorConstraints = OperatorConstraints {
-    name: <span class="string">&quot;join&quot;</span>,
+    name: <span class="string">"join"</span>,
     categories: <span class="kw-2">&amp;</span>[OperatorCategory::MultiIn],
     hard_range_inn: <span class="kw-2">&amp;</span>(<span class="number">2</span>..=<span class="number">2</span>),
     soft_range_inn: <span class="kw-2">&amp;</span>(<span class="number">2</span>..=<span class="number">2</span>),
@@ -323,14 +315,11 @@
     persistence_args: <span class="kw-2">&amp;</span>(<span class="number">0</span>..=<span class="number">2</span>),
     type_args: <span class="kw-2">&amp;</span>(<span class="number">0</span>..=<span class="number">1</span>),
     is_external_input: <span class="bool-val">false</span>,
-    ports_inn: <span class="prelude-val">Some</span>(|| <span class="kw">super</span>::PortListSpec::Fixed(<span class="macro">parse_quote! </span>{ <span class="number">0</span>, <span class="number">1 </span>})),
+    has_singleton_output: <span class="bool-val">false</span>,
+    ports_inn: <span class="prelude-val">Some</span>(|| <span class="kw">super</span>::PortListSpec::Fixed(<span class="macro">parse_quote!</span> { <span class="number">0</span>, <span class="number">1 </span>})),
     ports_out: <span class="prelude-val">None</span>,
-    properties: FlowProperties {
-        deterministic: FlowPropertyVal::Preserve,
-        monotonic: FlowPropertyVal::Preserve,
-        inconsistency_tainted: <span class="bool-val">false</span>,
-    },
     input_delaytype_fn: |<span class="kw">_</span>| <span class="prelude-val">None</span>,
+    flow_prop_fn: <span class="prelude-val">Some</span>(JOIN_CROSS_JOIN_FLOW_PROP_FN),
     write_fn: |wc @ <span class="kw-2">&amp;</span>WriteContextArgs {
                    root,
                    context,
@@ -353,7 +342,7 @@
                diagnostics| {
         <span class="kw">let </span>join_type =
             type_args
-                .get(<span class="number">0</span>)
+                .first()
                 .map(ToTokens::to_token_stream)
                 .unwrap_or(<span class="macro">quote_spanned!</span>(op_span=&gt;
                     #root::compiled::pull::HalfSetJoinState
@@ -362,10 +351,7 @@
         <span class="comment">// TODO: This is really bad.
         // This will break if the user aliases HalfSetJoinState to something else. Temporary hacky solution.
         // Note that cross_join() depends on the implementation here as well.
-        // Need to decide on what to do about multisetjoin.
-        // Should it be a separate operator (multisetjoin() and multisetcrossjoin())?
-        // Should the default be multiset join? And setjoin requires the use of lattice_join() with SetUnion lattice?
-        </span><span class="kw">let </span>additional_trait_bounds = <span class="kw">if </span>join_type.to_string().contains(<span class="string">&quot;HalfSetJoinState&quot;</span>) {
+        </span><span class="kw">let </span>additional_trait_bounds = <span class="kw">if </span>join_type.to_string().contains(<span class="string">"HalfSetJoinState"</span>) {
             <span class="macro">quote_spanned!</span>(op_span=&gt;
                 + ::std::cmp::Eq
             )
@@ -374,91 +360,91 @@
         };
 
         <span class="kw">let </span><span class="kw-2">mut </span>make_joindata = |persistence, side| {
-            <span class="kw">let </span>joindata_ident = wc.make_ident(<span class="macro">format!</span>(<span class="string">&quot;joindata_{}&quot;</span>, side));
-            <span class="kw">let </span>borrow_ident = wc.make_ident(<span class="macro">format!</span>(<span class="string">&quot;joindata_{}_borrow&quot;</span>, side));
-            <span class="kw">let </span>(init, borrow) = <span class="kw">match </span>persistence {
-                Persistence::Tick =&gt; (
-                    <span class="macro">quote_spanned! </span>{op_span=&gt;
-                        #root::util::monotonic_map::MonotonicMap::new_init(
-                            #join_type::default()
-                        )
-                    },
-                    <span class="macro">quote_spanned! </span>{op_span=&gt;
-                        <span class="kw-2">&amp;mut *</span>#borrow_ident.get_mut_clear(#context.current_tick())
-                    },
-                ),
-                Persistence::Static =&gt; (
-                    <span class="macro">quote_spanned! </span>{op_span=&gt;
-                        #join_type::default()
-                    },
-                    <span class="macro">quote_spanned! </span>{op_span=&gt;
-                        <span class="kw-2">&amp;mut *</span>#borrow_ident
-                    },
-                ),
+            <span class="kw">let </span>joindata_ident = wc.make_ident(<span class="macro">format!</span>(<span class="string">"joindata_{}"</span>, side));
+            <span class="kw">let </span>borrow_ident = wc.make_ident(<span class="macro">format!</span>(<span class="string">"joindata_{}_borrow"</span>, side));
+            <span class="kw">let </span>reset = <span class="kw">match </span>persistence {
+                Persistence::Tick =&gt; <span class="macro">quote_spanned!</span> {op_span=&gt;
+                    #hydroflow.set_state_tick_hook(#joindata_ident, |rcell| #root::util::clear::Clear::clear(rcell.get_mut()));
+                },
+                Persistence::Static =&gt; Default::default(),
                 Persistence::Mutable =&gt; {
                     diagnostics.push(Diagnostic::spanned(
                         op_span,
                         Level::Error,
-                        <span class="string">&quot;An implementation of &#39;mutable does not exist&quot;</span>,
+                        <span class="string">"An implementation of 'mutable does not exist"</span>,
                     ));
                     <span class="kw">return </span><span class="prelude-val">Err</span>(());
                 }
             };
-            <span class="prelude-val">Ok</span>((joindata_ident, borrow_ident, init, borrow))
+            <span class="kw">let </span>init = <span class="macro">quote_spanned!</span> {op_span=&gt;
+                <span class="kw">let </span>#joindata_ident = #hydroflow.add_state(::std::cell::RefCell::new(
+                    #join_type::default()
+                ));
+                #reset
+            };
+            <span class="prelude-val">Ok</span>((joindata_ident, borrow_ident, init))
         };
 
         <span class="kw">let </span>persistences = <span class="kw">match </span>persistence_args[..] {
             [] =&gt; [Persistence::Tick, Persistence::Tick],
             [a] =&gt; [a, a],
             [a, b] =&gt; [a, b],
-            <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
+            <span class="kw">_ </span>=&gt; <span class="macro">panic!</span>(),
         };
 
-        <span class="kw">let </span>(lhs_joindata_ident, lhs_borrow_ident, lhs_init, lhs_borrow) =
-            make_joindata(persistences[<span class="number">0</span>], <span class="string">&quot;lhs&quot;</span>)<span class="question-mark">?</span>;
-        <span class="kw">let </span>(rhs_joindata_ident, rhs_borrow_ident, rhs_init, rhs_borrow) =
-            make_joindata(persistences[<span class="number">1</span>], <span class="string">&quot;rhs&quot;</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(lhs_joindata_ident, lhs_borrow_ident, lhs_init) =
+            make_joindata(persistences[<span class="number">0</span>], <span class="string">"lhs"</span>)<span class="question-mark">?</span>;
+        <span class="kw">let </span>(rhs_joindata_ident, rhs_borrow_ident, rhs_init) =
+            make_joindata(persistences[<span class="number">1</span>], <span class="string">"rhs"</span>)<span class="question-mark">?</span>;
 
-        <span class="kw">let </span>write_prologue = <span class="macro">quote_spanned! </span>{op_span=&gt;
-            <span class="kw">let </span>#lhs_joindata_ident = #hydroflow.add_state(std::cell::RefCell::new(
-                #lhs_init
-            ));
-            <span class="kw">let </span>#rhs_joindata_ident = #hydroflow.add_state(std::cell::RefCell::new(
-                #rhs_init
-            ));
+        <span class="kw">let </span>write_prologue = <span class="macro">quote_spanned!</span> {op_span=&gt;
+            #lhs_init
+            #rhs_init
         };
 
         <span class="kw">let </span>lhs = <span class="kw-2">&amp;</span>inputs[<span class="number">0</span>];
         <span class="kw">let </span>rhs = <span class="kw-2">&amp;</span>inputs[<span class="number">1</span>];
-        <span class="kw">let </span>write_iterator = <span class="macro">quote_spanned! </span>{op_span=&gt;
+        <span class="kw">let </span>write_iterator = <span class="macro">quote_spanned!</span> {op_span=&gt;
             <span class="kw">let </span><span class="kw-2">mut </span>#lhs_borrow_ident = #context.state_ref(#lhs_joindata_ident).borrow_mut();
             <span class="kw">let </span><span class="kw-2">mut </span>#rhs_borrow_ident = #context.state_ref(#rhs_joindata_ident).borrow_mut();
             <span class="kw">let </span>#ident = {
                 <span class="comment">// Limit error propagation by bounding locally, erasing output iterator type.
                 </span><span class="attr">#[inline(always)]
-                </span><span class="kw">fn </span>check_inputs&lt;<span class="lifetime">&#39;a</span>, K, I1, V1, I2, V2&gt;(
+                </span><span class="kw">fn </span>check_inputs&lt;<span class="lifetime">'a</span>, K, I1, V1, I2, V2&gt;(
                     lhs: I1,
                     rhs: I2,
-                    lhs_state: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>#join_type&lt;K, V1, V2&gt;,
-                    rhs_state: <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span><span class="kw-2">mut </span>#join_type&lt;K, V2, V1&gt;,
-                ) -&gt; <span class="kw">impl </span><span class="lifetime">&#39;a </span>+ Iterator&lt;Item = (K, (V1, V2))&gt;
+                    lhs_state: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>#join_type&lt;K, V1, V2&gt;,
+                    rhs_state: <span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>#join_type&lt;K, V2, V1&gt;,
+                    is_new_tick: bool,
+                ) -&gt; <span class="kw">impl </span><span class="lifetime">'a </span>+ Iterator&lt;Item = (K, (V1, V2))&gt;
                 <span class="kw">where
                     </span>K: Eq + std::hash::Hash + Clone,
                     V1: Clone #additional_trait_bounds,
                     V2: Clone #additional_trait_bounds,
-                    I1: <span class="lifetime">&#39;a </span>+ Iterator&lt;Item = (K, V1)&gt;,
-                    I2: <span class="lifetime">&#39;a </span>+ Iterator&lt;Item = (K, V2)&gt;,
+                    I1: <span class="lifetime">'a </span>+ Iterator&lt;Item = (K, V1)&gt;,
+                    I2: <span class="lifetime">'a </span>+ Iterator&lt;Item = (K, V2)&gt;,
                 {
-                    #root::compiled::pull::SymmetricHashJoin::new_from_mut(lhs, rhs, lhs_state, rhs_state)
+                    #root::compiled::pull::symmetric_hash_join_into_iter(lhs, rhs, lhs_state, rhs_state, is_new_tick)
                 }
-                check_inputs(#lhs, #rhs, #lhs_borrow, #rhs_borrow)
+
+                check_inputs(#lhs, #rhs, <span class="kw-2">&amp;mut *</span>#lhs_borrow_ident, <span class="kw-2">&amp;mut *</span>#rhs_borrow_ident, #context.is_first_run_this_tick())
             };
         };
+
+        <span class="kw">let </span>write_iterator_after =
+            <span class="kw">if </span>persistences[<span class="number">0</span>] == Persistence::Static || persistences[<span class="number">1</span>] == Persistence::Static {
+                <span class="macro">quote_spanned!</span> {op_span=&gt;
+                    <span class="comment">// TODO: Probably only need to schedule if #*_borrow.len() &gt; 0?
+                    </span>#context.schedule_subgraph(#context.current_subgraph(), <span class="bool-val">false</span>);
+                }
+            } <span class="kw">else </span>{
+                <span class="macro">quote_spanned!</span> {op_span=&gt;}
+            };
 
         <span class="prelude-val">Ok</span>(OperatorWriteOutput {
             write_prologue,
             write_iterator,
-            ..Default::default()
+            write_iterator_after,
         })
     },
 };

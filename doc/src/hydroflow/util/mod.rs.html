@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow/src/util/mod.rs`."><title>mod.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-a23c9d150ad85d8b.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hydroflow" data-themes="" data-resource-suffix="" data-rustdoc-version="1.72.0-nightly (330727467 2023-06-29)" data-channel="nightly" data-search-js="search-91b58767224854cb.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ><script src="../../../static.files/storage-59fd9b8ccb335783.js"></script><script defer src="../../../static.files/source-script-106908c7a7964ba4.js"></script><script defer src="../../../source-files.js"></script><script defer src="../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../hydroflow/index.html"><img class="rust-logo" src="../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow/src/util/mod.rs`."><title>mod.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hydroflow" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (d7f6ebace 2024-06-16)" data-channel="nightly" data-search-js="search-0fe7219eb170c82e.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -342,20 +342,42 @@
 <a href="#342" id="342">342</a>
 <a href="#343" id="343">343</a>
 <a href="#344" id="344">344</a>
+<a href="#345" id="345">345</a>
+<a href="#346" id="346">346</a>
+<a href="#347" id="347">347</a>
+<a href="#348" id="348">348</a>
+<a href="#349" id="349">349</a>
+<a href="#350" id="350">350</a>
+<a href="#351" id="351">351</a>
+<a href="#352" id="352">352</a>
+<a href="#353" id="353">353</a>
+<a href="#354" id="354">354</a>
+<a href="#355" id="355">355</a>
+<a href="#356" id="356">356</a>
+<a href="#357" id="357">357</a>
+<a href="#358" id="358">358</a>
+<a href="#359" id="359">359</a>
+<a href="#360" id="360">360</a>
 </pre></div><pre class="rust"><code><span class="attr">#![warn(missing_docs)]
 </span><span class="doccomment">//! Helper utilities for the Hydroflow surface syntax.
 
 </span><span class="kw">pub mod </span>clear;
+<span class="attr">#[cfg(feature = <span class="string">"hydroflow_macro"</span>)]
+</span><span class="kw">pub mod </span>demux_enum;
 <span class="kw">pub mod </span>monotonic_map;
+<span class="kw">pub mod </span>multiset;
 <span class="kw">pub mod </span>sparse_vec;
 <span class="kw">pub mod </span>unsync;
 
+<span class="kw">mod </span>monotonic;
+<span class="kw">pub use </span>monotonic::<span class="kw-2">*</span>;
+
 <span class="kw">mod </span>udp;
-<span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+<span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
 </span><span class="kw">pub use </span>udp::<span class="kw-2">*</span>;
 
 <span class="kw">mod </span>tcp;
-<span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+<span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
 </span><span class="kw">pub use </span>tcp::<span class="kw-2">*</span>;
 
 <span class="attr">#[cfg(unix)]
@@ -363,14 +385,15 @@
 <span class="attr">#[cfg(unix)]
 </span><span class="kw">pub use </span>socket::<span class="kw-2">*</span>;
 
-<span class="attr">#[cfg(feature = <span class="string">&quot;cli_integration&quot;</span>)]
+<span class="attr">#[cfg(feature = <span class="string">"cli_integration"</span>)]
 </span><span class="kw">pub mod </span>cli;
 
+<span class="kw">use </span>std::io::Read;
 <span class="kw">use </span>std::net::SocketAddr;
 <span class="kw">use </span>std::num::NonZeroUsize;
+<span class="kw">use </span>std::process::{Child, ChildStdin, ChildStdout, Stdio};
 <span class="kw">use </span>std::task::{Context, Poll};
 
-<span class="kw">use </span>bincode;
 <span class="kw">use </span>futures::Stream;
 <span class="kw">use </span>serde::de::DeserializeOwned;
 <span class="kw">use </span>serde::ser::Serialize;
@@ -434,7 +457,7 @@
     </span>C: FromIterator&lt;S::Item&gt;,
     S: Stream,
 {
-    <span class="macro">assert!</span>(tokio::runtime::Handle::try_current().is_err(), <span class="string">&quot;Calling `collect_ready` from an async runtime may cause incorrect results, use `collect_ready_async` instead.&quot;</span>);
+    <span class="macro">assert!</span>(tokio::runtime::Handle::try_current().is_err(), <span class="string">"Calling `collect_ready` from an async runtime may cause incorrect results, use `collect_ready_async` instead."</span>);
     ready_iter(stream).collect()
 }
 
@@ -447,10 +470,16 @@
     </span>C: Default + Extend&lt;S::Item&gt;,
     S: Stream,
 {
-    <span class="kw">let </span>any = std::cell::Cell::new(<span class="bool-val">true</span>);
-    <span class="kw">let </span><span class="kw-2">mut </span>unfused_iter = ready_iter(stream).inspect(|<span class="kw">_</span>| any.set(<span class="bool-val">true</span>));
+    <span class="kw">use </span>std::sync::atomic::Ordering;
+
+    <span class="comment">// Yield to let any background async tasks send to the stream.
+    </span>tokio::task::yield_now().<span class="kw">await</span>;
+
+    <span class="kw">let </span>got_any_items = std::sync::atomic::AtomicBool::new(<span class="bool-val">true</span>);
+    <span class="kw">let </span><span class="kw-2">mut </span>unfused_iter =
+        ready_iter(stream).inspect(|<span class="kw">_</span>| got_any_items.store(<span class="bool-val">true</span>, Ordering::Relaxed));
     <span class="kw">let </span><span class="kw-2">mut </span>out = C::default();
-    <span class="kw">while </span>any.replace(<span class="bool-val">false</span>) {
+    <span class="kw">while </span>got_any_items.swap(<span class="bool-val">false</span>, Ordering::Relaxed) {
         out.extend(unfused_iter.by_ref());
         <span class="comment">// Tokio unbounded channel returns items in lenght-128 chunks, so we have to be careful
         // that everything gets returned. That is why we yield here and loop.
@@ -484,14 +513,14 @@
         <span class="prelude-val">Some</span>(addr) =&gt; <span class="prelude-val">Ok</span>(addr),
         <span class="prelude-val">None </span>=&gt; <span class="prelude-val">Err</span>(std::io::Error::new(
             std::io::ErrorKind::Other,
-            <span class="string">&quot;Unable to resolve IPv4 address&quot;</span>,
+            <span class="string">"Unable to resolve IPv4 address"</span>,
         )),
     }
 }
 
 <span class="doccomment">/// Returns a length-delimited bytes `Sink`, `Stream`, and `SocketAddr` bound to the given address.
 /// The input `addr` may have a port of `0`, the returned `SocketAddr` will have the chosen port.
-</span><span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+</span><span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
 </span><span class="kw">pub async fn </span>bind_udp_bytes(addr: SocketAddr) -&gt; (UdpSink, UdpStream, SocketAddr) {
     <span class="kw">let </span>socket = tokio::net::UdpSocket::bind(addr).<span class="kw">await</span>.unwrap();
     udp_bytes(socket)
@@ -499,7 +528,7 @@
 
 <span class="doccomment">/// Returns a newline-delimited bytes `Sink`, `Stream`, and `SocketAddr` bound to the given address.
 /// The input `addr` may have a port of `0`, the returned `SocketAddr` will have the chosen port.
-</span><span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+</span><span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
 </span><span class="kw">pub async fn </span>bind_udp_lines(addr: SocketAddr) -&gt; (UdpLinesSink, UdpLinesStream, SocketAddr) {
     <span class="kw">let </span>socket = tokio::net::UdpSocket::bind(addr).<span class="kw">await</span>.unwrap();
     udp_lines(socket)
@@ -510,7 +539,7 @@
 /// The inbound connections can be used in full duplex mode. When a `(T, SocketAddr)` pair is fed to the `Sender`
 /// returned by this function, the `SocketAddr` will be looked up against the currently existing connections.
 /// If a match is found then the data will be sent on that connection. If no match is found then the data is silently dropped.
-</span><span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+</span><span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
 </span><span class="kw">pub async fn </span>bind_tcp_bytes(
     addr: SocketAddr,
 ) -&gt; (
@@ -524,7 +553,7 @@
 }
 
 <span class="doccomment">/// This is the same thing as `bind_tcp_bytes` except instead of using a length-delimited encoding scheme it uses new lines to separate frames.
-</span><span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+</span><span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
 </span><span class="kw">pub async fn </span>bind_tcp_lines(
     addr: SocketAddr,
 ) -&gt; (
@@ -539,7 +568,7 @@
 
 <span class="doccomment">/// This is inverse of bind_tcp_bytes. `(Bytes, SocketAddr)` pairs fed to the returned `Sender` will initiate new tcp connections to the specified `SocketAddr`.
 /// These connections will be cached and reused, so that there will only be one connection per destination endpoint. When the endpoint sends data back it will be available via the returned `Receiver`
-</span><span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+</span><span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
 </span><span class="kw">pub fn </span>connect_tcp_bytes() -&gt; (
     TcpFramedSink&lt;bytes::Bytes&gt;,
     TcpFramedStream&lt;tokio_util::codec::LengthDelimitedCodec&gt;,
@@ -548,7 +577,7 @@
 }
 
 <span class="doccomment">/// This is the same thing as `connect_tcp_bytes` except instead of using a length-delimited encoding scheme it uses new lines to separate frames.
-</span><span class="attr">#[cfg(not(target_arch = <span class="string">&quot;wasm32&quot;</span>))]
+</span><span class="attr">#[cfg(not(target_arch = <span class="string">"wasm32"</span>))]
 </span><span class="kw">pub fn </span>connect_tcp_lines() -&gt; (
     TcpFramedSink&lt;String&gt;,
     TcpFramedStream&lt;tokio_util::codec::LinesCodec&gt;,
@@ -562,10 +591,105 @@
 /// &lt;https://stackoverflow.com/questions/56105305/how-to-sort-a-vec-of-structs-by-a-string-field&gt;
 </span><span class="kw">pub fn </span>sort_unstable_by_key_hrtb&lt;T, F, K&gt;(slice: <span class="kw-2">&amp;mut </span>[T], f: F)
 <span class="kw">where
-    </span>F: <span class="kw">for</span>&lt;<span class="lifetime">&#39;a</span>&gt; Fn(<span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>T) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">&#39;a </span>K,
+    </span>F: <span class="kw">for</span>&lt;<span class="lifetime">'a</span>&gt; Fn(<span class="kw-2">&amp;</span><span class="lifetime">'a </span>T) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'a </span>K,
     K: Ord,
 {
     slice.sort_unstable_by(|a, b| f(a).cmp(f(b)))
+}
+
+<span class="doccomment">/// When a child process is spawned often you want to wait until the child process is ready before moving on.
+/// One way to do that synchronization is by waiting for the child process to output something and match regex against that output.
+/// For example, you could wait until the child process outputs "Client live!" which would indicate that it is ready to receive input now on stdin.
+</span><span class="kw">pub fn </span>wait_for_process_output(
+    output_so_far: <span class="kw-2">&amp;mut </span>String,
+    output: <span class="kw-2">&amp;mut </span>ChildStdout,
+    wait_for: <span class="kw-2">&amp;</span>str,
+) {
+    <span class="kw">let </span>re = regex::Regex::new(wait_for).unwrap();
+
+    <span class="kw">while </span>!re.is_match(output_so_far) {
+        <span class="macro">println!</span>(<span class="string">"waiting: {}"</span>, output_so_far);
+        <span class="kw">let </span><span class="kw-2">mut </span>buffer = [<span class="number">0u8</span>; <span class="number">1024</span>];
+        <span class="kw">let </span>bytes_read = output.read(<span class="kw-2">&amp;mut </span>buffer).unwrap();
+
+        <span class="kw">if </span>bytes_read == <span class="number">0 </span>{
+            <span class="macro">panic!</span>();
+        }
+
+        output_so_far.push_str(<span class="kw-2">&amp;</span>String::from_utf8_lossy(<span class="kw-2">&amp;</span>buffer[<span class="number">0</span>..bytes_read]));
+
+        <span class="macro">println!</span>(<span class="string">"XXX {}"</span>, output_so_far);
+    }
+}
+
+<span class="doccomment">/// When a `Child` is dropped normally nothing happens but in unit tests you usually want to terminate
+/// the child and wait for it to terminate. `DroppableChild` does that for us.
+</span><span class="kw">pub struct </span>DroppableChild(Child);
+
+<span class="kw">impl </span>Drop <span class="kw">for </span>DroppableChild {
+    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="attr">#[cfg(target_family = <span class="string">"windows"</span>)]
+        </span><span class="kw">let _ </span>= <span class="self">self</span>.<span class="number">0</span>.kill(); <span class="comment">// Windows throws `PermissionDenied` if the process has already exited.
+        </span><span class="attr">#[cfg(not(target_family = <span class="string">"windows"</span>))]
+        </span><span class="self">self</span>.<span class="number">0</span>.kill().unwrap();
+
+        <span class="self">self</span>.<span class="number">0</span>.wait().unwrap();
+    }
+}
+
+<span class="doccomment">/// rust examples are meant to be run by people and have a natural interface for that. This makes unit testing them cumbersome.
+/// This function wraps calling cargo run and piping the stdin/stdout of the example to easy to handle returned objects.
+/// The function also returns a `DroppableChild` which will ensure that the child processes will be cleaned up appropriately.
+</span><span class="kw">pub fn </span>run_cargo_example(test_name: <span class="kw-2">&amp;</span>str, args: <span class="kw-2">&amp;</span>str) -&gt; (DroppableChild, ChildStdin, ChildStdout) {
+    <span class="kw">let </span><span class="kw-2">mut </span>server = <span class="kw">if </span>args.is_empty() {
+        std::process::Command::new(<span class="string">"cargo"</span>)
+            .args([<span class="string">"run"</span>, <span class="string">"-p"</span>, <span class="string">"hydroflow"</span>, <span class="string">"--example"</span>])
+            .arg(test_name)
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap()
+    } <span class="kw">else </span>{
+        std::process::Command::new(<span class="string">"cargo"</span>)
+            .args([<span class="string">"run"</span>, <span class="string">"-p"</span>, <span class="string">"hydroflow"</span>, <span class="string">"--example"</span>])
+            .arg(test_name)
+            .arg(<span class="string">"--"</span>)
+            .args(args.split(<span class="string">' '</span>))
+            .stdin(Stdio::piped())
+            .stdout(Stdio::piped())
+            .spawn()
+            .unwrap()
+    };
+
+    <span class="kw">let </span>stdin = server.stdin.take().unwrap();
+    <span class="kw">let </span>stdout = server.stdout.take().unwrap();
+
+    (DroppableChild(server), stdin, stdout)
+}
+
+<span class="doccomment">/// Returns an [`Stream`] that emits `n` items at a time from `iter` at a time, yielding in-between.
+/// This is useful for breaking up a large iterator across several ticks: `source_iter(...)` always
+/// releases all items in the first tick. However using `iter_batches_stream` with `source_stream(...)`
+/// will cause `n` items to be released each tick. (Although more than that may be emitted if there
+/// are loops in the stratum).
+</span><span class="kw">pub fn </span>iter_batches_stream&lt;I&gt;(
+    <span class="kw-2">mut </span>iter: I,
+    n: usize,
+) -&gt; futures::stream::PollFn&lt;<span class="kw">impl </span>FnMut(<span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">'_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Option</span>&lt;I::Item&gt;&gt;&gt;
+<span class="kw">where
+    </span>I: Iterator + Unpin,
+{
+    <span class="kw">let </span><span class="kw-2">mut </span>count = <span class="number">0</span>;
+    futures::stream::poll_fn(<span class="kw">move </span>|ctx| {
+        count += <span class="number">1</span>;
+        <span class="kw">if </span>n &lt; count {
+            count = <span class="number">0</span>;
+            ctx.waker().wake_by_ref();
+            Poll::Pending
+        } <span class="kw">else </span>{
+            Poll::Ready(iter.next())
+        }
+    })
 }
 
 <span class="attr">#[cfg(test)]
@@ -593,97 +717,5 @@
             collect_ready_async::&lt;Vec&lt;<span class="kw">_</span>&gt;, <span class="kw">_</span>&gt;(<span class="kw-2">&amp;mut </span>recv).<span class="kw">await</span>.len()
         );
     }
-}
-
-<span class="kw">use </span>std::io::Read;
-<span class="kw">use </span>std::process::{Child, ChildStdin, ChildStdout, Stdio};
-
-<span class="doccomment">/// When a child process is spawned often you want to wait until the child process is ready before moving on.
-/// One way to do that synchronization is by waiting for the child process to output something and match regex against that output.
-/// For example, you could wait until the child process outputs &quot;Client live!&quot; which would indicate that it is ready to receive input now on stdin.
-</span><span class="kw">pub fn </span>wait_for_process_output(
-    output_so_far: <span class="kw-2">&amp;mut </span>String,
-    output: <span class="kw-2">&amp;mut </span>ChildStdout,
-    wait_for: <span class="kw-2">&amp;</span>str,
-) {
-    <span class="kw">let </span>re = regex::Regex::new(wait_for).unwrap();
-
-    <span class="kw">while </span>!re.is_match(output_so_far) {
-        <span class="macro">println!</span>(<span class="string">&quot;waiting: {}&quot;</span>, output_so_far);
-        <span class="kw">let </span><span class="kw-2">mut </span>buffer = [<span class="number">0u8</span>; <span class="number">1024</span>];
-        <span class="kw">let </span>bytes_read = output.read(<span class="kw-2">&amp;mut </span>buffer).unwrap();
-
-        <span class="kw">if </span>bytes_read == <span class="number">0 </span>{
-            <span class="macro">panic!</span>();
-        }
-
-        output_so_far.push_str(<span class="kw-2">&amp;</span>String::from_utf8_lossy(<span class="kw-2">&amp;</span>buffer[<span class="number">0</span>..bytes_read]));
-    }
-}
-
-<span class="doccomment">/// When a `Child` is dropped normally nothing happens but in unit tests you usually want to terminate
-/// the child and wait for it to terminate. `DroppableChild` does that for us.
-</span><span class="kw">pub struct </span>DroppableChild(Child);
-
-<span class="kw">impl </span>Drop <span class="kw">for </span>DroppableChild {
-    <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
-        <span class="self">self</span>.<span class="number">0</span>.kill().unwrap();
-        <span class="self">self</span>.<span class="number">0</span>.wait().unwrap();
-    }
-}
-
-<span class="doccomment">/// rust examples are meant to be run by people and have a natural interface for that. This makes unit testing them cumbersome.
-/// This function wraps calling cargo run and piping the stdin/stdout of the example to easy to handle returned objects.
-/// The function also returns a `DroppableChild` which will ensure that the child processes will be cleaned up appropriately.
-</span><span class="kw">pub fn </span>run_cargo_example(test_name: <span class="kw-2">&amp;</span>str, args: <span class="kw-2">&amp;</span>str) -&gt; (DroppableChild, ChildStdin, ChildStdout) {
-    <span class="kw">let </span><span class="kw-2">mut </span>server = <span class="kw">if </span>args.is_empty() {
-        std::process::Command::new(<span class="string">&quot;cargo&quot;</span>)
-            .args([<span class="string">&quot;run&quot;</span>, <span class="string">&quot;-p&quot;</span>, <span class="string">&quot;hydroflow&quot;</span>, <span class="string">&quot;--example&quot;</span>])
-            .arg(test_name)
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .spawn()
-            .unwrap()
-    } <span class="kw">else </span>{
-        std::process::Command::new(<span class="string">&quot;cargo&quot;</span>)
-            .args([<span class="string">&quot;run&quot;</span>, <span class="string">&quot;-p&quot;</span>, <span class="string">&quot;hydroflow&quot;</span>, <span class="string">&quot;--example&quot;</span>])
-            .arg(test_name)
-            .arg(<span class="string">&quot;--&quot;</span>)
-            .args(args.split(<span class="string">&#39; &#39;</span>))
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .spawn()
-            .unwrap()
-    };
-
-    <span class="kw">let </span>stdin = server.stdin.take().unwrap();
-    <span class="kw">let </span>stdout = server.stdout.take().unwrap();
-
-    (DroppableChild(server), stdin, stdout)
-}
-
-<span class="doccomment">/// Returns an [`Stream`] that emits `n` items at a time from `iter` at a time, yielding in-between.
-/// This is useful for breaking up a large iterator across several ticks: `source_iter(...)` always
-/// releases all items in the first tick. However using `iter_batches_stream` with `source_stream(...)`
-/// will cause `n` items to be released each tick. (Although more than that may be emitted if there
-/// are loops in the stratum).
-</span><span class="kw">pub fn </span>iter_batches_stream&lt;I&gt;(
-    <span class="kw-2">mut </span>iter: I,
-    n: usize,
-) -&gt; futures::stream::PollFn&lt;<span class="kw">impl </span>FnMut(<span class="kw-2">&amp;mut </span>Context&lt;<span class="lifetime">&#39;_</span>&gt;) -&gt; Poll&lt;<span class="prelude-ty">Option</span>&lt;I::Item&gt;&gt;&gt;
-<span class="kw">where
-    </span>I: Iterator + Unpin,
-{
-    <span class="kw">let </span><span class="kw-2">mut </span>count = <span class="number">0</span>;
-    futures::stream::poll_fn(<span class="kw">move </span>|ctx| {
-        count += <span class="number">1</span>;
-        <span class="kw">if </span>n &lt; count {
-            count = <span class="number">0</span>;
-            ctx.waker().wake_by_ref();
-            Poll::Pending
-        } <span class="kw">else </span>{
-            Poll::Ready(iter.next())
-        }
-    })
 }
 </code></pre></div></section></main></body></html>

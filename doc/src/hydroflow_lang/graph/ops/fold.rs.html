@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow_lang/src/graph/ops/fold.rs`."><title>fold.rs - source</title><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Regular-46f98efaafac5295.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Regular-018c141bf0843ffd.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/FiraSans-Medium-8f9a781e4970d388.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceSerif4-Bold-a2c9cd1067f8b328.ttf.woff2"><link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2"><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-a23c9d150ad85d8b.css" id="mainThemeStyle"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="hydroflow_lang" data-themes="" data-resource-suffix="" data-rustdoc-version="1.72.0-nightly (330727467 2023-06-29)" data-channel="nightly" data-search-js="search-91b58767224854cb.js" data-settings-js="settings-de11bff964e9d4e5.js" data-settings-css="settings-8c76f75bfb6bd192.css" data-theme-light-css="light-0f8c037637f9eb3e.css" data-theme-dark-css="dark-1097f8e92a01e3cf.css" data-theme-ayu-css="ayu-614652228113ac93.css" ><script src="../../../../static.files/storage-59fd9b8ccb335783.js"></script><script defer src="../../../../static.files/source-script-106908c7a7964ba4.js"></script><script defer src="../../../../source-files.js"></script><script defer src="../../../../static.files/main-0795b7d26be81095.js"></script><noscript><link rel="stylesheet" media="(prefers-color-scheme:light)" href="../../../../static.files/light-0f8c037637f9eb3e.css"><link rel="stylesheet" media="(prefers-color-scheme:dark)" href="../../../../static.files/dark-1097f8e92a01e3cf.css"><link rel="stylesheet" href="../../../../static.files/noscript-13285aec31fa243e.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-16x16-8b506e7a72182f1c.png"><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc source"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"></nav><main><nav class="sub"><a class="sub-logo-container" href="../../../../hydroflow_lang/index.html"><img class="rust-logo" src="../../../../static.files/rust-logo-151179464ae7ed46.svg" alt="logo"></a><form class="search-form"><span></span><input class="search-input" name="search" aria-label="Run search in the documentation" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search"><div id="help-button" title="help" tabindex="-1"><a href="../../../../help.html">?</a></div><div id="settings-menu" tabindex="-1"><a href="../../../../settings.html" title="settings"><img width="22" height="22" alt="Change settings" src="../../../../static.files/wheel-7b819b6101059cd0.svg"></a></div></form></nav><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydroflow_lang/src/graph/ops/fold.rs`."><title>fold.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="hydroflow_lang" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (d7f6ebace 2024-06-16)" data-channel="nightly" data-search-js="search-0fe7219eb170c82e.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -146,145 +146,171 @@
 <a href="#146" id="146">146</a>
 <a href="#147" id="147">147</a>
 <a href="#148" id="148">148</a>
+<a href="#149" id="149">149</a>
+<a href="#150" id="150">150</a>
+<a href="#151" id="151">151</a>
+<a href="#152" id="152">152</a>
+<a href="#153" id="153">153</a>
+<a href="#154" id="154">154</a>
+<a href="#155" id="155">155</a>
+<a href="#156" id="156">156</a>
+<a href="#157" id="157">157</a>
+<a href="#158" id="158">158</a>
+<a href="#159" id="159">159</a>
+<a href="#160" id="160">160</a>
+<a href="#161" id="161">161</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>quote::quote_spanned;
 
 <span class="kw">use super</span>::{
-    DelayType, FlowProperties, FlowPropertyVal, OpInstGenerics, OperatorCategory,
-    OperatorConstraints, OperatorInstance, OperatorWriteOutput, Persistence, WriteContextArgs,
-    RANGE_0, RANGE_1,
+    DelayType, OpInstGenerics, OperatorCategory, OperatorConstraints,
+    OperatorInstance, OperatorWriteOutput, Persistence, WriteContextArgs, RANGE_0, RANGE_1,
 };
 <span class="kw">use </span><span class="kw">crate</span>::diagnostic::{Diagnostic, Level};
 
 <span class="doccomment">/// &gt; 1 input stream, 1 output stream
 ///
-/// &gt; Arguments: an initial value, and a closure which itself takes two arguments:
-/// an &#39;accumulator&#39;, and an element.
+/// &gt; Arguments: two arguments, both closures. The first closure is used to create the initial
+/// &gt; value for the accumulator, and the second is used to combine new items with the existing
+/// &gt; accumulator value. The second closure takes two two arguments: an `&amp;mut Accum` accumulated
+/// &gt; value, and an `Item`.
 ///
-/// Akin to Rust&#39;s built-in fold operator, except that it takes the accumulator by `&amp;mut` instead of by value. Folds every element into an accumulator by applying a closure,
-/// returning the final result.
+/// Akin to Rust's built-in [`fold`](https://doc.rust-lang.org/std/iter/trait.Iterator.html#method.fold)
+/// operator, except that it takes the accumulator by `&amp;mut` instead of by value. Folds every item
+/// into an accumulator by applying a closure, returning the final result.
 ///
-/// &gt; Note: The closure has access to the [`context` object](surface_flows.md#the-context-object).
+/// &gt; Note: The closures have access to the [`context` object](surface_flows.mdx#the-context-object).
 ///
 /// `fold` can also be provided with one generic lifetime persistence argument, either
-/// `&#39;tick` or `&#39;static`, to specify how data persists. With `&#39;tick`, values will only be collected
-/// within the same tick. With `&#39;static`, values will be remembered across ticks and will be
-/// aggregated with pairs arriving in later ticks. When not explicitly specified persistence
-/// defaults to `&#39;tick`.
+/// `'tick` or `'static`, to specify how data persists. With `'tick`, Items will only be collected
+/// within the same tick. With `'static`, the accumulated value will be remembered across ticks and
+/// will be aggregated with items arriving in later ticks. When not explicitly specified
+/// persistence defaults to `'tick`.
 ///
 /// ```hydroflow
 /// // should print `Reassembled vector [1,2,3,4,5]`
 /// source_iter([1,2,3,4,5])
-///     -&gt; fold::&lt;&#39;tick&gt;(Vec::new(), |accum: &amp;mut Vec&lt;_&gt;, elem| {
+///     -&gt; fold::&lt;'tick&gt;(Vec::new, |accum: &amp;mut Vec&lt;_&gt;, elem| {
 ///         accum.push(elem);
 ///     })
 ///     -&gt; assert_eq([vec![1, 2, 3, 4, 5]]);
 /// ```
 </span><span class="kw">pub const </span>FOLD: OperatorConstraints = OperatorConstraints {
-    name: <span class="string">&quot;fold&quot;</span>,
+    name: <span class="string">"fold"</span>,
     categories: <span class="kw-2">&amp;</span>[OperatorCategory::Fold],
     hard_range_inn: RANGE_1,
     soft_range_inn: RANGE_1,
-    hard_range_out: RANGE_1,
-    soft_range_out: RANGE_1,
+    hard_range_out: <span class="kw-2">&amp;</span>(<span class="number">0</span>..=<span class="number">1</span>),
+    soft_range_out: <span class="kw-2">&amp;</span>(<span class="number">0</span>..=<span class="number">1</span>),
     num_args: <span class="number">2</span>,
     persistence_args: <span class="kw-2">&amp;</span>(<span class="number">0</span>..=<span class="number">1</span>),
     type_args: RANGE_0,
     is_external_input: <span class="bool-val">false</span>,
+    has_singleton_output: <span class="bool-val">true</span>,
     ports_inn: <span class="prelude-val">None</span>,
     ports_out: <span class="prelude-val">None</span>,
-    properties: FlowProperties {
-        deterministic: FlowPropertyVal::DependsOnArgs,
-        monotonic: FlowPropertyVal::DependsOnArgs,
-        inconsistency_tainted: <span class="bool-val">false</span>,
-    },
     input_delaytype_fn: |<span class="kw">_</span>| <span class="prelude-val">Some</span>(DelayType::Stratum),
+    flow_prop_fn: <span class="prelude-val">None</span>,
     write_fn: |wc @ <span class="kw-2">&amp;</span>WriteContextArgs {
+                   root,
                    context,
                    hydroflow,
                    op_span,
                    ident,
-                   inputs,
                    is_pull,
+                   inputs,
+                   singleton_output_ident,
                    op_inst:
                        OperatorInstance {
-                           arguments,
                            generics:
                                OpInstGenerics {
                                    persistence_args, ..
                                },
                            ..
                        },
+                   arguments,
                    ..
                },
                diagnostics| {
-        <span class="macro">assert!</span>(is_pull);
-
         <span class="kw">let </span>persistence = <span class="kw">match </span>persistence_args[..] {
             [] =&gt; Persistence::Tick,
             [a] =&gt; a,
             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         };
+        <span class="kw">if </span>Persistence::Mutable == persistence {
+            diagnostics.push(Diagnostic::spanned(
+                op_span,
+                Level::Error,
+                <span class="string">"An implementation of 'mutable does not exist"</span>,
+            ));
+            <span class="kw">return </span><span class="prelude-val">Err</span>(());
+        }
 
         <span class="kw">let </span>input = <span class="kw-2">&amp;</span>inputs[<span class="number">0</span>];
         <span class="kw">let </span>init = <span class="kw-2">&amp;</span>arguments[<span class="number">0</span>];
         <span class="kw">let </span>func = <span class="kw-2">&amp;</span>arguments[<span class="number">1</span>];
-        <span class="kw">let </span>folddata_ident = wc.make_ident(<span class="string">&quot;folddata&quot;</span>);
-        <span class="kw">let </span>accumulator_ident = wc.make_ident(<span class="string">&quot;accumulator&quot;</span>);
-        <span class="kw">let </span>iterator_item_ident = wc.make_ident(<span class="string">&quot;iterator_item&quot;</span>);
+        <span class="kw">let </span>initializer_func_ident = wc.make_ident(<span class="string">"initializer_func"</span>);
+        <span class="kw">let </span>accumulator_ident = wc.make_ident(<span class="string">"accumulator"</span>);
+        <span class="kw">let </span>iterator_item_ident = wc.make_ident(<span class="string">"iterator_item"</span>);
 
-        <span class="kw">let </span>(write_prologue, write_iterator, write_iterator_after) = <span class="kw">match </span>persistence {
-            <span class="comment">// TODO(mingwei): Issues if initial value is not copy.
-            // TODO(mingwei): Might introduce the initial value multiple times on scheduling.
-            </span>Persistence::Tick =&gt; (
-                Default::default(),
-                <span class="macro">quote_spanned! </span>{op_span=&gt;
-                    <span class="kw">let </span>#ident = {
-                        <span class="kw">let </span><span class="kw-2">mut </span>#accumulator_ident = #init;
-
-                        <span class="kw">for </span>#iterator_item_ident <span class="kw">in </span>#input {
-                            <span class="attr">#[allow(clippy::redundant_closure_call)]
-                            </span>(#func)(<span class="kw-2">&amp;mut </span>#accumulator_ident, #iterator_item_ident);
-                        }
-
-                        ::std::iter::once(#accumulator_ident)
-                    };
-                },
-                Default::default(),
-            ),
-            Persistence::Static =&gt; (
-                <span class="macro">quote_spanned! </span>{op_span=&gt;
-                    <span class="kw">let </span>#folddata_ident = #hydroflow.add_state(
-                        ::std::cell::Cell::new(::std::option::Option::Some(#init))
-                    );
-                },
-                <span class="macro">quote_spanned! </span>{op_span=&gt;
-                    <span class="kw">let </span>#ident = {
-                        <span class="kw">let </span><span class="kw-2">mut </span>#accumulator_ident = #context.state_ref(#folddata_ident).take().expect(<span class="string">&quot;FOLD DATA MISSING&quot;</span>);
-
-                        <span class="kw">for </span>#iterator_item_ident <span class="kw">in </span>#input {
-                            <span class="attr">#[allow(clippy::redundant_closure_call)]
-                            </span>(#func)(<span class="kw-2">&amp;mut </span>#accumulator_ident, #iterator_item_ident);
-                        }
-
-                        #context.state_ref(#folddata_ident).set(
-                            ::std::option::Option::Some(::std::clone::Clone::clone(<span class="kw-2">&amp;</span>#accumulator_ident))
-                        );
-
-                        ::std::iter::once(#accumulator_ident)
-                    };
-                },
-                <span class="macro">quote_spanned! </span>{op_span=&gt;
-                    #context.schedule_subgraph(#context.current_subgraph(), <span class="bool-val">false</span>);
-                },
-            ),
-            Persistence::Mutable =&gt; {
-                diagnostics.push(Diagnostic::spanned(
-                    op_span,
-                    Level::Error,
-                    <span class="string">&quot;An implementation of &#39;mutable does not exist&quot;</span>,
-                ));
-                <span class="kw">return </span><span class="prelude-val">Err</span>(());
+        <span class="kw">let </span>iterator_foreach = <span class="macro">quote_spanned!</span> {op_span=&gt;
+            <span class="attr">#[inline(always)]
+            </span><span class="kw">fn </span>call_comb_type&lt;Accum, Item&gt;(
+                accum: <span class="kw-2">&amp;mut </span>Accum,
+                item: Item,
+                func: <span class="kw">impl </span>Fn(<span class="kw-2">&amp;mut </span>Accum, Item),
+            ) {
+                (func)(accum, item);
             }
+            <span class="attr">#[allow(clippy::redundant_closure_call)]
+            </span>call_comb_type(<span class="kw-2">&amp;mut *</span>#accumulator_ident, #iterator_item_ident, #func);
+        };
+
+        <span class="kw">let </span><span class="kw-2">mut </span>write_prologue = <span class="macro">quote_spanned!</span> {op_span=&gt;
+            <span class="attr">#[allow(unused_mut)]
+            </span><span class="kw">let </span><span class="kw-2">mut </span>#initializer_func_ident = #init;
+
+            <span class="attr">#[allow(clippy::redundant_closure_call)]
+            </span><span class="kw">let </span>#singleton_output_ident = #hydroflow.add_state(
+                ::std::cell::RefCell::new((#initializer_func_ident)())
+            );
+        };
+        <span class="kw">if </span>Persistence::Tick == persistence {
+            write_prologue.extend(<span class="macro">quote_spanned!</span> {op_span=&gt;
+                <span class="comment">// Reset the value to the initializer fn if it is a new tick.
+                </span>#hydroflow.set_state_tick_hook(#singleton_output_ident, <span class="kw">move </span>|rcell| { rcell.replace((#initializer_func_ident)()); });
+            });
+        }
+        <span class="kw">let </span>write_iterator = <span class="kw">if </span>is_pull {
+            <span class="macro">quote_spanned!</span> {op_span=&gt;
+                <span class="kw">let </span>#ident = {
+                    <span class="kw">let </span><span class="kw-2">mut </span>#accumulator_ident = #context.state_ref(#singleton_output_ident).borrow_mut();
+
+                    #input.for_each(|#iterator_item_ident| {
+                        #iterator_foreach
+                    });
+
+                    <span class="attr">#[allow(clippy::clone_on_copy)]
+                    </span>{
+                        ::std::iter::once(::std::clone::Clone::clone(<span class="kw-2">&amp;*</span>#accumulator_ident))
+                    }
+                };
+            }
+        } <span class="kw">else </span>{
+            <span class="macro">quote_spanned!</span> {op_span=&gt;
+                <span class="kw">let </span>#ident = {
+                    #root::pusherator::for_each::ForEach::new(|#iterator_item_ident| {
+                        <span class="kw">let </span><span class="kw-2">mut </span>#accumulator_ident = #context.state_ref(#singleton_output_ident).borrow_mut();
+                        #iterator_foreach
+                    })
+                };
+            }
+        };
+        <span class="kw">let </span>write_iterator_after = <span class="kw">if </span>Persistence::Static == persistence {
+            <span class="macro">quote_spanned!</span> {op_span=&gt;
+                #context.schedule_subgraph(#context.current_subgraph(), <span class="bool-val">false</span>);
+            }
+        } <span class="kw">else </span>{
+            Default::default()
         };
 
         <span class="prelude-val">Ok</span>(OperatorWriteOutput {
