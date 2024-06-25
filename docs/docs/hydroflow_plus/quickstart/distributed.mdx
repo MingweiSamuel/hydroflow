@@ -11,23 +11,26 @@ import { getLines, extractOutput } from '../../../src/util';
 # Adding Distribution
 Continuing from our previous example, we will now look at how to extend our program to run on multiple processes. Recall that our previous flow graph looked like this:
 
-<CodeBlock language="rust" title="flow/src/first_ten.rs">{getLines(firstTenSrc, 3, 14)}</CodeBlock>
+<CodeBlock language="rust" title="flow/src/first_ten.rs">{getLines(firstTenSrc, 'flowgraph')}</CodeBlock>
 
 ## The Flow Graph
-Let's extend this example to print the numbers on a separate process. First, we need to specify that our flow graph will involve the network. We do this by replacing the `LocalDeploy<'a>` trait bound with the general `Deploy<'a>`. Then, we can use the `process_spec` to create a second process:
 
-<CodeBlock language="rust" title="flow/src/first_ten_distributed.rs">{getLines(firstTenDistSrc, 1, 9)}</CodeBlock>
+In a new file, let's extend this example to print the numbers on a separate process. First, we need to specify that our flow graph will involve the network. We do this by replacing the `LocalDeploy<'a>` trait bound with the general `Deploy<'a>`. Then, we can use the `process_spec` to create a second process.
+
+<CodeBlock language="rust" title="flow/src/first_ten_distributed.rs">{getLines(firstTenDistSrc, 'flowgraph_start')}</CodeBlock>
 
 Now, we can distribute our dataflow by using the `send_bincode` operator to mark where the data should be sent using bincode serialization.
 
-<CodeBlock language="rust">{getLines(firstTenDistSrc, 11, 14)}</CodeBlock>
+<CodeBlock language="rust">{getLines(firstTenDistSrc, 'flowgraph_numbers')}</CodeBlock>
+
+Finally, we return the handle for the second process.
+
+<CodeBlock language="rust">{getLines(firstTenDistSrc, 'flowgraph_return')}</CodeBlock>
 
 ## The Runtime
 Now that our graph spans multiple processes, our runtime entrypoint will involve multiple subgraphs. This means we can't get away with just the optimized dataflow. Instead, we must take the subgraph ID as a runtime parameter through `with_dynamic_id` to select the appropriate graph. In addition, our dataflow involves the network, so we take a `HydroCLI` runtime parameter (`cli`) so that processes can look up their network connections and instantiate the flow graph with access to it.
 
-In a new file:
-
-<CodeBlock language="rust" title="flow/src/first_ten_distributed.rs">{getLines(firstTenDistSrc, 19, 31)}</CodeBlock>
+<CodeBlock language="rust" title="flow/src/first_ten_distributed.rs">{getLines(firstTenDistSrc, 'runtime')}</CodeBlock>
 
 The corresponding binary in `src/bin/first_ten_distributed.rs` then instantiates the CLI and reads the process ID from the command line arguments:
 

@@ -1,3 +1,4 @@
+//[flowgraph_start]//
 use hydroflow_plus::*;
 use stageleft::*;
 
@@ -7,15 +8,21 @@ pub fn first_ten_distributed<'a, D: Deploy<'a>>(
 ) -> D::Process {
     let process = flow.process(process_spec);
     let second_process = flow.process(process_spec);
+    //[/flowgraph_start]//
 
+    //[flowgraph_numbers]//
     let numbers = flow.source_iter(&process, q!(0..10));
     numbers
         .send_bincode(&second_process)
         .for_each(q!(|n| println!("{}", n)));
+    //[/flowgraph_numbers]//
 
+    //[flowgraph_return]//
     second_process
+    //[/flowgraph_return]//
 }
 
+//[runtime]//
 use hydroflow_plus::util::cli::HydroCLI;
 use hydroflow_plus_cli_integration::{CLIRuntime, HydroflowPlusMeta};
 
@@ -29,6 +36,7 @@ pub fn first_ten_distributed_runtime<'a>(
         .optimize_default()
         .with_dynamic_id(q!(cli.meta.subgraph_id))
 }
+//[/runtime]//
 
 #[stageleft::runtime]
 #[cfg(test)]
