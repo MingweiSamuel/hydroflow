@@ -22,7 +22,7 @@ use pyo3::{create_exception, wrap_pymodule};
 use pyo3_asyncio::TaskLocals;
 use pythonize::pythonize;
 use tokio::sync::oneshot::Sender;
-use tokio::sync::RwLock;
+use tokio::sync::{Mutex, RwLock};
 
 mod cli;
 use hydro_deploy as core;
@@ -329,19 +329,19 @@ impl Deployment {
 
 #[pyclass(subclass)]
 pub struct Host {
-    underlying: Arc<RwLock<dyn core::Host>>,
+    underlying: Arc<Mutex<dyn core::Host>>,
 }
 
 #[pyclass(extends=Host, subclass)]
 struct LocalhostHost {
-    underlying: Arc<RwLock<core::LocalhostHost>>,
+    underlying: Arc<Mutex<core::LocalhostHost>>,
 }
 
 #[pymethods]
 impl LocalhostHost {
     fn client_only(&self, py: Python<'_>) -> PyResult<Py<PyAny>> {
-        let arc = Arc::new(RwLock::new(
-            self.underlying.try_read().unwrap().client_only(),
+        let arc = Arc::new(Mutex::new(
+            self.underlying.try_lock().unwrap().client_only(),
         ));
 
         Ok(Py::new(
@@ -373,7 +373,7 @@ impl GCPNetwork {
 
 #[pyclass(extends=Host, subclass)]
 struct GCPComputeEngineHost {
-    underlying: Arc<RwLock<core::GCPComputeEngineHost>>,
+    underlying: Arc<Mutex<core::GCPComputeEngineHost>>,
 }
 
 #[pymethods]
@@ -381,7 +381,7 @@ impl GCPComputeEngineHost {
     #[getter]
     fn internal_ip(&self) -> String {
         self.underlying
-            .blocking_read()
+            .blocking_lock()
             .launched
             .as_ref()
             .unwrap()
@@ -392,7 +392,7 @@ impl GCPComputeEngineHost {
     #[getter]
     fn external_ip(&self) -> Option<String> {
         self.underlying
-            .blocking_read()
+            .blocking_lock()
             .launched
             .as_ref()
             .unwrap()
@@ -403,7 +403,7 @@ impl GCPComputeEngineHost {
     #[getter]
     fn ssh_key_path(&self) -> String {
         self.underlying
-            .blocking_read()
+            .blocking_lock()
             .launched
             .as_ref()
             .unwrap()
@@ -416,7 +416,7 @@ impl GCPComputeEngineHost {
 
 #[pyclass(extends=Host, subclass)]
 struct AzureHost {
-    underlying: Arc<RwLock<core::AzureHost>>,
+    underlying: Arc<Mutex<core::AzureHost>>,
 }
 
 #[pymethods]
@@ -424,7 +424,7 @@ impl AzureHost {
     #[getter]
     fn internal_ip(&self) -> String {
         self.underlying
-            .blocking_read()
+            .blocking_lock()
             .launched
             .as_ref()
             .unwrap()
@@ -435,7 +435,7 @@ impl AzureHost {
     #[getter]
     fn external_ip(&self) -> Option<String> {
         self.underlying
-            .blocking_read()
+            .blocking_lock()
             .launched
             .as_ref()
             .unwrap()
@@ -446,7 +446,7 @@ impl AzureHost {
     #[getter]
     fn ssh_key_path(&self) -> String {
         self.underlying
-            .blocking_read()
+            .blocking_lock()
             .launched
             .as_ref()
             .unwrap()

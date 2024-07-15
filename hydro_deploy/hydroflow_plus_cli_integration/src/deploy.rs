@@ -16,7 +16,7 @@ use hydroflow_plus::location::{
 };
 use stageleft::internal::syn::parse_quote;
 use stageleft::q;
-use tokio::sync::RwLock;
+use tokio::sync::{Mutex, RwLock};
 
 use super::HydroflowPlusMeta;
 
@@ -40,7 +40,7 @@ pub trait DeployCrateWrapper {
         &self,
         port: &str,
         deployment: &mut Deployment,
-        on: &Arc<RwLock<impl Host + 'static>>,
+        on: &Arc<Mutex<impl Host + 'static>>,
     ) -> CustomClientPort {
         let sender_service = deployment.CustomService(on.clone(), vec![]);
         let mut sender_port = sender_service.read().await.declare_client(&sender_service);
@@ -87,7 +87,7 @@ impl DeployPort<DeployNode> {
     pub async fn create_sender(
         &self,
         deployment: &mut Deployment,
-        on: &Arc<RwLock<impl Host + 'static>>,
+        on: &Arc<Mutex<impl Host + 'static>>,
     ) -> CustomClientPort {
         self.node.create_sender(&self.port, deployment, on).await
     }
@@ -97,7 +97,7 @@ impl DeployPort<DeployCluster> {
     pub async fn create_senders(
         &self,
         deployment: &mut Deployment,
-        on: &Arc<RwLock<impl Host + 'static>>,
+        on: &Arc<Mutex<impl Host + 'static>>,
     ) -> Vec<CustomClientPort> {
         let mut out = vec![];
         for member in &self.node.members {

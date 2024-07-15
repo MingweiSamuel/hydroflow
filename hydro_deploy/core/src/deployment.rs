@@ -2,7 +2,7 @@ use std::sync::{Arc, Weak};
 
 use anyhow::Result;
 use futures::{StreamExt, TryStreamExt};
-use tokio::sync::RwLock;
+use tokio::sync::{Mutex, RwLock};
 
 use super::gcp::GCPNetwork;
 use super::{
@@ -13,7 +13,7 @@ use crate::ServiceBuilder;
 
 #[derive(Default)]
 pub struct Deployment {
-    pub hosts: Vec<Arc<RwLock<dyn Host>>>,
+    pub hosts: Vec<Arc<Mutex<dyn Host>>>,
     pub services: Vec<Weak<RwLock<dyn Service>>>,
     pub resource_pool: ResourcePool,
     last_resource_result: Option<Arc<ResourceResult>>,
@@ -27,7 +27,7 @@ impl Deployment {
     }
 
     #[allow(non_snake_case)]
-    pub fn Localhost(&mut self) -> Arc<RwLock<LocalhostHost>> {
+    pub fn Localhost(&mut self) -> Arc<Mutex<LocalhostHost>> {
         self.add_host(LocalhostHost::new)
     }
 
@@ -40,7 +40,7 @@ impl Deployment {
         region: impl Into<String>,
         network: Arc<RwLock<GCPNetwork>>,
         user: Option<String>,
-    ) -> Arc<RwLock<GCPComputeEngineHost>> {
+    ) -> Arc<Mutex<GCPComputeEngineHost>> {
         self.add_host(|id| {
             GCPComputeEngineHost::new(id, project, machine_type, image, region, network, user)
         })
@@ -49,7 +49,7 @@ impl Deployment {
     #[allow(non_snake_case)]
     pub fn CustomService(
         &mut self,
-        on: Arc<RwLock<dyn Host>>,
+        on: Arc<Mutex<dyn Host>>,
         external_ports: Vec<u16>,
     ) -> Arc<RwLock<CustomService>> {
         self.add_service(|id| CustomService::new(id, on, external_ports))
@@ -76,7 +76,7 @@ impl Deployment {
             }
 
             for host in self.hosts.iter_mut() {
-                host.write().await.collect_resources(&mut resource_batch);
+                host.lock().await.collect_resources(&mut resource_batch);
             }
 
             let result = Arc::new(
@@ -93,8 +93,8 @@ impl Deployment {
                 let hosts_provisioned =
                     self.hosts
                         .iter_mut()
-                        .map(|host: &mut Arc<RwLock<dyn Host>>| async {
-                            host.write().await.provision(&result).await;
+                        .map(|host: &mut Arc<Mutex<dyn Host>>| async {
+                            host.lock().await.provision(&result).await;
                         });
                 futures::future::join_all(hosts_provisioned)
             })
@@ -166,8 +166,8 @@ impl Deployment {
     pub fn add_host<T: Host + 'static, F: FnOnce(usize) -> T>(
         &mut self,
         host: F,
-    ) -> Arc<RwLock<T>> {
-        let arc = Arc::new(RwLock::new(host(self.next_host_id)));
+    ) -> Arc<Mutex<T>> {
+        let arc = Arc::new(Mutex::new(host(self.next_host_id)));
         self.next_host_id += 1;
 
         self.hosts.push(arc.clone());

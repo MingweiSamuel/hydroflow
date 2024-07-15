@@ -8,7 +8,7 @@ use async_recursion::async_recursion;
 use async_trait::async_trait;
 use dyn_clone::DynClone;
 use hydroflow_cli_integration::ServerPort;
-use tokio::sync::RwLock;
+use tokio::sync::{Mutex, RwLock};
 
 use super::HydroflowCrateService;
 use crate::{ClientStrategy, Host, HostStrategyGetter, LaunchedHost, ServerStrategy};
@@ -17,7 +17,7 @@ pub trait HydroflowSource: Send + Sync {
     fn source_path(&self) -> SourcePath;
     fn record_server_config(&mut self, config: ServerConfig);
 
-    fn host(&self) -> Arc<RwLock<dyn Host>>;
+    fn host(&self) -> Arc<Mutex<dyn Host>>;
     fn server(&self) -> Arc<dyn HydroflowServer>;
     fn record_server_strategy(&mut self, config: ServerStrategy);
 
@@ -60,7 +60,7 @@ pub trait HydroflowSink: Send + Sync {
     /// Returns a thunk that can be called to perform mutations that instantiate the sink, taking a mutable reference to this sink.
     fn instantiate_reverse(
         &self,
-        server_host: &Arc<RwLock<dyn Host>>,
+        server_host: &Arc<Mutex<dyn Host>>,
         server_sink: Arc<dyn HydroflowServer>,
         wrap_client_port: &dyn Fn(ServerConfig) -> ServerConfig,
     ) -> Result<ReverseSinkInstantiator>;
@@ -86,7 +86,7 @@ impl HydroflowSource for TaggedSource {
             .record_server_config(config);
     }
 
-    fn host(&self) -> Arc<RwLock<dyn Host>> {
+    fn host(&self) -> Arc<Mutex<dyn Host>> {
         self.source.try_read().unwrap().host()
     }
 
@@ -113,7 +113,7 @@ impl HydroflowSource for NullSourceSink {
         SourcePath::Null
     }
 
-    fn host(&self) -> Arc<RwLock<dyn Host>> {
+    fn host(&self) -> Arc<Mutex<dyn Host>> {
         panic!("null source has no host")
     }
 
@@ -136,7 +136,7 @@ impl HydroflowSink for NullSourceSink {
 
     fn instantiate_reverse(
         &self,
-        _server_host: &Arc<RwLock<dyn Host>>,
+        _server_host: &Arc<Mutex<dyn Host>>,
         _server_sink: Arc<dyn HydroflowServer>,
         _wrap_client_port: &dyn Fn(ServerConfig) -> ServerConfig,
     ) -> Result<ReverseSinkInstantiator> {
@@ -171,7 +171,7 @@ impl HydroflowSink for DemuxSink {
 
     fn instantiate_reverse(
         &self,
-        server_host: &Arc<RwLock<dyn Host>>,
+        server_host: &Arc<Mutex<dyn Host>>,
         server_sink: Arc<dyn HydroflowServer>,
         wrap_client_port: &dyn Fn(ServerConfig) -> ServerConfig,
     ) -> Result<Box<dyn FnOnce(&mut dyn Any) -> ServerStrategy>> {
@@ -215,7 +215,7 @@ impl HydroflowSink for DemuxSink {
 #[derive(Clone)]
 pub struct HydroflowPortConfig {
     pub service: Weak<RwLock<HydroflowCrateService>>,
-    pub service_host: Arc<RwLock<dyn Host>>,
+    pub service_host: Arc<Mutex<dyn Host>>,
     pub service_server_defns: Arc<RwLock<HashMap<String, ServerPort>>>,
     pub port: String,
     pub merge: bool,
@@ -246,7 +246,7 @@ impl HydroflowSource for HydroflowPortConfig {
         )
     }
 
-    fn host(&self) -> Arc<RwLock<dyn Host>> {
+    fn host(&self) -> Arc<Mutex<dyn Host>> {
         self.service_host.clone()
     }
 
@@ -290,13 +290,13 @@ impl HydroflowServer for HydroflowPortConfig {
     }
 
     async fn launched_host(&self) -> Arc<dyn LaunchedHost> {
-        self.service_host.read().await.launched().unwrap()
+        self.service_host.lock().await.launched().unwrap()
     }
 }
 
 pub enum SourcePath {
     Null,
-    Direct(Arc<RwLock<dyn Host>>),
+    Direct(Arc<Mutex<dyn Host>>),
     Tagged(Box<SourcePath>, u32),
 }
 
@@ -308,7 +308,7 @@ impl SourcePath {
     ) -> Result<(HostStrategyGetter, ServerConfig)> {
         match self {
             SourcePath::Direct(client_host) => {
-                let client_host = client_host.try_read().unwrap();
+                let client_host = client_host.try_lock().unwrap();
                 let (conn_type, bind_type) = server_host.strategy_as_server(client_host.deref())?;
                 let base_config = ServerConfig::from_strategy(&conn_type, Arc::new(server.clone()));
                 Ok((bind_type, base_config))
@@ -343,7 +343,7 @@ impl HydroflowSink for HydroflowPortConfig {
         let server_read = server.try_read().unwrap();
 
         let server_host_clone = server_read.on.clone();
-        let server_host = server_host_clone.try_read().unwrap();
+        let server_host = server_host_clone.try_lock().unwrap();
 
         let (bind_type, base_config) = client_path.plan(self, server_host.deref())?;
 
@@ -352,7 +352,7 @@ impl HydroflowSink for HydroflowPortConfig {
         let port = self.port.clone();
         Ok(Box::new(move || {
             let mut server_write = server.try_write().unwrap();
-            let bind_type = bind_type(server_write.on.try_write().unwrap().as_any_mut());
+            let bind_type = bind_type(server_write.on.try_lock().unwrap().as_any_mut());
 
             if merge {
                 let merge_config = server_write
@@ -377,7 +377,7 @@ impl HydroflowSink for HydroflowPortConfig {
 
     fn instantiate_reverse(
         &self,
-        server_host: &Arc<RwLock<dyn Host>>,
+        server_host: &Arc<Mutex<dyn Host>>,
         server_sink: Arc<dyn HydroflowServer>,
         wrap_client_port: &dyn Fn(ServerConfig) -> ServerConfig,
     ) -> Result<Box<dyn FnOnce(&mut dyn Any) -> ServerStrategy>> {
@@ -385,10 +385,10 @@ impl HydroflowSink for HydroflowPortConfig {
         let client_read = client.try_read().unwrap();
 
         let server_host_clone = server_host.clone();
-        let server_host = server_host_clone.try_read().unwrap();
+        let server_host = server_host_clone.try_lock().unwrap();
 
         let (conn_type, bind_type) =
-            server_host.strategy_as_server(client_read.on.try_read().unwrap().deref())?;
+            server_host.strategy_as_server(client_read.on.try_lock().unwrap().deref())?;
         let client_port = wrap_client_port(ServerConfig::from_strategy(&conn_type, server_sink));
 
         let client = client.clone();
@@ -415,7 +415,7 @@ impl HydroflowSink for HydroflowPortConfig {
                     .insert(port.clone(), client_port);
             };
 
-            let mut server_host = client_write.on.try_write().unwrap();
+            let mut server_host = client_write.on.try_lock().unwrap();
             bind_type(server_host.as_any_mut())
         }))
     }

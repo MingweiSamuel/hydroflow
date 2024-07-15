@@ -9,7 +9,7 @@ use async_trait::async_trait;
 use futures_core::Future;
 use hydroflow_cli_integration::{InitConfig, ServerPort};
 use serde::Serialize;
-use tokio::sync::RwLock;
+use tokio::sync::{Mutex, RwLock};
 
 use super::build::{build_crate_memoized, BuildError, BuildOutput, BuildParams};
 use super::ports::{self, HydroflowPortConfig, HydroflowSink, SourcePath};
@@ -20,7 +20,7 @@ use crate::{
 
 pub struct HydroflowCrateService {
     id: usize,
-    pub(super) on: Arc<RwLock<dyn Host>>,
+    pub(super) on: Arc<Mutex<dyn Host>>,
     build_params: BuildParams,
     perf: Option<PathBuf>,
     args: Option<Vec<String>>,
@@ -51,7 +51,7 @@ impl HydroflowCrateService {
     pub fn new(
         id: usize,
         src: PathBuf,
-        on: Arc<RwLock<dyn Host>>,
+        on: Arc<Mutex<dyn Host>>,
         bin: Option<String>,
         example: Option<String>,
         profile: Option<String>,
@@ -61,7 +61,7 @@ impl HydroflowCrateService {
         display_id: Option<String>,
         external_ports: Vec<u16>,
     ) -> Self {
-        let target_type = on.try_read().unwrap().target_type();
+        let target_type = on.try_lock().unwrap().target_type();
 
         let build_params = BuildParams::new(src, bin, example, profile, target_type, features);
 
@@ -168,7 +168,7 @@ impl Service for HydroflowCrateService {
 
         let mut host = self
             .on
-            .try_write()
+            .try_lock()
             .expect("No one should be reading/writing the host while resources are collected");
 
         host.request_custom_binary();
@@ -195,7 +195,7 @@ impl Service for HydroflowCrateService {
             || async {
                 let built = self.build().await?;
 
-                let mut host_write = self.on.write().await;
+                let mut host_write = self.on.lock().await;
                 let launched = host_write.provision(resource_result).await;
 
                 launched.copy_binary(built).await?;

@@ -3,9 +3,9 @@ use std::sync::Arc;
 use hydro_deploy::gcp::GCPNetwork;
 use hydro_deploy::{Deployment, Host, HydroflowCrate};
 use hydroflow_plus_cli_integration::DeployProcessSpec;
-use tokio::sync::RwLock;
+use tokio::sync::{Mutex, RwLock};
 
-type HostCreator = Box<dyn Fn(&mut Deployment) -> Arc<RwLock<dyn Host>>>;
+type HostCreator = Box<dyn Fn(&mut Deployment) -> Arc<Mutex<dyn Host>>>;
 
 // run with no args for localhost, with `gcp <GCP PROJECT>` for GCP
 #[tokio::main]
@@ -18,7 +18,7 @@ async fn main() {
         let network = Arc::new(RwLock::new(GCPNetwork::new(&project, None)));
 
         (
-            Box::new(move |deployment| -> Arc<RwLock<dyn Host>> {
+            Box::new(move |deployment| -> Arc<Mutex<dyn Host>> {
                 deployment.GCPComputeEngineHost(
                     &project,
                     "e2-micro",
@@ -33,7 +33,7 @@ async fn main() {
     } else {
         let localhost = deployment.Localhost();
         (
-            Box::new(move |_| -> Arc<RwLock<dyn Host>> { localhost.clone() }),
+            Box::new(move |_| -> Arc<Mutex<dyn Host>> { localhost.clone() }),
             "dev",
         )
     };
