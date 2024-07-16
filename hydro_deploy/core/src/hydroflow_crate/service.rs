@@ -109,7 +109,7 @@ impl HydroflowCrateService {
         &mut self,
         self_arc: &Arc<RwLock<HydroflowCrateService>>,
         my_port: String,
-        sink: &mut dyn HydroflowSink,
+        sink: &dyn HydroflowSink,
     ) -> Result<()> {
         let forward_res = sink.instantiate(&SourcePath::Direct(self.on.clone()));
         if let Ok(instantiated) = forward_res {
