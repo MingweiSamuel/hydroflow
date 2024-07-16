@@ -376,6 +376,9 @@
 <a href="#376" id="376">376</a>
 <a href="#377" id="377">377</a>
 <a href="#378" id="378">378</a>
+<a href="#379" id="379">379</a>
+<a href="#380" id="380">380</a>
+<a href="#381" id="381">381</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::borrow::Cow;
 <span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::net::SocketAddr;
@@ -398,9 +401,10 @@
 <span class="kw">use </span><span class="kw">super</span>::progress::ProgressTracker;
 <span class="kw">use </span><span class="kw">super</span>::util::async_retry;
 <span class="kw">use super</span>::{LaunchedBinary, LaunchedHost, ResourceResult, ServerStrategy};
+<span class="kw">use </span><span class="kw">crate</span>::hydroflow_crate::build::BuildOutput;
 <span class="kw">use </span><span class="kw">crate</span>::util::prioritized_broadcast;
 
-<span class="kw">struct </span>LaunchedSSHBinary {
+<span class="kw">struct </span>LaunchedSshBinary {
     _resource_result: Arc&lt;ResourceResult&gt;,
     session: <span class="prelude-ty">Option</span>&lt;AsyncSession&lt;TcpStream&gt;&gt;,
     channel: AsyncChannel&lt;TcpStream&gt;,
@@ -411,7 +415,7 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl </span>LaunchedBinary <span class="kw">for </span>LaunchedSSHBinary {
+</span><span class="kw">impl </span>LaunchedBinary <span class="kw">for </span>LaunchedSshBinary {
     <span class="kw">async fn </span>stdin(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Sender&lt;String&gt; {
         <span class="self">self</span>.stdin_sender.clone()
     }
@@ -459,7 +463,7 @@
     }
 }
 
-<span class="kw">impl </span>Drop <span class="kw">for </span>LaunchedSSHBinary {
+<span class="kw">impl </span>Drop <span class="kw">for </span>LaunchedSshBinary {
     <span class="kw">fn </span>drop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
         <span class="kw">let </span>session = <span class="self">self</span>.session.take().unwrap();
         std::thread::scope(|s| {
@@ -476,7 +480,7 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">pub trait </span>LaunchedSSHHost: Send + Sync {
+</span><span class="kw">pub trait </span>LaunchedSshHost: Send + Sync {
     <span class="kw">fn </span>get_internal_ip(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String;
     <span class="kw">fn </span>get_external_ip(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt;;
     <span class="kw">fn </span>get_cloud_provider(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String;
@@ -504,7 +508,7 @@
             ServerStrategy::Demux(demux) =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>config_map = HashMap::new();
                 <span class="kw">for </span>(key, underlying) <span class="kw">in </span>demux {
-                    config_map.insert(<span class="kw-2">*</span>key, LaunchedSSHHost::server_config(<span class="self">self</span>, underlying));
+                    config_map.insert(<span class="kw-2">*</span>key, LaunchedSshHost::server_config(<span class="self">self</span>, underlying));
                 }
 
                 ServerBindConfig::Demux(config_map)
@@ -512,13 +516,13 @@
             ServerStrategy::Merge(merge) =&gt; {
                 <span class="kw">let </span><span class="kw-2">mut </span>configs = <span class="macro">vec!</span>[];
                 <span class="kw">for </span>underlying <span class="kw">in </span>merge {
-                    configs.push(LaunchedSSHHost::server_config(<span class="self">self</span>, underlying));
+                    configs.push(LaunchedSshHost::server_config(<span class="self">self</span>, underlying));
                 }
 
                 ServerBindConfig::Merge(configs)
             }
             ServerStrategy::Tagged(underlying, id) =&gt; ServerBindConfig::Tagged(
-                Box::new(LaunchedSSHHost::server_config(<span class="self">self</span>, underlying)),
+                Box::new(LaunchedSshHost::server_config(<span class="self">self</span>, underlying)),
                 <span class="kw-2">*</span>id,
             ),
             ServerStrategy::Null =&gt; ServerBindConfig::Null,
@@ -575,12 +579,12 @@
 }
 
 <span class="attr">#[async_trait]
-</span><span class="kw">impl</span>&lt;T: LaunchedSSHHost&gt; LaunchedHost <span class="kw">for </span>T {
+</span><span class="kw">impl</span>&lt;T: LaunchedSshHost&gt; LaunchedHost <span class="kw">for </span>T {
     <span class="kw">fn </span>server_config(<span class="kw-2">&amp;</span><span class="self">self</span>, bind_type: <span class="kw-2">&amp;</span>ServerStrategy) -&gt; ServerBindConfig {
-        LaunchedSSHHost::server_config(<span class="self">self</span>, bind_type)
+        LaunchedSshHost::server_config(<span class="self">self</span>, bind_type)
     }
 
-    <span class="kw">async fn </span>copy_binary(<span class="kw-2">&amp;</span><span class="self">self</span>, binary: Arc&lt;(String, Vec&lt;u8&gt;, PathBuf)&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
+    <span class="kw">async fn </span>copy_binary(<span class="kw-2">&amp;</span><span class="self">self</span>, binary: <span class="kw-2">&amp;</span>BuildOutput) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt; {
         <span class="kw">let </span>session = <span class="self">self</span>.open_ssh_session().<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="kw">let </span>sftp = async_retry(
@@ -591,7 +595,7 @@
         .<span class="kw">await</span><span class="question-mark">?</span>;
 
         <span class="comment">// we may be deploying multiple binaries, so give each a unique name
-        </span><span class="kw">let </span>unique_name = <span class="kw-2">&amp;</span>binary.<span class="number">0</span>;
+        </span><span class="kw">let </span>unique_name = <span class="kw-2">&amp;</span>binary.unique_id;
 
         <span class="kw">let </span>user = <span class="self">self</span>.ssh_user();
         <span class="kw">let </span>binary_path = PathBuf::from(<span class="macro">format!</span>(<span class="string">"/home/{user}/hydro-{unique_name}"</span>));
@@ -602,7 +606,7 @@
             <span class="kw">let </span>sftp = <span class="kw-2">&amp;</span>sftp;
 
             ProgressTracker::rich_leaf(
-                <span class="macro">format!</span>(<span class="string">"uploading binary to /home/{user}/hydro-{unique_name}"</span>),
+                <span class="macro">format!</span>(<span class="string">"uploading binary to {}"</span>, binary_path.display()),
                 |set_progress, <span class="kw">_</span>| {
                     <span class="kw">let </span>binary = <span class="kw-2">&amp;</span>binary;
                     <span class="kw">let </span>binary_path = <span class="kw-2">&amp;</span>binary_path;
@@ -610,15 +614,17 @@
                         <span class="kw">let </span><span class="kw-2">mut </span>created_file = sftp.create(<span class="kw-2">&amp;</span>temp_path).<span class="kw">await</span><span class="question-mark">?</span>;
 
                         <span class="kw">let </span><span class="kw-2">mut </span>index = <span class="number">0</span>;
-                        <span class="kw">while </span>index &lt; binary.<span class="number">1</span>.len() {
+                        <span class="kw">while </span>index &lt; binary.bin_data.len() {
                             <span class="kw">let </span>written = created_file
                                 .write(
-                                    <span class="kw-2">&amp;</span>binary.<span class="number">1
-                                        </span>[index..std::cmp::min(index + <span class="number">128 </span>* <span class="number">1024</span>, binary.<span class="number">1</span>.len())],
+                                    <span class="kw-2">&amp;</span>binary.bin_data[index
+                                        ..std::cmp::min(index + <span class="number">128 </span>* <span class="number">1024</span>, binary.bin_data.len())],
                                 )
                                 .<span class="kw">await</span><span class="question-mark">?</span>;
                             index += written;
-                            set_progress(((index <span class="kw">as </span>f64 / binary.<span class="number">1</span>.len() <span class="kw">as </span>f64) * <span class="number">100.0</span>) <span class="kw">as </span>u64);
+                            set_progress(
+                                ((index <span class="kw">as </span>f64 / binary.bin_data.len() <span class="kw">as </span>f64) * <span class="number">100.0</span>) <span class="kw">as </span>u64,
+                            );
                         }
                         <span class="kw">let </span><span class="kw-2">mut </span>orig_file_stat = sftp.stat(<span class="kw-2">&amp;</span>temp_path).<span class="kw">await</span><span class="question-mark">?</span>;
                         orig_file_stat.perm = <span class="prelude-val">Some</span>(<span class="number">0o755</span>); <span class="comment">// allow the copied binary to be executed by anyone
@@ -649,19 +655,19 @@
     <span class="kw">async fn </span>launch_binary(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         id: String,
-        binary: Arc&lt;(String, Vec&lt;u8&gt;, PathBuf)&gt;,
+        binary: <span class="kw-2">&amp;</span>BuildOutput,
         args: <span class="kw-2">&amp;</span>[String],
         perf: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
-    ) -&gt; <span class="prelude-ty">Result</span>&lt;Arc&lt;RwLock&lt;<span class="kw">dyn </span>LaunchedBinary&gt;&gt;&gt; {
+    ) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>LaunchedBinary&gt;&gt; {
         <span class="kw">let </span>session = <span class="self">self</span>.open_ssh_session().<span class="kw">await</span><span class="question-mark">?</span>;
 
-        <span class="kw">let </span>unique_name = <span class="kw-2">&amp;</span>binary.<span class="number">0</span>;
+        <span class="kw">let </span>unique_name = <span class="kw-2">&amp;</span>binary.unique_id;
 
         <span class="kw">let </span>user = <span class="self">self</span>.ssh_user();
         <span class="kw">let </span>binary_path = PathBuf::from(<span class="macro">format!</span>(<span class="string">"/home/{user}/hydro-{unique_name}"</span>));
 
         <span class="kw">let </span>channel = ProgressTracker::leaf(
-            <span class="macro">format!</span>(<span class="string">"launching binary /home/{user}/hydro-{unique_name}"</span>),
+            <span class="macro">format!</span>(<span class="string">"launching binary {}"</span>, binary_path.display()),
             <span class="kw">async </span>{
                 <span class="kw">let </span><span class="kw-2">mut </span>channel =
                     async_retry(
@@ -685,7 +691,7 @@
                     .exec(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"{binary_path_string}{args_string}"</span>))
                     .<span class="kw">await</span><span class="question-mark">?</span>;
                 <span class="kw">if </span>perf.is_some() {
-                    <span class="macro">todo!</span>(<span class="string">"Perf profiling on remote machines is not supported"</span>);
+                    <span class="macro">todo!</span>(<span class="string">"Profiling on remote machines is not (yet) supported"</span>);
                 }
 
                 anyhow::Ok(channel)
@@ -715,7 +721,7 @@
                 <span class="macro">eprintln!</span>(<span class="string">"[{id}] {s}"</span>)
             });
 
-        <span class="prelude-val">Ok</span>(Arc::new(RwLock::new(LaunchedSSHBinary {
+        <span class="prelude-val">Ok</span>(Box::new(LaunchedSshBinary {
             _resource_result: <span class="self">self</span>.resource_result().clone(),
             session: <span class="prelude-val">Some</span>(session),
             channel,
@@ -723,7 +729,7 @@
             stdout_cli_receivers,
             stdout_receivers,
             stderr_receivers,
-        })))
+        }))
     }
 
     <span class="kw">async fn </span>forward_port(<span class="kw-2">&amp;</span><span class="self">self</span>, addr: <span class="kw-2">&amp;</span>SocketAddr) -&gt; <span class="prelude-ty">Result</span>&lt;SocketAddr&gt; {
