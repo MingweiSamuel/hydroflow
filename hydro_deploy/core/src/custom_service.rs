@@ -138,7 +138,7 @@ impl HydroflowSource for CustomClientPort {
 }
 
 impl HydroflowSink for CustomClientPort {
-    fn as_any_mut(&mut self) -> &mut dyn Any {
+    fn as_any(&self) -> &dyn Any {
         self
     }
 
@@ -151,7 +151,7 @@ impl HydroflowSink for CustomClientPort {
         server_host: &Arc<RwLock<dyn Host>>,
         server_sink: Arc<dyn HydroflowServer>,
         wrap_client_port: &dyn Fn(ServerConfig) -> ServerConfig,
-    ) -> Result<Box<dyn FnOnce(&mut dyn Any) -> ServerStrategy>> {
+    ) -> Result<Box<dyn FnOnce(&dyn Any) -> ServerStrategy>> {
         let client = self.on.upgrade().unwrap();
         let client_read = client.try_read().unwrap();
 
@@ -166,9 +166,9 @@ impl HydroflowSink for CustomClientPort {
         let server_host_clone = server_host_clone.clone();
         Ok(Box::new(move |me| {
             let mut server_host = server_host_clone.try_write().unwrap();
-            let client_port_val = &mut me.downcast_mut::<CustomClientPort>().unwrap().client_port;
-            client_port_val.take();
-            client_port_val.set(client_port).map_err(drop).unwrap();
+            me.downcast_ref::<CustomClientPort>()
+                .unwrap()
+                .record_server_config(client_port);
             bind_type(server_host.as_any_mut())
         }))
     }

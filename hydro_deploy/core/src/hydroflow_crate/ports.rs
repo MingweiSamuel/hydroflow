@@ -25,7 +25,7 @@ pub trait HydroflowSource: Send + Sync {
         config
     }
 
-    fn send_to(&self, sink: &mut dyn HydroflowSink) {
+    fn send_to(&self, sink: &dyn HydroflowSink) {
         let forward_res = sink.instantiate(&self.source_path());
         if let Ok(instantiated) = forward_res {
             self.record_server_config(instantiated());
@@ -36,7 +36,7 @@ pub trait HydroflowSource: Send + Sync {
                     self.wrap_reverse_server_config(p)
                 })
                 .unwrap();
-            self.record_server_strategy(instantiated(sink.as_any_mut()));
+            self.record_server_strategy(instantiated(sink.as_any()));
         }
     }
 }
@@ -47,10 +47,10 @@ pub trait HydroflowServer: DynClone + Send + Sync {
     async fn launched_host(&self) -> Arc<dyn LaunchedHost>;
 }
 
-pub type ReverseSinkInstantiator = Box<dyn FnOnce(&mut dyn Any) -> ServerStrategy>;
+pub type ReverseSinkInstantiator = Box<dyn FnOnce(&dyn Any) -> ServerStrategy>;
 
 pub trait HydroflowSink: Send + Sync {
-    fn as_any_mut(&mut self) -> &mut dyn Any;
+    fn as_any(&self) -> &dyn Any;
 
     /// Instantiate the sink as the source host connecting to the sink host.
     /// Returns a thunk that can be called to perform mutations that instantiate the sink.
@@ -67,31 +67,25 @@ pub trait HydroflowSink: Send + Sync {
 }
 
 pub struct TaggedSource {
-    pub source: Arc<RwLock<dyn HydroflowSource>>,
+    pub source: Arc<dyn HydroflowSource>,
     pub tag: u32,
 }
 
 impl HydroflowSource for TaggedSource {
     fn source_path(&self) -> SourcePath {
-        SourcePath::Tagged(
-            Box::new(self.source.try_read().unwrap().source_path()),
-            self.tag,
-        )
+        SourcePath::Tagged(Box::new(self.source.source_path()), self.tag)
     }
 
     fn record_server_config(&self, config: ServerConfig) {
-        self.source
-            .try_write()
-            .unwrap()
-            .record_server_config(config);
+        self.source.record_server_config(config);
     }
 
     fn host(&self) -> Arc<RwLock<dyn Host>> {
-        self.source.try_read().unwrap().host()
+        self.source.host()
     }
 
     fn server(&self) -> Arc<dyn HydroflowServer> {
-        self.source.try_read().unwrap().server()
+        self.source.server()
     }
 
     fn wrap_reverse_server_config(&self, config: ServerConfig) -> ServerConfig {
@@ -99,10 +93,7 @@ impl HydroflowSource for TaggedSource {
     }
 
     fn record_server_strategy(&self, config: ServerStrategy) {
-        self.source
-            .try_write()
-            .unwrap()
-            .record_server_strategy(config);
+        self.source.record_server_strategy(config);
     }
 }
 
@@ -126,7 +117,7 @@ impl HydroflowSource for NullSourceSink {
 }
 
 impl HydroflowSink for NullSourceSink {
-    fn as_any_mut(&mut self) -> &mut dyn Any {
+    fn as_any(&self) -> &dyn Any {
         self
     }
 
@@ -145,18 +136,18 @@ impl HydroflowSink for NullSourceSink {
 }
 
 pub struct DemuxSink {
-    pub demux: HashMap<u32, Arc<RwLock<dyn HydroflowSink>>>,
+    pub demux: HashMap<u32, Arc<dyn HydroflowSink>>,
 }
 
 impl HydroflowSink for DemuxSink {
-    fn as_any_mut(&mut self) -> &mut dyn Any {
+    fn as_any(&self) -> &dyn Any {
         self
     }
 
     fn instantiate(&self, client_host: &SourcePath) -> Result<Box<dyn FnOnce() -> ServerConfig>> {
         let mut thunk_map = HashMap::new();
         for (key, target) in &self.demux {
-            thunk_map.insert(*key, target.try_read().unwrap().instantiate(client_host)?);
+            thunk_map.insert(*key, target.instantiate(client_host)?);
         }
 
         Ok(Box::new(move || {
@@ -174,12 +165,12 @@ impl HydroflowSink for DemuxSink {
         server_host: &Arc<RwLock<dyn Host>>,
         server_sink: Arc<dyn HydroflowServer>,
         wrap_client_port: &dyn Fn(ServerConfig) -> ServerConfig,
-    ) -> Result<Box<dyn FnOnce(&mut dyn Any) -> ServerStrategy>> {
+    ) -> Result<Box<dyn FnOnce(&dyn Any) -> ServerStrategy>> {
         let mut thunk_map = HashMap::new();
         for (key, target) in &self.demux {
             thunk_map.insert(
                 *key,
-                target.try_write().unwrap().instantiate_reverse(
+                target.instantiate_reverse(
                     server_host,
                     server_sink.clone(),
                     // the parent wrapper selects the demux port for the parent defn, so do that first
@@ -189,22 +180,10 @@ impl HydroflowSink for DemuxSink {
         }
 
         Ok(Box::new(move |me| {
-            let me = me.downcast_mut::<DemuxSink>().unwrap();
+            let me = me.downcast_ref::<DemuxSink>().unwrap();
             let instantiated_map = thunk_map
                 .into_iter()
-                .map(|(key, thunk)| {
-                    (
-                        key,
-                        thunk(
-                            me.demux
-                                .get_mut(&key)
-                                .unwrap()
-                                .try_write()
-                                .unwrap()
-                                .as_any_mut(),
-                        ),
-                    )
-                })
+                .map(|(key, thunk)| (key, thunk(me.demux.get(&key).unwrap().as_any())))
                 .collect();
 
             ServerStrategy::Demux(instantiated_map)
@@ -334,7 +313,7 @@ impl SourcePath {
 }
 
 impl HydroflowSink for HydroflowPortConfig {
-    fn as_any_mut(&mut self) -> &mut dyn Any {
+    fn as_any(&self) -> &dyn Any {
         self
     }
 
@@ -380,7 +359,7 @@ impl HydroflowSink for HydroflowPortConfig {
         server_host: &Arc<RwLock<dyn Host>>,
         server_sink: Arc<dyn HydroflowServer>,
         wrap_client_port: &dyn Fn(ServerConfig) -> ServerConfig,
-    ) -> Result<Box<dyn FnOnce(&mut dyn Any) -> ServerStrategy>> {
+    ) -> Result<Box<dyn FnOnce(&dyn Any) -> ServerStrategy>> {
         let client = self.service.upgrade().unwrap();
         let client_read = client.try_read().unwrap();
 

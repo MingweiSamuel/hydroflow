@@ -133,7 +133,7 @@ impl HydroflowCrateService {
 
             assert!(!self.port_to_bind.contains_key(&my_port));
             self.port_to_bind
-                .insert(my_port, instantiated(sink.as_any_mut()));
+                .insert(my_port, instantiated(sink.as_any()));
 
             Ok(())
         }
