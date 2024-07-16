@@ -2,6 +2,3 @@
 rustflags = [
     "-Zgit=shallow-index,shallow-deps"
 ]
-
-[target.x86_64-unknown-linux-musl]
-linker = "rust-lld"
