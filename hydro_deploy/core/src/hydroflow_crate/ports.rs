@@ -15,17 +15,17 @@ use crate::{ClientStrategy, Host, HostStrategyGetter, LaunchedHost, ServerStrate
 
 pub trait HydroflowSource: Send + Sync {
     fn source_path(&self) -> SourcePath;
-    fn record_server_config(&mut self, config: ServerConfig);
+    fn record_server_config(&self, config: ServerConfig);
 
     fn host(&self) -> Arc<RwLock<dyn Host>>;
     fn server(&self) -> Arc<dyn HydroflowServer>;
-    fn record_server_strategy(&mut self, config: ServerStrategy);
+    fn record_server_strategy(&self, config: ServerStrategy);
 
     fn wrap_reverse_server_config(&self, config: ServerConfig) -> ServerConfig {
         config
     }
 
-    fn send_to(&mut self, sink: &mut dyn HydroflowSink) {
+    fn send_to(&self, sink: &mut dyn HydroflowSink) {
         let forward_res = sink.instantiate(&self.source_path());
         if let Ok(instantiated) = forward_res {
             self.record_server_config(instantiated());
@@ -79,7 +79,7 @@ impl HydroflowSource for TaggedSource {
         )
     }
 
-    fn record_server_config(&mut self, config: ServerConfig) {
+    fn record_server_config(&self, config: ServerConfig) {
         self.source
             .try_write()
             .unwrap()
@@ -98,7 +98,7 @@ impl HydroflowSource for TaggedSource {
         ServerConfig::Tagged(Box::new(config), self.tag)
     }
 
-    fn record_server_strategy(&mut self, config: ServerStrategy) {
+    fn record_server_strategy(&self, config: ServerStrategy) {
         self.source
             .try_write()
             .unwrap()
@@ -121,8 +121,8 @@ impl HydroflowSource for NullSourceSink {
         panic!("null source has no server")
     }
 
-    fn record_server_config(&mut self, _config: ServerConfig) {}
-    fn record_server_strategy(&mut self, _config: ServerStrategy) {}
+    fn record_server_config(&self, _config: ServerConfig) {}
+    fn record_server_strategy(&self, _config: ServerStrategy) {}
 }
 
 impl HydroflowSink for NullSourceSink {
@@ -263,7 +263,7 @@ impl HydroflowSource for HydroflowPortConfig {
         })
     }
 
-    fn record_server_config(&mut self, config: ServerConfig) {
+    fn record_server_config(&self, config: ServerConfig) {
         let from = self.service.upgrade().unwrap();
         let mut from_write = from.try_write().unwrap();
 
@@ -272,7 +272,7 @@ impl HydroflowSource for HydroflowPortConfig {
         from_write.port_to_server.insert(self.port.clone(), config);
     }
 
-    fn record_server_strategy(&mut self, config: ServerStrategy) {
+    fn record_server_strategy(&self, config: ServerStrategy) {
         let from = self.service.upgrade().unwrap();
         let mut from_write = from.try_write().unwrap();
 
