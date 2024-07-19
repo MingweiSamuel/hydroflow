@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use anyhow::{Context, Result};
+use anyhow::{ensure, Context, Result};
 use async_process::{Command, Stdio};
 use async_trait::async_trait;
 use hydroflow_cli_integration::ServerBindConfig;
@@ -154,19 +154,39 @@ impl LaunchedHost for LaunchedLocalhost {
     ) -> Result<Box<dyn LaunchedBinary>> {
         let mut command = if let Some(perf) = perf {
             println!("Profiling binary with perf");
-            let mut tmp = Command::new("perf");
-            tmp.args([
-                "record",
-                "-F",
-                &perf.frequency.to_string(),
-                "--call-graph",
-                "dwarf,64000",
-                "-o",
-            ])
-            .arg(&perf.output_file)
-            .arg(&binary.bin_path)
-            .args(args);
-            tmp
+            let mut setup = Command::new("sudo sh -c 'echo -1 > /proc/sys/kernel/perf_event_paranoid && echo 0 > /proc/sys/kernel/kptr_restrict'");
+            let setup_exit = setup
+                .spawn()
+                .with_context(|| format!("Failed to spawn perf setup command: {:?}", setup))?
+                .status()
+                .await
+                .with_context(|| {
+                    format!(
+                        "Failed to execute setup command due to IO error: {:?}",
+                        setup
+                    )
+                })?
+                .code();
+            ensure!(
+                Some(0) == setup_exit,
+                "Setup command completed with error status code: {:?}",
+                setup_exit
+            );
+
+            let mut command = Command::new("perf");
+            command
+                .args([
+                    "record",
+                    "-F",
+                    &perf.frequency.to_string(),
+                    "--call-graph",
+                    "dwarf,64000",
+                    "-o",
+                ])
+                .arg(&perf.output_file)
+                .arg(&binary.bin_path)
+                .args(args);
+            command
         } else {
             let mut tmp = Command::new(&binary.bin_path);
             tmp.args(args);

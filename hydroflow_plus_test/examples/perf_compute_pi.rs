@@ -26,7 +26,8 @@ async fn main() {
                 deployment.GcpComputeEngineHost(
                     &project,
                     "e2-micro",
-                    "perf-image",
+                    // "projects/bigger-not-badder/global/images/perf-image",
+                    "debian-12-bookworm-arm64-v20240709",
                     "us-central1-a",
                     network.clone(),
                     None,
