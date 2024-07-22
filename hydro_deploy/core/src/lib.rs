@@ -83,8 +83,6 @@ pub trait LaunchedBinary: Send + Sync {
     fn stdout(&self) -> mpsc::UnboundedReceiver<String>;
     fn stderr(&self) -> mpsc::UnboundedReceiver<String>;
 
-    fn exit_code(&self) -> Option<i32>;
-
     async fn wait(&mut self) -> Option<i32>;
 }
 

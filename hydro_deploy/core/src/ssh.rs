@@ -64,18 +64,9 @@ impl LaunchedBinary for LaunchedSshBinary {
         receiver
     }
 
-    fn exit_code(&self) -> Option<i32> {
-        // until the program exits, the exit status is meaningless
-        if self.channel.eof() {
-            self.channel.exit_status().ok()
-        } else {
-            None
-        }
-    }
-
     async fn wait(&mut self) -> Option<i32> {
         self.channel.wait_eof().await.unwrap();
-        let ret = self.exit_code();
+        let ret = self.channel.exit_status().ok();
         self.channel.wait_close().await.unwrap();
         ret
     }

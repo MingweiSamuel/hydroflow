@@ -1,12 +1,13 @@
 use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::path::PathBuf;
+use std::process::Stdio;
 use std::sync::Arc;
 
 use anyhow::{Context, Result};
-use async_process::{Command, Stdio};
 use async_trait::async_trait;
 use hydroflow_cli_integration::ServerBindConfig;
+use tokio::process::Command;
 
 use super::{
     ClientStrategy, Host, HostTargetType, LaunchedBinary, LaunchedHost, ResourceBatch,

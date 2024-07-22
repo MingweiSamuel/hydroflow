@@ -3,15 +3,16 @@ use std::os::unix::process::ExitStatusExt;
 use std::sync::{Arc, Mutex};
 
 use async_trait::async_trait;
-use futures::io::BufReader;
-use futures::{AsyncBufReadExt, AsyncWriteExt};
+use tokio::io::{AsyncBufReadExt, AsyncWriteExt, BufReader};
+use tokio::process::Child;
 use tokio::sync::{mpsc, oneshot};
+use tokio_stream::wrappers::LinesStream;
 
 use crate::util::prioritized_broadcast;
 use crate::LaunchedBinary;
 
 pub struct LaunchedLocalhostBinary {
-    child: Mutex<async_process::Child>,
+    child: Mutex<Child>,
     stdin_sender: mpsc::UnboundedSender<String>,
     stdout_cli_receivers: Arc<Mutex<Option<oneshot::Sender<String>>>>,
     stdout_receivers: Arc<Mutex<Vec<mpsc::UnboundedSender<String>>>>,
@@ -38,7 +39,7 @@ impl Drop for LaunchedLocalhostBinary {
 }
 
 impl LaunchedLocalhostBinary {
-    pub fn new(mut child: async_process::Child, id: String) -> Self {
+    pub fn new(mut child: Child, id: String) -> Self {
         let (stdin_sender, mut stdin_receiver) = mpsc::unbounded_channel::<String>();
         let mut stdin = child.stdin.take().unwrap();
         tokio::spawn(async move {
@@ -53,11 +54,11 @@ impl LaunchedLocalhostBinary {
 
         let id_clone = id.clone();
         let (stdout_cli_receivers, stdout_receivers) = prioritized_broadcast(
-            BufReader::new(child.stdout.take().unwrap()).lines(),
+            LinesStream::new(BufReader::new(child.stdout.take().unwrap()).lines()),
             move |s| println!("[{id_clone}] {s}"),
         );
         let (_, stderr_receivers) = prioritized_broadcast(
-            BufReader::new(child.stderr.take().unwrap()).lines(),
+            LinesStream::new(BufReader::new(child.stderr.take().unwrap()).lines()),
             move |s| eprintln!("[{id}] {s}"),
         );
 
@@ -103,23 +104,13 @@ impl LaunchedBinary for LaunchedLocalhostBinary {
         receiver
     }
 
-    fn exit_code(&self) -> Option<i32> {
-        self.child
-            .lock()
-            .unwrap()
-            .try_status()
-            .ok()
-            .flatten()
-            .and_then(|c| {
-                #[cfg(unix)]
-                return c.code().or(c.signal());
-                #[cfg(not(unix))]
-                return c.code();
-            })
-    }
-
     async fn wait(&mut self) -> Option<i32> {
-        let _ = self.child.get_mut().unwrap().status().await;
-        self.exit_code()
+        let status = self.child.get_mut().unwrap().wait().await;
+        status.ok().and_then(|c| {
+            #[cfg(unix)]
+            return c.code().or(c.signal());
+            #[cfg(not(unix))]
+            return c.code();
+        })
     }
 }

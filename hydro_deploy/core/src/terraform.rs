@@ -1,13 +1,13 @@
 use std::collections::HashMap;
-use std::io::{BufRead, BufReader};
-use std::process::{ChildStdout, Command as StdCommand};
-use std::sync::{Arc, RwLock};
+use std::process::{Command as StdCommand, Stdio};
+use std::sync::Arc;
 
 use anyhow::{bail, Context, Result};
-use async_process::Stdio;
 use serde::{Deserialize, Serialize};
 use tempfile::TempDir;
-use tokio::process::{Child, Command};
+use tokio::io::{AsyncBufReadExt, BufReader};
+use tokio::process::{Child, ChildStdout, Command};
+use tokio::sync::Mutex;
 
 use super::progress::ProgressTracker;
 
@@ -19,14 +19,14 @@ pub static TERRAFORM_ALPHABET: [char; 16] = [
 #[derive(Default)]
 pub struct TerraformPool {
     counter: u32,
-    active_applies: HashMap<u32, Arc<tokio::sync::RwLock<TerraformApply>>>,
+    active_applies: HashMap<u32, Arc<Mutex<TerraformApply>>>,
 }
 
 impl TerraformPool {
     fn create_apply(
         &mut self,
         deployment_folder: TempDir,
-    ) -> Result<(u32, Arc<tokio::sync::RwLock<TerraformApply>>)> {
+    ) -> Result<(u32, Arc<Mutex<TerraformApply>>)> {
         let next_counter = self.counter;
         self.counter += 1;
 
@@ -50,10 +50,10 @@ impl TerraformPool {
             .spawn()
             .context("Failed to spawn `terraform`. Is it installed?")?;
 
-        let spawned_id = spawned_child.id();
+        let spawned_id = spawned_child.id().unwrap();
 
-        let deployment = Arc::new(tokio::sync::RwLock::new(TerraformApply {
-            child: Some((spawned_id, Arc::new(RwLock::new(spawned_child)))),
+        let deployment = Arc::new(Mutex::new(TerraformApply {
+            child: Some((spawned_id, Arc::new(Mutex::new(spawned_child)))),
             deployment_folder: Some(deployment_folder),
         }));
 
@@ -147,7 +147,7 @@ impl TerraformBatch {
             let output = ProgressTracker::with_group(
                 "apply",
                 Some(self.resource.values().map(|r| r.len()).sum()),
-                || async { apply.write().await.output().await },
+                || async { apply.lock().await.output().await },
             )
             .await;
             pool.drop_apply(apply_id);
@@ -158,16 +158,16 @@ impl TerraformBatch {
 }
 
 struct TerraformApply {
-    child: Option<(u32, Arc<RwLock<Child>>)>,
+    child: Option<(u32, Arc<Mutex<Child>>)>,
     deployment_folder: Option<TempDir>,
 }
 
 async fn display_apply_outputs(stdout: &mut ChildStdout) {
-    let lines = BufReader::new(stdout).lines();
+    let mut lines = BufReader::new(stdout).lines();
     let mut waiting_for_result = HashMap::new();
 
-    for line in lines {
-        if let Ok(line) = line {
+    while let Ok(Some(line)) = lines.next_line().await {
+        {
             let mut split = line.split(':');
             if let Some(first) = split.next() {
                 if first.chars().all(|c| c != ' ')
@@ -203,16 +203,14 @@ async fn display_apply_outputs(stdout: &mut ChildStdout) {
                     }
                 }
             }
-        } else {
-            break;
         }
     }
 }
 
-fn filter_terraform_logs(child: &mut Child) {
-    let lines = BufReader::new(child.stdout.take().unwrap()).lines();
-    for line in lines {
-        if let Ok(line) = line {
+async fn filter_terraform_logs(child: &mut Child) {
+    let mut lines = BufReader::new(child.stdout.take().unwrap()).lines();
+    while let Ok(Some(line)) = lines.next_line().await {
+        {
             let mut split = line.split(':');
             if let Some(first) = split.next() {
                 if first.chars().all(|c| c != ' ')
@@ -222,8 +220,6 @@ fn filter_terraform_logs(child: &mut Child) {
                     println!("[terraform] {}", line);
                 }
             }
-        } else {
-            break;
         }
     }
 }
@@ -231,26 +227,26 @@ fn filter_terraform_logs(child: &mut Child) {
 impl TerraformApply {
     async fn output(&mut self) -> Result<TerraformResult> {
         let (_, child) = self.child.as_ref().unwrap().clone();
-        let mut stdout = child.write().unwrap().stdout.take().unwrap();
-        let stderr = child.write().unwrap().stderr.take().unwrap();
 
-        let status = child.write().unwrap().wait().await.unwrap();
+        let mut child_lock = child.lock().await;
+        let mut stdout = child_lock.stdout.take().unwrap();
+        let stderr = child_lock.stderr.take().unwrap();
+        let status = child_lock.wait().await.unwrap();
+        drop(child_lock);
 
         let display_apply = display_apply_outputs(&mut stdout);
-        let stderr_loop = tokio::task::spawn_blocking(move || {
+        let stderr_loop = async {
             let mut lines = BufReader::new(stderr).lines();
-            while let Some(Ok(line)) = lines.next() {
+            while let Ok(Some(line)) = lines.next_line().await {
                 ProgressTracker::println(&format!("[terraform] {}", line));
             }
-        });
+        };
 
         let _ = futures::join!(display_apply, stderr_loop);
 
-        let status = status.await;
-
         self.child = None;
 
-        if !status.unwrap().success() {
+        if !status.success() {
             bail!("Terraform deployment failed");
         }
 
@@ -301,7 +297,7 @@ async fn destroy_deployment(deployment_folder: TempDir) {
         .spawn()
         .expect("Failed to spawn terraform destroy command");
 
-    filter_terraform_logs(&mut destroy_child);
+    filter_terraform_logs(&mut destroy_child).await;
 
     if !destroy_child
         .wait()
@@ -317,7 +313,8 @@ async fn destroy_deployment(deployment_folder: TempDir) {
 
 impl Drop for TerraformApply {
     fn drop(&mut self) {
-        if let Some((pid, child)) = self.child.take() {
+        let child = self.child.take();
+        if let Some((pid, child)) = child {
             #[cfg(unix)]
             nix::sys::signal::kill(
                 nix::unistd::Pid::from_raw(pid as i32),
@@ -327,15 +324,14 @@ impl Drop for TerraformApply {
             #[cfg(not(unix))]
             let _ = pid;
 
-            let mut child_write = child.write().unwrap();
-            if child_write.try_wait().unwrap().is_none() {
-                println!("Waiting for Terraform apply to finish...");
-                child_write.wait().unwrap();
-            }
+            tokio::task::spawn(async move {
+                child.lock().await.wait().await.unwrap();
+            });
         }
 
-        if let Some(deployment_folder) = self.deployment_folder.take() {
-            destroy_deployment(deployment_folder);
+        let deployment_folder = self.deployment_folder.take();
+        if let Some(deployment_folder) = deployment_folder {
+            tokio::task::spawn(destroy_deployment(deployment_folder));
         }
     }
 }
@@ -366,7 +362,7 @@ pub struct TerraformResult {
 impl Drop for TerraformResult {
     fn drop(&mut self) {
         if let Some(deployment_folder) = self.deployment_folder.take() {
-            destroy_deployment(deployment_folder);
+            tokio::task::spawn(destroy_deployment(deployment_folder));
         }
     }
 }

@@ -1,10 +1,10 @@
+use std::future::Future;
 use std::io;
 use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use anyhow::Result;
-use futures::{Future, StreamExt};
-use futures_core::Stream;
+use futures::{Stream, StreamExt};
 use tokio::sync::{mpsc, oneshot};
 
 pub async fn async_retry<T, F: Future<Output = Result<T>>>(
@@ -40,7 +40,7 @@ pub fn prioritized_broadcast<T: Stream<Item = io::Result<String>> + Send + Unpin
     let weak_receivers = Arc::downgrade(&receivers);
 
     tokio::spawn(async move {
-        while let Some(Result::Ok(line)) = lines.next().await {
+        while let Some(Ok(line)) = lines.next().await {
             if let Some(cli_receivers) = weak_priority_receivers.upgrade() {
                 let mut cli_receivers = cli_receivers.lock().unwrap();
 
