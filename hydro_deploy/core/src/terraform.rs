@@ -1,14 +1,13 @@
 use std::collections::HashMap;
 use std::io::{BufRead, BufReader};
-#[cfg(unix)]
-use std::os::unix::process::CommandExt;
-use std::process::{Child, ChildStdout, Command};
+use std::process::{ChildStdout, Command as StdCommand};
 use std::sync::{Arc, RwLock};
 
 use anyhow::{bail, Context, Result};
 use async_process::Stdio;
 use serde::{Deserialize, Serialize};
 use tempfile::TempDir;
+use tokio::process::{Child, Command};
 
 use super::progress::ProgressTracker;
 
@@ -31,7 +30,7 @@ impl TerraformPool {
         let next_counter = self.counter;
         self.counter += 1;
 
-        let mut apply_command = Command::new("terraform");
+        let mut apply_command = StdCommand::new("terraform");
 
         apply_command
             .current_dir(deployment_folder.path())
@@ -42,10 +41,10 @@ impl TerraformPool {
 
         #[cfg(unix)]
         {
-            apply_command.process_group(0);
+            std::os::unix::process::CommandExt::process_group(&mut apply_command, 0);
         }
 
-        let spawned_child = apply_command
+        let spawned_child = Command::from(apply_command)
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .spawn()
@@ -136,6 +135,7 @@ impl TerraformBatch {
                 .spawn()
                 .context("Failed to spawn `terraform`. Is it installed?")?
                 .wait()
+                .await
                 .context("Failed to launch terraform init command")?
                 .success()
             {
@@ -234,10 +234,7 @@ impl TerraformApply {
         let mut stdout = child.write().unwrap().stdout.take().unwrap();
         let stderr = child.write().unwrap().stderr.take().unwrap();
 
-        let status = tokio::task::spawn_blocking(move || {
-            // it is okay for this thread to keep running even if the future is cancelled
-            child.write().unwrap().wait().unwrap()
-        });
+        let status = child.write().unwrap().wait().await.unwrap();
 
         let display_apply = display_apply_outputs(&mut stdout);
         let stderr_loop = tokio::task::spawn_blocking(move || {
@@ -257,7 +254,7 @@ impl TerraformApply {
             bail!("Terraform deployment failed");
         }
 
-        let mut output_command = Command::new("terraform");
+        let mut output_command = StdCommand::new("terraform");
         output_command
             .current_dir(self.deployment_folder.as_ref().unwrap().path())
             .arg("output")
@@ -265,11 +262,12 @@ impl TerraformApply {
 
         #[cfg(unix)]
         {
-            output_command.process_group(0);
+            std::os::unix::process::CommandExt::process_group(&mut output_command, 0);
         }
 
-        let output = output_command
+        let output = Command::from(output_command)
             .output()
+            .await
             .context("Failed to read Terraform outputs")?;
 
         Ok(TerraformResult {
@@ -279,13 +277,13 @@ impl TerraformApply {
     }
 }
 
-fn destroy_deployment(deployment_folder: TempDir) {
+async fn destroy_deployment(deployment_folder: TempDir) {
     println!(
         "Destroying terraform deployment at {}",
         deployment_folder.path().display()
     );
 
-    let mut destroy_command = Command::new("terraform");
+    let mut destroy_command = StdCommand::new("terraform");
     destroy_command
         .current_dir(deployment_folder.path())
         .arg("destroy")
@@ -296,10 +294,10 @@ fn destroy_deployment(deployment_folder: TempDir) {
 
     #[cfg(unix)]
     {
-        destroy_command.process_group(0);
+        std::os::unix::process::CommandExt::process_group(&mut destroy_command, 0);
     }
 
-    let mut destroy_child = destroy_command
+    let mut destroy_child = Command::from(destroy_command)
         .spawn()
         .expect("Failed to spawn terraform destroy command");
 
@@ -307,6 +305,7 @@ fn destroy_deployment(deployment_folder: TempDir) {
 
     if !destroy_child
         .wait()
+        .await
         .expect("Failed to destroy terraform deployment")
         .success()
     {
