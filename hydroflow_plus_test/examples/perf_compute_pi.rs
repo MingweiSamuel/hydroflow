@@ -27,7 +27,7 @@ async fn main() {
                     &project,
                     "e2-micro",
                     // "projects/bigger-not-badder/global/images/perf-image",
-                    "debian-12-bookworm-arm64-v20240709",
+                    "debian-12-bookworm-v20240709",
                     "us-central1-a",
                     network.clone(),
                     None,

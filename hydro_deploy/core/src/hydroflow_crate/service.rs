@@ -247,7 +247,7 @@ impl Service for HydroflowCrateService {
 
                 let ready_line = ProgressTracker::leaf(
                     "waiting for ready".to_string(),
-                    tokio::time::timeout(Duration::from_secs(60), stdout_receiver),
+                    tokio::time::timeout(Duration::from_secs(120), stdout_receiver),
                 )
                 .await??;
                 if ready_line.starts_with("ready: ") {
