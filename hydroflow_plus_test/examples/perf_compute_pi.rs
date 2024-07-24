@@ -26,7 +26,7 @@ async fn main() {
                 deployment.GcpComputeEngineHost(
                     &project,
                     "e2-micro",
-                    "perf-image",
+                    "debian-12-bookworm-v20240709",
                     "us-central1-a",
                     network.clone(),
                     None,
