@@ -9,7 +9,9 @@ use std::time::Duration;
 use anyhow::{Context, Result};
 use async_channel::{Receiver, Sender};
 use async_ssh2_lite::ssh2::ErrorCode;
-use async_ssh2_lite::{AsyncChannel, AsyncSession, Error, SessionConfiguration};
+use async_ssh2_lite::{
+    AsyncChannel, AsyncSession, AsyncSessionStream, Error, SessionConfiguration,
+};
 use async_trait::async_trait;
 use futures::io::BufReader;
 use futures::{AsyncBufReadExt, AsyncReadExt, AsyncWriteExt, StreamExt};
@@ -90,10 +92,12 @@ impl Drop for LaunchedSSHBinary {
         let mut channel = self.channel.take().unwrap();
         let perf = self.perf.take();
         tokio::task::spawn(async move {
-            channel.write_all(&[b'\x03']).await.unwrap();
-            channel.send_eof().await?;
-            channel.wait_eof().await?;
-            channel.wait_close().await?;
+            {
+                channel.write_all(&[b'\x03']).await.unwrap();
+                channel.send_eof().await?;
+                channel.wait_eof().await?;
+                channel.wait_close().await?;
+            }
             // Copy perf file down
             if let Some(perf) = perf {
                 let output_file = perf.output_file.to_str().unwrap();
@@ -308,7 +312,10 @@ impl<T: LaunchedSSHHost> LaunchedHost for T {
         let channel = ProgressTracker::leaf(
             format!("launching binary /home/{user}/hydro-{unique_name}"),
             async {
-                let mut channel =
+                async fn open_channel<S>(session: &AsyncSession<S>) -> Result<AsyncChannel<S>>
+                where
+                    S: AsyncSessionStream + Send + Sync + 'static,
+                {
                     async_retry(
                         &|| async {
                             Ok(tokio::time::timeout(
@@ -320,30 +327,16 @@ impl<T: LaunchedSSHHost> LaunchedHost for T {
                         10,
                         Duration::from_secs(1),
                     )
-                    .await?;
+                    .await
+                }
                 // Launch with perf if specified, also copy local binary to expected place for perf report to work
                 let perf_wrapper = if let Some(perf) = perf.clone() {
                     {
-                        let mut setup = Command::new("sudo sh -c 'echo -1 > /proc/sys/kernel/perf_event_paranoid && echo 0 > /proc/sys/kernel/kptr_restrict'");
-                        let setup_exit = setup
-                            .spawn()
-                            .with_context(|| {
-                                format!("Failed to spawn perf setup command: {:?}", setup)
-                            })?
-                            .status()
-                            .await
-                            .with_context(|| {
-                                format!(
-                                    "Failed to execute setup command due to IO error: {:?}",
-                                    setup
-                                )
-                            })?
-                            .code();
-                        ensure!(
-                            Some(0) == setup_exit,
-                            "Setup command completed with error status code: {:?}",
-                            setup_exit
-                        );
+                        let mut channel = open_channel(&session).await?;
+                        channel.exec("sudo sh -c 'echo -1 > /proc/sys/kernel/perf_event_paranoid && echo 0 > /proc/sys/kernel/kptr_restrict'").await?;
+                        channel.send_eof().await?;
+                        channel.wait_eof().await?;
+                        channel.wait_close().await?;
                     }
 
                     // Copy local binary to {output_file}.bins/home/{user}/hydro-{unique_name}
@@ -365,6 +358,8 @@ impl<T: LaunchedSSHHost> LaunchedHost for T {
                     .iter()
                     .map(|s| shell_escape::unix::escape(Cow::from(s)))
                     .fold("".to_string(), |acc, v| format!("{acc} {v}"));
+
+                let mut channel = open_channel(&session).await?;
                 channel
                     .exec(&format!("{perf_wrapper}{binary_path_string}{args_string}"))
                     .await?;
