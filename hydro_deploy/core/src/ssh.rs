@@ -122,12 +122,40 @@ impl Drop for LaunchedSshBinary {
                                                 .await?;
                                             index += bytes_read as u64;
                                         }
+                                    }
+                                    Err(Error::Ssh2(ssh2_err))
+                                        if ErrorCode::SFTP(2) == ssh2_err.code() =>
+                                    {
+                                        // File not found, probably due to a previous error.
+                                        return Ok(())
+                                    }
+                                    Err(unexpected_err) => return Err(unexpected_err),
+                                }
+
+                                // Check if perf.data exists
+                                let output_file_data = format!("{output_file}.data");
+                                match sftp.open(&PathBuf::from(&output_file_data)).await {
+                                    Ok(mut perf_data) => {
+                                        // download perf.data
+                                        let mut downloaded_perf_data =
+                                            tokio::fs::File::create(output_file_data).await?;
+                                        let data_size = perf_data.stat().await?.size.unwrap();
+                                        let mut read_buf = vec![0; 128 * 1024];
+                                        let mut index = 0;
+                                        while index < data_size {
+                                            let bytes_read = perf_data.read(&mut read_buf).await?;
+                                            use tokio::io::AsyncWriteExt;
+                                            downloaded_perf_data
+                                                .write_all(read_buf[0..bytes_read].as_ref())
+                                                .await?;
+                                            index += bytes_read as u64;
+                                        }
                                         Ok(())
                                     }
                                     Err(Error::Ssh2(ssh2_err))
                                         if ErrorCode::SFTP(2) == ssh2_err.code() =>
                                     {
-                                        // File not found, probably due to previous error.
+                                        // File not found, probably due to a previous error.
                                         Ok(())
                                     }
                                     Err(unexpected_err) => Err(unexpected_err),
