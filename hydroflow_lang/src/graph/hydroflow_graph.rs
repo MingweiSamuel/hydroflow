@@ -1053,7 +1053,7 @@ impl HydroflowGraph {
                                     quote_spanned! {op_span=>
                                         let #ident = {
                                             #[allow(non_snake_case)]
-                                            #[inline(always)]
+                                            // #[inline(always)]
                                             pub fn #fn_ident<Item, Input: ::std::iter::Iterator<Item = Item>>(input: Input) -> impl ::std::iter::Iterator<Item = Item> {
                                                 #[repr(transparent)]
                                                 struct Pull<Item, Input: ::std::iter::Iterator<Item = Item>> {
@@ -1063,12 +1063,12 @@ impl HydroflowGraph {
                                                 impl<Item, Input: ::std::iter::Iterator<Item = Item>> Iterator for Pull<Item, Input> {
                                                     type Item = Item;
 
-                                                    #[inline(always)]
+                                                    // #[inline(always)]
                                                     fn next(&mut self) -> Option<Self::Item> {
                                                         self.inner.next()
                                                     }
 
-                                                    #[inline(always)]
+                                                    // #[inline(always)]
                                                     fn size_hint(&self) -> (usize, Option<usize>) {
                                                         self.inner.size_hint()
                                                     }
@@ -1085,7 +1085,7 @@ impl HydroflowGraph {
                                     quote_spanned! {op_span=>
                                         let #ident = {
                                             #[allow(non_snake_case)]
-                                            #[inline(always)]
+                                            // #[inline(always)]
                                             pub fn #fn_ident<Item, Input: #root::pusherator::Pusherator<Item = Item>>(input: Input) -> impl #root::pusherator::Pusherator<Item = Item> {
                                                 #[repr(transparent)]
                                                 struct Push<Item, Input: #root::pusherator::Pusherator<Item = Item>> {
@@ -1095,7 +1095,7 @@ impl HydroflowGraph {
                                                 impl<Item, Input: #root::pusherator::Pusherator<Item = Item>> #root::pusherator::Pusherator for Push<Item, Input> {
                                                     type Item = Item;
 
-                                                    #[inline(always)]
+                                                    // #[inline(always)]
                                                     fn give(&mut self, item: Self::Item) {
                                                         self.inner.give(item)
                                                     }
