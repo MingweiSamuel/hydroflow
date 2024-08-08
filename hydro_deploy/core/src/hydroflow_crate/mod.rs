@@ -1,7 +1,7 @@
 use std::path::PathBuf;
 use std::sync::Arc;
 
-use perf_options::PerfOptions;
+use tracing_options::TracingOptions;
 
 use super::Host;
 use crate::ServiceBuilder;
@@ -12,7 +12,8 @@ pub mod ports;
 pub mod service;
 pub use service::*;
 
-pub mod perf_options;
+pub(crate) mod flamegraph;
+pub mod tracing_options;
 
 #[derive(PartialEq)]
 pub enum CrateTarget {
@@ -28,7 +29,7 @@ pub struct HydroflowCrate {
     target: CrateTarget,
     on: Arc<dyn Host>,
     profile: Option<String>,
-    perf: Option<PerfOptions>,
+    tracing: Option<TracingOptions>,
     args: Vec<String>,
     display_name: Option<String>,
 }
@@ -43,7 +44,7 @@ impl HydroflowCrate {
             target: CrateTarget::Default,
             on,
             profile: None,
-            perf: None,
+            tracing: None,
             args: vec![],
             display_name: None,
         }
@@ -82,12 +83,12 @@ impl HydroflowCrate {
         self
     }
 
-    pub fn perf(mut self, perf: impl Into<PerfOptions>) -> Self {
-        if self.perf.is_some() {
-            panic!("perf path already set");
+    pub fn tracing(mut self, perf: impl Into<TracingOptions>) -> Self {
+        if self.tracing.is_some() {
+            panic!("tracing options are already set");
         }
 
-        self.perf = Some(perf.into());
+        self.tracing = Some(perf.into());
         self
     }
 
@@ -124,7 +125,7 @@ impl ServiceBuilder for HydroflowCrate {
             bin,
             example,
             self.profile,
-            self.perf,
+            self.tracing,
             None,
             Some(self.args),
             self.display_name,

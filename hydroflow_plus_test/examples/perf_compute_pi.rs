@@ -2,7 +2,7 @@ use std::cell::RefCell;
 use std::sync::Arc;
 
 use hydro_deploy::gcp::GcpNetwork;
-use hydro_deploy::hydroflow_crate::perf_options::PerfOptions;
+use hydro_deploy::hydroflow_crate::tracing_options::TracingOptions;
 use hydro_deploy::{Deployment, Host, HydroflowCrate};
 use hydroflow_plus_cli_integration::{DeployClusterSpec, DeployProcessSpec};
 use stageleft::RuntimeData;
@@ -49,17 +49,18 @@ async fn main() {
         &DeployProcessSpec::new(|| {
             let mut deployment = deployment.borrow_mut();
             let host = create_host(&mut deployment);
-            let perf_options: PerfOptions = PerfOptions::builder()
-                .perf_outfile("leader.perf")
+            let tracing_options = TracingOptions::builder()
+                .perf_raw_outfile("leader.perf.data")
+                .dtrace_outfile("leader.stacks")
                 .fold_outfile("leader.data.folded")
                 .flamegraph_outfile("leader.svg")
-                .frequency(5)
+                .frequency(997)
                 .build();
             deployment.add_service(
                 HydroflowCrate::new(".", host.clone())
                     .bin("compute_pi")
                     .profile(profile)
-                    .perf(perf_options)
+                    .tracing(tracing_options)
                     .display_name("leader"),
             )
         }),
@@ -68,17 +69,18 @@ async fn main() {
             (0..8)
                 .map(|idx| {
                     let host = create_host(&mut deployment);
-                    let perf_options = PerfOptions::builder()
-                        .perf_outfile(format!("cluster{}.leader.perf", idx))
+                    let tracing_options = TracingOptions::builder()
+                        .perf_raw_outfile(format!("cluster{}.perf.data", idx))
+                        .dtrace_outfile(format!("cluster{}.leader.stacks", idx))
                         .fold_outfile(format!("cluster{}.data.folded", idx))
                         .flamegraph_outfile(format!("cluster{}.svg", idx))
-                        .frequency(5)
+                        .frequency(997)
                         .build();
                     deployment.add_service(
                         HydroflowCrate::new(".", host.clone())
                             .bin("compute_pi")
                             .profile(profile)
-                            .perf(perf_options)
+                            .tracing(tracing_options)
                             .display_name(format!("cluster/{}", idx)),
                     )
                 })

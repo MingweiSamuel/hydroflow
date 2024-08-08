@@ -11,7 +11,7 @@ async fn main() {
         .unwrap()
         .open_mermaid(&Default::default())
         .unwrap();
-    timeout(Duration::from_secs(10), flow.run_async())
+    timeout(Duration::from_secs(20), flow.run_async())
         .await
         .expect_err("Expected timeout");
 }
