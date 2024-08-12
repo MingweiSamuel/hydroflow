@@ -7,11 +7,11 @@ use tokio::time::timeout;
 async fn main() {
     let batch_size = 8192;
     let mut flow = hydroflow_plus_test::local::compute_pi::compute_pi_runtime!(&batch_size);
-    flow.meta_graph()
-        .unwrap()
-        .open_mermaid(&Default::default())
-        .unwrap();
-    timeout(Duration::from_secs(10), flow.run_async())
+    // flow.meta_graph()
+    //     .unwrap()
+    //     .open_mermaid(&Default::default())
+    //     .unwrap();
+    timeout(Duration::from_secs(20), flow.run_async())
         .await
         .expect_err("Expected timeout");
 }

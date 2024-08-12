@@ -9,6 +9,8 @@ rustflags = [
     # https://github.com/rust-lang/rust-clippy/issues/10087
     ## TODO(mingwei): Need rust-analyzer support:
     # "-Aclippy::uninlined-format-args",
+    # https://stackoverflow.com/a/78070191/2398020
+    "-Zexport-executable-symbols",
 ]
 
 [target.x86_64-apple-darwin]

@@ -43,7 +43,7 @@ lto = "fat"
 
 [profile.profile]
 inherits = "release"
-debug = 2
+debug = "full"
 lto = "off"
 strip = "none"
 
