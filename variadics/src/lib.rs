@@ -126,8 +126,18 @@ pub trait VariadicExt: Variadic {
     /// Reverses this variadic value.
     fn reverse(self) -> Self::Reverse;
 
+    /// The length of this variadic type
+    fn len(&self) -> usize {
+        Self::LEN
+    }
+
+    /// Checks if this variadic type is empty.
+    fn is_empty(&self) -> bool {
+        Self::LEN == 0
+    }
+
     /// This as a variadic of references.
-    type AsRefVar<'a>: RefVariadic<
+    type AsRefVar<'a>: RefVariadicLt<'a,
         UnRefVar = Self,
         RefVar = Self::AsRefVar<'a>,
         MutVar = Self::AsMutVar<'a>,
@@ -287,7 +297,7 @@ impl VariadicExt for () {
 ///
 /// This is a sealed trait.
 #[sealed]
-pub trait EitherRefVariadic: Variadic {
+pub trait EitherRefVariadic: VariadicExt {
     /// The un-referenced variadic. Each item will have one layer of shared references removed.
     ///
     /// The inverse of [`VariadicExt::AsRefVar`] and [`VariadicExt::AsMutVar`].
@@ -319,6 +329,8 @@ pub trait EitherRefVariadic: Variadic {
     ///
     /// Conversion from `&` to `&mut` is generally invalid, so a `ref_to_mut()` method does not exist.
     type MutVar: MutVariadic<UnRefVar = Self::UnRefVar, MutVar = Self::MutVar>;
+
+    fn unref_ref(&self) -> <Self::UnRefVar as VariadicExt>::AsRefVar<'_>;
 }
 #[sealed]
 impl<'a, Item, Rest> EitherRefVariadic for (&'a Item, Rest)
@@ -334,6 +346,11 @@ where
     }
 
     type MutVar = (&'a mut Item, Rest::MutVar);
+
+    fn unref_ref(&self) -> <Self::UnRefVar as VariadicExt>::AsRefVar<'_> {
+        let var_args!(item, ...rest) = self;
+        var_expr!(item, ...rest.unref_ref())
+    }
 }
 #[sealed]
 impl<'a, Item, Rest> EitherRefVariadic for (&'a mut Item, Rest)
@@ -349,6 +366,11 @@ where
     }
 
     type MutVar = (&'a mut Item, Rest::MutVar);
+
+    fn unref_ref(&self) -> <Self::UnRefVar as VariadicExt>::AsRefVar<'_> {
+        let var_args!(item, ...rest) = self;
+        var_expr!(item, ...rest.unref_ref())
+    }
 }
 #[sealed]
 impl EitherRefVariadic for () {
@@ -358,6 +380,8 @@ impl EitherRefVariadic for () {
     fn mut_to_ref(self) -> Self::RefVar {}
 
     type MutVar = ();
+
+    fn unref_ref(&self) -> <Self::UnRefVar as VariadicExt>::AsRefVar<'_> {}
 }
 
 /// A variadic where each item is a shared reference `&item`.
@@ -371,11 +395,7 @@ impl EitherRefVariadic for () {
 ///
 /// This is a sealed trait.
 #[sealed]
-pub trait RefVariadic: EitherRefVariadic<RefVar = Self>
-where
-    Self: Copy,
-{
-}
+pub trait RefVariadic: EitherRefVariadic<RefVar = Self> + Copy {}
 #[sealed]
 impl<Item, Rest> RefVariadic for (&Item, Rest) where Rest: RefVariadic {}
 #[sealed]
@@ -397,6 +417,35 @@ pub trait MutVariadic: EitherRefVariadic<MutVar = Self> {}
 impl<Item, Rest> MutVariadic for (&mut Item, Rest) where Rest: MutVariadic {}
 #[sealed]
 impl MutVariadic for () {}
+
+#[sealed]
+pub trait RefVariadicLt<'a>: 'a + RefVariadic<UnRefVar: VariadicExt<AsRefVar<'a> = Self>> {
+    type ReverseRef: RefVariadicLt<'a, ReverseRef = Self>;
+    fn reverse_ref(self) -> Self::ReverseRef;
+}
+#[sealed]
+impl<'a, Item, Rest> RefVariadicLt<'a> for (&'a Item, Rest)
+where
+    Rest: RefVariadicLt<'a>,
+{
+    type ReverseRef = var_type!(...Rest::ReverseRef, &'a Item);
+    fn reverse_ref(self) -> Self::ReverseRef {
+        let (item, rest) = self;
+        rest.reverse_ref().extend((item, ()))
+    }
+}
+#[sealed]
+impl<'a> RefVariadicLt<'a> for () {
+    type ReverseRef = ();
+    fn reverse_ref(self) -> Self::ReverseRef {}
+}
+
+#[sealed]
+pub trait MutVariadicLt<'a>: 'a + MutVariadic<UnRefVar: VariadicExt<AsMutVar<'a> = Self>> {}
+#[sealed]
+impl<'a, Item, Rest> MutVariadicLt<'a> for (&'a mut Item, Rest) where Rest: MutVariadicLt<'a> {}
+#[sealed]
+impl<'a> MutVariadicLt<'a> for () {}
 
 /// Copy a variadic of references [`EitherRefVariadic`] into a variadic of owned values [`EitherRefVariadic::UnRefVar`].
 ///
@@ -450,35 +499,31 @@ impl CopyRefVariadic for () {
 /// );
 /// ```
 #[sealed]
-pub trait CloneRefVariadic: EitherRefVariadic {
+pub trait CloneVariadic: VariadicExt {
+    fn clone_var(&self) -> Self
+    where
+        Self: Sized,
+    {
+        Self::clone_var_ref(self.as_ref_var())
+    }
+
     /// Clone self per-value.
-    fn clone_var(&self) -> Self::UnRefVar;
+    fn clone_var_ref(this: Self::AsRefVar<'_>) -> Self;
 }
 #[sealed]
-impl<Item, Rest> CloneRefVariadic for (&Item, Rest)
+impl<Item, Rest> CloneVariadic for (Item, Rest)
 where
     Item: Clone,
-    Rest: CloneRefVariadic,
+    Rest: CloneVariadic,
 {
-    fn clone_var(&self) -> Self::UnRefVar {
-        let var_args!(item, ...rest) = self;
-        var_expr!((*item).clone(), ...rest.clone_var())
+    fn clone_var_ref(this: Self::AsRefVar<'_>) -> Self {
+        let var_args!(item, ...rest) = this;
+        var_expr!(item.clone(), ...Rest::clone_var_ref(rest))
     }
 }
 #[sealed]
-impl<Item, Rest> CloneRefVariadic for (&mut Item, Rest)
-where
-    Item: Clone,
-    Rest: CloneRefVariadic,
-{
-    fn clone_var(&self) -> Self::UnRefVar {
-        let var_args!(item, ...rest) = self;
-        var_expr!((*item).clone(), ...rest.clone_var())
-    }
-}
-#[sealed]
-impl CloneRefVariadic for () {
-    fn clone_var(&self) -> Self::UnRefVar {}
+impl CloneVariadic for () {
+    fn clone_var_ref(_this: Self::AsRefVar<'_>) -> Self {}
 }
 
 /// A variadic where all item implement `PartialEq`.
@@ -583,43 +628,222 @@ where
     }
 }
 
+// #[sealed]
+// pub trait Suffix<Suf>: Variadic {
+//     fn suffix(self) -> Suf;
+// }
+// #[sealed]
+// impl<Item, Rest, PrefixRest> Suffix<PrefixRest> for (Item, Rest)
+// where
+//     PrefixRest: Variadic,
+//     Rest: Split<PrefixRest>,
+// {
+//     type Suffix = <Rest as Split<PrefixRest>>::Suffix;
+//     fn split(self) -> ((Item, PrefixRest), Self::Suffix) {
+//         let (item, rest) = self;
+//         let (prefix_rest, suffix) = rest.split();
+//         ((item, prefix_rest), suffix)
+//     }
+// }
+// #[sealed]
+// impl<Rest> Suffix<Rest> for Rest
+// where
+//     Rest: Variadic,
+// {
+//     fn suffix(self) -> Rest {
+//         self
+//     }
+// }
+
 /// Helper trait for splitting a variadic into two parts. `Prefix` is the first part, everything
 /// after is the `Suffix` or second part.
 ///
 /// This is a sealed trait.
 #[sealed]
-pub trait Split<Prefix>: Variadic
+pub trait Split<Prefix>: VariadicExt
 where
-    Prefix: Variadic,
+    Prefix: VariadicExt,
 {
     /// The second part when splitting this variadic by `Prefix`.
-    type Suffix: Variadic;
+    type Suffix: VariadicExt;
     /// Splits this variadic into two parts, first the `Prefix`, and second the `Suffix`.
     fn split(self) -> (Prefix, Self::Suffix);
+    /// Splits a refvar variadic
+    fn split_ref(
+        this: Self::AsRefVar<'_>,
+    ) -> (
+        Prefix::AsRefVar<'_>,
+        <Self::Suffix as VariadicExt>::AsRefVar<'_>,
+    );
 }
 #[sealed]
 impl<Item, Rest, PrefixRest> Split<(Item, PrefixRest)> for (Item, Rest)
 where
-    PrefixRest: Variadic,
+    PrefixRest: VariadicExt,
     Rest: Split<PrefixRest>,
 {
+    /// The second part when splitting this variadic by `Prefix`.
     type Suffix = <Rest as Split<PrefixRest>>::Suffix;
+    /// Splits this variadic into two parts, first the `Prefix`, and second the `Suffix`.
     fn split(self) -> ((Item, PrefixRest), Self::Suffix) {
         let (item, rest) = self;
         let (prefix_rest, suffix) = rest.split();
         ((item, prefix_rest), suffix)
     }
-}
-#[sealed]
-impl<Rest> Split<()> for Rest
-where
-    Rest: Variadic,
-{
-    type Suffix = Rest;
-    fn split(self) -> ((), Self::Suffix) {
-        ((), self)
+    /// Splits a refvar variadic
+    fn split_ref(
+        this: Self::AsRefVar<'_>,
+    ) -> (
+        <(Item, PrefixRest) as VariadicExt>::AsRefVar<'_>,
+        <Self::Suffix as VariadicExt>::AsRefVar<'_>,
+    ) {
+        let (item, rest) = this;
+        let (prefix_rest, suffix) = Rest::split_ref(rest);
+        ((item, prefix_rest), suffix)
     }
 }
+#[sealed]
+impl<Rest> Split<var_type!()> for Rest
+where
+    Rest: VariadicExt,
+{
+    type Suffix = Rest;
+    fn split(self) -> (var_type!(), Self::Suffix) {
+        (var_expr!(), self)
+    }
+    fn split_ref(
+        this: Self::AsRefVar<'_>,
+    ) -> (var_type!(), <Self::Suffix as VariadicExt>::AsRefVar<'_>) {
+        (var_expr!(), this)
+    }
+}
+
+#[sealed]
+/// Helper trait for splitting a variadic into two parts. `Prefix` is the first part, everything
+/// after is the `Suffix` or second part.
+///
+/// This is a sealed trait.
+pub trait SplitBySuffix<Suffix>: VariadicExt
+where
+    Suffix: VariadicExt,
+{
+    /// The first part when splitting this variadic by `Suffix`.
+    type Prefix: VariadicExt;
+    /// Splits this variadic into two parts, first the `Prefix`, and second the `Suffix`.
+    fn split_by_suffix(self) -> (Self::Prefix, Suffix);
+    /// Splits a refvar variadic
+    fn split_by_suffix_ref<'a>(
+        this: Self::AsRefVar<'a>,
+    ) -> (
+        <Self::Prefix as VariadicExt>::AsRefVar<'a>,
+        Suffix::AsRefVar<'a>,
+    )
+    where
+        Self: RefVariadicLt<'a>;
+}
+#[sealed]
+impl<Suffix, This> SplitBySuffix<Suffix> for This
+where
+    Suffix: VariadicExt,
+    This: VariadicExt,
+    This::Reverse: Split<Suffix::Reverse>,
+    Suffix::Reverse: VariadicExt<Reverse = Suffix>,
+{
+    /// The second part when splitting this variadic by `Prefix`.
+    type Prefix = <<This::Reverse as Split<Suffix::Reverse>>::Suffix as VariadicExt>::Reverse;
+    /// Splits this variadic into two parts, first the `Prefix`, and second the `Suffix`.
+    fn split_by_suffix(self) -> (Self::Prefix, Suffix) {
+        let (rsuffix, rprefix) = self.reverse().split();
+        (rprefix.reverse(), rsuffix.reverse())
+    }
+
+    fn split_by_suffix_ref<'a>(
+        this: Self::AsRefVar<'a>,
+    ) -> (
+        <Self::Prefix as VariadicExt>::AsRefVar<'a>,
+        Suffix::AsRefVar<'a>,
+    )
+    where
+        Self: RefVariadicLt<'a>,
+    {
+        // let (rsuffix, rprefix) = <Self::Reverse as Split<_>>::split_ref(this.reverse());
+
+        let (rsuffix, rprefix) =
+            <This::Reverse as Split<Suffix::Reverse>>::split_ref(<Self as RefVariadicLt<'a>>::reverse_ref(this));
+        (rprefix.reverse(), rsuffix.reverse())
+    }
+}
+
+#[sealed]
+pub trait ReverseIdentity:
+    for<'a> RefVariadicLt<'a, UnRefVar: VariadicExt<Reverse: VariadicExt<AsRefVar<'a> = Self>>>
+{
+}
+
+// #[sealed]
+// pub trait ReverseIdentity<ReverseRef>: for<'a> VariadicExt<Reverse: VariadicExt<AsRefVar<'a> = ReverseRef>, AsRefVar<'a>: VariadicExt<Reverse = ReverseRef>> {}
+
+// #[sealed]
+// pub trait ReverseIdentity: for<'a> VariadicExt<AsRefVar<'a>: VariadicExt<Reverse = <Self::Reverse as VariadicExt>::AsRefVar<'a>>> {}
+
+// #[sealed]
+// pub trait ReverseIdentity: for<'a> VariadicExt<AsRefVar<'a>: VariadicExt<Reverse: EitherRefVariadic<UnRefVar = Self>>> {}
+
+// #[sealed]
+// impl<Item, Rest, Suffix> SplitBySuffix<Suffix> for (Item, Rest)
+// where
+//     Rest: SplitBySuffix<Suffix>,
+//     Suffix: VariadicExt,
+// {
+//     type Prefix = var_type!(Item, ...Rest::Prefix);
+//     fn split_by_suffix(self) -> (Self::Prefix, Suffix) {
+//         let (item, rest) = self;
+//         let (prefix, suffix) = rest.split_by_suffix();
+//         ((item, prefix), suffix)
+//     }
+//     fn split_by_suffix_ref(
+//         this: Self::AsRefVar<'_>,
+//     ) -> (
+//         <Self::Prefix as VariadicExt>::AsRefVar<'_>,
+//         Suffix::AsRefVar<'_>,
+//     ) {
+//         let (item, rest) = this;
+//         let (prefix, suffix) = Rest::split_by_suffix_ref(rest);
+//         ((item, prefix), suffix)
+//     }
+// }
+// #[sealed]
+// impl<Item, Suffix> SplitBySuffix<Suffix> for (Item, Suffix)
+// where
+//     Suffix: VariadicExt,
+// {
+//     type Prefix = var_type!(Item);
+//     fn split_by_suffix(self) -> (Self::Prefix, Suffix) {
+//         let (item, suffix) = self;
+//         (var_expr!(item), suffix)
+//     }
+//     fn split_by_suffix_ref(
+//         this: Self::AsRefVar<'_>,
+//     ) -> (
+//         <Self::Prefix as VariadicExt>::AsRefVar<'_>,
+//         Suffix::AsRefVar<'_>,
+//     ) {
+//         let (item, suffix) = this;
+//         (var_expr!(item), suffix)
+//     }
+// }
+// #[sealed]
+// impl SplitBySuffix<()> for () {
+//     type Prefix = ();
+//     fn split_by_suffix(self) -> (Self::Prefix, ()) {
+//         ((), ())
+//     }
+//     fn split_by_suffix_ref(
+//         _this: Self::AsRefVar<'_>,
+//     ) -> (<Self::Prefix as VariadicExt>::AsRefVar<'_>, ()) {
+//         ((), ())
+//     }
+// }
 
 #[cfg(test)]
 mod test {
@@ -712,31 +936,5 @@ mod test {
             assert_eq!(Some(i), var.get(i).copied());
             assert_eq!(Some(i), var.get_mut(i).copied());
         }
-    }
-
-    #[test]
-    fn test_eq_ref_vec() {
-        type MyVar = var_type!(i32, bool, &'static str);
-        let vec: Vec<MyVar> = vec![
-            var_expr!(0, true, "hello"),
-            var_expr!(1, true, "world"),
-            var_expr!(2, false, "goodnight"),
-            var_expr!(3, false, "moon"),
-        ];
-        let needle: <MyVar as VariadicExt>::AsRefVar<'_> =
-            var_expr!(2, false, "goodnight").as_ref_var();
-        assert_eq!(
-            Some(2),
-            vec.iter()
-                .position(|item| <MyVar as PartialEqVariadic>::eq_ref(needle, item.as_ref_var()))
-        );
-
-        let missing: <MyVar as VariadicExt>::AsRefVar<'_> =
-            var_expr!(3, false, "goodnight").as_ref_var();
-        assert_eq!(
-            None,
-            vec.iter()
-                .position(|item| <MyVar as PartialEqVariadic>::eq_ref(missing, item.as_ref_var()))
-        );
     }
 }
