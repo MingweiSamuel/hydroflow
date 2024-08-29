@@ -59,6 +59,8 @@ pub struct HydroflowGraph {
     node_singleton_references: SparseSecondaryMap<GraphNodeId, Vec<Option<GraphNodeId>>>,
     /// What variable name each graph node belongs to (if any). For debugging (graph writing) purposes only.
     node_varnames: SparseSecondaryMap<GraphNodeId, Varname>,
+    /// A tag, to be generated in tracing (perf/dtrace) stack outputs, for keeping track of operators.
+    operator_tracing_tags: SparseSecondaryMap<GraphNodeId, String>,
 
     /// If this subgraph is 'lazy' then when it sends data to a lower stratum it does not cause a new tick to start
     /// This is to support lazy defers
@@ -1011,7 +1013,7 @@ impl HydroflowGraph {
                                     .ok();
 
                                 #[allow(clippy::unnecessary_literal_unwrap)]
-                                let source_info = source_info.unwrap_or_else(|| {
+                                let mut source_info = source_info.unwrap_or_else(|| {
                                     format!(
                                         "loc_nopath_{}_{}_{}_{}",
                                         op_span.start().line,
@@ -1021,6 +1023,11 @@ impl HydroflowGraph {
                                     )
                                 });
 
+                                if let Some(tag) = self.operator_tracing_tags.get(node_id) {
+                                    source_info.push_str("__");
+                                    source_info.push_str(tag);
+                                }
+
                                 let fn_ident = format_ident!(
                                     "{}__{}__{}",
                                     ident,
@@ -1028,6 +1035,7 @@ impl HydroflowGraph {
                                     source_info,
                                     span = op_span
                                 );
+
                                 let type_guard = if is_pull {
                                     quote_spanned! {op_span=>
                                         let #ident = {
