@@ -212,6 +212,7 @@ fn stageleft_root() -> syn::Ident {
     }
 }
 
+#[diagnostic::on_unimplemented(note = "use `q!(...)`!!!!")]
 pub trait IntoQuotedOnce<'a, T>:
     FnOnce(&mut String, &mut &'static str, &mut TokenStream, &mut CaptureVec, bool) -> T
     + 'a
@@ -308,6 +309,7 @@ impl<
     }
 }
 
+#[diagnostic::on_unimplemented(note = "use `q!(...)`!!!!")]
 pub trait IntoQuotedMut<'a, T>:
     FnMut(&mut String, &mut &'static str, &mut TokenStream, &mut CaptureVec, bool) -> T + 'a
 {
