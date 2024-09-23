@@ -33,6 +33,8 @@ where
         topo_sort((nodes_fn)(), |v| {
             condensed_preds.get(&v).into_iter().flatten().cloned()
         })
+        .map_err(drop)
+        .unwrap() // SCC prevents cycles.
     };
     topo_sort_order
 }
@@ -42,44 +44,68 @@ where
 ///
 /// This naturally requires a directed acyclic graph (DAG).
 ///
+/// If there is a cycle, returns the cycle as `Result::Err<Vec<Id>>`, where the first and last
+/// elements are the same.
+///
 /// <https://en.wikipedia.org/wiki/Topological_sorting>
 pub fn topo_sort<Id, NodeIds, PredsFn, PredsIter>(
     node_ids: NodeIds,
     mut preds_fn: PredsFn,
-) -> Vec<Id>
+) -> Result<Vec<Id>, Vec<Id>>
 where
     Id: Copy + Eq + Ord,
     NodeIds: IntoIterator<Item = Id>,
     PredsFn: FnMut(Id) -> PredsIter,
     PredsIter: IntoIterator<Item = Id>,
 {
-    let (mut marked, mut order) = Default::default();
+    let (mut marked, mut order, mut cycle) = Default::default();
 
     fn pred_dfs_postorder<Id, PredsFn, PredsIter>(
         node_id: Id,
         preds_fn: &mut PredsFn,
-        marked: &mut BTreeSet<Id>,
+        // false = wip, true = done
+        marked: &mut BTreeMap<Id, bool>,
         order: &mut Vec<Id>,
-    ) where
+        cycle: &mut Vec<Id>,
+    ) -> Result<(), ()>
+    where
         Id: Copy + Eq + Ord,
         PredsFn: FnMut(Id) -> PredsIter,
         PredsIter: IntoIterator<Item = Id>,
     {
-        if marked.insert(node_id) {
-            for next_pred in (preds_fn)(node_id) {
-                pred_dfs_postorder(next_pred, preds_fn, marked, order);
+        match marked.get(&node_id) {
+            Some(_done @ true) => Ok(()),
+            Some(_wip @ false) => {
+                // Cycle found!
+                cycle.push(node_id);
+                Err(())
             }
-            order.push(node_id);
-        } else {
-            // TODO(mingwei): cycle found!
+            None => {
+                marked.insert(node_id, false);
+                for next_pred in (preds_fn)(node_id) {
+                    pred_dfs_postorder(next_pred, preds_fn, marked, order, cycle).map_err(
+                        |()| {
+                            if cycle.len() == 1 || cycle.first().unwrap() != cycle.last().unwrap() {
+                                cycle.push(node_id);
+                            }
+                        },
+                    )?;
+                }
+                order.push(node_id);
+                marked.insert(node_id, true);
+                Ok(())
+            }
         }
     }
 
     for node_id in node_ids {
-        pred_dfs_postorder(node_id, &mut preds_fn, &mut marked, &mut order);
+        if pred_dfs_postorder(node_id, &mut preds_fn, &mut marked, &mut order, &mut cycle).is_err()
+        {
+            return Err(cycle);
+        }
     }
 
-    order
+    Ok(order)
 }
 
 /// Finds the strongly connected components in the graph. A strongly connected component is a
@@ -156,6 +182,8 @@ where
 
 #[cfg(test)]
 mod test {
+    use itertools::Itertools;
+
     use super::*;
 
     #[test]
@@ -179,11 +207,44 @@ mod test {
                 .filter(move |&&(_, dst)| v == dst)
                 .map(|&(src, _)| src)
         });
+        assert!(sort.is_ok());
+        let sort = sort.unwrap();
         println!("{:?}", sort);
 
         let position: BTreeMap<_, _> = sort.iter().enumerate().map(|(i, &x)| (x, i)).collect();
         for (src, dst) in edges.iter() {
             assert!(position[src] < position[dst]);
+        }
+    }
+
+    #[test]
+    pub fn test_toposort_cycle() {
+        // https://commons.wikimedia.org/wiki/File:Directed_graph,_cyclic.svg
+        let edges = [
+            ('A', 'B'),
+            ('B', 'C'),
+            ('C', 'E'),
+            ('D', 'B'),
+            ('E', 'F'),
+            ('E', 'D'),
+        ];
+
+        let ids = edges
+            .iter()
+            .flat_map(|&(a, b)| [a, b])
+            .collect::<BTreeSet<_>>();
+        let permutations = ids.iter().copied().permutations(ids.len());
+
+        for permutation in permutations {
+            let result = topo_sort(permutation.iter().copied(), |v| {
+                edges
+                    .iter()
+                    .filter(move |&&(_, dst)| v == dst)
+                    .map(|&(src, _)| src)
+            });
+            assert!(result.is_err());
+            let cycle = result.unwrap_err();
+            assert_eq!(5, cycle.len(), "{:?}", cycle);
         }
     }
 
