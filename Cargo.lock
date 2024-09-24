@@ -1470,6 +1470,7 @@ dependencies = [
 name = "hydroflow_plus_test"
 version = "0.0.0"
 dependencies = [
+ "async-ssh2-lite",
  "futures",
  "hydro_deploy",
  "hydroflow_plus",
