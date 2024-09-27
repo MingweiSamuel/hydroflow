@@ -359,7 +359,7 @@ fn find_subgraph_strata(
 
     // Topological sort (of strongly connected components) is how we find the (nondecreasing)
     // order of strata.
-    let topo_sort_order = graph_algorithms::topo_sort_scc(
+    let (_scc, topo_sort_order) = graph_algorithms::topo_sort_scc(
         || partitioned_graph.subgraph_ids(),
         |v| subgraph_graph.preds.get(&v).into_iter().flatten().cloned(),
         |u| subgraph_graph.succs.get(&u).into_iter().flatten().cloned(),

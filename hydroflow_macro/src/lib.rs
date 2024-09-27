@@ -7,7 +7,6 @@ use std::path::PathBuf;
 
 use hydroflow_lang::diagnostic::{Diagnostic, Level};
 use hydroflow_lang::graph::{build_hfcode, partition_graph, FlatGraphBuilder};
-use hydroflow_lang::hydroflo2::build_hydroflo2;
 use hydroflow_lang::parse::HfCode;
 use proc_macro2::{Ident, Literal, Span};
 use quote::{format_ident, quote};
@@ -37,9 +36,45 @@ pub fn hydroflow_syntax_noemit(input: proc_macro::TokenStream) -> proc_macro::To
 
 #[proc_macro]
 pub fn hydroflo2_syntax(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let input = parse_macro_input!(input as HfCode);
-    let output = build_hydroflo2(input);
-    output.into()
+    let hf_code = parse_macro_input!(input as HfCode);
+
+    let macro_invocation_path = macro_invocation_path();
+    let root = root();
+
+    let flat_graph_builder = FlatGraphBuilder::from_hfcode(hf_code, macro_invocation_path);
+    let (mut flat_graph, uses, mut diagnostics) = flat_graph_builder.build();
+
+    let tokens = flat_graph
+        .as_hydroflo2_code(root, &mut diagnostics)
+        .unwrap_or_default();
+    let tokens = quote! {
+        {
+            #( #uses )*
+            #tokens
+        }
+    };
+
+    eprintln!("{}", tokens.to_string());
+
+    #[cfg(feature = "diagnostics")]
+    {
+        diagnostics.iter().for_each(Diagnostic::emit);
+        tokens.into()
+    }
+
+    #[cfg(not(feature = "diagnostics"))]
+    {
+        let diagnostics = diagnostics.map(Diagnostic::to_tokens);
+        quote! {
+            {
+                #(
+                    #diagnostics
+                )*
+                #tokens
+            }
+        }
+        .into()
+    }
 }
 
 fn root() -> proc_macro2::TokenStream {

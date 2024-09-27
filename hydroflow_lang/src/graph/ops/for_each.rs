@@ -1,8 +1,7 @@
 use quote::quote_spanned;
 
 use super::{
-    OperatorCategory, OperatorConstraints, OperatorWriteOutput, WriteContextArgs,
-    RANGE_0, RANGE_1,
+    OperatorCategory, OperatorConstraints, OperatorWriteOutput, WriteContextArgs, RANGE_0, RANGE_1,
 };
 
 /// > 1 input stream, 0 output streams
@@ -37,14 +36,25 @@ pub const FOR_EACH: OperatorConstraints = OperatorConstraints {
                    root,
                    op_span,
                    ident,
+                   is_pull,
+                   inputs,
                    arguments,
                    ..
                },
                _| {
         let func = &arguments[0];
-        let write_iterator = quote_spanned! {op_span=>
-            let #ident = #root::pusherator::for_each::ForEach::new(#func);
+
+        let write_iterator = if is_pull {
+            let input = &inputs[0];
+            quote_spanned! {op_span=>
+                #input.for_each(#func);
+            }
+        } else {
+            quote_spanned! {op_span=>
+                let #ident = #root::pusherator::for_each::ForEach::new(#func);
+            }
         };
+
         Ok(OperatorWriteOutput {
             write_iterator,
             ..Default::default()

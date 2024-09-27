@@ -259,9 +259,11 @@ impl FlatGraphBuilder {
             }
             Pipeline::Operator(operator) => {
                 let op_span = Some(operator.span());
-                let nid = self
-                    .flat_graph
-                    .insert_node(GraphNode::Operator(operator), current_varname.cloned(), current_loop);
+                let nid = self.flat_graph.insert_node(
+                    GraphNode::Operator(operator),
+                    current_varname.cloned(),
+                    current_loop,
+                );
                 Ends {
                     inn: Some((PortIndexValue::Elided(op_span), GraphDet::Determined(nid))),
                     out: Some((PortIndexValue::Elided(op_span), GraphDet::Determined(nid))),

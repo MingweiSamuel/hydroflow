@@ -17,7 +17,7 @@
         "--nocapture"
     ],
     "rust-analyzer.cargo.features": [
-        "python"
+        // "python"
     ],
     "rust-analyzer.server.extraEnv": {
         "CARGO_TARGET_DIR": "${workspaceFolder}/target/rust-analyzer",

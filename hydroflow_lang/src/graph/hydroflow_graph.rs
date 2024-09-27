@@ -44,7 +44,7 @@ pub struct HydroflowGraph {
     #[serde(skip)]
     operator_instances: SecondaryMap<GraphNodeId, OperatorInstance>,
     /// Graph data structure (two-way adjacency list).
-    graph: DiMulGraph<GraphNodeId, GraphEdgeId>,
+    pub(crate) graph: DiMulGraph<GraphNodeId, GraphEdgeId>,
     /// Input and output port for each edge.
     ports: SecondaryMap<GraphEdgeId, (PortIndexValue, PortIndexValue)>,
 
@@ -723,7 +723,7 @@ impl HydroflowGraph {
 /// Display/output methods.
 impl HydroflowGraph {
     /// Helper to generate a deterministic `Ident` for the given node.
-    fn node_as_ident(&self, node_id: GraphNodeId, is_pred: bool) -> Ident {
+    pub(crate) fn node_as_ident(&self, node_id: GraphNodeId, is_pred: bool) -> Ident {
         let name = match &self.nodes[node_id] {
             GraphNode::Operator(_) => format!("op_{:?}", node_id.data()),
             GraphNode::Handoff { .. } => format!(
@@ -921,7 +921,7 @@ impl HydroflowGraph {
                             let mut output_edges = self
                                 .graph
                                 .successor_edges(node_id)
-                                .map(|edge_id| (&self.ports[edge_id].0, edge_id))
+                                .map(|edge_id| (self.edge_ports(edge_id).0, edge_id))
                                 .collect::<Vec<_>>();
                             // Ensure sorted by port index.
                             output_edges.sort();

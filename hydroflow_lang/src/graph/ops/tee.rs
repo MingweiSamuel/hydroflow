@@ -1,8 +1,8 @@
 use quote::{quote_spanned, ToTokens};
 
 use super::{
-    OperatorCategory, OperatorConstraints, OperatorWriteOutput,
-    WriteContextArgs, RANGE_0, RANGE_1, RANGE_ANY,
+    OperatorCategory, OperatorConstraints, OperatorWriteOutput, WriteContextArgs, RANGE_0, RANGE_1,
+    RANGE_ANY,
 };
 
 /// > 1 input stream, *n* output streams
@@ -41,6 +41,8 @@ pub const TEE: OperatorConstraints = OperatorConstraints {
                    ..
                },
                _| {
+        assert_eq!(1, inputs.len());
+
         let write_iterator = if !is_pull {
             let tees = outputs
                 .iter()
@@ -54,10 +56,22 @@ pub const TEE: OperatorConstraints = OperatorConstraints {
                 let #ident = #tees;
             }
         } else {
-            assert_eq!(1, inputs.len());
+            // hydroflo2 only
             let input = &inputs[0];
-            quote_spanned! {op_span=>
-                let #ident = #input;
+            if let Some((last, elems)) = outputs.split_last() {
+                let clones = elems.iter().map(|output| {
+                    quote_spanned! {op_span=>
+                        let #output = ::core::clone::Clone::clone(&#input);
+                    }
+                });
+                quote_spanned! {op_span=>
+                    #(
+                        #clones
+                    )*
+                    let #last = #input;
+                }
+            } else {
+                Default::default()
             }
         };
         Ok(OperatorWriteOutput {

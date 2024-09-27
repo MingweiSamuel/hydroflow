@@ -21,6 +21,7 @@ mod eliminate_extra_unions_tees;
 mod flat_graph_builder;
 mod flat_to_partitioned;
 mod graph_write;
+mod hydroflo2_graph;
 mod hydroflow_graph;
 mod hydroflow_graph_debugging;
 

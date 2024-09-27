@@ -9,7 +9,7 @@ pub fn topo_sort_scc<Id, NodesFn, NodeIds, PredsFn, SuccsFn, PredsIter, SuccsIte
     mut nodes_fn: NodesFn,
     mut preds_fn: PredsFn,
     succs_fn: SuccsFn,
-) -> Vec<Id>
+) -> (BTreeMap<Id, Id>, Vec<Id>)
 where
     Id: Copy + Eq + Ord,
     NodesFn: FnMut() -> NodeIds,
@@ -34,7 +34,7 @@ where
             condensed_preds.get(&v).into_iter().flatten().cloned()
         })
     };
-    topo_sort_order
+    (scc, topo_sort_order)
 }
 
 /// Topologically sorts a set of nodes. Returns a list where the order of `Id`s will agree with
