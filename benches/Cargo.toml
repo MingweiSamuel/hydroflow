@@ -65,5 +65,5 @@ name = "symmetric_hash_join"
 harness = false
 
 [[bench]]
-name = "hydroflo2"
+name = "words_diamond"
 harness = false
