@@ -5,17 +5,14 @@ use std::collections::{BTreeMap, BTreeSet};
 
 /// Computes the topological sort of the nodes of a possibly cyclic graph by ordering strongly
 /// connected components together.
-pub fn topo_sort_scc<Id, NodesFn, NodeIds, PredsFn, SuccsFn, PredsIter, SuccsIter>(
-    mut nodes_fn: NodesFn,
-    mut preds_fn: PredsFn,
-    succs_fn: SuccsFn,
+pub fn topo_sort_scc<Id, NodeIds, PredsIter, SuccsIter>(
+    mut nodes_fn: impl FnMut() -> NodeIds,
+    mut preds_fn: impl FnMut(Id) -> PredsIter,
+    succs_fn: impl FnMut(Id) -> SuccsIter,
 ) -> (BTreeMap<Id, Id>, Vec<Id>)
 where
     Id: Copy + Eq + Ord,
-    NodesFn: FnMut() -> NodeIds,
     NodeIds: IntoIterator<Item = Id>,
-    PredsFn: FnMut(Id) -> PredsIter,
-    SuccsFn: FnMut(Id) -> SuccsIter,
     PredsIter: IntoIterator<Item = Id>,
     SuccsIter: IntoIterator<Item = Id>,
 {
@@ -43,14 +40,12 @@ where
 /// This naturally requires a directed acyclic graph (DAG).
 ///
 /// <https://en.wikipedia.org/wiki/Topological_sorting>
-pub fn topo_sort<Id, NodeIds, PredsFn, PredsIter>(
-    node_ids: NodeIds,
-    mut preds_fn: PredsFn,
+pub fn topo_sort<Id, PredsIter>(
+    node_ids: impl IntoIterator<Item = Id>,
+    mut preds_fn: impl FnMut(Id) -> PredsIter,
 ) -> Vec<Id>
 where
     Id: Copy + Eq + Ord,
-    NodeIds: IntoIterator<Item = Id>,
-    PredsFn: FnMut(Id) -> PredsIter,
     PredsIter: IntoIterator<Item = Id>,
 {
     let (mut marked, mut order) = Default::default();
@@ -92,16 +87,13 @@ where
 /// same strongly connected component.
 ///
 /// This function uses [Kosaraju's algorithm](https://en.wikipedia.org/wiki/Kosaraju%27s_algorithm).
-pub fn scc_kosaraju<Id, NodeIds, PredsFn, SuccsFn, PredsIter, SuccsIter>(
-    nodes: NodeIds,
-    mut preds_fn: PredsFn,
-    mut succs_fn: SuccsFn,
+pub fn scc_kosaraju<Id, PredsIter, SuccsIter>(
+    nodes: impl IntoIterator<Item = Id>,
+    mut preds_fn: impl FnMut(Id) -> PredsIter,
+    mut succs_fn: impl FnMut(Id) -> SuccsIter,
 ) -> BTreeMap<Id, Id>
 where
     Id: Copy + Eq + Ord,
-    NodeIds: IntoIterator<Item = Id>,
-    PredsFn: FnMut(Id) -> PredsIter,
-    SuccsFn: FnMut(Id) -> SuccsIter,
     PredsIter: IntoIterator<Item = Id>,
     SuccsIter: IntoIterator<Item = Id>,
 {
