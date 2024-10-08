@@ -16,8 +16,8 @@ impl HydroflowGraph {
         root: TokenStream,
         diagnostics: &mut Vec<Diagnostic>,
     ) -> Result<TokenStream, ()> {
-        let hf = Ident::new("hf", Span::call_site());
-        let context = Ident::new("context", Span::call_site());
+        let mut hf = Ident::new("hf", Span::call_site());
+        let mut context = Ident::new("context", Span::call_site());
 
         // Topological sort (of strongly connected components). SCC must be contained within a loop context.
         let (scc_reps, topo_sort) = graph_algorithms::topo_sort_scc(
@@ -101,6 +101,10 @@ impl HydroflowGraph {
                 format_ident!("__unreachable_op_{}", format!("{:?}", node_id.0))
             });
 
+            // Make errors show up on the specific operator.
+            hf.set_span(op_span.resolved_at(Span::call_site()));
+            context.set_span(op_span.resolved_at(Span::call_site()));
+
             let context_args = WriteContextArgs {
                 root: &root,
                 context: &context,
@@ -138,11 +142,17 @@ impl HydroflowGraph {
             subgraph_op_iter_after_code.push(write_iterator_after);
         }
 
+        context.set_span(Span::call_site());
+        hf.set_span(Span::call_site());
+
         Ok(quote! {
             {
+                let mut #hf = <#root::scheduled::graph::Hydroflow as ::core::default::Default>::default();
+
                 #( #op_prologue_code )*
 
-                let #context = ();
+                let #context = hf.context_mut(#root::scheduled::SubgraphId(0));
+
                 #( #subgraph_op_iter_code )*
 
                 #( #subgraph_op_iter_after_code )*

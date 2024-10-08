@@ -25,7 +25,7 @@ pub mod ticks;
 /// instance than the original that created it.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize)]
 #[repr(transparent)]
-pub struct SubgraphId(pub(crate) usize);
+pub struct SubgraphId(pub usize);
 impl Display for SubgraphId {
     fn fmt(&self, f: &mut Formatter) -> Result {
         write!(f, "{}", self.0)

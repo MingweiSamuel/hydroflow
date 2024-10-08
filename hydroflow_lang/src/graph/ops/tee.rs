@@ -31,7 +31,7 @@ pub const TEE: OperatorConstraints = OperatorConstraints {
     ports_inn: None,
     ports_out: None,
     input_delaytype_fn: |_| None,
-    write_fn: |&WriteContextArgs {
+    write_fn: |wc @ &WriteContextArgs {
                    root,
                    op_span,
                    ident,
@@ -58,21 +58,36 @@ pub const TEE: OperatorConstraints = OperatorConstraints {
         } else {
             // hydroflo2 only
             let input = &inputs[0];
-            if let Some((last, elems)) = outputs.split_last() {
-                let clones = elems.iter().map(|output| {
-                    quote_spanned! {op_span=>
-                        let #output = ::core::clone::Clone::clone(&#input);
-                    }
-                });
+            let buffer_ident = wc.make_ident("buffer");
+            let clones = outputs.iter().map(|output| {
                 quote_spanned! {op_span=>
-                    #(
-                        #clones
-                    )*
-                    let #last = #input;
+                    let #output = #buffer_ident.iter().cloned();
                 }
-            } else {
-                Default::default()
+            });
+            quote_spanned! {op_span=>
+                let #buffer_ident: ::std::vec::Vec::<_> = #input.collect();
+                #(
+                    #clones
+                )*
             }
+
+            // if let Some((last, elems)) = outputs.split_last() {
+            //     let buffer_ident = wc.make_ident("buffer");
+            //     let clones = elems.iter().map(|output| {
+            //         quote_spanned! {op_span=>
+            //             let #output = #buffer_ident.iter().cloned();
+            //         }
+            //     });
+            //     quote_spanned! {op_span=>
+            //         let #buffer_ident: ::std::vec::Vec::<_> = #input.collect();
+            //         #(
+            //             #clones
+            //         )*
+            //         let #last = #buffer_ident.into_iter();
+            //     }
+            // } else {
+            //     Default::default()
+            // }
         };
         Ok(OperatorWriteOutput {
             write_iterator,

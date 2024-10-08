@@ -3,8 +3,8 @@ use std::path::PathBuf;
 use std::sync::LazyLock;
 
 use criterion::{criterion_group, criterion_main, Criterion};
-use hydroflow::hydroflow_syntax;
 use hydroflow::itertools::Itertools;
+use hydroflow::{hydroflo2_syntax, hydroflow_syntax};
 use nameof::name_of;
 
 const OUTPUT: usize = 5_123_595;
@@ -44,6 +44,24 @@ fn hydroflow_diamond(c: &mut Criterion) {
                 }) -> assert_eq([OUTPUT]);
             };
             df.run_available();
+        })
+    });
+}
+
+fn hydroflo2_diamond(c: &mut Criterion) {
+    let _ = *WORDS;
+
+    c.bench_function(name_of!(hydroflo2_diamond), |b| {
+        b.iter(|| {
+            let words = words();
+            hydroflo2_syntax! {
+                my_tee = source_iter(words) -> tee();
+                my_tee -> flat_map(|s| [format!("hi {}", s), format!("bye {}", s)]) -> my_union;
+                my_tee -> filter(|s| 0 == s.len() % 5) -> my_union;
+                my_union = union() -> fold(|| 0, |n, s| {
+                    *n += s.len();
+                }) -> assert_eq([OUTPUT]);
+            };
         })
     });
 }
@@ -174,6 +192,7 @@ fn hydroflo2_diamond_iter_buffer_one(c: &mut Criterion) {
 criterion_group!(
     words_diamond,
     hydroflow_diamond,
+    hydroflo2_diamond,
     hydroflo2_diamond_forloop,
     hydroflo2_diamond_iter_clone_chain,
     hydroflo2_diamond_iter_clone_interleave,

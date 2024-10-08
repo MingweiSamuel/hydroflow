@@ -209,7 +209,8 @@ impl Context {
 /// Internal APIs.
 impl Context {
     /// Create a new context for the Hydroflow graph instance, used internally.
-    pub(crate) fn new(event_queue_send: UnboundedSender<(SubgraphId, bool)>) -> Self {
+    #[doc(hidden)]
+    pub fn new(event_queue_send: UnboundedSender<(SubgraphId, bool)>) -> Self {
         Context {
             states: Vec::new(),
 
