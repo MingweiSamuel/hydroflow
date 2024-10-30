@@ -18,8 +18,8 @@ use super::ops::{
 };
 use super::{
     change_spans, get_operator_generics, Color, DiMulGraph, GraphEdgeId, GraphNode, GraphNodeId,
-    GraphSubgraphId, OperatorInstance, PortIndexValue, Varname, CONTEXT, HANDOFF_NODE_STR,
-    HYDROFLOW, MODULE_BOUNDARY_NODE_STR,
+    GraphSubgraphId, OneToMany, OperatorInstance, PortIndexValue, Varname, CONTEXT,
+    HANDOFF_NODE_STR, HYDROFLOW, MODULE_BOUNDARY_NODE_STR,
 };
 use crate::diagnostic::{Diagnostic, Level};
 use crate::pretty_span::{PrettyRowCol, PrettySpan};
@@ -47,12 +47,14 @@ pub struct HydroflowGraph {
     graph: DiMulGraph<GraphNodeId, GraphEdgeId>,
     /// Input and output port for each edge.
     ports: SecondaryMap<GraphEdgeId, (PortIndexValue, PortIndexValue)>,
-    /// Which subgraph each node belongs to.
-    node_subgraph: SecondaryMap<GraphNodeId, GraphSubgraphId>,
 
-    /// Which nodes belong to each subgraph.
-    subgraph_nodes: SlotMap<GraphSubgraphId, Vec<GraphNodeId>>,
-    /// Which stratum each subgraph belongs to.
+    /// Which subgraph each node belongs to, and which nodes belong to each subgraph.
+    subgraph_nodes: OneToMany<
+        GraphSubgraphId,
+        GraphNodeId,
+        SlotMap<GraphSubgraphId, Vec<GraphNodeId>>,
+        SecondaryMap<GraphNodeId, GraphSubgraphId>,
+    >,
     subgraph_stratum: SecondaryMap<GraphSubgraphId, usize>,
 
     /// Resolved singletons varnames references, per node.
@@ -96,7 +98,7 @@ impl HydroflowGraph {
 
     /// Get subgraph for node.
     pub fn node_subgraph(&self, node_id: GraphNodeId) -> Option<GraphSubgraphId> {
-        self.node_subgraph.get(node_id).copied()
+        self.subgraph_nodes.many_to_one.get(node_id).copied()
     }
 
     /// Degree into a node, i.e. the number of predecessors.
@@ -404,7 +406,8 @@ impl HydroflowGraph {
             "Removed intermediate node must have one successor"
         );
         assert!(
-            self.node_subgraph.is_empty() && self.subgraph_nodes.is_empty(),
+            self.subgraph_nodes.one_to_many.is_empty()
+                && self.subgraph_nodes.many_to_one.is_empty(),
             "Should not remove intermediate node after subgraph partitioning"
         );
 
@@ -496,7 +499,8 @@ impl HydroflowGraph {
     /// `merge_modules` calls this function for each module boundary in the graph.
     fn remove_module_boundary(&mut self, mod_bound_node: GraphNodeId) -> Result<(), Diagnostic> {
         assert!(
-            self.node_subgraph.is_empty() && self.subgraph_nodes.is_empty(),
+            self.subgraph_nodes.one_to_many.is_empty()
+                && self.subgraph_nodes.many_to_one.is_empty(),
             "Should not remove intermediate node after subgraph partitioning"
         );
 
@@ -618,18 +622,19 @@ impl HydroflowGraph {
     /// Nodes belonging to the given subgraph.
     pub fn subgraph(&self, subgraph_id: GraphSubgraphId) -> &Vec<GraphNodeId> {
         self.subgraph_nodes
+            .one_to_many
             .get(subgraph_id)
             .expect("Subgraph not found.")
     }
 
     /// Iterator over all subgraph IDs.
     pub fn subgraph_ids(&self) -> slotmap::basic::Keys<'_, GraphSubgraphId, Vec<GraphNodeId>> {
-        self.subgraph_nodes.keys()
+        self.subgraph_nodes.one_to_many.keys()
     }
 
     /// Iterator over all subgraphs, ID and members: `(GraphSubgraphId, Vec<GraphNodeId>)`.
     pub fn subgraphs(&self) -> slotmap::basic::Iter<'_, GraphSubgraphId, Vec<GraphNodeId>> {
-        self.subgraph_nodes.iter()
+        self.subgraph_nodes.one_to_many.iter()
     }
 
     /// Create a subgraph consisting of `node_ids`. Returns an error if any of the nodes are already in a subgraph.
@@ -639,13 +644,13 @@ impl HydroflowGraph {
     ) -> Result<GraphSubgraphId, (GraphNodeId, GraphSubgraphId)> {
         // Check none are already in subgraphs
         for &node_id in node_ids.iter() {
-            if let Some(&old_sg_id) = self.node_subgraph.get(node_id) {
+            if let Some(&old_sg_id) = self.subgraph_nodes.many_to_one.get(node_id) {
                 return Err((node_id, old_sg_id));
             }
         }
-        let subgraph_id = self.subgraph_nodes.insert_with_key(|sg_id| {
+        let subgraph_id = self.subgraph_nodes.one_to_many.insert_with_key(|sg_id| {
             for &node_id in node_ids.iter() {
-                self.node_subgraph.insert(node_id, sg_id);
+                self.subgraph_nodes.many_to_one.insert(node_id, sg_id);
             }
             node_ids
         });
@@ -655,8 +660,9 @@ impl HydroflowGraph {
 
     /// Removes a node from its subgraph. Returns true if the node was in a subgraph.
     pub fn remove_from_subgraph(&mut self, node_id: GraphNodeId) -> bool {
-        if let Some(old_sg_id) = self.node_subgraph.remove(node_id) {
-            self.subgraph_nodes[old_sg_id].retain(|&other_node_id| other_node_id != node_id);
+        if let Some(old_sg_id) = self.subgraph_nodes.many_to_one.remove(node_id) {
+            self.subgraph_nodes.one_to_many[old_sg_id]
+                .retain(|&other_node_id| other_node_id != node_id);
             true
         } else {
             false
@@ -757,8 +763,7 @@ impl HydroflowGraph {
             GraphSubgraphId,
             (Vec<GraphNodeId>, Vec<GraphNodeId>),
         > = self
-            .subgraph_nodes
-            .keys()
+            .subgraph_ids()
             .map(|k| (k, Default::default()))
             .collect();
 
@@ -814,10 +819,8 @@ impl HydroflowGraph {
         let subgraph_handoffs = self.helper_collect_subgraph_handoffs();
 
         // we first generate the subgraphs that have no inputs to guide type inference
-        let (subgraphs_without_preds, subgraphs_with_preds) = self
-            .subgraph_nodes
-            .iter()
-            .partition::<Vec<_>, _>(|(_, nodes)| {
+        let (subgraphs_without_preds, subgraphs_with_preds) =
+            self.subgraphs().partition::<Vec<_>, _>(|(_, nodes)| {
                 nodes
                     .iter()
                     .any(|&node_id| self.node_degree_in(node_id) == 0)
@@ -1215,7 +1218,7 @@ impl HydroflowGraph {
             .collect();
 
         // Fill in rest via subgraphs.
-        for sg_nodes in self.subgraph_nodes.values() {
+        for (_sg_id, sg_nodes) in self.subgraphs() {
             let pull_to_push_idx = self.find_pull_to_push_idx(sg_nodes);
 
             for (idx, node_id) in sg_nodes.iter().copied().enumerate() {
@@ -1410,7 +1413,7 @@ impl HydroflowGraph {
 
         // Write subgraphs.
         if !write_config.no_subgraphs {
-            for (subgraph_id, subgraph_node_ids) in self.subgraph_nodes.iter() {
+            for (subgraph_id, subgraph_node_ids) in self.subgraphs() {
                 let handoff_node_ids = subgraph_handoffs.get(&subgraph_id).into_iter().flatten();
                 let subgraph_node_ids = subgraph_node_ids.iter();
                 let all_node_ids = handoff_node_ids.chain(subgraph_node_ids).copied();
