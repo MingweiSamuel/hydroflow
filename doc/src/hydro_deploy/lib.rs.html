@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydro_deploy/core/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-dd39b87e5fcfba68.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hydro_deploy" data-themes="" data-resource-suffix="" data-rustdoc-version="1.81.0-nightly (d7f6ebace 2024-06-16)" data-channel="nightly" data-search-js="search-0fe7219eb170c82e.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-20a3ad099b048cf2.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-df360f571f6edeae.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydro_deploy/core/src/lib.rs`."><title>lib.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../static.files/rustdoc-fecee23daa4e8a6d.css"><meta name="rustdoc-vars" data-root-path="../../" data-static-root-path="../../static.files/" data-current-crate="hydro_deploy" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0-nightly (4ac7bcbaa 2024-09-04)" data-channel="nightly" data-search-js="search-a99f1315e7cc5121.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../src-files.js"></script><script defer src="../../static.files/main-921df33f47b8780c.js"></script><noscript><link rel="stylesheet" href="../../static.files/noscript-3b12f09e550e0385.css"></noscript><link rel="alternate icon" type="image/png" href="../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -217,15 +217,17 @@
 <a href="#217" id="217">217</a>
 <a href="#218" id="218">218</a>
 <a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::net::SocketAddr;
-<span class="kw">use </span>std::path::PathBuf;
 <span class="kw">use </span>std::sync::Arc;
 
 <span class="kw">use </span>anyhow::Result;
-<span class="kw">use </span>async_channel::{Receiver, Sender};
 <span class="kw">use </span>async_trait::async_trait;
-<span class="kw">use </span>hydroflow_cli_integration::ServerBindConfig;
+<span class="kw">use </span>hydroflow_crate::tracing_options::TracingOptions;
+<span class="kw">use </span>hydroflow_deploy_integration::ServerBindConfig;
 
 <span class="kw">pub mod </span>deployment;
 <span class="kw">pub use </span>deployment::Deployment;
@@ -248,6 +250,7 @@
 
 <span class="kw">pub mod </span>custom_service;
 <span class="kw">pub use </span>custom_service::CustomService;
+<span class="kw">use </span>tokio::sync::{mpsc, oneshot};
 
 <span class="kw">use </span><span class="kw">crate</span>::hydroflow_crate::build::BuildOutput;
 
@@ -291,20 +294,23 @@
 
 <span class="attr">#[async_trait]
 </span><span class="kw">pub trait </span>LaunchedBinary: Send + Sync {
-    <span class="kw">async fn </span>stdin(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Sender&lt;String&gt;;
+    <span class="kw">fn </span>stdin(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; mpsc::UnboundedSender&lt;String&gt;;
 
-    <span class="doccomment">/// Provides a oneshot channel for the CLI to handshake with the binary,
-    /// with the guarantee that as long as the CLI is holding on
+    <span class="doccomment">/// Provides a oneshot channel to handshake with the binary,
+    /// with the guarantee that as long as deploy is holding on
     /// to a handle, none of the messages will also be broadcast
     /// to the user-facing [`LaunchedBinary::stdout`] channel.
-    </span><span class="kw">async fn </span>cli_stdout(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; tokio::sync::oneshot::Receiver&lt;String&gt;;
+    </span><span class="kw">fn </span>deploy_stdout(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; oneshot::Receiver&lt;String&gt;;
 
-    <span class="kw">async fn </span>stdout(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Receiver&lt;String&gt;;
-    <span class="kw">async fn </span>stderr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; Receiver&lt;String&gt;;
+    <span class="kw">fn </span>stdout(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; mpsc::UnboundedReceiver&lt;String&gt;;
+    <span class="kw">fn </span>stderr(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; mpsc::UnboundedReceiver&lt;String&gt;;
 
-    <span class="kw">async fn </span>exit_code(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;i32&gt;;
+    <span class="kw">fn </span>exit_code(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;i32&gt;;
 
-    <span class="kw">async fn </span>wait(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;i32&gt;;
+    <span class="doccomment">/// Wait for the process to stop on its own. Returns the exit code.
+    </span><span class="kw">async fn </span>wait(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;i32&gt;;
+    <span class="doccomment">/// If the process is still running, force stop it. Then run post-run tasks.
+    </span><span class="kw">async fn </span>stop(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
 }
 
 <span class="attr">#[async_trait]
@@ -320,7 +326,7 @@
         id: String,
         binary: <span class="kw-2">&amp;</span>BuildOutput,
         args: <span class="kw-2">&amp;</span>[String],
-        perf: <span class="prelude-ty">Option</span>&lt;PathBuf&gt;,
+        perf: <span class="prelude-ty">Option</span>&lt;TracingOptions&gt;,
     ) -&gt; <span class="prelude-ty">Result</span>&lt;Box&lt;<span class="kw">dyn </span>LaunchedBinary&gt;&gt;;
 
     <span class="kw">async fn </span>forward_port(<span class="kw-2">&amp;</span><span class="self">self</span>, addr: <span class="kw-2">&amp;</span>SocketAddr) -&gt; <span class="prelude-ty">Result</span>&lt;SocketAddr&gt;;
@@ -362,31 +368,28 @@
     Linux,
 }
 
-<span class="kw">pub type </span>HostStrategyGetter = Box&lt;<span class="kw">dyn </span>FnOnce(<span class="kw-2">&amp;mut </span><span class="kw">dyn </span>std::any::Any) -&gt; ServerStrategy&gt;;
+<span class="kw">pub type </span>HostStrategyGetter = Box&lt;<span class="kw">dyn </span>FnOnce(<span class="kw-2">&amp;</span><span class="kw">dyn </span>std::any::Any) -&gt; ServerStrategy&gt;;
 
-<span class="attr">#[async_trait]
-</span><span class="kw">pub trait </span>Host: Send + Sync {
+<span class="kw">pub trait </span>Host: Send + Sync {
     <span class="kw">fn </span>target_type(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; HostTargetType;
 
-    <span class="kw">fn </span>request_port(<span class="kw-2">&amp;mut </span><span class="self">self</span>, bind_type: <span class="kw-2">&amp;</span>ServerStrategy);
+    <span class="kw">fn </span>request_port(<span class="kw-2">&amp;</span><span class="self">self</span>, bind_type: <span class="kw-2">&amp;</span>ServerStrategy);
 
     <span class="doccomment">/// An identifier for this host, which is unique within a deployment.
     </span><span class="kw">fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize;
 
-    <span class="doccomment">/// Returns a reference to the host as a trait object.
-    </span><span class="kw">fn </span>as_any(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>std::any::Any;
-
-    <span class="doccomment">/// Returns a reference to the host as a trait object.
-    </span><span class="kw">fn </span>as_any_mut(<span class="kw-2">&amp;mut </span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;mut </span><span class="kw">dyn </span>std::any::Any;
-
     <span class="doccomment">/// Configures the host to support copying and running a custom binary.
-    </span><span class="kw">fn </span>request_custom_binary(<span class="kw-2">&amp;mut </span><span class="self">self</span>);
+    </span><span class="kw">fn </span>request_custom_binary(<span class="kw-2">&amp;</span><span class="self">self</span>);
 
     <span class="doccomment">/// Makes requests for physical resources (servers) that this host needs to run.
+    ///
+    /// This should be called before `provision` is called.
     </span><span class="kw">fn </span>collect_resources(<span class="kw-2">&amp;</span><span class="self">self</span>, resource_batch: <span class="kw-2">&amp;mut </span>ResourceBatch);
 
     <span class="doccomment">/// Connects to the acquired resources and prepares the host to run services.
-    </span><span class="kw">async fn </span>provision(<span class="kw-2">&amp;mut </span><span class="self">self</span>, resource_result: <span class="kw-2">&amp;</span>Arc&lt;ResourceResult&gt;) -&gt; Arc&lt;<span class="kw">dyn </span>LaunchedHost&gt;;
+    ///
+    /// This should be called after `collect_resources` is called.
+    </span><span class="kw">fn </span>provision(<span class="kw-2">&amp;</span><span class="self">self</span>, resource_result: <span class="kw-2">&amp;</span>Arc&lt;ResourceResult&gt;) -&gt; Arc&lt;<span class="kw">dyn </span>LaunchedHost&gt;;
 
     <span class="kw">fn </span>launched(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;Arc&lt;<span class="kw">dyn </span>LaunchedHost&gt;&gt;;
 
@@ -399,6 +402,9 @@
 
     <span class="doccomment">/// Determines whether this host can connect to another host using the given strategy.
     </span><span class="kw">fn </span>can_connect_to(<span class="kw-2">&amp;</span><span class="self">self</span>, typ: ClientStrategy) -&gt; bool;
+
+    <span class="doccomment">/// Returns a reference to the host as a trait object.
+    </span><span class="kw">fn </span>as_any(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="kw">dyn </span>std::any::Any;
 }
 
 <span class="attr">#[async_trait]
@@ -409,7 +415,7 @@
     ///
     /// This should also perform any "free", non-blocking computations (compilations),
     /// because the `deploy` method will be called after these resources are allocated.
-    </span><span class="kw">fn </span>collect_resources(<span class="kw-2">&amp;mut </span><span class="self">self</span>, resource_batch: <span class="kw-2">&amp;mut </span>ResourceBatch);
+    </span><span class="kw">fn </span>collect_resources(<span class="kw-2">&amp;</span><span class="self">self</span>, resource_batch: <span class="kw-2">&amp;mut </span>ResourceBatch);
 
     <span class="doccomment">/// Connects to the acquired resources and prepares the service to be launched.
     </span><span class="kw">async fn </span>deploy(<span class="kw-2">&amp;mut </span><span class="self">self</span>, resource_result: <span class="kw-2">&amp;</span>Arc&lt;ResourceResult&gt;) -&gt; <span class="prelude-ty">Result</span>&lt;()&gt;;
