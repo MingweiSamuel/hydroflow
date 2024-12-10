@@ -61,12 +61,7 @@
 <a href="#61" id="61">61</a>
 <a href="#62" id="62">62</a>
 <a href="#63" id="63">63</a>
-<a href="#64" id="64">64</a>
-<a href="#65" id="65">65</a>
-<a href="#66" id="66">66</a>
-<a href="#67" id="67">67</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>hydroflow_plus::<span class="kw-2">*</span>;
-<span class="kw">use </span>stageleft::<span class="kw-2">*</span>;
 
 <span class="kw">pub struct </span>Leader {}
 <span class="kw">pub struct </span>Worker {}
@@ -79,32 +74,32 @@
         .source_iter(<span class="macro">q!</span>(<span class="macro">vec!</span>[<span class="string">"abc"</span>, <span class="string">"abc"</span>, <span class="string">"xyz"</span>, <span class="string">"abc"</span>]))
         .map(<span class="macro">q!</span>(|s| s.to_string()));
 
-    <span class="kw">let </span>all_ids_vec = cluster.members();
-    <span class="kw">let </span>words_partitioned = words
-        .tick_batch()
-        .enumerate()
-        .map(<span class="macro">q!</span>(|(i, w)| (
-            ClusterId::from_raw((i % all_ids_vec.len()) <span class="kw">as </span>u32),
-            w
-        )))
-        .all_ticks();
+    <span class="kw">let </span>partitioned_words = words
+        .round_robin_bincode(<span class="kw-2">&amp;</span>cluster)
+        .map(<span class="macro">q!</span>(|string| (string, ())));
 
-    words_partitioned
-        .send_bincode(<span class="kw-2">&amp;</span>cluster)
-        .map(<span class="macro">q!</span>(|string| (string, ())))
-        .tick_batch()
-        .fold_keyed(<span class="macro">q!</span>(|| <span class="number">0</span>), <span class="macro">q!</span>(|count, <span class="kw">_</span>| <span class="kw-2">*</span>count += <span class="number">1</span>))
-        .inspect(<span class="macro">q!</span>(|(string, count)| <span class="macro">println!</span>(
-            <span class="string">"partition count: {} - {}"</span>,
-            string, count
-        )))
-        .all_ticks()
-        .send_bincode_interleaved(<span class="kw-2">&amp;</span>process)
-        .tick_batch()
-        .persist()
-        .reduce_keyed(<span class="macro">q!</span>(|total, count| <span class="kw-2">*</span>total += count))
-        .all_ticks()
-        .for_each(<span class="macro">q!</span>(|(string, count)| <span class="macro">println!</span>(<span class="string">"{}: {}"</span>, string, count)));
+    <span class="kw">let </span>batches = <span class="kw">unsafe </span>{
+        <span class="comment">// SAFETY: addition is associative so we can batch reduce
+        </span>partitioned_words.timestamped(<span class="kw-2">&amp;</span>cluster.tick()).tick_batch()
+    }
+    .fold_keyed(<span class="macro">q!</span>(|| <span class="number">0</span>), <span class="macro">q!</span>(|count, <span class="kw">_</span>| <span class="kw-2">*</span>count += <span class="number">1</span>))
+    .inspect(<span class="macro">q!</span>(|(string, count)| <span class="macro">println!</span>(
+        <span class="string">"partition count: {} - {}"</span>,
+        string, count
+    )))
+    .all_ticks()
+    .send_bincode_interleaved(<span class="kw-2">&amp;</span>process);
+
+    <span class="kw">unsafe </span>{
+        <span class="comment">// SAFETY: addition is associative so we can batch reduce
+        </span>batches
+            .timestamped(<span class="kw-2">&amp;</span>process.tick())
+            .tick_batch()
+            .persist()
+            .reduce_keyed_commutative(<span class="macro">q!</span>(|total, count| <span class="kw-2">*</span>total += count))
+    }
+    .all_ticks()
+    .for_each(<span class="macro">q!</span>(|(string, count)| <span class="macro">println!</span>(<span class="string">"{}: {}"</span>, string, count)));
 
     (process, cluster)
 }
@@ -118,14 +113,11 @@
     </span><span class="kw">fn </span>map_reduce_ir() {
         <span class="kw">let </span>builder = hydroflow_plus::FlowBuilder::new();
         <span class="kw">let _ </span>= <span class="kw">super</span>::map_reduce(<span class="kw-2">&amp;</span>builder);
-        <span class="kw">let </span>built = builder.with_default_optimize();
+        <span class="kw">let </span>built = builder.with_default_optimize::&lt;DeployRuntime&gt;();
 
         <span class="macro">insta::assert_debug_snapshot!</span>(built.ir());
 
-        <span class="kw">for </span>(id, ir) <span class="kw">in </span>built
-            .compile::&lt;DeployRuntime&gt;(<span class="kw-2">&amp;</span>RuntimeData::new(<span class="string">"FAKE"</span>))
-            .hydroflow_ir()
-        {
+        <span class="kw">for </span>(id, ir) <span class="kw">in </span>built.compile(<span class="kw-2">&amp;</span>RuntimeData::new(<span class="string">"FAKE"</span>)).hydroflow_ir() {
             <span class="macro">insta::with_settings!</span>({snapshot_suffix =&gt; <span class="macro">format!</span>(<span class="string">"surface_graph_{id}"</span>)}, {
                 <span class="macro">insta::assert_snapshot!</span>(ir.surface_syntax_string());
             });

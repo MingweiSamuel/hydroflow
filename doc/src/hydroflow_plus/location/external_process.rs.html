@@ -130,6 +130,13 @@
 <a href="#130" id="130">130</a>
 <a href="#131" id="131">131</a>
 <a href="#132" id="132">132</a>
+<a href="#133" id="133">133</a>
+<a href="#134" id="134">134</a>
+<a href="#135" id="135">135</a>
+<a href="#136" id="136">136</a>
+<a href="#137" id="137">137</a>
+<a href="#138" id="138">138</a>
+<a href="#139" id="139">139</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 
 <span class="kw">use </span>hydroflow::bytes::Bytes;
@@ -139,6 +146,7 @@
 <span class="kw">use super</span>::{Location, LocationId, NoTick};
 <span class="kw">use </span><span class="kw">crate</span>::builder::FlowState;
 <span class="kw">use </span><span class="kw">crate</span>::ir::{HfPlusNode, HfPlusSource};
+<span class="kw">use </span><span class="kw">crate</span>::staging_util::Invariant;
 <span class="kw">use crate</span>::{Stream, Unbounded};
 
 <span class="kw">pub struct </span>ExternalBytesPort {
@@ -163,7 +171,7 @@
 
     <span class="kw">pub</span>(<span class="kw">crate</span>) flow_state: FlowState,
 
-    <span class="kw">pub</span>(<span class="kw">crate</span>) _phantom: PhantomData&lt;<span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">&amp;</span><span class="lifetime">'a </span><span class="kw-2">mut </span>P&gt;,
+    <span class="kw">pub</span>(<span class="kw">crate</span>) _phantom: Invariant&lt;<span class="lifetime">'a</span>, P&gt;,
 }
 
 <span class="kw">impl</span>&lt;P&gt; Clone <span class="kw">for </span>ExternalProcess&lt;<span class="lifetime">'_</span>, P&gt; {
@@ -177,6 +185,12 @@
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, P&gt; Location&lt;<span class="lifetime">'a</span>&gt; <span class="kw">for </span>ExternalProcess&lt;<span class="lifetime">'a</span>, P&gt; {
+    <span class="kw">type </span>Root = <span class="self">Self</span>;
+
+    <span class="kw">fn </span>root(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span>::Root {
+        <span class="self">self</span>.clone()
+    }
+
     <span class="kw">fn </span>id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; LocationId {
         LocationId::ExternalProcess(<span class="self">self</span>.id)
     }
@@ -194,7 +208,7 @@
     <span class="kw">pub fn </span>source_external_bytes&lt;L: Location&lt;<span class="lifetime">'a</span>&gt; + NoTick&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         to: <span class="kw-2">&amp;</span>L,
-    ) -&gt; (ExternalBytesPort, Stream&lt;Bytes, Unbounded, L&gt;) {
+    ) -&gt; (ExternalBytesPort, Stream&lt;Bytes, L, Unbounded&gt;) {
         <span class="kw">let </span>next_external_port_id = {
             <span class="kw">let </span><span class="kw-2">mut </span>flow_state = <span class="self">self</span>.flow_state.borrow_mut();
             <span class="kw">let </span>id = flow_state.next_external_out;
@@ -229,7 +243,7 @@
     <span class="kw">pub fn </span>source_external_bincode&lt;L: Location&lt;<span class="lifetime">'a</span>&gt; + NoTick, T: Serialize + DeserializeOwned&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         to: <span class="kw-2">&amp;</span>L,
-    ) -&gt; (ExternalBincodeSink&lt;T&gt;, Stream&lt;T, Unbounded, L&gt;) {
+    ) -&gt; (ExternalBincodeSink&lt;T&gt;, Stream&lt;T, L, Unbounded&gt;) {
         <span class="kw">let </span>next_external_port_id = {
             <span class="kw">let </span><span class="kw-2">mut </span>flow_state = <span class="self">self</span>.flow_state.borrow_mut();
             <span class="kw">let </span>id = flow_state.next_external_out;

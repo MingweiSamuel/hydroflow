@@ -431,6 +431,7 @@
 <a href="#431" id="431">431</a>
 <a href="#432" id="432">432</a>
 <a href="#433" id="433">433</a>
+<a href="#434" id="434">434</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Graph representation stages for Hydroflow graphs.
 
 </span><span class="kw">use </span>std::borrow::Cow;
@@ -458,7 +459,6 @@
 <span class="kw">mod </span>hydroflow_graph_debugging;
 
 <span class="kw">use </span>std::fmt::Display;
-<span class="kw">use </span>std::path::PathBuf;
 
 <span class="kw">pub use </span>di_mul_graph::DiMulGraph;
 <span class="kw">pub use </span>eliminate_extra_unions_tees::eliminate_extra_unions_tees;
@@ -478,6 +478,9 @@
 
     <span class="doccomment">/// ID to identify a subgraph in [`HydroflowGraph`].
     </span><span class="kw">pub struct </span>GraphSubgraphId;
+
+    <span class="doccomment">/// ID to identify a loop block in [`HydroflowGraph`].
+    </span><span class="kw">pub struct </span>GraphLoopId;
 }
 
 <span class="doccomment">/// Context identifier as a string.
@@ -806,9 +809,8 @@
 </span><span class="kw">pub fn </span>build_hfcode(
     hf_code: HfCode,
     root: <span class="kw-2">&amp;</span>TokenStream,
-    macro_invocation_path: PathBuf,
 ) -&gt; (<span class="prelude-ty">Option</span>&lt;(HydroflowGraph, TokenStream)&gt;, Vec&lt;Diagnostic&gt;) {
-    <span class="kw">let </span>flat_graph_builder = FlatGraphBuilder::from_hfcode(hf_code, macro_invocation_path);
+    <span class="kw">let </span>flat_graph_builder = FlatGraphBuilder::from_hfcode(hf_code);
     <span class="kw">let </span>(<span class="kw-2">mut </span>flat_graph, uses, <span class="kw-2">mut </span>diagnostics) = flat_graph_builder.build();
     <span class="kw">if </span>!diagnostics.iter().any(Diagnostic::is_error) {
         <span class="kw">if let </span><span class="prelude-val">Err</span>(diagnostic) = flat_graph.merge_modules() {

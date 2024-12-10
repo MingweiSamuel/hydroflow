@@ -889,12 +889,40 @@
 <a href="#889" id="889">889</a>
 <a href="#890" id="890">890</a>
 <a href="#891" id="891">891</a>
+<a href="#892" id="892">892</a>
+<a href="#893" id="893">893</a>
+<a href="#894" id="894">894</a>
+<a href="#895" id="895">895</a>
+<a href="#896" id="896">896</a>
+<a href="#897" id="897">897</a>
+<a href="#898" id="898">898</a>
+<a href="#899" id="899">899</a>
+<a href="#900" id="900">900</a>
+<a href="#901" id="901">901</a>
+<a href="#902" id="902">902</a>
+<a href="#903" id="903">903</a>
+<a href="#904" id="904">904</a>
+<a href="#905" id="905">905</a>
+<a href="#906" id="906">906</a>
+<a href="#907" id="907">907</a>
+<a href="#908" id="908">908</a>
+<a href="#909" id="909">909</a>
+<a href="#910" id="910">910</a>
+<a href="#911" id="911">911</a>
+<a href="#912" id="912">912</a>
+<a href="#913" id="913">913</a>
+<a href="#914" id="914">914</a>
+<a href="#915" id="915">915</a>
+<a href="#916" id="916">916</a>
+<a href="#917" id="917">917</a>
+<a href="#918" id="918">918</a>
+<a href="#919" id="919">919</a>
+<a href="#920" id="920">920</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Build a flat graph from [`HfStatement`]s.
 
 </span><span class="kw">use </span>std::borrow::Cow;
 <span class="kw">use </span>std::collections::btree_map::Entry;
 <span class="kw">use </span>std::collections::{BTreeMap, BTreeSet};
-<span class="kw">use </span>std::path::PathBuf;
 
 <span class="kw">use </span>itertools::Itertools;
 <span class="kw">use </span>proc_macro2::Span;
@@ -902,8 +930,11 @@
 <span class="kw">use </span>syn::spanned::Spanned;
 <span class="kw">use </span>syn::{Error, Ident, ItemUse};
 
-<span class="kw">use super</span>::{GraphEdgeId, GraphNode, GraphNodeId, HydroflowGraph, PortIndexValue};
+<span class="kw">use </span><span class="kw">super</span>::ops::defer_tick::DEFER_TICK;
+<span class="kw">use </span><span class="kw">super</span>::ops::FloType;
+<span class="kw">use super</span>::{GraphEdgeId, GraphLoopId, GraphNode, GraphNodeId, HydroflowGraph, PortIndexValue};
 <span class="kw">use </span><span class="kw">crate</span>::diagnostic::{Diagnostic, Level};
+<span class="kw">use </span><span class="kw">crate</span>::graph::graph_algorithms;
 <span class="kw">use </span><span class="kw">crate</span>::graph::ops::{PortListSpec, RangeTrait};
 <span class="kw">use </span><span class="kw">crate</span>::parse::{HfCode, HfStatement, Operator, Pipeline};
 <span class="kw">use </span><span class="kw">crate</span>::pretty_span::PrettySpan;
@@ -959,9 +990,6 @@
     <span class="doccomment">/// Use statements.
     </span>uses: Vec&lt;ItemUse&gt;,
 
-    <span class="doccomment">/// In order to make import!() statements relative to the current file, we need to know where the file is that is building the flat graph.
-    </span>invocating_file_path: PathBuf,
-
     <span class="doccomment">/// If the flat graph is being loaded as a module, then two initial ModuleBoundary nodes are inserted into the graph. One
     /// for the input into the module and one for the output out of the module.
     </span>module_boundary_nodes: <span class="prelude-ty">Option</span>&lt;(GraphNodeId, GraphNodeId)&gt;,
@@ -974,35 +1002,8 @@
     }
 
     <span class="doccomment">/// Convert the Hydroflow code AST into a graph builder.
-    </span><span class="kw">pub fn </span>from_hfcode(input: HfCode, macro_invocation_path: PathBuf) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span><span class="kw-2">mut </span>builder = <span class="self">Self </span>{
-            invocating_file_path: macro_invocation_path,
-            ..Default::default()
-        };
-        builder.process_statements(input.statements);
-        builder
-    }
-
-    <span class="doccomment">/// Convert the Hydroflow code AST into a graph builder.
-    </span><span class="kw">pub fn </span>from_hfmodule(input: HfCode, root_path: PathBuf) -&gt; <span class="self">Self </span>{
+    </span><span class="kw">pub fn </span>from_hfcode(input: HfCode) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span><span class="kw-2">mut </span>builder = <span class="self">Self</span>::default();
-        builder.invocating_file_path = root_path; <span class="comment">// imports inside of modules should be relative to the importing file.
-        </span>builder.module_boundary_nodes = <span class="prelude-val">Some</span>((
-            builder.flat_graph.insert_node(
-                GraphNode::ModuleBoundary {
-                    input: <span class="bool-val">true</span>,
-                    import_expr: Span::call_site(),
-                },
-                <span class="prelude-val">Some</span>(Ident::new(<span class="string">"input"</span>, Span::call_site())),
-            ),
-            builder.flat_graph.insert_node(
-                GraphNode::ModuleBoundary {
-                    input: <span class="bool-val">false</span>,
-                    import_expr: Span::call_site(),
-                },
-                <span class="prelude-val">Some</span>(Ident::new(<span class="string">"output"</span>, Span::call_site())),
-            ),
-        ));
         builder.process_statements(input.statements);
         builder
     }
@@ -1025,15 +1026,24 @@
         (<span class="self">self</span>.flat_graph, <span class="self">self</span>.uses, <span class="self">self</span>.diagnostics)
     }
 
-    <span class="doccomment">/// Add a single [`HfStatement`] line to this `HydroflowGraph`.
+    <span class="doccomment">/// Add a single [`HfStatement`] line to this `HydroflowGraph` in the root context.
     </span><span class="kw">pub fn </span>add_statement(<span class="kw-2">&amp;mut </span><span class="self">self</span>, stmt: HfStatement) {
+        <span class="self">self</span>.add_statement_with_loop(stmt, <span class="prelude-val">None</span>)
+    }
+
+    <span class="doccomment">/// Add a single [`HfStatement`] line to this `HydroflowGraph` in the given loop context.
+    </span><span class="kw">pub fn </span>add_statement_with_loop(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        stmt: HfStatement,
+        current_loop: <span class="prelude-ty">Option</span>&lt;GraphLoopId&gt;,
+    ) {
         <span class="kw">match </span>stmt {
             HfStatement::Use(yuse) =&gt; {
                 <span class="self">self</span>.uses.push(yuse);
             }
             HfStatement::Named(named) =&gt; {
                 <span class="kw">let </span>stmt_span = named.span();
-                <span class="kw">let </span>ends = <span class="self">self</span>.add_pipeline(named.pipeline, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>named.name));
+                <span class="kw">let </span>ends = <span class="self">self</span>.add_pipeline(named.pipeline, <span class="prelude-val">Some</span>(<span class="kw-2">&amp;</span>named.name), current_loop);
                 <span class="kw">match </span><span class="self">self</span>.varname_ends.entry(named.name) {
                     Entry::Vacant(vacant_entry) =&gt; {
                         vacant_entry.insert(VarnameInfo::new(ends));
@@ -1062,20 +1072,32 @@
                 }
             }
             HfStatement::Pipeline(pipeline_stmt) =&gt; {
-                <span class="kw">let </span>ends = <span class="self">self</span>.add_pipeline(pipeline_stmt.pipeline, <span class="prelude-val">None</span>);
+                <span class="kw">let </span>ends = <span class="self">self</span>.add_pipeline(pipeline_stmt.pipeline, <span class="prelude-val">None</span>, current_loop);
                 <span class="self">Self</span>::helper_check_unused_port(<span class="kw-2">&amp;mut </span><span class="self">self</span>.diagnostics, <span class="kw-2">&amp;</span>ends, <span class="bool-val">true</span>);
                 <span class="self">Self</span>::helper_check_unused_port(<span class="kw-2">&amp;mut </span><span class="self">self</span>.diagnostics, <span class="kw-2">&amp;</span>ends, <span class="bool-val">false</span>);
+            }
+            HfStatement::Loop(loop_statement) =&gt; {
+                <span class="kw">let </span>inner_loop = <span class="self">self</span>.flat_graph.insert_loop(current_loop);
+                <span class="kw">for </span>stmt <span class="kw">in </span>loop_statement.statements {
+                    <span class="self">self</span>.add_statement_with_loop(stmt, <span class="prelude-val">Some</span>(inner_loop));
+                }
             }
         }
     }
 
     <span class="doccomment">/// Helper: Add a pipeline, i.e. `a -&gt; b -&gt; c`. Return the input and output ends for it.
-    </span><span class="kw">fn </span>add_pipeline(<span class="kw-2">&amp;mut </span><span class="self">self</span>, pipeline: Pipeline, current_varname: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Ident&gt;) -&gt; Ends {
+    </span><span class="kw">fn </span>add_pipeline(
+        <span class="kw-2">&amp;mut </span><span class="self">self</span>,
+        pipeline: Pipeline,
+        current_varname: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>Ident&gt;,
+        current_loop: <span class="prelude-ty">Option</span>&lt;GraphLoopId&gt;,
+    ) -&gt; Ends {
         <span class="kw">match </span>pipeline {
             Pipeline::Paren(ported_pipeline_paren) =&gt; {
                 <span class="kw">let </span>(inn_port, pipeline_paren, out_port) =
                     PortIndexValue::from_ported(ported_pipeline_paren);
-                <span class="kw">let </span>og_ends = <span class="self">self</span>.add_pipeline(<span class="kw-2">*</span>pipeline_paren.pipeline, current_varname);
+                <span class="kw">let </span>og_ends =
+                    <span class="self">self</span>.add_pipeline(<span class="kw-2">*</span>pipeline_paren.pipeline, current_varname, current_loop);
                 <span class="self">Self</span>::helper_combine_ends(<span class="kw-2">&amp;mut </span><span class="self">self</span>.diagnostics, og_ends, inn_port, out_port)
             }
             Pipeline::Name(pipeline_name) =&gt; {
@@ -1113,8 +1135,8 @@
             }
             Pipeline::Link(pipeline_link) =&gt; {
                 <span class="comment">// Add the nested LHS and RHS of this link.
-                </span><span class="kw">let </span>lhs_ends = <span class="self">self</span>.add_pipeline(<span class="kw-2">*</span>pipeline_link.lhs, current_varname);
-                <span class="kw">let </span>rhs_ends = <span class="self">self</span>.add_pipeline(<span class="kw-2">*</span>pipeline_link.rhs, current_varname);
+                </span><span class="kw">let </span>lhs_ends = <span class="self">self</span>.add_pipeline(<span class="kw-2">*</span>pipeline_link.lhs, current_varname, current_loop);
+                <span class="kw">let </span>rhs_ends = <span class="self">self</span>.add_pipeline(<span class="kw-2">*</span>pipeline_link.rhs, current_varname, current_loop);
 
                 <span class="comment">// Outer (first and last) ends.
                 </span><span class="kw">let </span>outer_ends = Ends {
@@ -1131,125 +1153,17 @@
             }
             Pipeline::Operator(operator) =&gt; {
                 <span class="kw">let </span>op_span = <span class="prelude-val">Some</span>(operator.span());
-                <span class="kw">let </span>nid = <span class="self">self
-                    </span>.flat_graph
-                    .insert_node(GraphNode::Operator(operator), current_varname.cloned());
+                <span class="kw">let </span>nid = <span class="self">self</span>.flat_graph.insert_node(
+                    GraphNode::Operator(operator),
+                    current_varname.cloned(),
+                    current_loop,
+                );
                 Ends {
                     inn: <span class="prelude-val">Some</span>((PortIndexValue::Elided(op_span), GraphDet::Determined(nid))),
                     out: <span class="prelude-val">Some</span>((PortIndexValue::Elided(op_span), GraphDet::Determined(nid))),
                 }
             }
-            Pipeline::Import(import) =&gt; {
-                <span class="comment">// TODO: https://github.com/rust-lang/rfcs/pull/3200
-                // this would be way better...
-                </span><span class="kw">let </span>file_path = {
-                    <span class="kw">let </span><span class="kw-2">mut </span>dir = <span class="self">self</span>.invocating_file_path.clone();
-                    dir.pop();
-                    dir.join(import.filename.value())
-                };
-
-                <span class="kw">let </span>file_contents = <span class="kw">match </span>std::fs::read_to_string(<span class="kw-2">&amp;</span>file_path) {
-                    <span class="prelude-val">Ok</span>(contents) =&gt; contents,
-                    <span class="prelude-val">Err</span>(err) =&gt; {
-                        <span class="self">self</span>.diagnostics.push(Diagnostic::spanned(
-                            import.filename.span(),
-                            Level::Error,
-                            <span class="macro">format!</span>(<span class="string">"filename: {}, err: {err}"</span>, import.filename.value()),
-                        ));
-
-                        <span class="kw">return </span>Ends {
-                            inn: <span class="prelude-val">None</span>,
-                            out: <span class="prelude-val">None</span>,
-                        };
-                    }
-                };
-
-                <span class="kw">let </span>statements = <span class="kw">match </span>syn::parse_str::&lt;HfCode&gt;(<span class="kw-2">&amp;</span>file_contents) {
-                    <span class="prelude-val">Ok</span>(code) =&gt; code,
-                    <span class="prelude-val">Err</span>(err) =&gt; {
-                        <span class="self">self</span>.diagnostics.push(Diagnostic::spanned(
-                            import.span(),
-                            Level::Error,
-                            err.to_string(),
-                        ));
-
-                        <span class="kw">return </span>Ends {
-                            inn: <span class="prelude-val">None</span>,
-                            out: <span class="prelude-val">None</span>,
-                        };
-                    }
-                };
-
-                <span class="kw">let </span>flat_graph_builder = FlatGraphBuilder::from_hfmodule(statements, file_path);
-                <span class="kw">let </span>(flat_graph, _uses, diagnostics) = flat_graph_builder.build();
-                diagnostics.iter().for_each(Diagnostic::emit);
-
-                <span class="self">self</span>.merge_in(flat_graph, import.span())
-            }
         }
-    }
-
-    <span class="doccomment">/// Merge one flatgraph into the current flatgraph
-    /// other must be a flatgraph and not be partitioned yet.
-    </span><span class="kw">fn </span>merge_in(<span class="kw-2">&amp;mut </span><span class="self">self</span>, other: HydroflowGraph, parent_span: Span) -&gt; Ends {
-        <span class="macro">assert_eq!</span>(other.subgraphs().count(), <span class="number">0</span>);
-
-        <span class="kw">let </span><span class="kw-2">mut </span>ends = Ends {
-            inn: <span class="prelude-val">None</span>,
-            out: <span class="prelude-val">None</span>,
-        };
-
-        <span class="kw">let </span><span class="kw-2">mut </span>node_mapping = BTreeMap::new();
-
-        <span class="kw">for </span>(other_node_id, node) <span class="kw">in </span>other.nodes() {
-            <span class="kw">match </span>node {
-                GraphNode::Operator(<span class="kw">_</span>) =&gt; {
-                    <span class="kw">let </span>varname = other.node_varname(other_node_id);
-                    <span class="kw">let </span>new_id = <span class="self">self</span>.flat_graph.insert_node(node.clone(), varname);
-                    node_mapping.insert(other_node_id, new_id);
-                }
-                GraphNode::ModuleBoundary { input, .. } =&gt; {
-                    <span class="kw">let </span>new_id = <span class="self">self</span>.flat_graph.insert_node(
-                        GraphNode::ModuleBoundary {
-                            input: <span class="kw-2">*</span>input,
-                            import_expr: parent_span,
-                        },
-                        <span class="prelude-val">Some</span>(Ident::new(<span class="kw-2">&amp;</span><span class="macro">format!</span>(<span class="string">"module_{}"</span>, input), parent_span)),
-                    );
-                    node_mapping.insert(other_node_id, new_id);
-
-                    <span class="comment">// in the case of nested imports, this module boundary might not be the module boundary into or out of the top-most module
-                    // So we have to be careful to only target those two boundaries.
-                    // There should be no inputs to it, if it is an input boundary, if it is the top-most one.
-                    // and there should be no outputs from it, if it is an output boundary, if it is the top-most one.
-                    </span><span class="kw">if </span><span class="kw-2">*</span>input &amp;&amp; other.node_predecessor_nodes(other_node_id).count() == <span class="number">0 </span>{
-                        <span class="kw">if </span>other.node_predecessor_nodes(other_node_id).count() == <span class="number">0 </span>{
-                            ends.inn =
-                                <span class="prelude-val">Some</span>((PortIndexValue::Elided(<span class="prelude-val">None</span>), GraphDet::Determined(new_id)));
-                        }
-                    } <span class="kw">else if </span>!(<span class="kw-2">*</span>input) &amp;&amp; other.node_successor_nodes(other_node_id).count() == <span class="number">0 </span>{
-                        ends.out =
-                            <span class="prelude-val">Some</span>((PortIndexValue::Elided(<span class="prelude-val">None</span>), GraphDet::Determined(new_id)));
-                    }
-                }
-                GraphNode::Handoff { .. } =&gt; {
-                    <span class="macro">panic!</span>(<span class="string">"Handoff in graph that is being merged into self"</span>)
-                }
-            }
-        }
-
-        <span class="kw">for </span>(other_edge_id, (other_src, other_dst)) <span class="kw">in </span>other.edges() {
-            <span class="kw">let </span>(src_port, dst_port) = other.edge_ports(other_edge_id);
-
-            <span class="kw">let </span>_new_edge_id = <span class="self">self</span>.flat_graph.insert_edge(
-                <span class="kw-2">*</span>node_mapping.get(<span class="kw-2">&amp;</span>other_src).unwrap(),
-                src_port.clone(),
-                <span class="kw-2">*</span>node_mapping.get(<span class="kw-2">&amp;</span>other_dst).unwrap(),
-                dst_port.clone(),
-            );
-        }
-
-        ends
     }
 
     <span class="doccomment">/// Connects operator links as a final building step. Processes all the links stored in
@@ -1453,6 +1367,7 @@
         <span class="self">self</span>.make_operator_instances();
         <span class="self">self</span>.check_operator_errors();
         <span class="self">self</span>.warn_unused_port_indexing();
+        <span class="self">self</span>.check_loop_errors();
     }
 
     <span class="doccomment">/// Make `OperatorInstance`s for each operator node.
@@ -1776,6 +1691,149 @@
                 <span class="comment">// When errored, just use original and ignore OTHER port to minimize
                 // noisy/extra diagnostics.
                 </span><span class="prelude-val">Some</span>((og_port, og_node))
+            }
+        }
+    }
+
+    <span class="doccomment">/// Check for loop context-related errors.
+    </span><span class="kw">fn </span>check_loop_errors(<span class="kw-2">&amp;mut </span><span class="self">self</span>) {
+        <span class="comment">// All inputs must be declared in the root block.
+        </span><span class="kw">for </span>(node_id, node) <span class="kw">in </span><span class="self">self</span>.flat_graph.nodes() {
+            <span class="kw">let </span><span class="prelude-val">Some</span>(op_inst) = <span class="self">self</span>.flat_graph.node_op_inst(node_id) <span class="kw">else </span>{
+                <span class="kw">continue</span>;
+            };
+            <span class="kw">let </span>loop_id = <span class="self">self</span>.flat_graph.node_loop(node_id);
+
+            <span class="comment">// Source operators must be at the top level.
+            </span><span class="kw">if </span><span class="prelude-val">Some</span>(FloType::Source) == op_inst.op_constraints.flo_type &amp;&amp; loop_id.is_some() {
+                <span class="self">self</span>.diagnostics.push(Diagnostic::spanned(
+                    node.span(),
+                    Level::Error,
+                    <span class="macro">format!</span>(
+                        <span class="string">"Source operator `{}(...)` must be at the root level, not within any `loop {{ ... }}` contexts."</span>,
+                        op_inst.op_constraints.name
+                    )
+                ));
+            }
+        }
+
+        <span class="comment">// Check windowing and un-windowing operators, for loop inputs and outputs respectively.
+        </span><span class="kw">for </span>(_edge_id, (pred_id, node_id)) <span class="kw">in </span><span class="self">self</span>.flat_graph.edges() {
+            <span class="kw">let </span><span class="prelude-val">Some</span>(op_inst) = <span class="self">self</span>.flat_graph.node_op_inst(node_id) <span class="kw">else </span>{
+                <span class="kw">continue</span>;
+            };
+            <span class="kw">let </span>flo_type = <span class="kw-2">&amp;</span>op_inst.op_constraints.flo_type;
+
+            <span class="kw">let </span>pred_loop_id = <span class="self">self</span>.flat_graph.node_loop(pred_id);
+            <span class="kw">let </span>loop_id = <span class="self">self</span>.flat_graph.node_loop(node_id);
+
+            <span class="kw">let </span>span = <span class="self">self</span>.flat_graph.node(node_id).span();
+
+            <span class="kw">let </span>(is_input, is_output) = {
+                <span class="kw">let </span>parent_pred_loop_id =
+                    pred_loop_id.and_then(|lid| <span class="self">self</span>.flat_graph.loop_parent(lid));
+                <span class="kw">let </span>parent_loop_id = loop_id.and_then(|lid| <span class="self">self</span>.flat_graph.loop_parent(lid));
+                <span class="kw">let </span>is_same = pred_loop_id == loop_id;
+                <span class="kw">let </span>is_input = !is_same &amp;&amp; parent_loop_id == pred_loop_id;
+                <span class="kw">let </span>is_output = !is_same &amp;&amp; parent_pred_loop_id == loop_id;
+                <span class="kw">if </span>!(is_input || is_output || is_same) {
+                    <span class="self">self</span>.diagnostics.push(Diagnostic::spanned(
+                        span,
+                        Level::Error,
+                        <span class="string">"Operator input edge may not cross multiple loop contexts."</span>,
+                    ));
+                    <span class="kw">continue</span>;
+                }
+                (is_input, is_output)
+            };
+
+            <span class="kw">match </span>flo_type {
+                <span class="prelude-val">None </span>=&gt; {
+                    <span class="kw">if </span>is_input {
+                        <span class="self">self</span>.diagnostics.push(Diagnostic::spanned(
+                            span,
+                            Level::Error,
+                            <span class="macro">format!</span>(
+                                <span class="string">"Operator `{}(...)` entering a loop context must be a windowing operator, but is not."</span>,
+                                op_inst.op_constraints.name
+                            )
+                        ));
+                    }
+                    <span class="kw">if </span>is_output {
+                        <span class="self">self</span>.diagnostics.push(Diagnostic::spanned(
+                            span,
+                            Level::Error,
+                            <span class="macro">format!</span>(
+                                <span class="string">"Operator `{}(...)` exiting a loop context must be an un-windowing operator, but is not."</span>,
+                                op_inst.op_constraints.name
+                            )
+                        ));
+                    }
+                }
+                <span class="prelude-val">Some</span>(FloType::Windowing) =&gt; {
+                    <span class="kw">if </span>!is_input {
+                        <span class="self">self</span>.diagnostics.push(Diagnostic::spanned(
+                            span,
+                            Level::Error,
+                            <span class="macro">format!</span>(
+                                <span class="string">"Windowing operator `{}(...)` must be the first input operator into a `loop {{ ... }} context."</span>,
+                                op_inst.op_constraints.name
+                            )
+                        ));
+                    }
+                }
+                <span class="prelude-val">Some</span>(FloType::Unwindowing) =&gt; {
+                    <span class="kw">if </span>!is_output {
+                        <span class="self">self</span>.diagnostics.push(Diagnostic::spanned(
+                            span,
+                            Level::Error,
+                            <span class="macro">format!</span>(
+                                <span class="string">"Un-windowing operator `{}(...)` must be the first output operator after exiting a `loop {{ ... }} context."</span>,
+                                op_inst.op_constraints.name
+                            )
+                        ));
+                    }
+                }
+                <span class="prelude-val">Some</span>(FloType::Source) =&gt; {
+                    <span class="comment">// Handled above.
+                </span>}
+            }
+        }
+
+        <span class="comment">// Must be a DAG (excluding `next_tick()` operators).
+        // TODO(mingwei): Nested loop blocks should count as a single node.
+        </span><span class="kw">for </span>(loop_id, loop_nodes) <span class="kw">in </span><span class="self">self</span>.flat_graph.loops() {
+            <span class="comment">// Filter out `defer_tick()` operators.
+            </span><span class="kw">let </span>filter_defer_tick = |<span class="kw-2">&amp;</span>node_id: <span class="kw-2">&amp;</span>GraphNodeId| {
+                <span class="self">self</span>.flat_graph
+                    .node_op_inst(node_id)
+                    .map(|op_inst| DEFER_TICK.name != op_inst.op_constraints.name)
+                    .unwrap_or(<span class="bool-val">true</span>)
+            };
+
+            <span class="kw">let </span>topo_sort_result = graph_algorithms::topo_sort(
+                loop_nodes.iter().copied().filter(filter_defer_tick),
+                |dst| {
+                    <span class="self">self</span>.flat_graph
+                        .node_predecessor_nodes(dst)
+                        .filter(|<span class="kw-2">&amp;</span>src| <span class="prelude-val">Some</span>(loop_id) == <span class="self">self</span>.flat_graph.node_loop(src))
+                        .filter(filter_defer_tick)
+                },
+            );
+            <span class="kw">if let </span><span class="prelude-val">Err</span>(cycle) = topo_sort_result {
+                <span class="kw">let </span>len = cycle.len();
+                <span class="kw">for </span>(i, node_id) <span class="kw">in </span>cycle.into_iter().enumerate() {
+                    <span class="kw">let </span>span = <span class="self">self</span>.flat_graph.node(node_id).span();
+                    <span class="self">self</span>.diagnostics.push(Diagnostic::spanned(
+                        span,
+                        Level::Error,
+                        <span class="macro">format!</span>(
+                            <span class="string">"Operator forms an illegal cycle within a `loop {{ ... }}` block ({}/{})."</span>,
+                            i + <span class="number">1</span>,
+                            len
+                        ),
+                    ));
+                }
             }
         }
     }

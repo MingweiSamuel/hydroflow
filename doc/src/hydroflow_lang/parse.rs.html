@@ -594,6 +594,25 @@
 <a href="#594" id="594">594</a>
 <a href="#595" id="595">595</a>
 <a href="#596" id="596">596</a>
+<a href="#597" id="597">597</a>
+<a href="#598" id="598">598</a>
+<a href="#599" id="599">599</a>
+<a href="#600" id="600">600</a>
+<a href="#601" id="601">601</a>
+<a href="#602" id="602">602</a>
+<a href="#603" id="603">603</a>
+<a href="#604" id="604">604</a>
+<a href="#605" id="605">605</a>
+<a href="#606" id="606">606</a>
+<a href="#607" id="607">607</a>
+<a href="#608" id="608">608</a>
+<a href="#609" id="609">609</a>
+<a href="#610" id="610">610</a>
+<a href="#611" id="611">611</a>
+<a href="#612" id="612">612</a>
+<a href="#613" id="613">613</a>
+<a href="#614" id="614">614</a>
+<a href="#615" id="615">615</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! AST for surface syntax, modelled on [`syn`]'s ASTs.
 </span><span class="attr">#![allow(clippy::allow_attributes, missing_docs, reason = <span class="string">"internal use"</span>)]
 
@@ -604,10 +623,10 @@
 <span class="kw">use </span>quote::ToTokens;
 <span class="kw">use </span>syn::parse::{Parse, ParseStream};
 <span class="kw">use </span>syn::punctuated::Punctuated;
-<span class="kw">use </span>syn::token::{Bracket, Paren};
+<span class="kw">use </span>syn::token::{Brace, Bracket, Paren};
 <span class="kw">use </span>syn::{
-    bracketed, parenthesized, AngleBracketedGenericArguments, Expr, ExprPath, GenericArgument,
-    Ident, ItemUse, LitInt, LitStr, Path, PathArguments, PathSegment, Token,
+    braced, bracketed, parenthesized, AngleBracketedGenericArguments, Expr, ExprPath,
+    GenericArgument, Ident, ItemUse, LitInt, Path, PathArguments, PathSegment, Token,
 };
 
 <span class="kw">use </span><span class="kw">crate</span>::process_singletons::preprocess_singletons;
@@ -636,24 +655,44 @@
     Use(ItemUse),
     Named(NamedHfStatement),
     Pipeline(PipelineStatement),
+    Loop(LoopStatement),
 }
 <span class="kw">impl </span>Parse <span class="kw">for </span>HfStatement {
     <span class="kw">fn </span>parse(input: ParseStream) -&gt; syn::Result&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">if </span>input.peek(<span class="macro">Token!</span>[<span class="kw">use</span>]) {
+        <span class="kw">let </span>lookahead1 = input.lookahead1();
+        <span class="kw">if </span>lookahead1.peek(<span class="macro">Token!</span>[<span class="kw">use</span>]) {
             <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Use(ItemUse::parse(input)<span class="question-mark">?</span>))
-        } <span class="kw">else if </span>input.peek2(<span class="macro">Token!</span>[=]) {
-            <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Named(NamedHfStatement::parse(input)<span class="question-mark">?</span>))
-        } <span class="kw">else </span>{
+        } <span class="kw">else if </span>lookahead1.peek(Paren) || lookahead1.peek(Bracket) || lookahead1.peek(<span class="macro">Token!</span>[<span class="kw">mod</span>])
+        {
             <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Pipeline(PipelineStatement::parse(input)<span class="question-mark">?</span>))
+        } <span class="kw">else if </span>lookahead1.peek(<span class="macro">Token!</span>[<span class="kw">loop</span>]) {
+            <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Loop(LoopStatement::parse(input)<span class="question-mark">?</span>))
+        } <span class="kw">else if </span>lookahead1.peek(Ident) {
+            <span class="kw">let </span>fork = input.fork();
+            <span class="kw">let _</span>: Path = fork.parse()<span class="question-mark">?</span>;
+            <span class="kw">let </span>lookahead2 = fork.lookahead1();
+            <span class="kw">if </span>lookahead2.peek(<span class="macro">Token!</span>[=]) {
+                <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Named(NamedHfStatement::parse(input)<span class="question-mark">?</span>))
+            } <span class="kw">else if </span>lookahead2.peek(<span class="macro">Token!</span>[-&gt;])
+                || lookahead2.peek(Paren)
+                || lookahead2.peek(Bracket)
+            {
+                <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Pipeline(PipelineStatement::parse(input)<span class="question-mark">?</span>))
+            } <span class="kw">else </span>{
+                <span class="prelude-val">Err</span>(lookahead2.error())
+            }
+        } <span class="kw">else </span>{
+            <span class="prelude-val">Err</span>(lookahead1.error())
         }
     }
 }
 <span class="kw">impl </span>ToTokens <span class="kw">for </span>HfStatement {
     <span class="kw">fn </span>to_tokens(<span class="kw-2">&amp;</span><span class="self">self</span>, tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
         <span class="kw">match </span><span class="self">self </span>{
-            HfStatement::Use(x) =&gt; x.to_tokens(tokens),
-            HfStatement::Named(x) =&gt; x.to_tokens(tokens),
-            HfStatement::Pipeline(x) =&gt; x.to_tokens(tokens),
+            <span class="self">Self</span>::Use(x) =&gt; x.to_tokens(tokens),
+            <span class="self">Self</span>::Named(x) =&gt; x.to_tokens(tokens),
+            <span class="self">Self</span>::Pipeline(x) =&gt; x.to_tokens(tokens),
+            <span class="self">Self</span>::Loop(x) =&gt; x.to_tokens(tokens),
         }
     }
 }
@@ -715,7 +754,6 @@
     Link(PipelineLink),
     Operator(Operator),
     ModuleBoundary(Ported&lt;<span class="macro">Token!</span>[<span class="kw">mod</span>]&gt;),
-    Import(Import),
 }
 <span class="kw">impl </span>Pipeline {
     <span class="kw">fn </span>parse_one(input: ParseStream) -&gt; syn::Result&lt;<span class="self">Self</span>&gt; {
@@ -750,20 +788,17 @@
         <span class="comment">// Ident or macro-style expression
         </span>} <span class="kw">else if </span>lookahead1.peek(Ident) {
             <span class="kw">let </span>speculative = input.fork();
-            <span class="kw">let </span>ident: Ident = speculative.parse()<span class="question-mark">?</span>;
-            <span class="kw">let </span>lookahead2 = speculative.lookahead1();
+            <span class="kw">let </span>_ident: Ident = speculative.parse()<span class="question-mark">?</span>;
 
             <span class="comment">// If has paren or generic next, it's an operator
-            </span><span class="kw">if </span>lookahead2.peek(Paren) || lookahead2.peek(<span class="macro">Token!</span>[&lt;]) || lookahead2.peek(<span class="macro">Token!</span>[::]) {
+            </span><span class="kw">if </span>speculative.peek(Paren)
+                || speculative.peek(<span class="macro">Token!</span>[&lt;])
+                || speculative.peek(<span class="macro">Token!</span>[::])
+            {
                 <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Operator(input.parse()<span class="question-mark">?</span>))
-            <span class="comment">// macro-style expression "x!.."
-            </span>} <span class="kw">else if </span>lookahead2.peek(<span class="macro">Token!</span>[!]) {
-                <span class="kw">match </span>ident.to_string().as_str() {
-                    <span class="string">"import" </span>=&gt; <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Import(input.parse()<span class="question-mark">?</span>)),
-                    <span class="kw">_ </span>=&gt; <span class="prelude-val">Err</span>(syn::Error::new(ident.span(), <span class="string">r#"Expected "import""#</span>)),
-                }
-            <span class="comment">// Otherwise it's a name
-            </span>} <span class="kw">else </span>{
+            }
+            <span class="comment">// Otherwise it's a variable name
+            </span><span class="kw">else </span>{
                 <span class="prelude-val">Ok</span>(<span class="self">Self</span>::Name(input.parse()<span class="question-mark">?</span>))
             }
         }
@@ -793,45 +828,48 @@
 <span class="kw">impl </span>ToTokens <span class="kw">for </span>Pipeline {
     <span class="kw">fn </span>to_tokens(<span class="kw-2">&amp;</span><span class="self">self</span>, tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
         <span class="kw">match </span><span class="self">self </span>{
-            Pipeline::Paren(x) =&gt; x.to_tokens(tokens),
-            Pipeline::Link(x) =&gt; x.to_tokens(tokens),
-            Pipeline::Name(x) =&gt; x.to_tokens(tokens),
-            Pipeline::Operator(x) =&gt; x.to_tokens(tokens),
-            Pipeline::ModuleBoundary(x) =&gt; x.to_tokens(tokens),
-            Pipeline::Import(x) =&gt; x.to_tokens(tokens),
+            <span class="self">Self</span>::Paren(x) =&gt; x.to_tokens(tokens),
+            <span class="self">Self</span>::Link(x) =&gt; x.to_tokens(tokens),
+            <span class="self">Self</span>::Name(x) =&gt; x.to_tokens(tokens),
+            <span class="self">Self</span>::Operator(x) =&gt; x.to_tokens(tokens),
+            <span class="self">Self</span>::ModuleBoundary(x) =&gt; x.to_tokens(tokens),
         }
     }
 }
 
-<span class="attr">#[derive(Clone, Debug)]
-</span><span class="kw">pub struct </span>Import {
-    <span class="kw">pub </span>import: Ident,
-    <span class="kw">pub </span>bang: <span class="macro">Token!</span>[!],
-    <span class="kw">pub </span>paren_token: Paren,
-    <span class="kw">pub </span>filename: LitStr,
+<span class="kw">pub struct </span>LoopStatement {
+    <span class="kw">pub </span>loop_token: <span class="macro">Token!</span>[<span class="kw">loop</span>],
+    <span class="kw">pub </span>ident: <span class="prelude-ty">Option</span>&lt;Ident&gt;,
+    <span class="kw">pub </span>brace_token: Brace,
+    <span class="kw">pub </span>statements: Vec&lt;HfStatement&gt;,
 }
-<span class="kw">impl </span>Parse <span class="kw">for </span>Import {
+<span class="kw">impl </span>Parse <span class="kw">for </span>LoopStatement {
     <span class="kw">fn </span>parse(input: ParseStream) -&gt; syn::Result&lt;<span class="self">Self</span>&gt; {
-        <span class="kw">let </span>import = input.parse()<span class="question-mark">?</span>;
-        <span class="kw">let </span>bang = input.parse()<span class="question-mark">?</span>;
+        <span class="kw">let </span>loop_token = input.parse()<span class="question-mark">?</span>;
+        <span class="kw">let </span>ident = input.parse()<span class="question-mark">?</span>;
         <span class="kw">let </span>content;
-        <span class="kw">let </span>paren_token = <span class="macro">parenthesized!</span>(content <span class="kw">in </span>input);
-        <span class="kw">let </span>filename: LitStr = content.parse()<span class="question-mark">?</span>;
-
+        <span class="kw">let </span>brace_token = <span class="macro">braced!</span>(content <span class="kw">in </span>input);
+        <span class="kw">let </span><span class="kw-2">mut </span>statements = Vec::new();
+        <span class="kw">while </span>!content.is_empty() {
+            statements.push(content.parse()<span class="question-mark">?</span>);
+        }
         <span class="prelude-val">Ok</span>(<span class="self">Self </span>{
-            import,
-            bang,
-            paren_token,
-            filename,
+            loop_token,
+            ident,
+            brace_token,
+            statements,
         })
     }
 }
-<span class="kw">impl </span>ToTokens <span class="kw">for </span>Import {
+<span class="kw">impl </span>ToTokens <span class="kw">for </span>LoopStatement {
     <span class="kw">fn </span>to_tokens(<span class="kw-2">&amp;</span><span class="self">self</span>, tokens: <span class="kw-2">&amp;mut </span>TokenStream) {
-        <span class="self">self</span>.import.to_tokens(tokens);
-        <span class="self">self</span>.bang.to_tokens(tokens);
-        <span class="self">self</span>.paren_token
-            .surround(tokens, |tokens| <span class="self">self</span>.filename.to_tokens(tokens));
+        <span class="self">self</span>.loop_token.to_tokens(tokens);
+        <span class="self">self</span>.ident.to_tokens(tokens);
+        <span class="self">self</span>.brace_token.surround(tokens, |tokens| {
+            <span class="kw">for </span>statement <span class="kw">in </span><span class="self">self</span>.statements.iter() {
+                statement.to_tokens(tokens);
+            }
+        });
     }
 }
 

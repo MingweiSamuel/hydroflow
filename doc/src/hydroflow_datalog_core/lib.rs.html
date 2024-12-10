@@ -1279,7 +1279,7 @@
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::{HashMap, HashSet};
 <span class="kw">use </span>std::ops::Deref;
 
-<span class="kw">use </span>hydroflow_lang::diagnostic::{Diagnostic, Level};
+<span class="kw">pub use </span>hydroflow_lang::diagnostic::{Diagnostic, Level};
 <span class="kw">use </span>hydroflow_lang::graph::{
     eliminate_extra_unions_tees, partition_graph, FlatGraphBuilder, HydroflowGraph,
 };
