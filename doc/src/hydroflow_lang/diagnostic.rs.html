@@ -210,13 +210,6 @@
 <a href="#210" id="210">210</a>
 <a href="#211" id="211">211</a>
 <a href="#212" id="212">212</a>
-<a href="#213" id="213">213</a>
-<a href="#214" id="214">214</a>
-<a href="#215" id="215">215</a>
-<a href="#216" id="216">216</a>
-<a href="#217" id="217">217</a>
-<a href="#218" id="218">218</a>
-<a href="#219" id="219">219</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Compatibility for `proc_macro` diagnostics, which are missing from [`proc_macro2`].
 
 </span><span class="kw">use </span>std::borrow::Cow;
@@ -290,7 +283,7 @@
     <span class="doccomment">/// Emit if possible, otherwise return `Err` containing a [`TokenStream`] of a
     /// `compile_error!(...)` call.
     </span><span class="kw">pub fn </span>try_emit(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), TokenStream&gt; {
-        <span class="attr">#[cfg(nightly)]
+        <span class="attr">#[cfg(all(nightly, panic = <span class="string">"unwind"</span>))]
         </span>{
             <span class="kw">if let </span><span class="prelude-val">Ok</span>(()) = std::panic::catch_unwind(|| {
                 <span class="kw">let </span>pm_diag = <span class="kw">match </span><span class="self">self</span>.level {
@@ -412,20 +405,13 @@
 }
 <span class="kw">impl </span>From&lt;Span&gt; <span class="kw">for </span>SerdeSpan {
     <span class="kw">fn </span>from(span: Span) -&gt; <span class="self">Self </span>{
-        <span class="attr">#[cfg(nightly)]
-        </span><span class="kw">let </span>path = span
-            .unwrap()
-            .source_file()
-            .path()
-            .display()
-            .to_string()
-            .into();
-
-        <span class="attr">#[cfg(not(nightly))]
-        </span><span class="kw">let </span>path = <span class="string">"unknown"</span>.into();
+        <span class="kw">let </span>path = <span class="macro">cfg!</span>(all(nightly, panic = <span class="string">"unwind"</span>))
+            .then_some(())
+            .and_then(|()| std::panic::catch_unwind(|| span.unwrap()).ok())
+            .map(|span| span.source_file().path().display().to_string());
 
         <span class="self">Self </span>{
-            path,
+            path: path.map_or(Cow::Borrowed(<span class="string">"unknown"</span>), Cow::Owned),
             line: span.start().line,
             column: span.start().column,
         }
