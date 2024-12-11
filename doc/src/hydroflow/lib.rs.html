@@ -52,7 +52,7 @@
 <a href="#52" id="52">52</a>
 <a href="#53" id="53">53</a>
 <a href="#54" id="54">54</a>
-</pre></div><pre class="rust"><code><span class="attr">#![cfg_attr(nightly, feature(never_type))]
+</pre></div><pre class="rust"><code><span class="attr">#![cfg_attr(feature = <span class="string">"nightly"</span>, feature(never_type))]
 #![warn(missing_docs)]
 
 </span><span class="doccomment">//! Hydroflow is a low-level dataflow-based runtime system for the [Hydro Project](https://hydro.run/).
@@ -94,10 +94,10 @@
 };
 
 <span class="doccomment">/// Stand-in for the [nightly "never" type `!`](https://doc.rust-lang.org/std/primitive.never.html)
-</span><span class="attr">#[cfg(not(nightly))]
+</span><span class="attr">#[cfg(not(feature = <span class="string">"nightly"</span>))]
 </span><span class="kw">pub type </span>Never = std::convert::Infallible;
 <span class="doccomment">/// The [nightly "never" type `!`](https://doc.rust-lang.org/std/primitive.never.html)
-</span><span class="attr">#[cfg(nightly)]
+</span><span class="attr">#[cfg(feature = <span class="string">"nightly"</span>)]
 </span><span class="kw">pub type </span>Never = !;
 
 <span class="attr">#[cfg(doctest)]
