@@ -214,9 +214,20 @@
 <a href="#214" id="214">214</a>
 <a href="#215" id="215">215</a>
 <a href="#216" id="216">216</a>
+<a href="#217" id="217">217</a>
+<a href="#218" id="218">218</a>
+<a href="#219" id="219">219</a>
+<a href="#220" id="220">220</a>
+<a href="#221" id="221">221</a>
+<a href="#222" id="222">222</a>
+<a href="#223" id="223">223</a>
+<a href="#224" id="224">224</a>
+<a href="#225" id="225">225</a>
 </pre></div><pre class="rust"><code><span class="doccomment">//! Compatibility for `proc_macro` diagnostics, which are missing from [`proc_macro2`].
 
-</span><span class="kw">use </span>std::borrow::Cow;
+</span><span class="kw">extern crate </span>proc_macro;
+
+<span class="kw">use </span>std::borrow::Cow;
 <span class="kw">use </span>std::hash::{Hash, Hasher};
 
 <span class="kw">use </span>proc_macro2::{Ident, Literal, Span, TokenStream};
@@ -287,19 +298,16 @@
     <span class="doccomment">/// Emit if possible, otherwise return `Err` containing a [`TokenStream`] of a
     /// `compile_error!(...)` call.
     </span><span class="kw">pub fn </span>try_emit(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), TokenStream&gt; {
-        <span class="attr">#[cfg(all(nightly, panic = <span class="string">"unwind"</span>))]
-        </span>{
-            <span class="kw">if let </span><span class="prelude-val">Ok</span>(()) = std::panic::catch_unwind(|| {
-                <span class="kw">let </span>pm_diag = <span class="kw">match </span><span class="self">self</span>.level {
-                    Level::Error =&gt; <span class="self">self</span>.span.unwrap().error(<span class="kw-2">&amp;*</span><span class="self">self</span>.message),
-                    Level::Warning =&gt; <span class="self">self</span>.span.unwrap().warning(<span class="kw-2">&amp;*</span><span class="self">self</span>.message),
-                    Level::Note =&gt; <span class="self">self</span>.span.unwrap().note(<span class="kw-2">&amp;*</span><span class="self">self</span>.message),
-                    Level::Help =&gt; <span class="self">self</span>.span.unwrap().help(<span class="kw-2">&amp;*</span><span class="self">self</span>.message),
-                };
-                pm_diag.emit()
-            }) {
-                <span class="kw">return </span><span class="prelude-val">Ok</span>(());
-            }
+        <span class="attr">#[cfg(nightly)]
+        </span><span class="kw">if </span>proc_macro::is_available() {
+            <span class="kw">let </span>pm_diag = <span class="kw">match </span><span class="self">self</span>.level {
+                Level::Error =&gt; <span class="self">self</span>.span.unwrap().error(<span class="kw-2">&amp;*</span><span class="self">self</span>.message),
+                Level::Warning =&gt; <span class="self">self</span>.span.unwrap().warning(<span class="kw-2">&amp;*</span><span class="self">self</span>.message),
+                Level::Note =&gt; <span class="self">self</span>.span.unwrap().note(<span class="kw-2">&amp;*</span><span class="self">self</span>.message),
+                Level::Help =&gt; <span class="self">self</span>.span.unwrap().help(<span class="kw-2">&amp;*</span><span class="self">self</span>.message),
+            };
+            pm_diag.emit();
+            <span class="kw">return </span><span class="prelude-val">Ok</span>(());
         }
         <span class="prelude-val">Err</span>(<span class="self">self</span>.to_tokens())
     }
@@ -410,12 +418,22 @@
 <span class="kw">impl </span>From&lt;Span&gt; <span class="kw">for </span>SerdeSpan {
     <span class="kw">fn </span>from(span: Span) -&gt; <span class="self">Self </span>{
         <span class="kw">let </span>path = <span class="lifetime">'a</span>: {
-            <span class="attr">#[cfg(all(nightly, panic = <span class="string">"unwind"</span>))]
-            </span><span class="kw">if let </span><span class="prelude-val">Ok</span>(span) = std::panic::catch_unwind(|| span.unwrap()) {
-                <span class="kw">break </span><span class="lifetime">'a </span>span.source_file().path().display().to_string().into();
+            <span class="attr">#[cfg(nightly)]
+            </span><span class="kw">if </span>proc_macro::is_available() {
+                <span class="kw">break </span><span class="lifetime">'a </span>span
+                    .unwrap()
+                    .source_file()
+                    .path()
+                    .display()
+                    .to_string()
+                    .into();
             }
 
-            <span class="kw">break </span><span class="lifetime">'a </span><span class="string">"unknown"</span>.into();
+            <span class="attr">#[cfg_attr(
+                not(nightly),
+                expect(clippy::diverging_sub_expression, reason = <span class="string">"conditional compilation"</span>)
+            )]
+            </span><span class="kw">break </span><span class="lifetime">'a </span><span class="string">"unknown"</span>.into();
         };
 
         <span class="self">Self </span>{
