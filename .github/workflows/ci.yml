@@ -269,6 +269,7 @@ jobs:
         uses: actions-rs/cargo@v1
         env:
           CARGO_TARGET_WASM32_UNKNOWN_UNKNOWN_RUNNER: wasm-bindgen-test-runner
+          TRYBUILD: ${{ matrix.rust_release != 'latest-stable' && 'overwrite' || '' }}
         with:
           command: test
           args: -p hydroflow --target wasm32-unknown-unknown --tests --no-fail-fast
