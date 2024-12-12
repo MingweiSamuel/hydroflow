@@ -417,7 +417,11 @@
 }
 <span class="kw">impl </span>From&lt;Span&gt; <span class="kw">for </span>SerdeSpan {
     <span class="kw">fn </span>from(span: Span) -&gt; <span class="self">Self </span>{
-        <span class="kw">let </span>path = <span class="lifetime">'a</span>: {
+        <span class="attr">#[cfg_attr(
+            not(nightly),
+            expect(unused_labels, reason = <span class="string">"conditional compilation"</span>)
+        )]
+        </span><span class="kw">let </span>path = <span class="lifetime">'a</span>: {
             <span class="attr">#[cfg(nightly)]
             </span><span class="kw">if </span>proc_macro::is_available() {
                 <span class="kw">break </span><span class="lifetime">'a </span>span
@@ -429,11 +433,7 @@
                     .into();
             }
 
-            <span class="attr">#[cfg_attr(
-                not(nightly),
-                expect(clippy::diverging_sub_expression, reason = <span class="string">"conditional compilation"</span>)
-            )]
-            </span><span class="kw">break </span><span class="lifetime">'a </span><span class="string">"unknown"</span>.into();
+            <span class="string">"unknown"</span>.into()
         };
 
         <span class="self">Self </span>{
