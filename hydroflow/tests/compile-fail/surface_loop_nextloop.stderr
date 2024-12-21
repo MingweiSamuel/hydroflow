@@ -1,0 +1,5 @@
+error: Operator `next_loop(...)` must be within a `loop { ... }` context.
+ --> tests/compile-fail/surface_loop_nextloop.rs:3:31
+  |
+3 |         source_iter(0..10) -> next_loop() -> null();
+  |                               ^^^^^^^^^^^
