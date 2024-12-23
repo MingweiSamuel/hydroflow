@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"macro":["q"],"mod":["boundedness","builder","cycle","deploy","ir","location","optional","rewrites","runtime_context","singleton","stream"]};
