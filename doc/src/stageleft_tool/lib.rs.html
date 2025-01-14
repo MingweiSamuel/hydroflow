@@ -334,6 +334,8 @@
 <a href="#334" id="334">334</a>
 <a href="#335" id="335">335</a>
 <a href="#336" id="336">336</a>
+<a href="#337" id="337">337</a>
+<a href="#338" id="338">338</a>
 </pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::BTreeSet;
 <span class="kw">use </span>std::path::Path;
 <span class="kw">use </span>std::{env, fs};
@@ -666,8 +668,10 @@
 </span><span class="macro">macro_rules!</span> gen_final {
     () =&gt; {
         <span class="attr">#[allow(unexpected_cfgs)]
-        #[cfg(not(feature = <span class="string">"stageleft_devel"</span>))]
-        </span><span class="macro-nonterminal">$crate::gen_final_helper</span>()
+        </span>{
+            <span class="attr">#[cfg(not(feature = <span class="string">"stageleft_devel"</span>))]
+            </span><span class="macro-nonterminal">$crate::gen_final_helper</span>()
+        }
     };
 }
 </code></pre></div></section></main></body></html>
