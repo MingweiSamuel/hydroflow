@@ -11,6 +11,7 @@ use syn::spanned::Spanned;
 use syn::{Error, Ident, ItemUse};
 
 use super::ops::defer_tick::DEFER_TICK;
+use super::ops::next_loop::NEXT_LOOP;
 use super::ops::FloType;
 use super::{DfirGraph, GraphEdgeId, GraphLoopId, GraphNode, GraphNodeId, PortIndexValue};
 use crate::diagnostic::{Diagnostic, Level};
@@ -874,6 +875,19 @@ impl FlatGraphBuilder {
                         ));
                     }
                 }
+                Some(FloType::NextLoop) => {
+                    // Must be in a loop context.
+                    if loop_id.is_none() {
+                        self.diagnostics.push(Diagnostic::spanned(
+                            span,
+                            Level::Error,
+                            format!(
+                                "Operator `{}(...)` must be within a `loop {{ ... }}` context.",
+                                op_inst.op_constraints.name
+                            ),
+                        ));
+                    }
+                }
                 Some(FloType::Source) => {
                     // Handled above.
                 }
@@ -884,20 +898,23 @@ impl FlatGraphBuilder {
         // TODO(mingwei): Nested loop blocks should count as a single node.
         for (loop_id, loop_nodes) in self.flat_graph.loops() {
             // Filter out `defer_tick()` operators.
-            let filter_defer_tick = |&node_id: &GraphNodeId| {
+            let filter_loop_ops = |&node_id: &GraphNodeId| {
                 self.flat_graph
                     .node_op_inst(node_id)
-                    .map(|op_inst| DEFER_TICK.name != op_inst.op_constraints.name)
+                    .map(|op_inst| {
+                        DEFER_TICK.name != op_inst.op_constraints.name
+                            && Some(FloType::NextLoop) != op_inst.op_constraints.flo_type
+                    })
                     .unwrap_or(true)
             };
 
             let topo_sort_result = graph_algorithms::topo_sort(
-                loop_nodes.iter().copied().filter(filter_defer_tick),
+                loop_nodes.iter().copied().filter(filter_loop_ops),
                 |dst| {
                     self.flat_graph
                         .node_predecessor_nodes(dst)
                         .filter(|&src| Some(loop_id) == self.flat_graph.node_loop(src))
-                        .filter(filter_defer_tick)
+                        .filter(filter_loop_ops)
                 },
             );
             if let Err(cycle) = topo_sort_result {
@@ -908,7 +925,8 @@ impl FlatGraphBuilder {
                         span,
                         Level::Error,
                         format!(
-                            "Operator forms an illegal cycle within a `loop {{ ... }}` block ({}/{}).",
+                            "Operator forms an illegal cycle within a `loop {{ ... }}` block. Use `{}()` to pass data across loop iterations. ({}/{})",
+                            NEXT_LOOP.name,
                             i + 1,
                             len
                         ),
