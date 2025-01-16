@@ -36,8 +36,6 @@ linkStyle default stroke:#aaa
 26v1["(26v1) <code>handoff</code>"]:::otherClass
 27v1["(27v1) <code>handoff</code>"]:::otherClass
 28v1["(28v1) <code>handoff</code>"]:::otherClass
-29v1["(29v1) <code>handoff</code>"]:::otherClass
-30v1["(30v1) <code>handoff</code>"]:::otherClass
 1v1-->2v1
 3v1-->4v1
 5v1-->22v1
@@ -55,19 +53,17 @@ linkStyle default stroke:#aaa
 20v1-->21v1
 19v1-->20v1
 18v1-->19v1
-17v1-->28v1
-16v1-->29v1
-15v1-->30v1
-14v1-->15v1
+17v1--x18v1; linkStyle 17 stroke:red
+16v1-->17v1
+15v1--x16v1; linkStyle 19 stroke:red
+14v1-->28v1
 22v1-->6v1
 23v1-->5v1
 24v1-->8v1
 25v1-->7v1
 26v1--x9v1; linkStyle 25 stroke:red
 27v1--x11v1; linkStyle 26 stroke:red
-28v1--x18v1; linkStyle 27 stroke:red
-29v1-->17v1
-30v1--x16v1; linkStyle 29 stroke:red
+28v1-->15v1
 subgraph sg_1v1 ["sg_1v1 stratum 0"]
     1v1
     2v1
@@ -108,24 +104,29 @@ subgraph sg_6v1 ["sg_6v1 stratum 0"]
         8v1
     end
 end
-subgraph sg_7v1 ["sg_7v1 stratum 1"]
+subgraph sg_7v1 ["sg_7v1 stratum 0"]
+    28v1
     9v1
     10v1
     11v1
     12v1
+    15v1
+    16v1
+    17v1
     18v1
     19v1
     20v1
     21v1
     13v1
     14v1
-    15v1
     subgraph sg_7v1_var_centroids ["var <tt>centroids</tt>"]
         13v1
     end
     subgraph sg_7v1_var_cj ["var <tt>cj</tt>"]
         14v1
         15v1
+        16v1
+        17v1
         18v1
         19v1
         20v1
@@ -134,17 +135,5 @@ subgraph sg_7v1 ["sg_7v1 stratum 1"]
     subgraph sg_7v1_var_points ["var <tt>points</tt>"]
         9v1
         10v1
-    end
-end
-subgraph sg_8v1 ["sg_8v1 stratum 2"]
-    16v1
-    subgraph sg_8v1_var_cj ["var <tt>cj</tt>"]
-        16v1
-    end
-end
-subgraph sg_9v1 ["sg_9v1 stratum 2"]
-    17v1
-    subgraph sg_9v1_var_cj ["var <tt>cj</tt>"]
-        17v1
     end
 end

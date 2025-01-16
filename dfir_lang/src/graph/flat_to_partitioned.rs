@@ -59,9 +59,16 @@ fn find_barrier_crossers(partitioned_graph: &DfirGraph) -> BarrierCrossers {
             let (_src_port, dst_port) = partitioned_graph.edge_ports(edge_id);
             let op_constraints = partitioned_graph.node_op_inst(dst)?.op_constraints;
             let input_barrier = (op_constraints.input_delaytype_fn)(dst_port)?;
+
+            // Exclude edges within `loop {` contexts.
+            if partitioned_graph.node_loop(dst).is_some() {
+                return None;
+            }
+
             Some((edge_id, input_barrier))
         })
         .collect();
+
     let singleton_barrier_crossers = partitioned_graph
         .node_ids()
         .flat_map(|dst| {
@@ -72,6 +79,7 @@ fn find_barrier_crossers(partitioned_graph: &DfirGraph) -> BarrierCrossers {
                 .map(move |&src_ref| (src_ref, dst))
         })
         .collect();
+
     BarrierCrossers {
         edge_barrier_crossers,
         singleton_barrier_crossers,
