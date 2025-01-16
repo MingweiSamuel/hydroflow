@@ -1,8 +1,7 @@
 use quote::quote_spanned;
 
 use super::{
-    FloType, OperatorCategory, OperatorConstraints, OperatorWriteOutput, WriteContextArgs, RANGE_0,
-    RANGE_1,
+    FloType, OperatorCategory, OperatorConstraints, OperatorWriteOutput, WriteContextArgs, IDENTITY_WRITE_FN, RANGE_0, RANGE_1
 };
 use crate::graph::{OpInstGenerics, OperatorInstance};
 
@@ -23,53 +22,54 @@ pub const NEXT_LOOP: OperatorConstraints = OperatorConstraints {
     ports_inn: None,
     ports_out: None,
     input_delaytype_fn: |_| None,
-    write_fn: |&WriteContextArgs {
-                   root,
-                   context,
-                   op_span,
-                   ident,
-                   is_pull,
-                   inputs,
-                   outputs,
-                   op_inst:
-                       OperatorInstance {
-                           generics: OpInstGenerics { type_args, .. },
-                           ..
-                       },
-                   ..
-               },
-               _| {
-        let generic_type = type_args
-            .first()
-            .map(quote::ToTokens::to_token_stream)
-            .unwrap_or(quote_spanned!(op_span=> _));
+    write_fn: IDENTITY_WRITE_FN,
+    // write_fn: |&WriteContextArgs {
+    //                root,
+    //                context,
+    //                op_span,
+    //                ident,
+    //                is_pull,
+    //                inputs,
+    //                outputs,
+    //                op_inst:
+    //                    OperatorInstance {
+    //                        generics: OpInstGenerics { type_args, .. },
+    //                        ..
+    //                    },
+    //                ..
+    //            },
+    //            _| {
+    //     let generic_type = type_args
+    //         .first()
+    //         .map(quote::ToTokens::to_token_stream)
+    //         .unwrap_or(quote_spanned!(op_span=> _));
 
-        let write_iterator = if is_pull {
-            let input = &inputs[0];
-            quote_spanned! {op_span=>
-                let #ident = {
-                    fn check_input<Iter: ::std::iter::Iterator<Item = Item>, Item>(iter: Iter, filter: bool) -> impl ::std::iter::Iterator<Item = Item> {
-                        iter.filter(move |_item| filter)
-                    }
-                    check_input::<_, #generic_type>(#input, #context.is_first_run_this_tick() || #context.was_rescheduled())
-                };
-            }
-        } else {
-            let output = &outputs[0];
-            quote_spanned! {op_span=>
-                let #ident = {
-                    fn check_output<Push: #root::pusherator::Pusherator<Item = Item>, Item>(push: Push, filter: bool) -> impl #root::pusherator::Pusherator<Item = Item> {
-                        // Don't continue to the next loop iteration if we weren't rescheduled, to prevent spinning.
-                        #root::pusherator::filter::Filter::new(push, move |_item| filter)
-                    }
-                    check_output::<_, #generic_type>(#output, #context.is_first_run_this_tick() || #context.was_rescheduled())
-                };
-            }
-        };
+    //     let write_iterator = if is_pull {
+    //         let input = &inputs[0];
+    //         quote_spanned! {op_span=>
+    //             let #ident = {
+    //                 fn check_input<Iter: ::std::iter::Iterator<Item = Item>, Item>(iter: Iter, filter: bool) -> impl ::std::iter::Iterator<Item = Item> {
+    //                     iter.filter(move |_item| filter)
+    //                 }
+    //                 check_input::<_, #generic_type>(#input, #context.is_first_run_this_tick())// || #context.was_rescheduled())
+    //             };
+    //         }
+    //     } else {
+    //         let output = &outputs[0];
+    //         quote_spanned! {op_span=>
+    //             let #ident = {
+    //                 fn check_output<Push: #root::pusherator::Pusherator<Item = Item>, Item>(push: Push, filter: bool) -> impl #root::pusherator::Pusherator<Item = Item> {
+    //                     // Don't continue to the next loop iteration if we weren't rescheduled, to prevent spinning.
+    //                     #root::pusherator::filter::Filter::new(push, move |_item| filter)
+    //                 }
+    //                 check_output::<_, #generic_type>(#output, #context.is_first_run_this_tick())// || #context.was_rescheduled())
+    //             };
+    //         }
+    //     };
 
-        Ok(OperatorWriteOutput {
-            write_iterator,
-            ..Default::default()
-        })
-    },
+    //     Ok(OperatorWriteOutput {
+    //         write_iterator,
+    //         ..Default::default()
+    //     })
+    // },
 };
