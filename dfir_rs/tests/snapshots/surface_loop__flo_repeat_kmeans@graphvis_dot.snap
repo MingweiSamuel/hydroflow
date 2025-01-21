@@ -31,20 +31,18 @@ digraph {
     n24v1 [label="(n24v1) handoff", shape=parallelogram, fillcolor="#ddddff"]
     n25v1 [label="(n25v1) handoff", shape=parallelogram, fillcolor="#ddddff"]
     n26v1 [label="(n26v1) handoff", shape=parallelogram, fillcolor="#ddddff"]
-    n27v1 [label="(n27v1) handoff", shape=parallelogram, fillcolor="#ddddff"]
-    n28v1 [label="(n28v1) handoff", shape=parallelogram, fillcolor="#ddddff"]
     n1v1 -> n2v1
     n3v1 -> n4v1
-    n5v1 -> n22v1
-    n2v1 -> n23v1
-    n7v1 -> n24v1
-    n4v1 -> n25v1
+    n5v1 -> n6v1
+    n2v1 -> n22v1
+    n7v1 -> n8v1
+    n4v1 -> n23v1
     n10v1 -> n14v1 [label="0"]
     n9v1 -> n10v1
-    n6v1 -> n26v1
+    n6v1 -> n24v1
     n12v1 -> n13v1
     n11v1 -> n12v1
-    n8v1 -> n27v1
+    n8v1 -> n25v1
     n13v1 -> n14v1 [label="1"]
     n21v1 -> n13v1
     n20v1 -> n21v1
@@ -53,14 +51,12 @@ digraph {
     n17v1 -> n18v1 [color=red]
     n16v1 -> n17v1
     n15v1 -> n16v1 [color=red]
-    n14v1 -> n28v1
-    n22v1 -> n6v1
-    n23v1 -> n5v1
-    n24v1 -> n8v1
-    n25v1 -> n7v1
-    n26v1 -> n9v1 [color=red]
-    n27v1 -> n11v1 [color=red]
-    n28v1 -> n15v1
+    n14v1 -> n26v1
+    n22v1 -> n5v1
+    n23v1 -> n7v1
+    n24v1 -> n9v1 [color=red]
+    n25v1 -> n11v1 [color=red]
+    n26v1 -> n15v1
     subgraph "cluster n1v1" {
         fillcolor="#dddddd"
         style=filled
@@ -90,46 +86,30 @@ digraph {
         style=filled
         label = "sg_3v1\nstratum 0"
         n5v1
+        n6v1
         subgraph "cluster_sg_3v1_var_batch_points" {
             label="var batch_points"
             n5v1
+            n6v1
         }
     }
     subgraph "cluster n4v1" {
         fillcolor="#dddddd"
         style=filled
         label = "sg_4v1\nstratum 0"
-        n6v1
-        subgraph "cluster_sg_4v1_var_batch_points" {
-            label="var batch_points"
-            n6v1
+        n7v1
+        n8v1
+        subgraph "cluster_sg_4v1_var_batch_centroids" {
+            label="var batch_centroids"
+            n7v1
+            n8v1
         }
     }
     subgraph "cluster n5v1" {
         fillcolor="#dddddd"
         style=filled
         label = "sg_5v1\nstratum 0"
-        n7v1
-        subgraph "cluster_sg_5v1_var_batch_centroids" {
-            label="var batch_centroids"
-            n7v1
-        }
-    }
-    subgraph "cluster n6v1" {
-        fillcolor="#dddddd"
-        style=filled
-        label = "sg_6v1\nstratum 0"
-        n8v1
-        subgraph "cluster_sg_6v1_var_batch_centroids" {
-            label="var batch_centroids"
-            n8v1
-        }
-    }
-    subgraph "cluster n7v1" {
-        fillcolor="#dddddd"
-        style=filled
-        label = "sg_7v1\nstratum 0"
-        n28v1
+        n26v1
         n9v1
         n10v1
         n11v1
@@ -143,11 +123,11 @@ digraph {
         n21v1
         n13v1
         n14v1
-        subgraph "cluster_sg_7v1_var_centroids" {
+        subgraph "cluster_sg_5v1_var_centroids" {
             label="var centroids"
             n13v1
         }
-        subgraph "cluster_sg_7v1_var_cj" {
+        subgraph "cluster_sg_5v1_var_cj" {
             label="var cj"
             n14v1
             n15v1
@@ -158,7 +138,7 @@ digraph {
             n20v1
             n21v1
         }
-        subgraph "cluster_sg_7v1_var_points" {
+        subgraph "cluster_sg_5v1_var_points" {
             label="var points"
             n9v1
             n10v1
