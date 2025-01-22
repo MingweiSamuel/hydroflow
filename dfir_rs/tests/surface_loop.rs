@@ -186,7 +186,7 @@ pub fn test_flo_repeat_n_multiple_nested() {
     df.run_available();
 }
 
-#[multiplatform_test(test, env_tracing)]
+#[multiplatform_test]
 pub fn test_flo_repeat_kmeans() {
     const POINTS: &[[i32; 2]] = &[
         [-210, -104],
@@ -226,19 +226,23 @@ pub fn test_flo_repeat_kmeans() {
         init_points = source_iter(POINTS) -> map(std::clone::Clone::clone);
         init_centroids = source_iter(CENTROIDS) -> map(std::clone::Clone::clone);
         loop {
-            batch_points = init_points -> batch() -> flatten();
-            batch_centroids = init_centroids -> batch() -> flatten();
+            batch_points = init_points -> batch() -> inspect(|x| println!("BATCH POINTS {} {:?}", line!(), x)) -> flatten();
+            batch_centroids = init_centroids -> batch() -> inspect(|x| println!("BATCH CENTROIDS {} {:?}", line!(), x)) -> flatten();
 
             loop {
                 points = batch_points
                     -> repeat_n(10)
+                    -> inspect(|x| println!("CJ0 {} {:?}", line!(), x))
                     -> flatten()
                     -> [0]cj;
                 batch_centroids -> all_once() -> flatten() -> centroids;
 
-                centroids = union() -> [1]cj;
+                centroids = union()
+                    -> inspect(|x| println!("CJ1 {} {:?}", line!(), x))
+                    -> [1]cj;
 
                 cj = cross_join_multiset()
+                    -> inspect(|x| println!("cjm: {:?}", x))
                     -> map(|(point, centroid): ([i32; 2], [i32; 2])| {
                         let dist2 = (point[0] - centroid[0]).pow(2) + (point[1] - centroid[1]).pow(2);
                         (point, (dist2, centroid))

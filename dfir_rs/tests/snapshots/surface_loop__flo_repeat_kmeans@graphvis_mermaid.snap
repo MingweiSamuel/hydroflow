@@ -13,53 +13,63 @@ linkStyle default stroke:#aaa
 3v1[\"(3v1) <code>source_iter(CENTROIDS)</code>"/]:::pullClass
 4v1[\"(4v1) <code>map(std::clone::Clone::clone)</code>"/]:::pullClass
 5v1[\"(5v1) <code>batch()</code>"/]:::pullClass
-6v1[\"(6v1) <code>flatten()</code>"/]:::pullClass
-7v1[\"(7v1) <code>batch()</code>"/]:::pullClass
-8v1[\"(8v1) <code>flatten()</code>"/]:::pullClass
-9v1[\"(9v1) <code>repeat_n(10)</code>"/]:::pullClass
+6v1[\"(6v1) <code>inspect(|x| println!(&quot;BATCH POINTS {} {:?}&quot;, line!(), x))</code>"/]:::pullClass
+7v1[\"(7v1) <code>flatten()</code>"/]:::pullClass
+8v1[\"(8v1) <code>batch()</code>"/]:::pullClass
+9v1[\"(9v1) <code>inspect(|x| println!(&quot;BATCH CENTROIDS {} {:?}&quot;, line!(), x))</code>"/]:::pullClass
 10v1[\"(10v1) <code>flatten()</code>"/]:::pullClass
-11v1[\"(11v1) <code>all_once()</code>"/]:::pullClass
-12v1[\"(12v1) <code>flatten()</code>"/]:::pullClass
-13v1[\"(13v1) <code>union()</code>"/]:::pullClass
-14v1[\"(14v1) <code>cross_join_multiset()</code>"/]:::pullClass
-15v1[\"<div style=text-align:center>(15v1)</div> <code>map(|(point, centroid): ([i32; 2], [i32; 2])| {<br>    let dist2 = (point[0] - centroid[0]).pow(2) + (point[1] - centroid[1]).pow(2);<br>    (point, (dist2, centroid))<br>})</code>"/]:::pullClass
-16v1[\"<div style=text-align:center>(16v1)</div> <code>reduce_keyed(|(a_dist2, a_centroid), (b_dist2, b_centroid)| {<br>    if b_dist2 &lt; *a_dist2 {<br>        *a_dist2 = b_dist2;<br>        *a_centroid = b_centroid;<br>    }<br>})</code>"/]:::pullClass
-17v1[\"(17v1) <code>map(|(point, (_dist2, centroid))| { (centroid, (point, 1)) })</code>"/]:::pullClass
-18v1[\"<div style=text-align:center>(18v1)</div> <code>reduce_keyed(|(p1, n1), (p2, n2): ([i32; 2], i32)| {<br>    p1[0] += p2[0];<br>    p1[1] += p2[1];<br>    *n1 += n2;<br>})</code>"/]:::pullClass
-19v1[\"(19v1) <code>map(|(_centroid, (p, n))| { [p[0] / n, p[1] / n] })</code>"/]:::pullClass
-20v1[\"(20v1) <code>next_loop()</code>"/]:::pullClass
-21v1[\"(21v1) <code>inspect(|x| println!(&quot;centroid: {:?}&quot;, x))</code>"/]:::pullClass
-22v1["(22v1) <code>handoff</code>"]:::otherClass
-23v1["(23v1) <code>handoff</code>"]:::otherClass
-24v1["(24v1) <code>handoff</code>"]:::otherClass
-25v1["(25v1) <code>handoff</code>"]:::otherClass
-26v1["(26v1) <code>handoff</code>"]:::otherClass
+11v1[\"(11v1) <code>repeat_n(10)</code>"/]:::pullClass
+12v1[\"(12v1) <code>inspect(|x| println!(&quot;CJ0 {} {:?}&quot;, line!(), x))</code>"/]:::pullClass
+13v1[\"(13v1) <code>flatten()</code>"/]:::pullClass
+14v1[\"(14v1) <code>all_once()</code>"/]:::pullClass
+15v1[\"(15v1) <code>flatten()</code>"/]:::pullClass
+16v1[\"(16v1) <code>union()</code>"/]:::pullClass
+17v1[\"(17v1) <code>inspect(|x| println!(&quot;CJ1 {} {:?}&quot;, line!(), x))</code>"/]:::pullClass
+18v1[\"(18v1) <code>cross_join_multiset()</code>"/]:::pullClass
+19v1[\"(19v1) <code>inspect(|x| println!(&quot;cjm: {:?}&quot;, x))</code>"/]:::pullClass
+20v1[\"<div style=text-align:center>(20v1)</div> <code>map(|(point, centroid): ([i32; 2], [i32; 2])| {<br>    let dist2 = (point[0] - centroid[0]).pow(2) + (point[1] - centroid[1]).pow(2);<br>    (point, (dist2, centroid))<br>})</code>"/]:::pullClass
+21v1[\"<div style=text-align:center>(21v1)</div> <code>reduce_keyed(|(a_dist2, a_centroid), (b_dist2, b_centroid)| {<br>    if b_dist2 &lt; *a_dist2 {<br>        *a_dist2 = b_dist2;<br>        *a_centroid = b_centroid;<br>    }<br>})</code>"/]:::pullClass
+22v1[\"(22v1) <code>map(|(point, (_dist2, centroid))| { (centroid, (point, 1)) })</code>"/]:::pullClass
+23v1[\"<div style=text-align:center>(23v1)</div> <code>reduce_keyed(|(p1, n1), (p2, n2): ([i32; 2], i32)| {<br>    p1[0] += p2[0];<br>    p1[1] += p2[1];<br>    *n1 += n2;<br>})</code>"/]:::pullClass
+24v1[\"(24v1) <code>map(|(_centroid, (p, n))| { [p[0] / n, p[1] / n] })</code>"/]:::pullClass
+25v1[\"(25v1) <code>next_loop()</code>"/]:::pullClass
+26v1[\"(26v1) <code>inspect(|x| println!(&quot;centroid: {:?}&quot;, x))</code>"/]:::pullClass
+27v1["(27v1) <code>handoff</code>"]:::otherClass
+28v1["(28v1) <code>handoff</code>"]:::otherClass
+29v1["(29v1) <code>handoff</code>"]:::otherClass
+30v1["(30v1) <code>handoff</code>"]:::otherClass
+31v1["(31v1) <code>handoff</code>"]:::otherClass
 1v1-->2v1
 3v1-->4v1
+6v1-->7v1
 5v1-->6v1
-2v1-->22v1
-7v1-->8v1
-4v1-->23v1
-10v1-->|0|14v1
+2v1-->27v1
 9v1-->10v1
-6v1-->24v1
+8v1-->9v1
+4v1-->28v1
+13v1-->|0|18v1
 12v1-->13v1
 11v1-->12v1
-8v1-->25v1
-13v1-->|1|14v1
-21v1-->13v1
-20v1-->21v1
-19v1-->20v1
-18v1-->19v1
-17v1--x18v1; linkStyle 17 stroke:red
+7v1-->29v1
+15v1-->16v1
+14v1-->15v1
+10v1-->30v1
+17v1-->|1|18v1
 16v1-->17v1
-15v1--x16v1; linkStyle 19 stroke:red
-14v1-->26v1
-22v1-->5v1
-23v1-->7v1
-24v1--x9v1; linkStyle 23 stroke:red
-25v1--x11v1; linkStyle 24 stroke:red
-26v1-->15v1
+26v1-->16v1
+25v1-->26v1
+24v1-->25v1
+23v1-->24v1
+22v1--x23v1; linkStyle 21 stroke:red
+21v1-->22v1
+20v1--x21v1; linkStyle 23 stroke:red
+19v1-->20v1
+18v1-->31v1
+27v1-->5v1
+28v1-->8v1
+29v1--x11v1; linkStyle 28 stroke:red
+30v1--x14v1; linkStyle 29 stroke:red
+31v1-->19v1
 subgraph sg_1v1 ["sg_1v1 stratum 0"]
     1v1
     2v1
@@ -79,49 +89,59 @@ end
 subgraph sg_3v1 ["sg_3v1 stratum 0"]
     5v1
     6v1
+    7v1
     subgraph sg_3v1_var_batch_points ["var <tt>batch_points</tt>"]
         5v1
         6v1
+        7v1
     end
 end
 subgraph sg_4v1 ["sg_4v1 stratum 0"]
-    7v1
     8v1
+    9v1
+    10v1
     subgraph sg_4v1_var_batch_centroids ["var <tt>batch_centroids</tt>"]
-        7v1
         8v1
+        9v1
+        10v1
     end
 end
 subgraph sg_5v1 ["sg_5v1 stratum 0"]
-    26v1
-    9v1
-    10v1
+    31v1
     11v1
     12v1
+    13v1
+    14v1
     15v1
-    16v1
-    17v1
-    18v1
     19v1
     20v1
     21v1
-    13v1
-    14v1
+    22v1
+    23v1
+    24v1
+    25v1
+    26v1
+    16v1
+    17v1
+    18v1
     subgraph sg_5v1_var_centroids ["var <tt>centroids</tt>"]
-        13v1
-    end
-    subgraph sg_5v1_var_cj ["var <tt>cj</tt>"]
-        14v1
-        15v1
         16v1
         17v1
+    end
+    subgraph sg_5v1_var_cj ["var <tt>cj</tt>"]
         18v1
         19v1
         20v1
         21v1
+        22v1
+        23v1
+        24v1
+        25v1
+        26v1
     end
     subgraph sg_5v1_var_points ["var <tt>points</tt>"]
-        9v1
-        10v1
+        11v1
+        12v1
+        13v1
     end
 end
