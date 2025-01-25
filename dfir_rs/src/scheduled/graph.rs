@@ -2,7 +2,6 @@
 
 use std::any::Any;
 use std::borrow::Cow;
-use std::cell::Cell;
 use std::future::Future;
 use std::marker::PhantomData;
 
@@ -23,13 +22,28 @@ use super::state::StateHandle;
 use super::subgraph::Subgraph;
 use super::{HandoffId, HandoffTag, SubgraphId, SubgraphTag};
 use crate::scheduled::ticks::{TickDuration, TickInstant};
-use crate::util::slot_vec::SlotVec;
+use crate::util::slot_vec::{SecondarySlotVec, SlotVec};
 use crate::Never;
 
 /// A DFIR graph. Owns, schedules, and runs the compiled subgraphs.
 #[derive(Default)]
 pub struct Dfir<'a> {
-    pub(super) subgraphs: SlotVec<SubgraphTag, SubgraphData<'a>>,
+    /// The actual execution code of the subgraph.
+    subgraphs: SlotVec<SubgraphTag, Box<dyn Subgraph + 'a>>,
+    /// Each subgraph's friendly name for diagnostics.
+    subgraph_name: SecondarySlotVec<SubgraphTag, Cow<'static, str>>,
+    /// Each subgraph's stratum number.
+    subgraph_stratum: SecondarySlotVec<SubgraphTag, usize>,
+    subgraph_preds: SecondarySlotVec<SubgraphTag, Vec<HandoffId>>,
+    subgraph_succs: SecondarySlotVec<SubgraphTag, Vec<HandoffId>>,
+    /// If this subgraph is scheduled in [`dfir_rs::stratum_queues`].
+    subgraph_is_scheduled: SecondarySlotVec<SubgraphTag, bool>,
+    /// Keep track of the last tick that this subgraph was run in.
+    /// Will be unset if subgraph has not run yet.
+    subgraph_last_tick_run_in: SecondarySlotVec<SubgraphTag, TickInstant>,
+    /// If this subgraph is marked as lazy, then sending data back to a lower stratum does not trigger a new tick to be run.
+    subgraph_is_lazy: SecondarySlotVec<SubgraphTag, bool>,
+
     pub(super) context: Context,
 
     handoffs: SlotVec<HandoffTag, HandoffData>,
@@ -88,7 +102,7 @@ impl Dfir<'_> {
             "Tee send side should only have one sender (or none set yet)."
         );
         if let Some(&pred_sg_id) = tee_root_data.preds.first() {
-            self.subgraphs[pred_sg_id].succs.push(new_hoff_id);
+            self.subgraph_succs[pred_sg_id].push(new_hoff_id);
         }
 
         let output_port = RecvPort {
@@ -126,9 +140,7 @@ impl Dfir<'_> {
             "Tee send side should only have one sender (or none set yet)."
         );
         if let Some(&pred_sg_id) = tee_root_data.preds.first() {
-            self.subgraphs[pred_sg_id]
-                .succs
-                .retain(|&succ_hoff| succ_hoff != tee_port.handoff_id);
+            self.subgraph_succs[pred_sg_id].retain(|&succ_hoff| succ_hoff != tee_port.handoff_id);
         }
     }
 }
@@ -271,34 +283,37 @@ impl<'a> Dfir<'a> {
         {
             work_done = true;
             {
-                let sg_data = &mut self.subgraphs[sg_id];
                 // This must be true for the subgraph to be enqueued.
-                assert!(sg_data.is_scheduled.take());
+                let _was_scheduled = std::mem::take(&mut self.subgraph_is_scheduled[sg_id]);
+                assert!(_was_scheduled);
+
                 tracing::trace!(
                     sg_id = sg_id.to_string(),
-                    sg_name = &*sg_data.name,
+                    sg_name = &*self.subgraph_name[sg_id],
                     "Running subgraph."
                 );
 
                 self.context.subgraph_id = sg_id;
-                self.context.subgraph_last_tick_run_in = sg_data.last_tick_run_in;
-                sg_data.subgraph.run(&mut self.context, &mut self.handoffs);
-                sg_data.last_tick_run_in = Some(current_tick);
+                self.context.subgraph_last_tick_run_in =
+                    self.subgraph_last_tick_run_in.get(sg_id).copied();
+                self.subgraphs[sg_id].run(&mut self.context, &mut self.handoffs);
+                self.subgraph_last_tick_run_in.insert(sg_id, current_tick);
             }
 
-            let sg_data = &self.subgraphs[sg_id];
-            for &handoff_id in sg_data.succs.iter() {
+            for &handoff_id in self.subgraph_succs[sg_id].iter() {
                 let handoff = &self.handoffs[handoff_id];
                 if !handoff.handoff.is_bottom() {
                     for &succ_id in handoff.succs.iter() {
-                        let succ_sg_data = &self.subgraphs[succ_id];
+                        let succ_stratum = self.subgraph_stratum[succ_id];
                         // If we have sent data to the next tick, then we can start the next tick.
-                        if succ_sg_data.stratum < self.context.current_stratum && !sg_data.is_lazy {
+                        if succ_stratum < self.context.current_stratum
+                            && !self.subgraph_is_lazy[succ_id]
+                        {
                             self.context.can_start_tick = true;
                         }
                         // Add subgraph to stratum queue if it is not already scheduled.
-                        if !succ_sg_data.is_scheduled.replace(true) {
-                            self.context.stratum_queues[succ_sg_data.stratum].push_back(succ_id);
+                        if !std::mem::replace(&mut self.subgraph_is_scheduled[succ_id], true) {
+                            self.context.stratum_queues[succ_stratum].push_back(succ_id);
                         }
                     }
                 }
@@ -443,26 +458,24 @@ impl<'a> Dfir<'a> {
     pub fn try_recv_events(&mut self) -> usize {
         let mut enqueued_count = 0;
         while let Ok((sg_id, is_external)) = self.context.event_queue_recv.try_recv() {
-            let sg_data = &self.subgraphs[sg_id];
+            let sg_stratum = self.subgraph_stratum[sg_id];
             tracing::trace!(
                 sg_id = sg_id.to_string(),
                 is_external = is_external,
-                sg_stratum = sg_data.stratum,
+                sg_stratum = sg_stratum,
                 "Event received."
             );
-            if !sg_data.is_scheduled.replace(true) {
-                self.context.stratum_queues[sg_data.stratum].push_back(sg_id);
+            if !std::mem::replace(&mut self.subgraph_is_scheduled[sg_id], true) {
+                self.context.stratum_queues[sg_stratum].push_back(sg_id);
                 enqueued_count += 1;
             }
             if is_external {
                 // Next tick is triggered if we are at the start of the next tick (`!self.events_receved_tick`).
                 // Or if the stratum is in the next tick.
-                if !self.context.events_received_tick
-                    || sg_data.stratum < self.context.current_stratum
-                {
+                if !self.context.events_received_tick || sg_stratum < self.context.current_stratum {
                     tracing::trace!(
                         current_stratum = self.context.current_stratum,
-                        sg_stratum = sg_data.stratum,
+                        sg_stratum = sg_stratum,
                         "External event, setting `can_start_tick = true`."
                     );
                     self.context.can_start_tick = true;
@@ -481,26 +494,24 @@ impl<'a> Dfir<'a> {
         let mut count = 0;
         loop {
             let (sg_id, is_external) = self.context.event_queue_recv.blocking_recv()?;
-            let sg_data = &self.subgraphs[sg_id];
+            let sg_stratum = self.subgraph_stratum[sg_id];
             tracing::trace!(
                 sg_id = sg_id.to_string(),
                 is_external = is_external,
-                sg_stratum = sg_data.stratum,
+                sg_stratum = sg_stratum,
                 "Event received."
             );
-            if !sg_data.is_scheduled.replace(true) {
-                self.context.stratum_queues[sg_data.stratum].push_back(sg_id);
+            if !std::mem::replace(&mut self.subgraph_is_scheduled[sg_id], true) {
+                self.context.stratum_queues[sg_stratum].push_back(sg_id);
                 count += 1;
             }
             if is_external {
                 // Next tick is triggered if we are at the start of the next tick (`!self.events_receved_tick`).
                 // Or if the stratum is in the next tick.
-                if !self.context.events_received_tick
-                    || sg_data.stratum < self.context.current_stratum
-                {
+                if !self.context.events_received_tick || sg_stratum < self.context.current_stratum {
                     tracing::trace!(
                         current_stratum = self.context.current_stratum,
-                        sg_stratum = sg_data.stratum,
+                        sg_stratum = sg_stratum,
                         "External event, setting `can_start_tick = true`."
                     );
                     self.context.can_start_tick = true;
@@ -526,26 +537,25 @@ impl<'a> Dfir<'a> {
         loop {
             tracing::trace!("Awaiting events (`event_queue_recv`).");
             let (sg_id, is_external) = self.context.event_queue_recv.recv().await?;
-            let sg_data = &self.subgraphs[sg_id];
+            let sg_stratum = self.subgraph_stratum[sg_id];
             tracing::trace!(
                 sg_id = sg_id.to_string(),
                 is_external = is_external,
-                sg_stratum = sg_data.stratum,
+                sg_stratum = sg_stratum,
                 "Event received."
             );
-            if !sg_data.is_scheduled.replace(true) {
-                self.context.stratum_queues[sg_data.stratum].push_back(sg_id);
+            let already_scheduled = std::mem::replace(&mut self.subgraph_is_scheduled[sg_id], true);
+            if !already_scheduled {
+                self.context.stratum_queues[sg_stratum].push_back(sg_id);
                 count += 1;
             }
             if is_external {
                 // Next tick is triggered if we are at the start of the next tick (`!self.events_receved_tick`).
                 // Or if the stratum is in the next tick.
-                if !self.context.events_received_tick
-                    || sg_data.stratum < self.context.current_stratum
-                {
+                if !self.context.events_received_tick || sg_stratum < self.context.current_stratum {
                     tracing::trace!(
                         current_stratum = self.context.current_stratum,
-                        sg_stratum = sg_data.stratum,
+                        sg_stratum = sg_stratum,
                         "External event, setting `can_start_tick = true`."
                     );
                     self.context.can_start_tick = true;
@@ -562,10 +572,10 @@ impl<'a> Dfir<'a> {
 
     /// Schedules a subgraph to be run. See also: [`Context::schedule_subgraph`].
     pub fn schedule_subgraph(&mut self, sg_id: SubgraphId) -> bool {
-        let sg_data = &self.subgraphs[sg_id];
-        let already_scheduled = sg_data.is_scheduled.replace(true);
+        let already_scheduled = std::mem::replace(&mut self.subgraph_is_scheduled[sg_id], true);
         if !already_scheduled {
-            self.context.stratum_queues[sg_data.stratum].push_back(sg_id);
+            let sg_stratum = self.subgraph_stratum[sg_id];
+            self.context.stratum_queues[sg_stratum].push_back(sg_id);
             true
         } else {
             false
@@ -612,22 +622,24 @@ impl<'a> Dfir<'a> {
             recv_ports.set_graph_meta(&mut self.handoffs, &mut subgraph_preds, sg_id, true);
             send_ports.set_graph_meta(&mut self.handoffs, &mut subgraph_succs, sg_id, false);
 
+            self.subgraph_preds.insert(sg_id, subgraph_preds);
+            self.subgraph_succs.insert(sg_id, subgraph_succs);
+
             let subgraph =
                 move |context: &mut Context, handoffs: &mut SlotVec<HandoffTag, HandoffData>| {
                     let recv = recv_ports.make_ctx(&*handoffs);
                     let send = send_ports.make_ctx(&*handoffs);
                     (subgraph)(context, recv, send);
                 };
-            SubgraphData::new(
-                name.into(),
-                stratum,
-                subgraph,
-                subgraph_preds,
-                subgraph_succs,
-                true,
-                laziness,
-            )
+
+            Box::new(subgraph)
         });
+
+        self.subgraph_name.insert(sg_id, name.into());
+        self.subgraph_stratum.insert(sg_id, stratum);
+        self.subgraph_is_scheduled.insert(sg_id, true);
+        self.subgraph_is_lazy.insert(sg_id, laziness);
+
         self.context.init_stratum(stratum);
         self.context.stratum_queues[stratum].push_back(sg_id);
 
@@ -679,6 +691,9 @@ impl<'a> Dfir<'a> {
                 self.handoffs[send_port.handoff_id].preds.push(sg_id);
             }
 
+            self.subgraph_preds.insert(sg_id, subgraph_preds);
+            self.subgraph_succs.insert(sg_id, subgraph_succs);
+
             let subgraph =
                 move |context: &mut Context, handoffs: &mut SlotVec<HandoffTag, HandoffData>| {
                     let recvs: Vec<&RecvCtx<R>> = recv_ports
@@ -711,16 +726,14 @@ impl<'a> Dfir<'a> {
 
                     (subgraph)(context, &recvs, &sends)
                 };
-            SubgraphData::new(
-                name.into(),
-                stratum,
-                subgraph,
-                subgraph_preds,
-                subgraph_succs,
-                true,
-                false,
-            )
+
+            Box::new(subgraph)
         });
+
+        self.subgraph_name.insert(sg_id, name.into());
+        self.subgraph_stratum.insert(sg_id, stratum);
+        self.subgraph_is_scheduled.insert(sg_id, true);
+        self.subgraph_is_lazy.insert(sg_id, false);
 
         self.context.init_stratum(stratum);
         self.context.stratum_queues[stratum].push_back(sg_id);
@@ -865,53 +878,53 @@ impl HandoffData {
     }
 }
 
-/// A subgraph along with its predecessor and successor [SubgraphId]s.
-///
-/// Used internally by the [Dfir] struct to represent the dataflow graph
-/// structure and scheduled state.
-pub(super) struct SubgraphData<'a> {
-    /// A friendly name for diagnostics.
-    pub(super) name: Cow<'static, str>,
-    /// This subgraph's stratum number.
-    pub(super) stratum: usize,
-    /// The actual execution code of the subgraph.
-    subgraph: Box<dyn Subgraph + 'a>,
+// /// A subgraph along with its predecessor and successor [SubgraphId]s.
+// ///
+// /// Used internally by the [Dfir] struct to represent the dataflow graph
+// /// structure and scheduled state.
+// pub(super) struct SubgraphData<'a> {
+//     /// A friendly name for diagnostics.
+//     pub(super) name: Cow<'static, str>,
+//     /// This subgraph's stratum number.
+//     pub(super) stratum: usize,
+//     /// The actual execution code of the subgraph.
+//     subgraph: Box<dyn Subgraph + 'a>,
 
-    #[expect(dead_code, reason = "may be useful in the future")]
-    preds: Vec<HandoffId>,
-    succs: Vec<HandoffId>,
+//     #[expect(dead_code, reason = "may be useful in the future")]
+//     preds: Vec<HandoffId>,
+//     succs: Vec<HandoffId>,
 
-    /// If this subgraph is scheduled in [`dfir_rs::stratum_queues`].
-    /// [`Cell`] allows modifying this field when iterating `Self::preds` or
-    /// `Self::succs`, as all `SubgraphData` are owned by the same vec
-    /// `dfir_rs::subgraphs`.
-    is_scheduled: Cell<bool>,
+//     /// If this subgraph is scheduled in [`dfir_rs::stratum_queues`].
+//     /// [`Cell`] allows modifying this field when iterating `Self::preds` or
+//     /// `Self::succs`, as all `SubgraphData` are owned by the same vec
+//     /// `dfir_rs::subgraphs`.
+//     is_scheduled: Cell<bool>,
 
-    /// Keep track of the last tick that this subgraph was run in
-    last_tick_run_in: Option<TickInstant>,
+//     /// Keep track of the last tick that this subgraph was run in
+//     last_tick_run_in: Option<TickInstant>,
 
-    /// If this subgraph is marked as lazy, then sending data back to a lower stratum does not trigger a new tick to be run.
-    is_lazy: bool,
-}
-impl<'a> SubgraphData<'a> {
-    pub fn new(
-        name: Cow<'static, str>,
-        stratum: usize,
-        subgraph: impl Subgraph + 'a,
-        preds: Vec<HandoffId>,
-        succs: Vec<HandoffId>,
-        is_scheduled: bool,
-        laziness: bool,
-    ) -> Self {
-        Self {
-            name,
-            stratum,
-            subgraph: Box::new(subgraph),
-            preds,
-            succs,
-            is_scheduled: Cell::new(is_scheduled),
-            last_tick_run_in: None,
-            is_lazy: laziness,
-        }
-    }
-}
+//     /// If this subgraph is marked as lazy, then sending data back to a lower stratum does not trigger a new tick to be run.
+//     is_lazy: bool,
+// }
+// impl<'a> SubgraphData<'a> {
+//     pub fn new(
+//         name: Cow<'static, str>,
+//         stratum: usize,
+//         subgraph: impl Subgraph + 'a,
+//         preds: Vec<HandoffId>,
+//         succs: Vec<HandoffId>,
+//         is_scheduled: bool,
+//         laziness: bool,
+//     ) -> Self {
+//         Self {
+//             name,
+//             stratum,
+//             subgraph: Box::new(subgraph),
+//             preds,
+//             succs,
+//             is_scheduled: Cell::new(is_scheduled),
+//             last_tick_run_in: None,
+//             is_lazy: laziness,
+//         }
+//     }
+// }
