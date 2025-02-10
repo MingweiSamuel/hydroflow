@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydro_lang/src/location/tick.rs`."><title>tick.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fecee23daa4e8a6d.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hydro_lang" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0-nightly (4ac7bcbaa 2024-09-04)" data-channel="nightly" data-search-js="search-a99f1315e7cc5121.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-921df33f47b8780c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-3b12f09e550e0385.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydro_lang/src/location/tick.rs`."><title>tick.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-cf3c48c1.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hydro_lang" data-themes="" data-resource-suffix="" data-rustdoc-version="1.86.0-nightly (124cc9219 2025-02-09)" data-channel="nightly" data-search-js="search-581efc7a.js" data-settings-js="settings-6dad6058.js" ><script src="../../../static.files/storage-3a5871a4.js"></script><script defer src="../../../static.files/src-script-8fee9dc5.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-4d63596a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">hydro_lang/location/</div>tick.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -280,7 +281,12 @@
 <a href="#280" id="280">280</a>
 <a href="#281" id="281">281</a>
 <a href="#282" id="282">282</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
+<a href="#283" id="283">283</a>
+<a href="#284" id="284">284</a>
+<a href="#285" id="285">285</a>
+<a href="#286" id="286">286</a>
+<a href="#287" id="287">287</a>
+<a href="#288" id="288">288</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::marker::PhantomData;
 
 <span class="kw">use </span>proc_macro2::Span;
 <span class="kw">use </span>sealed::sealed;
@@ -292,7 +298,7 @@
     CycleCollection, CycleCollectionWithInitial, DeferTick, ForwardRef, ForwardRefMarker,
     TickCycle, TickCycleMarker,
 };
-<span class="kw">use </span><span class="kw">crate</span>::ir::{HydroNode, HydroSource};
+<span class="kw">use </span><span class="kw">crate</span>::ir::{HydroNode, HydroNodeMetadata, HydroSource};
 <span class="kw">use crate</span>::{Bounded, Optional, Singleton, Stream};
 
 <span class="attr">#[sealed]
@@ -303,20 +309,20 @@
 </span><span class="kw">impl</span>&lt;T&gt; NoTick <span class="kw">for </span>Cluster&lt;<span class="lifetime">'_</span>, T&gt; {}
 
 <span class="attr">#[sealed]
-</span><span class="kw">pub trait </span>NoTimestamp {}
+</span><span class="kw">pub trait </span>NoAtomic {}
 <span class="attr">#[sealed]
-</span><span class="kw">impl</span>&lt;T&gt; NoTimestamp <span class="kw">for </span>Process&lt;<span class="lifetime">'_</span>, T&gt; {}
+</span><span class="kw">impl</span>&lt;T&gt; NoAtomic <span class="kw">for </span>Process&lt;<span class="lifetime">'_</span>, T&gt; {}
 <span class="attr">#[sealed]
-</span><span class="kw">impl</span>&lt;T&gt; NoTimestamp <span class="kw">for </span>Cluster&lt;<span class="lifetime">'_</span>, T&gt; {}
+</span><span class="kw">impl</span>&lt;T&gt; NoAtomic <span class="kw">for </span>Cluster&lt;<span class="lifetime">'_</span>, T&gt; {}
 <span class="attr">#[sealed]
-</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, L: Location&lt;<span class="lifetime">'a</span>&gt;&gt; NoTimestamp <span class="kw">for </span>Tick&lt;L&gt; {}
+</span><span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, L: Location&lt;<span class="lifetime">'a</span>&gt;&gt; NoAtomic <span class="kw">for </span>Tick&lt;L&gt; {}
 
 <span class="attr">#[derive(Clone)]
-</span><span class="kw">pub struct </span>Timestamped&lt;L&gt; {
+</span><span class="kw">pub struct </span>Atomic&lt;L&gt; {
     <span class="kw">pub</span>(<span class="kw">crate</span>) tick: Tick&lt;L&gt;,
 }
 
-<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, L: Location&lt;<span class="lifetime">'a</span>&gt;&gt; Location&lt;<span class="lifetime">'a</span>&gt; <span class="kw">for </span>Timestamped&lt;L&gt; {
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, L: Location&lt;<span class="lifetime">'a</span>&gt;&gt; Location&lt;<span class="lifetime">'a</span>&gt; <span class="kw">for </span>Atomic&lt;L&gt; {
     <span class="kw">type </span>Root = L::Root;
 
     <span class="kw">fn </span>root(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="self">Self</span>::Root {
@@ -337,7 +343,7 @@
 }
 
 <span class="attr">#[sealed]
-</span><span class="kw">impl</span>&lt;L&gt; NoTick <span class="kw">for </span>Timestamped&lt;L&gt; {}
+</span><span class="kw">impl</span>&lt;L&gt; NoTick <span class="kw">for </span>Atomic&lt;L&gt; {}
 
 <span class="doccomment">/// Marks the stream as being inside the single global clock domain.
 </span><span class="attr">#[derive(Clone)]
@@ -364,6 +370,14 @@
     <span class="kw">fn </span>is_top_level() -&gt; bool {
         <span class="bool-val">false
     </span>}
+
+    <span class="kw">fn </span>next_node_id(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; usize {
+        <span class="self">self</span>.l.next_node_id()
+    }
+
+    <span class="kw">fn </span>new_node_metadata&lt;T&gt;(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; HydroNodeMetadata {
+        <span class="self">self</span>.l.new_node_metadata::&lt;T&gt;()
+    }
 }
 
 <span class="kw">impl</span>&lt;<span class="lifetime">'a</span>, L: Location&lt;<span class="lifetime">'a</span>&gt;&gt; Tick&lt;L&gt; {
@@ -376,19 +390,18 @@
         batch_size: <span class="kw">impl </span>QuotedWithContext&lt;<span class="lifetime">'a</span>, usize, L&gt; + Copy + <span class="lifetime">'a</span>,
     ) -&gt; Stream&lt;(), <span class="self">Self</span>, Bounded&gt;
     <span class="kw">where
-        </span>L: NoTick + NoTimestamp,
+        </span>L: NoTick + NoAtomic,
     {
         <span class="kw">let </span>out = <span class="self">self
             </span>.l
             .spin()
             .flat_map_ordered(<span class="macro">q!</span>(<span class="kw">move </span>|<span class="kw">_</span>| <span class="number">0</span>..batch_size))
-            .map(<span class="macro">q!</span>(|<span class="kw">_</span>| ()))
-            .timestamped(<span class="self">self</span>);
+            .map(<span class="macro">q!</span>(|<span class="kw">_</span>| ()));
 
         <span class="kw">unsafe </span>{
             <span class="comment">// SAFETY: at runtime, `spin` produces a single value per tick,
             // so each batch is guaranteed to be the same size.
-            </span>out.tick_batch()
+            </span>out.tick_batch(<span class="self">self</span>)
         }
     }
 
@@ -397,20 +410,20 @@
         e: <span class="kw">impl </span>QuotedWithContext&lt;<span class="lifetime">'a</span>, T, L&gt;,
     ) -&gt; Singleton&lt;T, <span class="self">Self</span>, Bounded&gt;
     <span class="kw">where
-        </span>L: NoTick,
+        </span>L: NoTick + NoAtomic,
     {
         <span class="kw">unsafe </span>{
             <span class="comment">// SAFETY: a top-level singleton produces the same value each tick
-            </span><span class="self">self</span>.outer().singleton(e).timestamped(<span class="self">self</span>).latest_tick()
+            </span><span class="self">self</span>.outer().singleton(e).latest_tick(<span class="self">self</span>)
         }
     }
 
-    <span class="kw">pub fn </span>singleton_first_tick&lt;T: Clone&gt;(
+    <span class="kw">pub fn </span>optional_first_tick&lt;T: Clone&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
         e: <span class="kw">impl </span>QuotedWithContext&lt;<span class="lifetime">'a</span>, T, Tick&lt;L&gt;&gt;,
     ) -&gt; Optional&lt;T, <span class="self">Self</span>, Bounded&gt;
     <span class="kw">where
-        </span>L: NoTick,
+        </span>L: NoTick + NoAtomic,
     {
         <span class="kw">let </span>e_arr = <span class="macro">q!</span>([e]);
         <span class="kw">let </span>e = e_arr.splice_untyped_ctx(<span class="self">self</span>);
@@ -420,6 +433,7 @@
             HydroNode::Source {
                 source: HydroSource::Iter(e.into()),
                 location_kind: <span class="self">self</span>.l.id(),
+                metadata: <span class="self">self</span>.new_node_metadata::&lt;T&gt;(),
             },
         )
     }
@@ -458,9 +472,7 @@
         )
     }
 
-    <span class="kw">pub fn </span>forward_ref_timestamped&lt;
-        S: CycleCollection&lt;<span class="lifetime">'a</span>, ForwardRefMarker, Location = Timestamped&lt;L&gt;&gt;,
-    &gt;(
+    <span class="kw">pub fn </span>forward_ref_atomic&lt;S: CycleCollection&lt;<span class="lifetime">'a</span>, ForwardRefMarker, Location = Atomic&lt;L&gt;&gt;&gt;(
         <span class="kw-2">&amp;</span><span class="self">self</span>,
     ) -&gt; (ForwardRef&lt;<span class="lifetime">'a</span>, S&gt;, S) {
         <span class="kw">let </span>next_id = {
@@ -487,7 +499,7 @@
                 expected_location: <span class="self">self</span>.id(),
                 _phantom: PhantomData,
             },
-            S::create_source(ident, Timestamped { tick: <span class="self">self</span>.clone() }),
+            S::create_source(ident, Atomic { tick: <span class="self">self</span>.clone() }),
         )
     }
 

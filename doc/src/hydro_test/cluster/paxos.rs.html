@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydro_test/src/cluster/paxos.rs`."><title>paxos.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../static.files/rustdoc-fecee23daa4e8a6d.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hydro_test" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0-nightly (4ac7bcbaa 2024-09-04)" data-channel="nightly" data-search-js="search-a99f1315e7cc5121.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-921df33f47b8780c.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-3b12f09e550e0385.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `hydro_test/src/cluster/paxos.rs`."><title>paxos.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../static.files/rustdoc-cf3c48c1.css"><meta name="rustdoc-vars" data-root-path="../../../" data-static-root-path="../../../static.files/" data-current-crate="hydro_test" data-themes="" data-resource-suffix="" data-rustdoc-version="1.86.0-nightly (124cc9219 2025-02-09)" data-channel="nightly" data-search-js="search-581efc7a.js" data-settings-js="settings-6dad6058.js" ><script src="../../../static.files/storage-3a5871a4.js"></script><script defer src="../../../static.files/src-script-8fee9dc5.js"></script><script defer src="../../../src-files.js"></script><script defer src="../../../static.files/main-4d63596a.js"></script><noscript><link rel="stylesheet" href="../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">hydro_test/cluster/</div>paxos.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -826,7 +827,53 @@
 <a href="#826" id="826">826</a>
 <a href="#827" id="827">827</a>
 <a href="#828" id="828">828</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
+<a href="#829" id="829">829</a>
+<a href="#830" id="830">830</a>
+<a href="#831" id="831">831</a>
+<a href="#832" id="832">832</a>
+<a href="#833" id="833">833</a>
+<a href="#834" id="834">834</a>
+<a href="#835" id="835">835</a>
+<a href="#836" id="836">836</a>
+<a href="#837" id="837">837</a>
+<a href="#838" id="838">838</a>
+<a href="#839" id="839">839</a>
+<a href="#840" id="840">840</a>
+<a href="#841" id="841">841</a>
+<a href="#842" id="842">842</a>
+<a href="#843" id="843">843</a>
+<a href="#844" id="844">844</a>
+<a href="#845" id="845">845</a>
+<a href="#846" id="846">846</a>
+<a href="#847" id="847">847</a>
+<a href="#848" id="848">848</a>
+<a href="#849" id="849">849</a>
+<a href="#850" id="850">850</a>
+<a href="#851" id="851">851</a>
+<a href="#852" id="852">852</a>
+<a href="#853" id="853">853</a>
+<a href="#854" id="854">854</a>
+<a href="#855" id="855">855</a>
+<a href="#856" id="856">856</a>
+<a href="#857" id="857">857</a>
+<a href="#858" id="858">858</a>
+<a href="#859" id="859">859</a>
+<a href="#860" id="860">860</a>
+<a href="#861" id="861">861</a>
+<a href="#862" id="862">862</a>
+<a href="#863" id="863">863</a>
+<a href="#864" id="864">864</a>
+<a href="#865" id="865">865</a>
+<a href="#866" id="866">866</a>
+<a href="#867" id="867">867</a>
+<a href="#868" id="868">868</a>
+<a href="#869" id="869">869</a>
+<a href="#870" id="870">870</a>
+<a href="#871" id="871">871</a>
+<a href="#872" id="872">872</a>
+<a href="#873" id="873">873</a>
+<a href="#874" id="874">874</a>
+<a href="#875" id="875">875</a></pre></div><pre class="rust"><code><span class="kw">use </span>std::collections::HashMap;
 <span class="kw">use </span>std::fmt::Debug;
 <span class="kw">use </span>std::hash::Hash;
 <span class="kw">use </span>std::time::Duration;
@@ -837,8 +884,23 @@
 <span class="kw">use </span>serde::de::DeserializeOwned;
 <span class="kw">use </span>serde::{Deserialize, Serialize};
 
+<span class="kw">use </span><span class="kw">super</span>::kv_replica::Replica;
+<span class="kw">use </span><span class="kw">super</span>::paxos_with_client::PaxosLike;
+
 <span class="kw">pub struct </span>Proposer {}
 <span class="kw">pub struct </span>Acceptor {}
+
+<span class="attr">#[derive(Clone, Copy)]
+</span><span class="kw">pub struct </span>PaxosConfig {
+    <span class="doccomment">/// Maximum number of faulty nodes
+    </span><span class="kw">pub </span>f: usize,
+    <span class="doccomment">/// How often to send "I am leader" heartbeats
+    </span><span class="kw">pub </span>i_am_leader_send_timeout: u64,
+    <span class="doccomment">/// How often to check if the leader has expired
+    </span><span class="kw">pub </span>i_am_leader_check_timeout: u64,
+    <span class="doccomment">/// Initial delay, multiplied by proposer pid, to stagger proposers checking for timeouts
+    </span><span class="kw">pub </span>i_am_leader_check_timeout_delay_multiplier: usize,
+}
 
 <span class="kw">pub trait </span>PaxosPayload: Serialize + DeserializeOwned + PartialEq + Eq + Clone + Debug {}
 <span class="kw">impl</span>&lt;T: Serialize + DeserializeOwned + PartialEq + Eq + Clone + Debug&gt; PaxosPayload <span class="kw">for </span>T {}
@@ -876,6 +938,47 @@
     value: <span class="prelude-ty">Option</span>&lt;P&gt;, <span class="comment">// might be a re-committed hole
 </span>}
 
+<span class="kw">pub struct </span>CorePaxos&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">pub </span>proposers: Cluster&lt;<span class="lifetime">'a</span>, Proposer&gt;,
+    <span class="kw">pub </span>acceptors: Cluster&lt;<span class="lifetime">'a</span>, Acceptor&gt;,
+    <span class="kw">pub </span>replica_checkpoint:
+        Stream&lt;(ClusterId&lt;Replica&gt;, usize), Cluster&lt;<span class="lifetime">'a</span>, Acceptor&gt;, Unbounded, NoOrder&gt;,
+    <span class="kw">pub </span>paxos_config: PaxosConfig,
+}
+
+<span class="kw">impl</span>&lt;<span class="lifetime">'a</span>&gt; PaxosLike&lt;<span class="lifetime">'a</span>&gt; <span class="kw">for </span>CorePaxos&lt;<span class="lifetime">'a</span>&gt; {
+    <span class="kw">type </span>Leader = Proposer;
+    <span class="kw">type </span>Ballot = Ballot;
+
+    <span class="kw">fn </span>leaders(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Cluster&lt;<span class="lifetime">'a</span>, Proposer&gt; {
+        <span class="kw-2">&amp;</span><span class="self">self</span>.proposers
+    }
+
+    <span class="kw">fn </span>get_ballot_leader&lt;L: Location&lt;<span class="lifetime">'a</span>&gt;&gt;(
+        ballot: Optional&lt;<span class="self">Self</span>::Ballot, L, Unbounded&gt;,
+    ) -&gt; Optional&lt;ClusterId&lt;<span class="self">Self</span>::Leader&gt;, L, Unbounded&gt; {
+        ballot.map(<span class="macro">q!</span>(|ballot| ballot.proposer_id))
+    }
+
+    <span class="kw">unsafe fn </span>build&lt;P: PaxosPayload&gt;(
+        <span class="self">self</span>,
+        with_ballot: <span class="kw">impl </span>FnOnce(
+            Stream&lt;Ballot, Cluster&lt;<span class="lifetime">'a</span>, Proposer&gt;, Unbounded&gt;,
+        ) -&gt; Stream&lt;P, Cluster&lt;<span class="lifetime">'a</span>, Proposer&gt;, Unbounded&gt;,
+    ) -&gt; Stream&lt;(usize, <span class="prelude-ty">Option</span>&lt;P&gt;), Cluster&lt;<span class="lifetime">'a</span>, Proposer&gt;, Unbounded, NoOrder&gt; {
+        <span class="kw">unsafe </span>{
+            paxos_core(
+                <span class="kw-2">&amp;</span><span class="self">self</span>.proposers,
+                <span class="kw-2">&amp;</span><span class="self">self</span>.acceptors,
+                <span class="self">self</span>.replica_checkpoint,
+                with_ballot,
+                <span class="self">self</span>.paxos_config,
+            )
+            .<span class="number">1
+        </span>}
+    }
+}
+
 <span class="doccomment">/// Implements the core Paxos algorithm, which uses a cluster of propsers and acceptors
 /// to sequence payloads being sent to the proposers.
 ///
@@ -892,11 +995,7 @@
 /// in deterministic order. However, when the leader is changing, payloads may be
 /// non-deterministically dropped. The stream of ballots is also non-deterministic because
 /// leaders are elected in a non-deterministic process.
-</span><span class="attr">#[expect(
-    clippy::too_many_arguments,
-    clippy::type_complexity,
-    reason = <span class="string">"internal paxos code // TODO"
-</span>)]
+</span><span class="attr">#[expect(clippy::type_complexity, reason = <span class="string">"internal paxos code // TODO"</span>)]
 </span><span class="kw">pub unsafe fn </span>paxos_core&lt;<span class="lifetime">'a</span>, P: PaxosPayload, R&gt;(
     proposers: <span class="kw-2">&amp;</span>Cluster&lt;<span class="lifetime">'a</span>, Proposer&gt;,
     acceptors: <span class="kw-2">&amp;</span>Cluster&lt;<span class="lifetime">'a</span>, Acceptor&gt;,
@@ -906,15 +1005,20 @@
         Unbounded,
         NoOrder,
     &gt;,
-    c_to_proposers: Stream&lt;P, Cluster&lt;<span class="lifetime">'a</span>, Proposer&gt;, Unbounded&gt;,
-    f: usize,
-    i_am_leader_send_timeout: u64,
-    i_am_leader_check_timeout: u64,
-    i_am_leader_check_timeout_delay_multiplier: usize,
+    c_to_proposers: <span class="kw">impl </span>FnOnce(
+        Stream&lt;Ballot, Cluster&lt;<span class="lifetime">'a</span>, Proposer&gt;, Unbounded&gt;,
+    ) -&gt; Stream&lt;P, Cluster&lt;<span class="lifetime">'a</span>, Proposer&gt;, Unbounded&gt;,
+    config: PaxosConfig,
 ) -&gt; (
     Stream&lt;Ballot, Cluster&lt;<span class="lifetime">'a</span>, Proposer&gt;, Unbounded&gt;,
     Stream&lt;(usize, <span class="prelude-ty">Option</span>&lt;P&gt;), Cluster&lt;<span class="lifetime">'a</span>, Proposer&gt;, Unbounded, NoOrder&gt;,
 ) {
+    <span class="kw">let </span>f = config.f;
+    <span class="kw">let </span>i_am_leader_send_timeout = config.i_am_leader_send_timeout;
+    <span class="kw">let </span>i_am_leader_check_timeout = config.i_am_leader_check_timeout;
+    <span class="kw">let </span>i_am_leader_check_timeout_delay_multiplier =
+        config.i_am_leader_check_timeout_delay_multiplier;
+
     proposers
         .source_iter(<span class="macro">q!</span>([<span class="string">"Proposers say hello"</span>]))
         .for_each(<span class="macro">q!</span>(|s| <span class="macro">println!</span>(<span class="string">"{}"</span>, s)));
@@ -955,6 +1059,13 @@
         .clone()
         .continue_unless(p_is_leader.clone().defer_tick());
 
+    <span class="kw">let </span>c_to_proposers = c_to_proposers(
+        just_became_leader
+            .clone()
+            .then(p_ballot.clone())
+            .all_ticks(),
+    );
+
     <span class="kw">let </span>(p_to_replicas, a_log, sequencing_max_ballots) = <span class="kw">unsafe </span>{
         <span class="comment">// SAFETY: The relevant p1bs are non-deterministic because they come from a arbitrary quorum, but because
         // we use a quorum, if we remain the leader there are no missing committed values when we combine the logs.
@@ -985,10 +1096,7 @@
 
     (
         <span class="comment">// Only tell the clients once when leader election concludes
-        </span>just_became_leader
-            .then(p_ballot)
-            .all_ticks()
-            .drop_timestamp(),
+        </span>just_became_leader.then(p_ballot).all_ticks(),
         p_to_replicas,
     )
 }
@@ -1037,9 +1145,7 @@
     <span class="kw">let </span>(p_ballot, p_has_largest_ballot) = p_ballot_calc(proposer_tick, <span class="kw">unsafe </span>{
         <span class="comment">// SAFETY: A stale max ballot might result in us failing to become the leader, but which proposer
         // becomes the leader is non-deterministic anyway.
-        </span>p_received_max_ballot
-            .timestamped(proposer_tick)
-            .latest_tick()
+        </span>p_received_max_ballot.latest_tick(proposer_tick)
     });
 
     <span class="kw">let </span>(p_to_proposers_i_am_leader, p_trigger_election) = <span class="kw">unsafe </span>{
@@ -1070,7 +1176,7 @@
             <span class="comment">// SAFETY: Non-deterministic batching may result in different payloads being rejected
             // by an acceptor if the payload is batched with another payload with larger ballot.
             // But as documented, payloads may be non-deterministically dropped during leader election.
-            </span>p_to_acceptors_p1a.timestamped(acceptor_tick).tick_batch()
+            </span>p_to_acceptors_p1a.tick_batch(acceptor_tick)
         },
         a_log,
         proposers,
@@ -1084,7 +1190,7 @@
         f,
     );
     p_is_leader_complete_cycle.complete(p_is_leader.clone());
-    p1b_fail_complete.complete(fail_ballots.drop_timestamp());
+    p1b_fail_complete.complete(fail_ballots.end_atomic());
 
     (p_ballot, p_is_leader, p_accepted_values, a_max_ballot)
 }
@@ -1156,7 +1262,6 @@
             .clone()
             .then(p_ballot)
             .latest()
-            .drop_timestamp()
             .sample_every(<span class="macro">q!</span>(Duration::from_secs(i_am_leader_send_timeout)))
     }
     .broadcast_bincode_interleaved(proposers);
@@ -1168,8 +1273,7 @@
         </span>p_to_proposers_i_am_leader
             .clone()
             .timeout(<span class="macro">q!</span>(Duration::from_secs(i_am_leader_check_timeout)))
-            .timestamped(proposer_tick)
-            .latest_tick()
+            .latest_tick(proposer_tick)
             .continue_unless(p_is_leader)
     };
 
@@ -1188,8 +1292,7 @@
                     )),
                     <span class="macro">q!</span>(Duration::from_secs(i_am_leader_check_timeout)),
                 )
-                .timestamped(proposer_tick)
-                .tick_batch()
+                .tick_batch(proposer_tick)
                 .first(),
         )
     };
@@ -1233,7 +1336,7 @@
                 )
             )))
             .all_ticks()
-            .send_bincode_interleaved(proposers),
+            .send_bincode_anonymous(proposers),
     )
 }
 
@@ -1253,13 +1356,10 @@
 ) -&gt; (
     Optional&lt;(), Tick&lt;Cluster&lt;<span class="lifetime">'a</span>, Proposer&gt;&gt;, Bounded&gt;,
     Stream&lt;(<span class="prelude-ty">Option</span>&lt;usize&gt;, P), Tick&lt;Cluster&lt;<span class="lifetime">'a</span>, Proposer&gt;&gt;, Bounded, NoOrder&gt;,
-    Stream&lt;Ballot, Timestamped&lt;Cluster&lt;<span class="lifetime">'a</span>, Proposer&gt;&gt;, Unbounded, NoOrder&gt;,
+    Stream&lt;Ballot, Atomic&lt;Cluster&lt;<span class="lifetime">'a</span>, Proposer&gt;&gt;, Unbounded, NoOrder&gt;,
 ) {
-    <span class="kw">let </span>(quorums, fails) = collect_quorum_with_response(
-        a_to_proposers_p1b.timestamped(proposer_tick),
-        f + <span class="number">1</span>,
-        <span class="number">2 </span>* f + <span class="number">1</span>,
-    );
+    <span class="kw">let </span>(quorums, fails) =
+        collect_quorum_with_response(a_to_proposers_p1b.atomic(proposer_tick), f + <span class="number">1</span>, <span class="number">2 </span>* f + <span class="number">1</span>);
 
     <span class="kw">let </span>p_received_quorum_of_p1bs = <span class="kw">unsafe </span>{
         <span class="comment">// SAFETY: All the values for a quorum will be emitted in a single batch,
@@ -1384,7 +1484,7 @@
             value: <span class="prelude-val">None
         </span>}));
 
-    (p_log_to_try_commit.union(p_log_holes), p_max_slot)
+    (p_log_to_try_commit.chain(p_log_holes), p_max_slot)
 }
 
 <span class="attr">#[expect(
@@ -1421,7 +1521,7 @@
     Stream&lt;(usize, <span class="prelude-ty">Option</span>&lt;P&gt;), Cluster&lt;<span class="lifetime">'a</span>, Proposer&gt;, Unbounded, NoOrder&gt;,
     Singleton&lt;
         (<span class="prelude-ty">Option</span>&lt;usize&gt;, HashMap&lt;usize, LogValue&lt;P&gt;&gt;),
-        Timestamped&lt;Cluster&lt;<span class="lifetime">'a</span>, Acceptor&gt;&gt;,
+        Atomic&lt;Cluster&lt;<span class="lifetime">'a</span>, Acceptor&gt;&gt;,
         Unbounded,
     &gt;,
     Stream&lt;Ballot, Cluster&lt;<span class="lifetime">'a</span>, Proposer&gt;, Unbounded, NoOrder&gt;,
@@ -1436,8 +1536,7 @@
         // in which payloads are committed when the leader is changing, which is documented at
         // the function level.
         </span>c_to_proposers
-            .timestamped(proposer_tick)
-            .tick_batch()
+            .tick_batch(proposer_tick)
             .continue_if(p_is_leader.clone())
     });
 
@@ -1447,9 +1546,9 @@
             (slot, ballot),
             <span class="prelude-val">Some</span>(payload)
         )))
-        .union(p_log_to_recommit.map(<span class="macro">q!</span>(|p2a| ((p2a.slot, p2a.ballot), p2a.value))))
+        .chain(p_log_to_recommit.map(<span class="macro">q!</span>(|p2a| ((p2a.slot, p2a.ballot), p2a.value))))
         .continue_if(p_is_leader)
-        .all_ticks();
+        .all_ticks_atomic();
 
     <span class="kw">let </span>(a_log, a_to_proposers_p2b) = acceptor_p2(
         acceptor_tick,
@@ -1468,11 +1567,8 @@
     );
 
     <span class="comment">// TOOD: only persist if we are the leader
-    </span><span class="kw">let </span>(quorums, fails) = collect_quorum(
-        a_to_proposers_p2b.timestamped(proposer_tick),
-        f + <span class="number">1</span>,
-        <span class="number">2 </span>* f + <span class="number">1</span>,
-    );
+    </span><span class="kw">let </span>(quorums, fails) =
+        collect_quorum(a_to_proposers_p2b.atomic(proposer_tick), f + <span class="number">1</span>, <span class="number">2 </span>* f + <span class="number">1</span>);
 
     <span class="kw">let </span>p_to_replicas = join_responses(proposer_tick, quorums.map(<span class="macro">q!</span>(|k| (k, ()))), <span class="kw">unsafe </span>{
         <span class="comment">// SAFETY: The metadata will always be generated before we get a quorum
@@ -1483,9 +1579,9 @@
     (
         p_to_replicas
             .map(<span class="macro">q!</span>(|((slot, _ballot), (value, <span class="kw">_</span>))| (slot, value)))
-            .drop_timestamp(),
+            .end_atomic(),
         a_log,
-        fails.map(<span class="macro">q!</span>(|(<span class="kw">_</span>, ballot)| ballot)).drop_timestamp(),
+        fails.map(<span class="macro">q!</span>(|(<span class="kw">_</span>, ballot)| ballot)).end_atomic(),
     )
 }
 
@@ -1542,7 +1638,7 @@
 ) -&gt; (
     Singleton&lt;
         (<span class="prelude-ty">Option</span>&lt;usize&gt;, HashMap&lt;usize, LogValue&lt;P&gt;&gt;),
-        Timestamped&lt;Cluster&lt;<span class="lifetime">'a</span>, Acceptor&gt;&gt;,
+        Atomic&lt;Cluster&lt;<span class="lifetime">'a</span>, Acceptor&gt;&gt;,
         Unbounded,
     &gt;,
     Stream&lt;((usize, Ballot), <span class="prelude-ty">Result</span>&lt;(), Ballot&gt;), Cluster&lt;<span class="lifetime">'a</span>, Proposer&gt;, Unbounded, NoOrder&gt;,
@@ -1552,7 +1648,7 @@
         // a confirmation to the proposer. Because we use `persist()` on these
         // messages before folding into the log, non-deterministic batch boundaries
         // will not affect the eventual log state.
-        </span>p_to_acceptors_p2a.timestamped(acceptor_tick).tick_batch()
+        </span>p_to_acceptors_p2a.tick_batch(acceptor_tick)
     };
 
     <span class="comment">// Get the latest checkpoint sequence per replica
@@ -1561,9 +1657,7 @@
         // that do not need to be saved (because the data is at all replicas). This affects
         // the logs that will be collected during a leader re-election, but eventually the
         // same checkpoint will arrive at acceptors and those slots will be eventually deleted.
-        </span>r_to_acceptors_checkpoint
-            .timestamped(acceptor_tick)
-            .tick_batch()
+        </span>r_to_acceptors_checkpoint.tick_batch(acceptor_tick)
     }
     .persist()
     .reduce_keyed_commutative(<span class="macro">q!</span>(|curr_seq, seq| {
@@ -1598,8 +1692,8 @@
             </span>}
         ));
     <span class="kw">let </span>a_log = a_p2as_to_place_in_log
-        .union(a_new_checkpoint.into_stream())
-        .all_ticks()
+        .chain(a_new_checkpoint.into_stream())
+        .all_ticks_atomic()
         .fold_commutative(
             <span class="macro">q!</span>(|| (<span class="prelude-val">None</span>, HashMap::new())),
             <span class="macro">q!</span>(|(prev_checkpoint, log), checkpoint_or_p2a| {
@@ -1651,7 +1745,7 @@
             )
         )))
         .all_ticks()
-        .send_bincode_interleaved(proposers);
+        .send_bincode_anonymous(proposers);
     (a_log, a_to_proposers_p2b)
 }
 </code></pre></div></section></main></body></html>

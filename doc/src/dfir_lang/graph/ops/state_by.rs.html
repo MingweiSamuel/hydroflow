@@ -1,4 +1,5 @@
-<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `dfir_lang/src/graph/ops/state_by.rs`."><title>state_by.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-46f98efaafac5295.ttf.woff2,FiraSans-Regular-018c141bf0843ffd.woff2,FiraSans-Medium-8f9a781e4970d388.woff2,SourceCodePro-Regular-562dcc5011b6de7d.ttf.woff2,SourceCodePro-Semibold-d899c5a5c4aeb14a.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-76eba96aa4d2e634.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-fecee23daa4e8a6d.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="dfir_lang" data-themes="" data-resource-suffix="" data-rustdoc-version="1.83.0-nightly (4ac7bcbaa 2024-09-04)" data-channel="nightly" data-search-js="search-a99f1315e7cc5121.js" data-settings-js="settings-4313503d2e1961c2.js" ><script src="../../../../static.files/storage-118b08c4c78b968e.js"></script><script defer src="../../../../static.files/src-script-e66d777a5a92e9b2.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-921df33f47b8780c.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-3b12f09e550e0385.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-422f7d1d52889060.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-2c020d218678b618.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers"><a href="#1" id="1">1</a>
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="generator" content="rustdoc"><meta name="description" content="Source of the Rust file `dfir_lang/src/graph/ops/state_by.rs`."><title>state_by.rs - source</title><script>if(window.location.protocol!=="file:")document.head.insertAdjacentHTML("beforeend","SourceSerif4-Regular-6b053e98.ttf.woff2,FiraSans-Italic-81dc35de.woff2,FiraSans-Regular-0fe48ade.woff2,FiraSans-MediumItalic-ccf7e434.woff2,FiraSans-Medium-e1aa3f0a.woff2,SourceCodePro-Regular-8badfe75.ttf.woff2,SourceCodePro-Semibold-aa29a496.ttf.woff2".split(",").map(f=>`<link rel="preload" as="font" type="font/woff2" crossorigin href="../../../../static.files/${f}">`).join(""))</script><link rel="stylesheet" href="../../../../static.files/normalize-9960930a.css"><link rel="stylesheet" href="../../../../static.files/rustdoc-cf3c48c1.css"><meta name="rustdoc-vars" data-root-path="../../../../" data-static-root-path="../../../../static.files/" data-current-crate="dfir_lang" data-themes="" data-resource-suffix="" data-rustdoc-version="1.86.0-nightly (124cc9219 2025-02-09)" data-channel="nightly" data-search-js="search-581efc7a.js" data-settings-js="settings-6dad6058.js" ><script src="../../../../static.files/storage-3a5871a4.js"></script><script defer src="../../../../static.files/src-script-8fee9dc5.js"></script><script defer src="../../../../src-files.js"></script><script defer src="../../../../static.files/main-4d63596a.js"></script><noscript><link rel="stylesheet" href="../../../../static.files/noscript-893ab5e7.css"></noscript><link rel="alternate icon" type="image/png" href="../../../../static.files/favicon-32x32-6580c154.png"><link rel="icon" type="image/svg+xml" href="../../../../static.files/favicon-044be391.svg"></head><body class="rustdoc src"><!--[if lte IE 11]><div class="warning">This old browser is unsupported and will most likely display funky things.</div><![endif]--><nav class="sidebar"><div class="src-sidebar-title"><h2>Files</h2></div></nav><div class="sidebar-resizer"></div><main><rustdoc-search></rustdoc-search><section id="main-content" class="content"><div class="main-heading"><h1><div class="sub-heading">dfir_lang/graph/ops/</div>state_by.rs</h1><rustdoc-toolbar></rustdoc-toolbar></div><div class="example-wrap"><div data-nosnippet><pre class="src-line-numbers">
+<a href="#1" id="1">1</a>
 <a href="#2" id="2">2</a>
 <a href="#3" id="3">3</a>
 <a href="#4" id="4">4</a>
@@ -175,7 +176,30 @@
 <a href="#175" id="175">175</a>
 <a href="#176" id="176">176</a>
 <a href="#177" id="177">177</a>
-</pre></div><pre class="rust"><code><span class="kw">use </span>quote::{quote_spanned, ToTokens};
+<a href="#178" id="178">178</a>
+<a href="#179" id="179">179</a>
+<a href="#180" id="180">180</a>
+<a href="#181" id="181">181</a>
+<a href="#182" id="182">182</a>
+<a href="#183" id="183">183</a>
+<a href="#184" id="184">184</a>
+<a href="#185" id="185">185</a>
+<a href="#186" id="186">186</a>
+<a href="#187" id="187">187</a>
+<a href="#188" id="188">188</a>
+<a href="#189" id="189">189</a>
+<a href="#190" id="190">190</a>
+<a href="#191" id="191">191</a>
+<a href="#192" id="192">192</a>
+<a href="#193" id="193">193</a>
+<a href="#194" id="194">194</a>
+<a href="#195" id="195">195</a>
+<a href="#196" id="196">196</a>
+<a href="#197" id="197">197</a>
+<a href="#198" id="198">198</a>
+<a href="#199" id="199">199</a>
+<a href="#200" id="200">200</a>
+<a href="#201" id="201">201</a></pre></div><pre class="rust"><code><span class="kw">use </span>quote::{quote_spanned, ToTokens};
 
 <span class="kw">use super</span>::{
     OpInstGenerics, OperatorCategory, OperatorConstraints, OperatorInstance, OperatorWriteOutput,
@@ -183,7 +207,8 @@
 };
 <span class="kw">use </span><span class="kw">crate</span>::diagnostic::{Diagnostic, Level};
 
-<span class="doccomment">/// List state operator, but with a closure to map the input to the state lattice.
+<span class="doccomment">/// List state operator, but with a closure to map the input to the state lattice and a factory
+/// function to initialize the internal data structure.
 ///
 /// The emitted outputs (both the referencable singleton and the optional pass-through stream) are
 /// of the same type as the inputs to the state_by operator and are not required to be a lattice
@@ -192,11 +217,29 @@
 /// ```dfir
 /// use std::collections::HashSet;
 ///
+///
 /// use lattices::set_union::{CartesianProductBimorphism, SetUnionHashSet, SetUnionSingletonSet};
 ///
 /// my_state = source_iter(0..3)
-///     -&gt; state_by::&lt;SetUnionHashSet&lt;usize&gt;&gt;(SetUnionSingletonSet::new_from);
+///     -&gt; state_by::&lt;SetUnionHashSet&lt;usize&gt;&gt;(SetUnionSingletonSet::new_from, std::default::Default::default);
 /// ```
+/// The 2nd argument into `state_by` is a factory function that can be used to supply a custom
+/// initial value for the backing state. The initial value is still expected to be bottom (and will
+/// be checked). This is useful for doing things like pre-allocating buffers, etc. In the above
+/// example, it is just using `Default::default()`
+///
+/// An example of preallocating the capacity in a hashmap:
+///
+///```dfir
+/// use std::collections::HashSet;
+/// use lattices::set_union::{SetUnion, CartesianProductBimorphism, SetUnionHashSet, SetUnionSingletonSet};
+///
+/// my_state = source_iter(0..3)
+///     -&gt; state_by::&lt;SetUnionHashSet&lt;usize&gt;&gt;(SetUnionSingletonSet::new_from, {|| SetUnion::new(HashSet::&lt;usize&gt;::with_capacity(1_000)) });
+///```
+///
+/// The `state` operator is equivalent to `state_by` used with an identity mapping operator with
+/// `Default::default` providing the factory function.
 </span><span class="kw">pub const </span>STATE_BY: OperatorConstraints = OperatorConstraints {
     name: <span class="string">"state_by"</span>,
     categories: <span class="kw-2">&amp;</span>[OperatorCategory::Persistence],
@@ -204,7 +247,7 @@
     soft_range_inn: RANGE_1,
     hard_range_out: <span class="kw-2">&amp;</span>(<span class="number">0</span>..=<span class="number">1</span>),
     soft_range_out: <span class="kw-2">&amp;</span>(<span class="number">0</span>..=<span class="number">1</span>),
-    num_args: <span class="number">1</span>,
+    num_args: <span class="number">2</span>,
     persistence_args: <span class="kw-2">&amp;</span>(<span class="number">0</span>..=<span class="number">1</span>),
     type_args: <span class="kw-2">&amp;</span>(<span class="number">0</span>..=<span class="number">1</span>),
     is_external_input: <span class="bool-val">false</span>,
@@ -257,11 +300,16 @@
             <span class="kw">_ </span>=&gt; <span class="macro">unreachable!</span>(),
         };
 
+
         <span class="kw">let </span>state_ident = singleton_output_ident;
-        <span class="kw">let </span><span class="kw-2">mut </span>write_prologue = <span class="macro">quote_spanned!</span> {op_span=&gt;
-            <span class="kw">let </span>#state_ident = #hydroflow.add_state(::std::cell::RefCell::new(
-                &lt;#lattice_type <span class="kw">as </span>::std::default::Default&gt;::default()
-            ));
+        <span class="kw">let </span>factory_fn = <span class="kw-2">&amp;</span>arguments[<span class="number">1</span>];
+
+        <span class="kw">let </span><span class="kw-2">mut </span>write_prologue = <span class="macro">quote_spanned!</span> { op_span=&gt;
+                    <span class="kw">let </span>#state_ident = {
+                        <span class="kw">let </span>data_struct : #lattice_type = (#factory_fn)();
+                        <span class="macro">::std::debug_assert!</span>(::lattices::IsBot::is_bot(<span class="kw-2">&amp;</span>data_struct));
+                        #hydroflow.add_state(::std::cell::RefCell::new(data_struct))
+                    };
         };
         <span class="kw">if </span>Persistence::Tick == persistence {
             write_prologue.extend(<span class="macro">quote_spanned!</span> {op_span=&gt;
@@ -269,7 +317,7 @@
             </span>});
         }
 
-        <span class="kw">let </span>func = <span class="kw-2">&amp;</span>arguments[<span class="number">0</span>];
+        <span class="kw">let </span>by_fn = <span class="kw-2">&amp;</span>arguments[<span class="number">0</span>];
 
         <span class="comment">// TODO(mingwei): deduplicate codegen
         </span><span class="kw">let </span>write_iterator = <span class="kw">if </span>is_pull {
@@ -294,7 +342,7 @@
                                 #root::lattices::Merge::merge(<span class="kw-2">&amp;mut *</span>state, (mapfn)(::std::clone::Clone::clone(item)))
                             })
                     }
-                    check_input::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, #lattice_type&gt;(#input, #func, #state_ident, #context)
+                    check_input::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, #lattice_type&gt;(#input, #by_fn, #state_ident, #context)
                 };
             }
         } <span class="kw">else if let </span><span class="prelude-val">Some</span>(output) = outputs.first() {
@@ -318,7 +366,7 @@
                                 #root::lattices::Merge::merge(<span class="kw-2">&amp;mut *</span>state, (mapfn)(::std::clone::Clone::clone(item)))
                         }, push)
                     }
-                    check_output::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, #lattice_type&gt;(#output, #func, #state_ident, #context)
+                    check_output::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, #lattice_type&gt;(#output, #by_fn, #state_ident, #context)
                 };
             }
         } <span class="kw">else </span>{
@@ -341,7 +389,7 @@
                             #root::lattices::Merge::merge(<span class="kw-2">&amp;mut *</span>state, (mapfn)(item));
                         })
                     }
-                    check_output::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, #lattice_type&gt;(#state_ident, #func, #context)
+                    check_output::&lt;<span class="kw">_</span>, <span class="kw">_</span>, <span class="kw">_</span>, #lattice_type&gt;(#state_ident, #by_fn, #context)
                 };
             }
         };
