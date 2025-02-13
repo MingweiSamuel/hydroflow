@@ -2,12 +2,13 @@
 //!
 //! Provides APIs for state and scheduling.
 
+use core::debug_assert_eq;
+use core::ops::FnMut;
 use std::any::Any;
 use std::cell::Cell;
 use std::collections::VecDeque;
 use std::future::Future;
 use std::marker::PhantomData;
-use std::ops::DerefMut;
 use std::pin::Pin;
 
 use tokio::sync::mpsc::{self, UnboundedReceiver, UnboundedSender};
@@ -15,10 +16,10 @@ use tokio::task::JoinHandle;
 use web_time::SystemTime;
 
 use super::state::StateHandle;
-use super::{LoopTag, StateId, SubgraphId};
-use crate::scheduled::ticks::TickInstant;
+use super::ticks::TickInstant;
+use super::{LoopId, LoopTag, StateId, SubgraphId};
 use crate::util::priority_stack::PriorityStack;
-use crate::util::slot_vec::SlotVec;
+use crate::util::slot_vec::{SecondarySlotVec, SlotVec};
 
 /// The main state and scheduler of the runtime instance. Provided as the `context` API to each
 /// subgraph/operator as it is run.
@@ -28,6 +29,8 @@ use crate::util::slot_vec::SlotVec;
 pub struct Context {
     /// User-facing State API.
     states: Vec<StateData>,
+    /// State hooks for each loop.
+    loop_state_hook_fns: SecondarySlotVec<LoopTag, Vec<StateId>>,
 
     /// Priority stack for handling strata within loops. Prioritized by loop depth.
     pub(super) stratum_stack: PriorityStack<usize>,
@@ -50,6 +53,11 @@ pub struct Context {
     /// If the events have been received for this tick.
     pub(super) events_received_tick: bool,
 
+    // Depth of loop (zero for top-level).
+    pub(super) loop_depth: SlotVec<LoopTag, usize>,
+
+    pub(super) loop_nonce: usize,
+
     // TODO(mingwei): as long as this is here, it's impossible to know when all work is done.
     // Second field (bool) is for if the event is an external "important" event (true).
     pub(super) event_queue_send: UnboundedSender<(SubgraphId, bool)>,
@@ -63,11 +71,6 @@ pub struct Context {
     pub(super) current_tick_start: SystemTime,
     pub(super) is_first_run_this_tick: bool,
     pub(super) loop_iter_count: usize,
-
-    // Depth of loop (zero for top-level).
-    pub(super) loop_depth: SlotVec<LoopTag, usize>,
-
-    pub(super) loop_nonce: usize,
 
     /// The SubgraphId of the currently running operator. When this context is
     /// not being forwarded to a running operator, this field is meaningless.
@@ -183,7 +186,8 @@ impl Context {
 
         let state_data = StateData {
             state: Box::new(state),
-            tick_reset: None,
+            loop_id: None,
+            hook_fn: None,
         };
         self.states.push(state_data);
 
@@ -194,6 +198,7 @@ impl Context {
     }
 
     /// Sets a hook to modify the state at the end of each tick, using the supplied closure.
+    #[deprecated(note = "Use `set_state_hook` instead.")]
     pub fn set_state_tick_hook<T>(
         &mut self,
         handle: StateHandle<T>,
@@ -204,9 +209,46 @@ impl Context {
         self.states
             .get_mut(handle.state_id.0)
             .expect("Failed to find state with given handle.")
-            .tick_reset = Some(Box::new(move |state| {
+            .hook_fn = Some(Box::new(move |state| {
             (tick_hook_fn)(state.downcast_mut::<T>().unwrap());
         }));
+    }
+
+    /// Sets a hook to modify the state at the end of each loop execution (or at the end of each
+    /// tick, if `loop_id` is `None`), using the supplied closure.
+    ///
+    /// Panics if the state hook is already set.
+    pub fn set_state_hook<T>(
+        &mut self,
+        handle: StateHandle<T>,
+        loop_id: Option<LoopId>,
+        mut hook_fn: impl 'static + FnMut(&mut T),
+    ) where
+        T: Any,
+    {
+        // let loop_id = loop_id.unwrap_or_default();
+        let state = self
+            .states
+            .get_mut(handle.state_id.0)
+            .expect("Failed to find state with given handle.");
+
+        state.hook_fn = Some(Box::new(move |state| {
+            (hook_fn)(state.downcast_mut::<T>().unwrap());
+        }));
+        if let Some(old_loop_id) = std::mem::replace(&mut state.loop_id, loop_id) {
+            // Remove the state from the old loop's hook list.
+            self.loop_state_hook_fns
+                .get_mut(old_loop_id)
+                .expect("Failed to find loop with given ID.")
+                .retain(|&state_id| state_id != handle.state_id);
+        }
+        if let Some(loop_id) = loop_id {
+            // Add the state to the new loop's hook list.
+            self.loop_state_hook_fns
+                .get_mut(loop_id)
+                .expect("Failed to find loop with given ID.")
+                .push(handle.state_id);
+        }
     }
 
     /// Removes state from the context returns it as an owned heap value.
@@ -282,6 +324,7 @@ impl Default for Context {
 
             loop_depth,
             loop_nonce: 0,
+            loop_state_hook_fns: Default::default(),
 
             // Will be re-set before use.
             subgraph_id: SubgraphId::from_raw(0),
@@ -301,11 +344,37 @@ impl Context {
         }
     }
 
-    /// Call this at the end of a tick,
+    /// Called by the scheduler at the end of a tick.
     pub(super) fn reset_state_at_end_of_tick(&mut self) {
-        for StateData { state, tick_reset } in self.states.iter_mut() {
-            if let Some(tick_reset) = tick_reset {
-                (tick_reset)(Box::deref_mut(state));
+        for StateData {
+            state,
+            loop_id,
+            hook_fn,
+        } in self.states.iter_mut()
+        {
+            // Only reset top-level state (loop_id `None`).
+            if let (None, Some(tick_reset)) = (loop_id, hook_fn) {
+                (tick_reset)(state);
+            }
+        }
+    }
+
+    /// Call by the scheduler at the end of a loop execution (all iterations done).
+    pub(super) fn reset_state_at_end_of_loop(&mut self, loop_id: LoopId) {
+        for state_id in self
+            .loop_state_hook_fns
+            .get(loop_id)
+            .iter()
+            .flat_map(|v| v.iter())
+        {
+            let StateData {
+                state,
+                loop_id: state_loop_id,
+                hook_fn,
+            } = self.states.get_mut(state_id.0).unwrap();
+            debug_assert_eq!(Some(loop_id), *state_loop_id);
+            if let Some(tick_reset) = hook_fn {
+                (tick_reset)(state);
             }
         }
     }
@@ -314,6 +383,7 @@ impl Context {
 /// Internal struct containing a pointer to instance-owned state.
 struct StateData {
     state: Box<dyn Any>,
-    tick_reset: Option<TickResetFn>,
+    loop_id: Option<LoopId>,
+    hook_fn: Option<TickResetFn>,
 }
 type TickResetFn = Box<dyn FnMut(&mut dyn Any)>;

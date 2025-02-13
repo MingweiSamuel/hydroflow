@@ -308,19 +308,23 @@ impl<'a> Dfir<'a> {
                     // iteration count, then we need to increment the iteration count.
                     let curr_loop_nonce = self.context.loop_nonce_stack.last().copied();
 
-                    let curr_iter_count = if let Some(&(_loop_loop_nonce, loop_iter_count)) =
+                    let curr_iter_count = if let Some(&(loop_loop_nonce, loop_iter_count)) =
                         self.loop_iter_counters.get(loop_id)
                     {
+                        if curr_loop_nonce.is_none_or(|nonce| nonce == loop_loop_nonce) {
+                            // reset at the end of the execution????.
+                        }
+
                         let (prev_loop_nonce, prev_iter_count) = sg_data.last_loop_nonce;
 
-                        // If the loop nonce is the same as the previous execution, then we are in
-                        // the same loop execution.
-                        // `curr_loop_nonce` is `None` for top-level loops, and top-level loops are
-                        // always in the same (singular) loop execution.
                         if curr_loop_nonce.is_none_or(|nonce| nonce == prev_loop_nonce) {
-                            // If the iteration count is the same as the previous execution, we
-                            // need to increment it.
+                            // If the loop nonce is the same as the previous execution, then we are in
+                            // the same loop execution.
+                            // `curr_loop_nonce` is `None` for top-level loops, and top-level loops are
+                            // always in the same (singular) loop execution.
                             if loop_iter_count == prev_iter_count {
+                                // If the iteration count is the same as the previous execution, we
+                                // need to increment it.
                                 loop_iter_count + 1
                             } else {
                                 // Otherwise update the iteration count to match the loop.
