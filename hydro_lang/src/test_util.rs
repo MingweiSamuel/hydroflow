@@ -1,9 +1,9 @@
 use std::future::Future;
-use std::panic::{catch_unwind, AssertUnwindSafe};
+use std::panic::{AssertUnwindSafe, catch_unwind};
 use std::pin::Pin;
 
-use serde::de::DeserializeOwned;
 use serde::Serialize;
+use serde::de::DeserializeOwned;
 
 use crate::{FlowBuilder, Process, Stream, Unbounded};
 
@@ -31,7 +31,11 @@ pub async fn multi_location_test<
         .with_external(&external, deployment.Localhost())
         .deploy(&mut deployment);
 
-    deployment.deploy().await.unwrap();
+    deployment
+        .deploy()
+        .await
+        .inspect_err(print_escaped_ansi)
+        .unwrap();
 
     let external_out = nodes.connect_source_bincode(out_port).await;
     deployment.start().await.unwrap();
@@ -59,7 +63,11 @@ pub async fn stream_transform_test<
         .with_external(&external, deployment.Localhost())
         .deploy(&mut deployment);
 
-    deployment.deploy().await.unwrap();
+    deployment
+        .deploy()
+        .await
+        .inspect_err(print_escaped_ansi)
+        .unwrap();
 
     let external_out = nodes.connect_source_bincode(out_port).await;
     deployment.start().await.unwrap();
@@ -84,4 +92,12 @@ pub fn assert_panics_with_message(func: impl FnOnce(), msg: &'static str) {
         .map(|s| chk(&s))
         .or_else(|err| err.downcast::<&'static str>().map(|s| chk(*s)))
         .expect("Unexpected panic type!");
+}
+
+/// Escapes ANSI codes in an error message.
+///
+/// `rustdoc --test` mangles ANSI escape codes, so we need to remove them before printing.
+/// This is specifically useful for the `cargo` `BuildError` messages from `hydro_deploy`.
+fn print_escaped_ansi(error: &hydro_deploy::Error) {
+    eprintln!("{}", strip_ansi_escapes::strip_str(&error.to_string()));
 }

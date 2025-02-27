@@ -2,7 +2,7 @@ use std::collections::HashMap;
 use std::net::SocketAddr;
 use std::sync::Arc;
 
-use anyhow::Result;
+pub use anyhow::{Error, Result};
 use async_trait::async_trait;
 use hydroflow_crate::build::BuildOutput;
 use hydroflow_crate::tracing_options::TracingOptions;
