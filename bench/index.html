@@ -144,7 +144,8 @@
             return map;
           }
 
-          const data = window.BENCHMARK_DATA;
+a
+          data.entries.Benchmark = data.entries.Benchmark.slice(-365)
 
           // Render header
           document.getElementById('last-update').textContent = new Date(data.lastUpdate).toString();
