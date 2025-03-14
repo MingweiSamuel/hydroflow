@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["gen_final_helper","gen_macro","gen_staged_trybuild"],"macro":["gen_final"]};

@@ -1,1 +1,1 @@
-searchState.loadedDescShard("hydro_std", 0, "Given an incoming stream of request-response responses, …")
+searchState.loadedDescShard("hydro_std", 0, "Benchmarks transactional workloads by concurrently …\nReturns the argument unchanged.\nCalls <code>U::from(self)</code>.\nPrints transaction latency and throughput results to …\nGiven an incoming stream of request-response responses, …")

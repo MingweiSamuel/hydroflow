@@ -1,1 +1,0 @@
-searchState.loadedDescShard("stageleft_macro", 0, "Defines an entrypoint for staged code, which will be …\nCreates a quoted expression for Hydro.\nA utility for declaring top-level public modules in a …")

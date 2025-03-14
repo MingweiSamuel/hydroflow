@@ -1,1 +1,0 @@
-window.SIDEBAR_ITEMS = {"fn":["bench_client"],"struct":["Client"]};

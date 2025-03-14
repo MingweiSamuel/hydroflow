@@ -1,1 +1,0 @@
-searchState.loadedDescShard("stageleft_test_macro", 0, "")
