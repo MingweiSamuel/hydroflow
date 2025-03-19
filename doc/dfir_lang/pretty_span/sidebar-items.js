@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["PrettyRowCol","PrettySpan"]};
+window.SIDEBAR_ITEMS = {"fn":["make_source_path_relative"],"struct":["PrettyRowCol","PrettySpan"]};
