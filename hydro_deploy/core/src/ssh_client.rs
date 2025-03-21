@@ -9,7 +9,7 @@ use std::task::{Context, Poll, ready};
 
 use anyhow::Error;
 use memo_map::MemoMap;
-use russh::client::{self, Config, Handle, Handler, Msg};
+use russh::client::{Config, Handle, Handler, Msg, connect};
 use russh::keys::{PrivateKeyWithHashAlg, load_secret_key, ssh_key};
 use russh::{ChannelMsg, ChannelWriteHalf, CryptoVec};
 use russh_sftp::client::SftpSession;
@@ -18,6 +18,8 @@ use tokio::io::{AsyncBufRead, AsyncRead, AsyncWrite, ReadBuf};
 use tokio::net::ToSocketAddrs;
 use tokio::sync::{Semaphore, mpsc};
 use tokio::task::JoinHandle;
+
+use crate::progress::ProgressTracker;
 
 pub struct NoCheckHandler;
 impl Handler for NoCheckHandler {
@@ -50,7 +52,7 @@ impl Session {
     ) -> Result<Self, russh::Error> {
         let key_pair = load_secret_key(key_path, None)?;
 
-        let mut session = client::connect(config.into(), addrs, NoCheckHandler).await?;
+        let mut session = connect(config.into(), addrs, NoCheckHandler).await?;
 
         // use publickey authentication.
         let auth_res = session
@@ -94,7 +96,6 @@ pub struct Channel {
     write_half: ChannelWriteHalf<Msg>,
     data_receivers: Arc<MemoMap<Option<u32>, mpsc::UnboundedSender<CryptoVec>>>,
     exit_status: Promise<u32>,
-    eof: Promise<()>,
     reader: JoinHandle<()>,
 }
 
@@ -102,7 +103,6 @@ impl From<russh::Channel<Msg>> for Channel {
     fn from(inner: russh::Channel<Msg>) -> Self {
         let (mut read_half, write_half) = inner.split();
         let (mut resolve_exit_status, exit_status) = promise();
-        let (mut resolve_eof, eof) = promise();
         let data_receivers = Arc::new(MemoMap::<_, mpsc::UnboundedSender<CryptoVec>>::new());
         let send_data_receivers = data_receivers.clone();
 
@@ -114,27 +114,28 @@ impl From<russh::Channel<Msg>> for Channel {
                     ChannelMsg::ExtendedData { data, ext } => (data, Some(ext)),
                     // The command has returned an exit code
                     ChannelMsg::ExitStatus { exit_status } => {
+                        ProgressTracker::eprintln(format!("EXIT STATUS: {}", exit_status));
                         let _ = resolve_exit_status.resolve(exit_status);
                         continue;
                     }
-                    ChannelMsg::Eof => {
-                        let _ = resolve_eof.resolve(());
+                    ChannelMsg::WindowChange { .. } | ChannelMsg::WindowAdjusted { .. } => continue,
+                    other => {
+                        ProgressTracker::eprintln(format!("Channel message: {:?}", other));
                         continue;
                     }
-                    _ => continue,
                 };
 
                 if let Some(send) = send_data_receivers.get(&ext) {
                     let _ = send.send(data);
                 }
             }
+            ProgressTracker::eprintln(format!("READER EXIT!!!!!!"));
         });
 
         Self {
             write_half,
             data_receivers,
             exit_status,
-            eof,
             reader,
         }
     }
@@ -184,14 +185,6 @@ impl Channel {
         self.exit_status.get().copied()
     }
 
-    pub async fn wait_eof(&self) {
-        self.eof.wait().await;
-    }
-
-    pub fn is_eof(&self) -> bool {
-        self.eof.get().is_some()
-    }
-
     pub async fn wait_close(&mut self) {
         let _ = (&mut self.reader).await;
     }
@@ -231,12 +224,8 @@ impl AsyncBufRead for ReadStream {
         let this = self.get_mut();
 
         if this.buffer.is_none() {
-            match this.recv.poll_recv(cx) {
-                Poll::Pending => return Poll::Pending,
-                Poll::Ready(opt_data) => {
-                    this.buffer = opt_data.map(|data| (data, 0));
-                }
-            }
+            let opt_data = ready!(this.recv.poll_recv(cx));
+            this.buffer = opt_data.map(|data| (data, 0));
         }
 
         Poll::Ready(Ok(this

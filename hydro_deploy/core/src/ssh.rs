@@ -6,11 +6,7 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use anyhow::{Context as _, Result};
-// use async_ssh2_lite::ssh2::ErrorCode;
-// use async_ssh2_lite::{AsyncChannel, AsyncSession, SessionConfiguration};
 use async_trait::async_trait;
-// use futures::io::BufReader as FuturesBufReader;
-// use futures::{AsyncBufReadExt, AsyncWriteExt};
 use hydro_deploy_integration::ServerBindConfig;
 use inferno::collapse::Collapse;
 use inferno::collapse::perf::Folder;
@@ -106,17 +102,16 @@ impl LaunchedBinary for LaunchedSshBinary {
     }
 
     async fn wait(&mut self) -> Result<i32> {
-        self.channel.wait_eof().await;
+        self.channel.wait_close().await;
         Ok(self.channel.wait_exit_status().await as _)
     }
 
     async fn stop(&mut self) -> Result<()> {
-        if !self.channel.is_eof() {
+        if !self.channel.is_closed() {
             ProgressTracker::leaf("force stopping", async {
                 // self.channel.write_all(b"\x03").await?; // `^C`
                 self.channel.eof().await?; // Send EOF.
                 self.channel.close().await?; // Close the channel.
-                self.channel.wait_eof().await;
                 self.channel.wait_close().await;
                 Result::<_>::Ok(())
             })
@@ -211,8 +206,8 @@ impl Drop for LaunchedSshBinary {
             tokio::task::block_in_place(|| {
                 tokio::runtime::Handle::current().block_on(session.disconnect(
                     russh::Disconnect::ByApplication,
-                    "LaunchedSshBinary dropped",
-                    "en_US",
+                    "",
+                    "",
                 ))
             })
             .unwrap();
@@ -290,8 +285,12 @@ pub trait LaunchedSshHost: Send + Sync {
             ),
             async_retry(
                 &|| async {
-                    let config = Config::default();
-                    // TODO(mingwei): config.preferred.compression = Some(???);
+                    let mut config = Config::default();
+                    config.preferred.compression = Cow::Borrowed(&[
+                        russh::compression::ZLIB,
+                        russh::compression::ZLIB_LEGACY,
+                        russh::compression::NONE,
+                    ]);
 
                     let session =
                         Session::connect(config, self.ssh_key_path(), self.ssh_user(), target_addr)
@@ -356,6 +355,7 @@ impl<T: LaunchedSshHost> LaunchedHost for T {
                         match sftp.rename(&temp_path, binary_path).await {
                             Ok(_) => {}
                             Err(russh_sftp::client::error::Error::Status(Status {
+                                // 4
                                 status_code: StatusCode::Failure,
                                 ..
                             })) => {
@@ -388,7 +388,7 @@ impl<T: LaunchedSshHost> LaunchedHost for T {
         let user = self.ssh_user();
         let binary_path = PathBuf::from(format!("/home/{user}/hydro-{}", binary.unique_id));
 
-        let channel = ProgressTracker::leaf(
+        let (channel, stdout, stderr) = ProgressTracker::leaf(
             format!("launching binary {}", binary_path.display()),
             async {
                 let channel =
@@ -417,31 +417,33 @@ impl<T: LaunchedSshHost> LaunchedHost for T {
                         "perf record -F {frequency} -e cycles:u --call-graph dwarf,65528 -o {PERF_OUTFILE} {command}",
                     );
                 }
+                // Make sure to begin reading stdout/stderr before running the command.
+                let (stdout, stderr) = (channel.stdout(), channel.stderr());
                 channel.exec(false, command).await?;
-                anyhow::Ok(channel)
+                anyhow::Ok((channel, stdout, stderr))
             },
         )
         .await?;
 
         let (stdin_sender, mut stdin_receiver) = mpsc::unbounded_channel::<String>();
         let mut stdin = channel.stdin(); // stream 0 is stdout/stdin, we use it for stdin
+
         tokio::spawn(async move {
             while let Some(line) = stdin_receiver.recv().await {
                 if stdin.write_all(line.as_bytes()).await.is_err() {
                     break;
                 }
-
                 stdin.flush().await.unwrap();
             }
         });
 
         let id_clone = id.clone();
         let (stdout_deploy_receivers, stdout_receivers) =
-            prioritized_broadcast(LinesStream::new(channel.stdout().lines()), move |s| {
+            prioritized_broadcast(LinesStream::new(stdout.lines()), move |s| {
                 ProgressTracker::println(format!("[{id_clone}] {s}"));
             });
         let (_, stderr_receivers) =
-            prioritized_broadcast(LinesStream::new(channel.stderr().lines()), move |s| {
+            prioritized_broadcast(LinesStream::new(stderr.lines()), move |s| {
                 ProgressTracker::println(format!("[{id} stderr] {s}"));
             });
 
