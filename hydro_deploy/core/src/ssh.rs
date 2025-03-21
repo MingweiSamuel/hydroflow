@@ -128,12 +128,8 @@ impl LaunchedBinary for LaunchedSshBinary {
             let session = self.session.as_ref().unwrap();
             if let Some(local_raw_perf) = tracing.perf_raw_outfile.as_ref() {
                 ProgressTracker::progress_leaf("downloading perf data", |progress, _| async move {
-                    let sftp = async_retry(
-                        &|| async { Ok(session.open_sftp().await?) },
-                        10,
-                        Duration::from_secs(1),
-                    )
-                    .await?;
+                    let sftp =
+                        async_retry(&|| session.open_sftp(), 10, Duration::from_secs(1)).await?;
 
                     let mut remote_raw_perf = sftp.open(PERF_OUTFILE).await?;
                     let mut local_raw_perf = File::create(local_raw_perf).await?;
@@ -321,12 +317,7 @@ impl<T: LaunchedSshHost> LaunchedHost for T {
     async fn copy_binary(&self, binary: &BuildOutput) -> Result<()> {
         let session = self.open_ssh_session().await?;
 
-        let sftp = async_retry(
-            &|| async { Ok(session.open_sftp().await?) },
-            10,
-            Duration::from_secs(1),
-        )
-        .await?;
+        let sftp = async_retry(&|| session.open_sftp(), 10, Duration::from_secs(1)).await?;
 
         let user = self.ssh_user();
         // we may be deploying multiple binaries, so give each a unique name

@@ -348,7 +348,7 @@ impl<T> Inner<T> {
         let initialized = self.value_set.load(Ordering::Acquire);
         if initialized {
             // SAFETY: Value is initialized.
-            Some(unsafe { &*(&*self.value.get()).as_ptr() })
+            Some(unsafe { &*(*self.value.get()).as_ptr() })
         } else {
             None
         }
