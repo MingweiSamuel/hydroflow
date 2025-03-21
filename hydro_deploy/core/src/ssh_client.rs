@@ -3,20 +3,20 @@ use std::mem::MaybeUninit;
 use std::ops::Deref;
 use std::path::Path;
 use std::pin::Pin;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
+use std::sync::{Arc, Weak};
 use std::task::{Context, Poll, ready};
 
+use anyhow::Error;
 use memo_map::MemoMap;
 use russh::client::{self, Config, Handle, Handler, Msg};
 use russh::keys::{PrivateKeyWithHashAlg, load_secret_key, ssh_key};
-use russh::{ChannelMsg, ChannelWriteHalf, CryptoVec, Disconnect};
+use russh::{ChannelMsg, ChannelWriteHalf, CryptoVec};
 use russh_sftp::client::SftpSession;
 use russh_sftp::client::rawsession::SftpResult;
 use tokio::io::{AsyncBufRead, AsyncRead, AsyncWrite, ReadBuf};
 use tokio::net::ToSocketAddrs;
-use tokio::sync::oneshot::error::RecvError;
-use tokio::sync::{OnceCell, Semaphore, SemaphorePermit, mpsc, oneshot};
+use tokio::sync::{Semaphore, mpsc};
 use tokio::task::JoinHandle;
 
 pub struct NoCheckHandler;
@@ -43,15 +43,14 @@ pub struct Session {
 
 impl Session {
     pub async fn connect(
+        config: impl Into<Arc<Config>>,
         key_path: impl AsRef<Path>,
         user: impl Into<String>,
         addrs: impl ToSocketAddrs,
     ) -> Result<Self, russh::Error> {
-        let config = Arc::new(Config::default()); // Has sane defaults.
-
         let key_pair = load_secret_key(key_path, None)?;
 
-        let mut session = client::connect(config, addrs, NoCheckHandler).await?;
+        let mut session = client::connect(config.into(), addrs, NoCheckHandler).await?;
 
         // use publickey authentication.
         let auth_res = session
@@ -71,16 +70,16 @@ impl Session {
         }
     }
 
-    pub async fn channel_open(&self) -> Result<Channel, russh::Error> {
+    pub async fn open_channel(&self) -> Result<Channel, russh::Error> {
         let russh_channel = self.session.channel_open_session().await?;
         Ok(Channel::from(russh_channel))
     }
 
-    pub async fn close(&self) -> Result<(), russh::Error> {
-        self.session
-            .disconnect(Disconnect::ByApplication, "", "")
-            .await?;
-        Ok(())
+    pub async fn open_sftp(&self) -> Result<SftpSession, Error> {
+        let channel = self.open_channel().await?;
+        channel.request_subsystem(true, "sftp").await?;
+        let sftp = channel.sftp().await?;
+        Ok(sftp)
     }
 }
 
@@ -116,13 +115,11 @@ impl From<russh::Channel<Msg>> for Channel {
                     // The command has returned an exit code
                     ChannelMsg::ExitStatus { exit_status } => {
                         let _ = resolve_exit_status.resolve(exit_status);
-                        // Cannot leave the loop immediately, there might still be more data to receive
                         continue;
                     }
                     ChannelMsg::Eof => {
                         let _ = resolve_eof.resolve(());
-                        // Leave the loop, consider the channel closed.
-                        break;
+                        continue;
                     }
                     _ => continue,
                 };
@@ -177,6 +174,30 @@ impl Channel {
     /// ```
     pub async fn sftp(&self) -> SftpResult<SftpSession> {
         SftpSession::new(tokio::io::join(self.stdout(), self.stdin())).await
+    }
+
+    pub async fn wait_exit_status(&self) -> u32 {
+        *self.exit_status.wait().await
+    }
+
+    pub fn get_exit_status(&self) -> Option<u32> {
+        self.exit_status.get().copied()
+    }
+
+    pub async fn wait_eof(&self) {
+        self.eof.wait().await;
+    }
+
+    pub fn is_eof(&self) -> bool {
+        self.eof.get().is_some()
+    }
+
+    pub async fn wait_close(&mut self) {
+        let _ = (&mut self.reader).await;
+    }
+
+    pub fn is_closed(&self) -> bool {
+        self.reader.is_finished()
     }
 }
 
@@ -239,9 +260,47 @@ impl AsyncBufRead for ReadStream {
     }
 }
 
-fn promise<T>() -> (Resolve<T>, Promise<T>) {
+pub fn promise<T>() -> (Resolve<T>, Promise<T>) {
     let inner = Arc::new(Inner::new());
-    (Resolve { inner: Some(inner.clone()) }, Promise { inner })
+    (
+        Resolve {
+            inner: Some(Arc::downgrade(&inner)),
+        },
+        Promise { inner },
+    )
+}
+
+pub struct Resolve<T> {
+    inner: Option<Weak<Inner<T>>>,
+}
+impl<T> Resolve<T> {
+    pub fn resolve(&mut self, value: T) -> Result<(), T> {
+        if let Some(inner) = self.inner.take().as_ref().and_then(Weak::upgrade) {
+            // SAFETY: `&mut self: Resolve` has exclusive access to `set_value`, once.
+            unsafe { inner.set_value(value) };
+            Ok(())
+        } else {
+            Err(value)
+        }
+    }
+}
+
+pub struct Promise<T> {
+    inner: Arc<Inner<T>>,
+}
+impl<T> Promise<T> {
+    pub async fn wait(&self) -> &T {
+        self.inner.semaphore.acquire().await.unwrap_err();
+        self.get().unwrap()
+    }
+
+    pub fn get(&self) -> Option<&T> {
+        self.inner.get_value()
+    }
+
+    pub fn initialized(&self) -> bool {
+        self.get().is_some()
+    }
 }
 
 // Based on [`tokio::sync::OnceCell`].
@@ -294,92 +353,16 @@ impl<T> Inner<T> {
             None
         }
     }
-
-
-struct Resolve<T> {
-    inner: Option<Arc<Inner<T>>>,
-}
-impl<T> Resolve<T> {
-    fn resolve(&mut self, value: T) -> Result<(), T> {
-        if let Some(inner) = self.inner.take() {
-            // SAFETY: `&mut self: Resolve` has exclusive access to `set_value`, once.
-            unsafe { inner.set_value(value) };
-            Ok(())
-        } else {
-            Err(value)
-        }
-    }
 }
 
-struct Promise<T> {
-    inner: Arc<Inner<T>>,
-}
-impl<T> Promise<T> {
-    async fn wait(&self) -> &T {
-        self.inner.semaphore.acquire().await.unwrap_err();
-        self.get().unwrap()
-    }
+// Since `get` gives us access to immutable references of the OnceCell, OnceCell
+// can only be Sync if T is Sync, otherwise OnceCell would allow sharing
+// references of !Sync values across threads. We need T to be Send in order for
+// OnceCell to by Sync because we can use `set` on `&OnceCell<T>` to send values
+// (of type T) across threads.
+unsafe impl<T: Sync + Send> Sync for Inner<T> {}
 
-    fn get(&self) -> Option<&T> {
-        self.inner.get_value()
-    }
-}
-
-// fn promise<T>() -> (Resolve<T>, Promise<T>) {
-//     let (send, recv) = oneshot::channel();
-//     (send.into(), recv.into())
-// }
-
-// struct Resolve<T>(Option<oneshot::Sender<T>>);
-// impl<T> From<oneshot::Sender<T>> for Resolve<T> {
-//     fn from(send: oneshot::Sender<T>) -> Self {
-//         Self(Some(send))
-//     }
-// }
-// impl<T> Resolve<T> {
-//     fn into_resolve(self, value: T) -> Result<(), T> {
-//         if let Some(send) = self.0 {
-//             send.send(value)
-//         } else {
-//             Err(value)
-//         }
-//     }
-
-//     fn resolve(&mut self, value: T) -> Result<(), T> {
-//         if let Some(send) = self.0.take() {
-//             send.send(value)
-//         } else {
-//             Err(value)
-//         }
-//     }
-// }
-
-// struct Promise<T> {
-//     value: OnceCell<Result<T, RecvError>>,
-//     recv: UnsafeCell<Option<oneshot::Receiver<T>>>,
-// }
-// impl<T> From<oneshot::Receiver<T>> for Promise<T> {
-//     fn from(recv: oneshot::Receiver<T>) -> Self {
-//         Self {
-//             value: OnceCell::new(),
-//             recv: UnsafeCell::new(Some(recv)),
-//         }
-//     }
-// }
-// impl<T> Promise<T> {
-//     pub async fn wait(&self) -> Result<&T, RecvError> {
-//         let result = self
-//             .value
-//             .get_or_init(|| async {
-//                 // SAFETY: `OnceCell::get_or_init` guarantees that this closure is never called simultaneously.
-//                 let recv = unsafe { &mut *self.recv.get() }.take().unwrap();
-//                 recv.await
-//             })
-//             .await;
-//         result.as_ref().map_err(Clone::clone)
-//     }
-
-//     pub fn get(&self) -> Option<&Result<T, RecvError>> {
-//         self.value.get()
-//     }
-// }
+// Access to OnceCell's value is guarded by the semaphore permit
+// and atomic operations on `value_set`, so as long as T itself is Send
+// it's safe to send it to another thread
+unsafe impl<T: Send> Send for Inner<T> {}

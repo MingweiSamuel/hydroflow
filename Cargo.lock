@@ -317,7 +317,6 @@ dependencies = [
  "futures-util",
  "libssh2-sys",
  "ssh2",
- "tokio",
 ]
 
 [[package]]
@@ -2048,7 +2047,6 @@ dependencies = [
  "anyhow",
  "async-process",
  "async-recursion",
- "async-ssh2-lite",
  "async-trait",
  "buildstructor",
  "bytes",
