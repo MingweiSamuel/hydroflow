@@ -7,7 +7,7 @@ use memo_map::MemoMap;
 use russh::client::{self, Config, Handle, Handler, Msg};
 use russh::keys::{PrivateKeyWithHashAlg, load_secret_key, ssh_key};
 use russh::{ChannelMsg, ChannelWriteHalf, CryptoVec, Disconnect};
-use tokio::io::{AsyncBufRead, AsyncRead, ReadBuf};
+use tokio::io::{AsyncBufRead, AsyncRead, AsyncWrite, ReadBuf};
 use tokio::net::ToSocketAddrs;
 use tokio::sync::{mpsc, oneshot};
 use tokio::task::JoinHandle;
@@ -162,20 +162,24 @@ impl Channel {
         Some(ReadStream { recv, curr: None })
     }
 
-    pub fn write_stream(&self, ext: Option<u32>) -> Option<impl AsyncWrite> {
-        // self.write_half.make_
+    pub fn stdout(&self) -> ReadStream {
+        self.read_stream(None).unwrap()
+    }
+
+    pub fn stderr(&self) -> ReadStream {
+        self.read_stream(Some(1)).unwrap()
+    }
+
+    pub fn write_stream(&self, ext: Option<u32>) -> impl AsyncWrite {
+        self.write_half.make_writer_ext(ext)
+    }
+
+    pub fn stdin(&self) -> impl AsyncWrite {
+        self.write_stream(None)
     }
 
     pub async fn exec(&self, command: impl Into<Vec<u8>>) -> Result<(), russh::Error> {
         self.write_half.exec(false, command).await
-    }
-
-    pub fn read_stdout(&self) -> ReadStream {
-        self.read_stream(None).unwrap()
-    }
-
-    pub fn read_stderr(&self) -> ReadStream {
-        self.read_stream(Some(1)).unwrap()
     }
 
     pub async fn close(&self) -> Result<(), russh::Error> {
