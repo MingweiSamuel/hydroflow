@@ -18,7 +18,6 @@ use nanoid::nanoid;
 use tokio::fs::File;
 use tokio::io::{AsyncReadExt, BufReader as TokioBufReader};
 use tokio::net::{TcpListener, TcpStream};
-use tokio::runtime::Handle;
 use tokio::sync::{mpsc, oneshot};
 use tokio_stream::StreamExt;
 use tokio_util::compat::FuturesAsyncReadCompatExt;
@@ -218,7 +217,7 @@ impl Drop for LaunchedSshBinary {
     fn drop(&mut self) {
         if let Some(session) = self.session.take() {
             tokio::task::block_in_place(|| {
-                Handle::current().block_on(session.disconnect(None, "", None))
+                tokio::runtime::Handle::current().block_on(session.disconnect(None, "", None))
             })
             .unwrap();
         }
@@ -340,11 +339,9 @@ impl<T: LaunchedSshHost> LaunchedHost for T {
         )
         .await?;
 
-        // we may be deploying multiple binaries, so give each a unique name
-        let unique_name = &binary.unique_id;
-
         let user = self.ssh_user();
-        let binary_path = PathBuf::from(format!("/home/{user}/hydro-{unique_name}"));
+        // we may be deploying multiple binaries, so give each a unique name
+        let binary_path = PathBuf::from(format!("/home/{user}/hydro-{}", binary.unique_id));
 
         if sftp.stat(&binary_path).await.is_err() {
             let random = nanoid!(8);
@@ -409,10 +406,8 @@ impl<T: LaunchedSshHost> LaunchedHost for T {
     ) -> Result<Box<dyn LaunchedBinary>> {
         let session = self.open_ssh_session().await?;
 
-        let unique_name = &binary.unique_id;
-
         let user = self.ssh_user();
-        let binary_path = PathBuf::from(format!("/home/{user}/hydro-{unique_name}"));
+        let binary_path = PathBuf::from(format!("/home/{user}/hydro-{}", binary.unique_id));
 
         let channel = ProgressTracker::leaf(
             format!("launching binary {}", binary_path.display()),
