@@ -1,18 +1,25 @@
+use std::cell::UnsafeCell;
+use std::mem::MaybeUninit;
+use std::ops::Deref;
 use std::path::Path;
 use std::pin::Pin;
 use std::sync::Arc;
+use std::sync::atomic::{AtomicBool, Ordering};
 use std::task::{Context, Poll, ready};
 
 use memo_map::MemoMap;
 use russh::client::{self, Config, Handle, Handler, Msg};
 use russh::keys::{PrivateKeyWithHashAlg, load_secret_key, ssh_key};
 use russh::{ChannelMsg, ChannelWriteHalf, CryptoVec, Disconnect};
+use russh_sftp::client::SftpSession;
+use russh_sftp::client::rawsession::SftpResult;
 use tokio::io::{AsyncBufRead, AsyncRead, AsyncWrite, ReadBuf};
 use tokio::net::ToSocketAddrs;
-use tokio::sync::{mpsc, oneshot};
+use tokio::sync::oneshot::error::RecvError;
+use tokio::sync::{OnceCell, Semaphore, SemaphorePermit, mpsc, oneshot};
 use tokio::task::JoinHandle;
 
-struct NoCheckHandler;
+pub struct NoCheckHandler;
 impl Handler for NoCheckHandler {
     type Error = russh::Error;
 
@@ -20,8 +27,9 @@ impl Handler for NoCheckHandler {
         &mut self,
         _server_public_key: &ssh_key::PublicKey,
     ) -> Result<bool, Self::Error> {
-        // TODO(mingwei): we should check the server's public key fingerprint here, but ssh `publickey`
-        // authentication already generally prevents MITM attacks.
+        // TODO(mingwei): we technically should check the server's public key fingerprint here
+        // (get it somehow via terraform), but ssh `publickey` authentication already generally
+        // prevents MITM attacks.
         Ok(true)
     }
 }
@@ -64,64 +72,42 @@ impl Session {
     }
 
     pub async fn channel_open(&self) -> Result<Channel, russh::Error> {
-        let channel = self.session.channel_open_session().await?;
-        Ok(Channel::from_inner(channel))
+        let russh_channel = self.session.channel_open_session().await?;
+        Ok(Channel::from(russh_channel))
     }
 
-    // async fn call(&mut self, command: &str) -> Result<u32> {
-    //     let mut channel = self.session.channel_open_session().await?;
-    //     channel.exec(true, command).await?;
-
-    //     let mut code = None;
-    //     let mut stdout = tokio::io::stdout();
-
-    //     loop {
-    //         // There's an event available on the session channel
-    //         let Some(msg) = channel.wait().await else {
-    //             break;
-    //         };
-    //         match msg {
-    //             // Write data to the terminal
-    //             ChannelMsg::Data { ref data } => {
-    //                 // TODO!!!
-    //                 // TODO: also handle DataExt
-    //                 // stdout.write_all(data).await?;
-    //                 // stdout.flush().await?;
-    //             }
-    //             // The command has returned an exit code
-    //             ChannelMsg::ExitStatus { exit_status } => {
-    //                 code = Some(exit_status);
-    //                 // cannot leave the loop immediately, there might still be more data to receive
-    //             }
-    //             _ => {}
-    //         }
-    //     }
-    //     Ok(code.expect("program did not exit cleanly"))
-    // }
-
-    pub async fn close(&mut self) -> Result<(), russh::Error> {
+    pub async fn close(&self) -> Result<(), russh::Error> {
         self.session
-            .disconnect(Disconnect::ByApplication, "", "English")
+            .disconnect(Disconnect::ByApplication, "", "")
             .await?;
         Ok(())
+    }
+}
+
+impl Deref for Session {
+    type Target = Handle<NoCheckHandler>;
+    fn deref(&self) -> &Self::Target {
+        &self.session
     }
 }
 
 pub struct Channel {
     write_half: ChannelWriteHalf<Msg>,
     data_receivers: Arc<MemoMap<Option<u32>, mpsc::UnboundedSender<CryptoVec>>>,
-    recv_exit: oneshot::Receiver<u32>,
+    exit_status: Promise<u32>,
+    eof: Promise<()>,
     reader: JoinHandle<()>,
 }
-impl Channel {
-    fn from_inner(inner: russh::Channel<Msg>) -> Self {
+
+impl From<russh::Channel<Msg>> for Channel {
+    fn from(inner: russh::Channel<Msg>) -> Self {
         let (mut read_half, write_half) = inner.split();
-        let (send_exit, recv_exit) = oneshot::channel();
+        let (mut resolve_exit_status, exit_status) = promise();
+        let (mut resolve_eof, eof) = promise();
         let data_receivers = Arc::new(MemoMap::<_, mpsc::UnboundedSender<CryptoVec>>::new());
         let send_data_receivers = data_receivers.clone();
 
         let reader = tokio::task::spawn(async move {
-            let mut send_exit = Some(send_exit);
             while let Some(msg) = read_half.wait().await {
                 let (data, ext) = match msg {
                     // Write data to the terminal
@@ -129,13 +115,15 @@ impl Channel {
                     ChannelMsg::ExtendedData { data, ext } => (data, Some(ext)),
                     // The command has returned an exit code
                     ChannelMsg::ExitStatus { exit_status } => {
-                        if let Some(send_exit) = send_exit.take() {
-                            let _ = send_exit.send(exit_status);
-                        }
-                        // cannot leave the loop immediately, there might still be more data to receive
+                        let _ = resolve_exit_status.resolve(exit_status);
+                        // Cannot leave the loop immediately, there might still be more data to receive
                         continue;
                     }
-                    ChannelMsg::Eof => continue, // TODO(mingwei)
+                    ChannelMsg::Eof => {
+                        let _ = resolve_eof.resolve(());
+                        // Leave the loop, consider the channel closed.
+                        break;
+                    }
                     _ => continue,
                 };
 
@@ -148,18 +136,21 @@ impl Channel {
         Self {
             write_half,
             data_receivers,
-            recv_exit,
+            exit_status,
+            eof,
             reader,
         }
     }
+}
 
+impl Channel {
     pub fn read_stream(&self, ext: Option<u32>) -> Option<ReadStream> {
         let (send, recv) = mpsc::unbounded_channel();
         let added = self.data_receivers.insert(ext, send);
         if !added {
             return None;
         }
-        Some(ReadStream { recv, curr: None })
+        Some(ReadStream { recv, buffer: None })
     }
 
     pub fn stdout(&self) -> ReadStream {
@@ -170,31 +161,35 @@ impl Channel {
         self.read_stream(Some(1)).unwrap()
     }
 
-    pub fn write_stream(&self, ext: Option<u32>) -> impl AsyncWrite {
+    pub fn write_stream(&self, ext: Option<u32>) -> impl 'static + AsyncWrite {
         self.write_half.make_writer_ext(ext)
     }
 
-    pub fn stdin(&self) -> impl AsyncWrite {
+    pub fn stdin(&self) -> impl 'static + AsyncWrite {
         self.write_stream(None)
     }
 
-    pub async fn exec(&self, command: impl Into<Vec<u8>>) -> Result<(), russh::Error> {
-        self.write_half.exec(false, command).await
+    /// Starst an SFTP session on this channel.
+    ///
+    /// Make sure to request the SFTP subsystem before calling this:
+    /// ```rust,ignore
+    /// channel.request_subsystem(true, "sftp").await.unwrap();
+    /// ```
+    pub async fn sftp(&self) -> SftpResult<SftpSession> {
+        SftpSession::new(tokio::io::join(self.stdout(), self.stdin())).await
     }
+}
 
-    pub async fn close(&self) -> Result<(), russh::Error> {
-        self.write_half.close().await
+impl Deref for Channel {
+    type Target = ChannelWriteHalf<Msg>;
+    fn deref(&self) -> &Self::Target {
+        &self.write_half
     }
-
-    // // TODO(mingwei): ownership issue
-    // pub async fn exit_status(&self) -> Result<u32, russh::Error> {
-    //     self.recv_exit.await.map_err(|_| russh::Error::Disconnect)
-    // }
 }
 
 pub struct ReadStream {
     recv: mpsc::UnboundedReceiver<CryptoVec>,
-    curr: Option<(CryptoVec, usize)>,
+    buffer: Option<(CryptoVec, usize)>,
 }
 impl AsyncRead for ReadStream {
     fn poll_read(
@@ -214,17 +209,17 @@ impl AsyncBufRead for ReadStream {
     fn poll_fill_buf(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<std::io::Result<&[u8]>> {
         let this = self.get_mut();
 
-        if this.curr.is_none() {
+        if this.buffer.is_none() {
             match this.recv.poll_recv(cx) {
                 Poll::Pending => return Poll::Pending,
                 Poll::Ready(opt_data) => {
-                    this.curr = opt_data.map(|data| (data, 0));
+                    this.buffer = opt_data.map(|data| (data, 0));
                 }
             }
         }
 
         Poll::Ready(Ok(this
-            .curr
+            .buffer
             .as_ref()
             .map(|(buf, offset)| &buf[*offset..])
             .unwrap_or(&[])))
@@ -232,14 +227,159 @@ impl AsyncBufRead for ReadStream {
 
     fn consume(self: Pin<&mut Self>, amt: usize) {
         let this = self.get_mut();
-        if let Some((buf, offset)) = &mut this.curr {
+        if let Some((buf, offset)) = &mut this.buffer {
             *offset += amt;
             debug_assert!(*offset <= buf.len());
             if *offset == buf.len() {
-                this.curr = None;
+                this.buffer = None;
             }
         } else {
             debug_assert!(amt == 0);
         }
     }
 }
+
+fn promise<T>() -> (Resolve<T>, Promise<T>) {
+    let inner = Arc::new(Inner::new());
+    (Resolve { inner: Some(inner.clone()) }, Promise { inner })
+}
+
+// Based on [`tokio::sync::OnceCell`].
+//
+// Any thread with an `&self` may access the `value` field according the following rules:
+//
+//  1. When `value_set` is false, the `value` field may be modified by the
+//     thread holding the permit on the semaphore.
+//  2. When `value_set` is true, the `value` field may be accessed immutably by
+//     any thread.
+//
+// It is an invariant that if the semaphore is closed, then `value_set` is true.
+// The reverse does not necessarily hold — but if not, the semaphore may not
+// have any available permits.
+struct Inner<T> {
+    value_set: AtomicBool,
+    value: UnsafeCell<MaybeUninit<T>>,
+    semaphore: Semaphore,
+}
+impl<T> Inner<T> {
+    fn new() -> Self {
+        Self {
+            value_set: AtomicBool::new(false),
+            value: UnsafeCell::new(MaybeUninit::uninit()),
+            semaphore: Semaphore::const_new(0),
+        }
+    }
+
+    /// SAFETY: Must only be called once, by the `Resolve` that owns this `Inner`.
+    unsafe fn set_value(&self, value: T) {
+        // SAFETY: We are holding the only permit on the semaphore.
+        unsafe {
+            self.value.get().write(MaybeUninit::new(value));
+        }
+
+        // Using release ordering so any threads that read a true from this
+        // atomic is able to read the value we just stored.
+        self.value_set.store(true, Ordering::Release);
+        self.semaphore.close();
+    }
+
+    fn get_value(&self) -> Option<&T> {
+        // Using acquire ordering so any threads that read a true from this
+        // atomic is able to read the value.
+        let initialized = self.value_set.load(Ordering::Acquire);
+        if initialized {
+            // SAFETY: Value is initialized.
+            Some(unsafe { &*(&*self.value.get()).as_ptr() })
+        } else {
+            None
+        }
+    }
+
+
+struct Resolve<T> {
+    inner: Option<Arc<Inner<T>>>,
+}
+impl<T> Resolve<T> {
+    fn resolve(&mut self, value: T) -> Result<(), T> {
+        if let Some(inner) = self.inner.take() {
+            // SAFETY: `&mut self: Resolve` has exclusive access to `set_value`, once.
+            unsafe { inner.set_value(value) };
+            Ok(())
+        } else {
+            Err(value)
+        }
+    }
+}
+
+struct Promise<T> {
+    inner: Arc<Inner<T>>,
+}
+impl<T> Promise<T> {
+    async fn wait(&self) -> &T {
+        self.inner.semaphore.acquire().await.unwrap_err();
+        self.get().unwrap()
+    }
+
+    fn get(&self) -> Option<&T> {
+        self.inner.get_value()
+    }
+}
+
+// fn promise<T>() -> (Resolve<T>, Promise<T>) {
+//     let (send, recv) = oneshot::channel();
+//     (send.into(), recv.into())
+// }
+
+// struct Resolve<T>(Option<oneshot::Sender<T>>);
+// impl<T> From<oneshot::Sender<T>> for Resolve<T> {
+//     fn from(send: oneshot::Sender<T>) -> Self {
+//         Self(Some(send))
+//     }
+// }
+// impl<T> Resolve<T> {
+//     fn into_resolve(self, value: T) -> Result<(), T> {
+//         if let Some(send) = self.0 {
+//             send.send(value)
+//         } else {
+//             Err(value)
+//         }
+//     }
+
+//     fn resolve(&mut self, value: T) -> Result<(), T> {
+//         if let Some(send) = self.0.take() {
+//             send.send(value)
+//         } else {
+//             Err(value)
+//         }
+//     }
+// }
+
+// struct Promise<T> {
+//     value: OnceCell<Result<T, RecvError>>,
+//     recv: UnsafeCell<Option<oneshot::Receiver<T>>>,
+// }
+// impl<T> From<oneshot::Receiver<T>> for Promise<T> {
+//     fn from(recv: oneshot::Receiver<T>) -> Self {
+//         Self {
+//             value: OnceCell::new(),
+//             recv: UnsafeCell::new(Some(recv)),
+//         }
+//     }
+// }
+// impl<T> Promise<T> {
+//     pub async fn wait(&self) -> Result<&T, RecvError> {
+//         let result = self
+//             .value
+//             .get_or_init(|| async {
+//                 // SAFETY: `OnceCell::get_or_init` guarantees that this closure is never called simultaneously.
+//                 let recv = unsafe { &mut *self.recv.get() }.take().unwrap();
+//                 recv.await
+//             })
+//             .await;
+//         result.as_ref().map_err(Clone::clone)
+//     }
+
+//     pub fn get(&self) -> Option<&Result<T, RecvError>> {
+//         self.value.get()
+//     }
+// }

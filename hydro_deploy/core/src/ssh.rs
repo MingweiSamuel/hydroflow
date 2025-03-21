@@ -6,8 +6,8 @@ use std::sync::{Arc, Mutex};
 use std::time::Duration;
 
 use anyhow::{Context as _, Result};
-use async_ssh2_lite::ssh2::ErrorCode;
-use async_ssh2_lite::{AsyncChannel, AsyncSession, SessionConfiguration};
+// use async_ssh2_lite::ssh2::ErrorCode;
+// use async_ssh2_lite::{AsyncChannel, AsyncSession, SessionConfiguration};
 use async_trait::async_trait;
 use futures::io::BufReader as FuturesBufReader;
 use futures::{AsyncBufReadExt, AsyncWriteExt};
@@ -27,6 +27,7 @@ use crate::progress::ProgressTracker;
 use crate::rust_crate::build::BuildOutput;
 use crate::rust_crate::flamegraph::handle_fold_data;
 use crate::rust_crate::tracing_options::TracingOptions;
+use crate::ssh_client::{Channel, Session};
 use crate::util::{async_retry, prioritized_broadcast};
 use crate::{LaunchedBinary, LaunchedHost, ResourceResult, ServerStrategy, TracingResults};
 
@@ -36,8 +37,8 @@ pub type PrefixFilteredChannel = (Option<String>, mpsc::UnboundedSender<String>)
 
 struct LaunchedSshBinary {
     _resource_result: Arc<ResourceResult>,
-    session: Option<AsyncSession<TcpStream>>,
-    channel: AsyncChannel<TcpStream>,
+    session: Option<Session>,
+    channel: Channel,
     stdin_sender: mpsc::UnboundedSender<String>,
     stdout_receivers: Arc<Mutex<Vec<PrefixFilteredChannel>>>,
     stdout_deploy_receivers: Arc<Mutex<Option<oneshot::Sender<String>>>>,
