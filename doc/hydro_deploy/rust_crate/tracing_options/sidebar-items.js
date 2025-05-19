@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["TracingOptions"],"type":["NewTracingOptionsBuilder"]};
+window.SIDEBAR_ITEMS = {"constant":["DEBIAN_PERF_SETUP_COMMAND"],"struct":["TracingOptions"],"type":["CowStr","NewTracingOptionsBuilder"]};
