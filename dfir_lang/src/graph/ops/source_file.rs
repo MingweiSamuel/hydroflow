@@ -2,7 +2,7 @@ use quote::quote_spanned;
 use syn::parse_quote_spanned;
 
 use super::{
-    FloType, OperatorCategory, OperatorConstraints, OperatorWriteOutput, RANGE_0, RANGE_1,
+    Boundedness, FloType, OperatorCategory, OperatorConstraints, OperatorWriteOutput, RANGE_0, RANGE_1,
     WriteContextArgs, make_missing_runtime_msg,
 };
 
@@ -31,9 +31,11 @@ pub const SOURCE_FILE: OperatorConstraints = OperatorConstraints {
     is_external_input: true,
     has_singleton_output: false,
     flo_type: Some(FloType::Source),
-    ports_inn: None,
+  ports_inn: None,
     ports_out: None,
     input_delaytype_fn: |_| None,
+    flag_input_boundedness: |_| None, // No inputs to constrain
+    flag_output_boundedness: |_| vec![Boundedness::Bounded], // File source produces a bounded stream
     write_fn: |wc @ &WriteContextArgs {
                    root,
                    op_span,

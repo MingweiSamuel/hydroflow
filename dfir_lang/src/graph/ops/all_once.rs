@@ -1,4 +1,4 @@
-use super::{FloType, OperatorCategory, OperatorConstraints, IDENTITY_WRITE_FN, RANGE_0, RANGE_1};
+use super::{Boundedness, FloType, OperatorCategory, OperatorConstraints, IDENTITY_WRITE_FN, RANGE_0, RANGE_1};
 
 /// Given a _bounded_ input stream, emits the entire stream in the first loop iteration.
 ///
@@ -19,5 +19,7 @@ pub const ALL_ONCE: OperatorConstraints = OperatorConstraints {
     ports_inn: None,
     ports_out: None,
     input_delaytype_fn: |_| None,
+    flag_input_boundedness: |_| Some(Boundedness::Bounded), // Requires bounded input
+    flag_output_boundedness: |_| vec![Boundedness::Bounded], // Produces bounded output
     write_fn: IDENTITY_WRITE_FN,
 };

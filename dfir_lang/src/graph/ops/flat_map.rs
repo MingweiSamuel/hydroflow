@@ -1,8 +1,8 @@
 use quote::quote_spanned;
 
 use super::{
-    OperatorCategory, OperatorConstraints, OperatorWriteOutput, WriteContextArgs,
-    RANGE_0, RANGE_1,
+    Boundedness, OperatorCategory, OperatorConstraints, OperatorWriteOutput, WriteContextArgs,
+    RANGE_0, RANGE_1, preserve_boundedness,
 };
 
 /// > 1 input stream, 1 output stream
@@ -36,6 +36,8 @@ pub const FLAT_MAP: OperatorConstraints = OperatorConstraints {
     ports_inn: None,
     ports_out: None,
     input_delaytype_fn: |_| None,
+    flag_input_boundedness: |_| None, // Accept any boundedness for inputs
+    flag_output_boundedness: preserve_boundedness, // Output boundedness matches input boundedness
     write_fn: |&WriteContextArgs {
                    root,
                    op_span,

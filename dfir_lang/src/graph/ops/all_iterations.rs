@@ -1,4 +1,4 @@
-use super::{FloType, OperatorCategory, OperatorConstraints, IDENTITY_WRITE_FN, RANGE_0, RANGE_1};
+use super::{FloType, OperatorCategory, OperatorConstraints, IDENTITY_WRITE_FN, RANGE_0, RANGE_1, preserve_boundedness};
 
 // TODO(mingwei)
 pub const ALL_ITERATIONS: OperatorConstraints = OperatorConstraints {
@@ -17,5 +17,7 @@ pub const ALL_ITERATIONS: OperatorConstraints = OperatorConstraints {
     ports_inn: None,
     ports_out: None,
     input_delaytype_fn: |_| None,
+    flag_input_boundedness: |_| None, // Accept any boundedness for inputs
+    flag_output_boundedness: preserve_boundedness, // Output boundedness matches input boundedness
     write_fn: IDENTITY_WRITE_FN,
 };

@@ -2,7 +2,8 @@ use quote::quote_spanned;
 use syn::Ident;
 
 use super::{
-    OperatorCategory, OperatorConstraints, OperatorWriteOutput, RANGE_0, RANGE_1, WriteContextArgs,
+    Boundedness, OperatorCategory, OperatorConstraints, OperatorWriteOutput, RANGE_0, RANGE_1, 
+    WriteContextArgs, preserve_boundedness,
 };
 
 /// Given an incoming stream of `F: Future`, sends those futures to the executor being used
@@ -24,6 +25,8 @@ pub const RESOLVE_FUTURES: OperatorConstraints = OperatorConstraints {
     ports_inn: None,
     ports_out: None,
     input_delaytype_fn: |_| None,
+    flag_input_boundedness: |_| None, // Accept any boundedness for inputs
+    flag_output_boundedness: preserve_boundedness, // Output boundedness matches input boundedness
     write_fn: move |wc, _| {
         resolve_futures_writer(
             Ident::new("FuturesUnordered", wc.op_span),

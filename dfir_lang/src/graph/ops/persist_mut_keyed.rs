@@ -1,7 +1,7 @@
 use quote::quote_spanned;
 
 use super::{
-    DelayType, OpInstGenerics, OperatorCategory, OperatorConstraints, OperatorInstance,
+    Boundedness, DelayType, OpInstGenerics, OperatorCategory, OperatorConstraints, OperatorInstance,
     OperatorWriteOutput, Persistence, RANGE_0, RANGE_1, WriteContextArgs,
 };
 use crate::diagnostic::{Diagnostic, Level};
@@ -43,6 +43,8 @@ pub const PERSIST_MUT_KEYED: OperatorConstraints = OperatorConstraints {
     ports_inn: None,
     ports_out: None,
     input_delaytype_fn: |_| Some(DelayType::Stratum),
+    flag_input_boundedness: |_| None, // Accept any boundedness for inputs
+    flag_output_boundedness: |_| vec![Boundedness::Unbounded], // Produces unbounded output as it accumulates over time
     write_fn: |wc @ &WriteContextArgs {
                    root,
                    context,

@@ -3,7 +3,7 @@ use syn::parse_quote;
 
 use super::{
     DelayType, OperatorCategory, OperatorConstraints, OperatorInstance,
-    OperatorWriteOutput, PortIndexValue, WriteContextArgs, RANGE_0, RANGE_1,
+    OperatorWriteOutput, PortIndexValue, WriteContextArgs, RANGE_0, RANGE_1, output_bounded_if_all_bounded,
 };
 
 /// > 2 input streams of the same type T, 1 output stream of type T
@@ -44,6 +44,8 @@ pub const DIFFERENCE_MULTISET: OperatorConstraints = OperatorConstraints {
         }
         _else => None,
     },
+    flag_input_boundedness: |_| None, // Accept any boundedness for inputs
+    flag_output_boundedness: output_bounded_if_all_bounded, // Output is bounded only if all inputs are bounded
     write_fn: |wc @ &WriteContextArgs {
                    op_span,
                    ident,

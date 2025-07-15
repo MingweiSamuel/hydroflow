@@ -675,3 +675,42 @@ pub enum FloType {
     /// Moves data into the next loop iteration within a loop context.
     NextIteration,
 }
+
+/// Helper function for operators that accept any boundedness on all inputs
+pub fn any_boundedness(_: &PortIndexValue) -> Option<Boundedness> {
+    None
+}
+
+/// Helper function for operators that require bounded inputs on all ports
+pub fn all_bounded(_: &PortIndexValue) -> Option<Boundedness> {
+    Some(Boundedness::Bounded)
+}
+
+/// Helper function for operators that require unbounded inputs on all ports
+pub fn all_unbounded(_: &PortIndexValue) -> Option<Boundedness> {
+    Some(Boundedness::Unbounded)
+}
+
+/// Helper function for operators that produce bounded outputs regardless of input boundedness
+pub fn output_bounded(_: &[Boundedness]) -> Vec<Boundedness> {
+    vec![Boundedness::Bounded]
+}
+
+/// Helper function for operators that produce unbounded outputs regardless of input boundedness
+pub fn output_unbounded(_: &[Boundedness]) -> Vec<Boundedness> {
+    vec![Boundedness::Unbounded]
+}
+
+/// Helper function for operators that preserve the boundedness of their inputs
+pub fn preserve_boundedness(inputs: &[Boundedness]) -> Vec<Boundedness> {
+    inputs.to_vec()
+}
+
+/// Helper function for operators that produce bounded output only if all inputs are bounded
+pub fn output_bounded_if_all_bounded(inputs: &[Boundedness]) -> Vec<Boundedness> {
+    if inputs.iter().all(|&b| b == Boundedness::Bounded) {
+        vec![Boundedness::Bounded]
+    } else {
+        vec![Boundedness::Unbounded]
+    }
+}

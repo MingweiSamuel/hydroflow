@@ -96,6 +96,8 @@ pub const DEST_SINK: OperatorConstraints = OperatorConstraints {
     ports_inn: None,
     ports_out: None,
     input_delaytype_fn: |_| None,
+    flag_input_boundedness: |_| None, // Accept any boundedness for inputs
+    flag_output_boundedness: |_| vec![], // No outputs
     write_fn: |wc @ &WriteContextArgs {
                    root,
                    df_ident,

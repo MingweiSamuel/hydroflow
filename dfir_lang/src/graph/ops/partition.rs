@@ -8,7 +8,7 @@ use syn::{parse_quote_spanned, Expr, Ident, LitInt, LitStr, Pat, PatType};
 
 use super::{
     OperatorCategory, OperatorConstraints, OperatorInstance, OperatorWriteOutput, PortIndexValue,
-    PortListSpec, WriteContextArgs, RANGE_0, RANGE_1,
+    PortListSpec, WriteContextArgs, RANGE_0, RANGE_1, preserve_boundedness,
 };
 use crate::diagnostic::{Diagnostic, Level};
 use crate::pretty_span::PrettySpan;
@@ -68,7 +68,9 @@ pub const PARTITION: OperatorConstraints = OperatorConstraints {
     flo_type: None,
     ports_inn: None,
     ports_out: Some(|| PortListSpec::Variadic),
-    input_delaytype_fn: |_| None,
+input_delaytype_fn: |_| None,
+    flag_input_boundedness: |_| None, // Accept any boundedness for inputs
+    flag_output_boundedness: |inputs| vec![inputs[0]; 2], // All outputs have same boundedness as input
     write_fn: |wc @ &WriteContextArgs {
                    root,
                    op_span,

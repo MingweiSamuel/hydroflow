@@ -2,7 +2,7 @@ use quote::quote_spanned;
 
 use super::{
     DelayType, OperatorCategory, OperatorConstraints, OperatorWriteOutput, RANGE_0, RANGE_1,
-    WriteContextArgs,
+    WriteContextArgs, output_bounded_if_all_bounded,
 };
 
 /// Like sort, takes a stream as input and produces a version of the stream as output.
@@ -31,6 +31,8 @@ pub const SORT_BY_KEY: OperatorConstraints = OperatorConstraints {
     ports_inn: None,
     ports_out: None,
     input_delaytype_fn: |_| Some(DelayType::Stratum),
+    flag_input_boundedness: |_| None, // Accept any boundedness for inputs
+    flag_output_boundedness: output_bounded_if_all_bounded, // Output is bounded only if input is bounded
     write_fn: |&WriteContextArgs {
                    root,
                    op_span,

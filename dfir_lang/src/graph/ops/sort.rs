@@ -1,8 +1,8 @@
 use quote::quote_spanned;
 
 use super::{
-    DelayType, OperatorCategory, OperatorConstraints, OperatorWriteOutput, RANGE_0, RANGE_1,
-    WriteContextArgs,
+    Boundedness, DelayType, OperatorCategory, OperatorConstraints, OperatorWriteOutput, RANGE_0, RANGE_1,
+    WriteContextArgs, output_bounded_if_all_bounded,
 };
 
 /// Takes a stream as input and produces a sorted version of the stream as output.
@@ -31,6 +31,8 @@ pub const SORT: OperatorConstraints = OperatorConstraints {
     ports_inn: None,
     ports_out: None,
     input_delaytype_fn: |_| Some(DelayType::Stratum),
+    flag_input_boundedness: |_| None, // Accept any boundedness for inputs
+    flag_output_boundedness: output_bounded_if_all_bounded, // Output is bounded only if input is bounded
     write_fn: |&WriteContextArgs {
                    op_span,
                    ident,

@@ -1,7 +1,7 @@
 use quote::quote_spanned;
 
 use super::{
-    FloType, OperatorCategory, OperatorConstraints, OperatorWriteOutput, RANGE_0, RANGE_1,
+    Boundedness, FloType, OperatorCategory, OperatorConstraints, OperatorWriteOutput, RANGE_0, RANGE_1,
     WriteContextArgs,
 };
 
@@ -23,7 +23,9 @@ pub const PREFIX: OperatorConstraints = OperatorConstraints {
     flo_type: Some(FloType::Windowing),
     ports_inn: None,
     ports_out: None,
-    input_delaytype_fn: |_| None,
+input_delaytype_fn: |_| None,
+    flag_input_boundedness: |_| Some(Boundedness::Unbounded), // Requires unbounded input
+    flag_output_boundedness: |_| vec![Boundedness::Unbounded], // Output is unbounded
     write_fn: |wc @ &WriteContextArgs {
                    context,
                    df_ident,

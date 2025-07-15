@@ -2,8 +2,8 @@ use quote::quote_spanned;
 use syn::parse_quote;
 
 use super::{
-    OperatorCategory, OperatorConstraints, OperatorWriteOutput, WriteContextArgs,
-    RANGE_0, RANGE_1,
+    Boundedness, OperatorCategory, OperatorConstraints, OperatorWriteOutput, WriteContextArgs,
+    RANGE_0, RANGE_1, preserve_boundedness,
 };
 
 /// > 1 input stream of pair tuples `(A, B)`, 2 output streams
@@ -32,6 +32,8 @@ pub const UNZIP: OperatorConstraints = OperatorConstraints {
     ports_inn: None,
     ports_out: Some(|| super::PortListSpec::Fixed(parse_quote!(0, 1))),
     input_delaytype_fn: |_| None,
+    flag_input_boundedness: |_| None, // Accept any boundedness for inputs
+    flag_output_boundedness: |inputs| vec![inputs[0], inputs[0]], // Both outputs have same boundedness as input
     write_fn: |&WriteContextArgs {
                    root,
                    op_span,

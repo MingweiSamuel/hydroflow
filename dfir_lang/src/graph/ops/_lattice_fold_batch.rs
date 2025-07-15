@@ -3,7 +3,7 @@ use syn::parse_quote;
 
 use super::{
     DelayType, OpInstGenerics, OperatorCategory, OperatorConstraints, OperatorInstance,
-    OperatorWriteOutput, PortListSpec, WriteContextArgs, RANGE_0, RANGE_1,
+    OperatorWriteOutput, PortListSpec, WriteContextArgs, RANGE_0, RANGE_1, output_bounded_if_all_bounded,
 };
 
 /// > 2 input streams, 1 output stream, no arguments.
@@ -46,6 +46,8 @@ pub const _LATTICE_FOLD_BATCH: OperatorConstraints = OperatorConstraints {
     ports_inn: Some(|| PortListSpec::Fixed(parse_quote! { input, signal })),
     ports_out: None,
     input_delaytype_fn: |_| Some(DelayType::MonotoneAccum),
+    flag_input_boundedness: |_| None, // Accept any boundedness for inputs
+    flag_output_boundedness: output_bounded_if_all_bounded, // Output is bounded only if all inputs are bounded
     write_fn: |wc @ &WriteContextArgs {
                    context,
                    df_ident,

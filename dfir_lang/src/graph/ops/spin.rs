@@ -1,7 +1,7 @@
 use quote::quote_spanned;
 
 use super::{
-    OperatorCategory, OperatorConstraints, OperatorWriteOutput, WriteContextArgs,
+    Boundedness, OperatorCategory, OperatorConstraints, OperatorWriteOutput, WriteContextArgs,
     RANGE_0, RANGE_1,
 };
 
@@ -33,6 +33,8 @@ pub const SPIN: OperatorConstraints = OperatorConstraints {
     ports_inn: None,
     ports_out: None,
     input_delaytype_fn: |_| None,
+    flag_input_boundedness: |_| None, // No inputs to constrain
+    flag_output_boundedness: |_| vec![Boundedness::Unbounded], // Output is unbounded (produces values indefinitely)
     write_fn: |&WriteContextArgs {
                    context,
                    op_span,

@@ -1,7 +1,7 @@
 use quote::quote_spanned;
 
 use super::{
-    identity_write_iterator_fn, FloType, OperatorCategory, OperatorConstraints,
+    Boundedness, identity_write_iterator_fn, FloType, OperatorCategory, OperatorConstraints,
     OperatorWriteOutput, WriteContextArgs, RANGE_0, RANGE_1,
 };
 
@@ -24,6 +24,8 @@ pub const BATCH: OperatorConstraints = OperatorConstraints {
     ports_inn: None,
     ports_out: None,
     input_delaytype_fn: |_| None,
+    flag_input_boundedness: |_| Some(Boundedness::Unbounded), // Requires unbounded input
+    flag_output_boundedness: |_| vec![Boundedness::Bounded], // Each batch is bounded
     // Scheduler automatically handles the batching of values as this is a `OperatorCategory::Windowing` operator.
     write_fn: |wc @ &WriteContextArgs {
                    context, op_span, ..

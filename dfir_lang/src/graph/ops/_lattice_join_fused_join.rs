@@ -4,7 +4,7 @@ use syn::spanned::Spanned;
 
 use super::{
     DelayType, OpInstGenerics, OperatorCategory, OperatorConstraints, OperatorInstance,
-    OperatorWriteOutput, RANGE_1, WriteContextArgs,
+    OperatorWriteOutput, RANGE_1, WriteContextArgs, output_bounded_if_all_bounded,
 };
 
 /// > 2 input streams of type `(K, V1)` and `(K, V2)`, 1 output stream of type `(K, (V1', V2'))` where `V1`, `V2`, `V1'`, `V2'` are lattice types
@@ -90,6 +90,8 @@ pub const _LATTICE_JOIN_FUSED_JOIN: OperatorConstraints = OperatorConstraints {
     ports_inn: Some(|| super::PortListSpec::Fixed(parse_quote! { 0, 1 })),
     ports_out: None,
     input_delaytype_fn: |_| Some(DelayType::MonotoneAccum),
+    flag_input_boundedness: |_| None, // Accept any boundedness for inputs
+    flag_output_boundedness: output_bounded_if_all_bounded, // Output is bounded only if all inputs are bounded
     write_fn: |wc @ &WriteContextArgs {
                    root,
                    op_span,

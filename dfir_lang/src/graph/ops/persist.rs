@@ -1,7 +1,7 @@
 use quote::quote_spanned;
 
 use super::{
-    OpInstGenerics, OperatorCategory, OperatorConstraints, OperatorInstance, OperatorWriteOutput,
+    Boundedness, OpInstGenerics, OperatorCategory, OperatorConstraints, OperatorInstance, OperatorWriteOutput,
     Persistence, RANGE_0, RANGE_1, WriteContextArgs,
 };
 use crate::diagnostic::{Diagnostic, Level};
@@ -48,9 +48,11 @@ pub const PERSIST: OperatorConstraints = OperatorConstraints {
     is_external_input: false,
     has_singleton_output: true,
     flo_type: None,
-    ports_inn: None,
+  ports_inn: None,
     ports_out: None,
     input_delaytype_fn: |_| None,
+    flag_input_boundedness: |_| None, // Accept any boundedness for inputs
+    flag_output_boundedness: |_| vec![Boundedness::Unbounded], // Persist produces unbounded output as it accumulates over time
     write_fn: |wc @ &WriteContextArgs {
                    root,
                    context,

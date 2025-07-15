@@ -1,4 +1,4 @@
-use super::{OperatorCategory, OperatorConstraints, NULL_WRITE_FN, RANGE_0};
+use super::{Boundedness, OperatorCategory, OperatorConstraints, NULL_WRITE_FN, RANGE_0};
 
 /// > unbounded number of input streams of any type, unbounded number of output streams of any type.
 ///
@@ -30,5 +30,7 @@ pub const NULL: OperatorConstraints = OperatorConstraints {
     ports_inn: None,
     ports_out: None,
     input_delaytype_fn: |_| None,
+    flag_input_boundedness: |_| None, // Accept any boundedness for inputs
+    flag_output_boundedness: |_| vec![Boundedness::Bounded], // Null produces bounded output (empty)
     write_fn: NULL_WRITE_FN,
 };

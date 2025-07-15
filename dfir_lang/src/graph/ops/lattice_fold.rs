@@ -2,7 +2,7 @@ use syn::parse_quote_spanned;
 
 use super::{
     DelayType, OperatorCategory, OperatorConstraints, WriteContextArgs,
-    RANGE_0, RANGE_1,
+    RANGE_0, RANGE_1, preserve_boundedness,
 };
 
 /// > 1 input stream, 1 output stream
@@ -43,6 +43,8 @@ pub const LATTICE_FOLD: OperatorConstraints = OperatorConstraints {
     ports_inn: None,
     ports_out: None,
     input_delaytype_fn: |_| Some(DelayType::MonotoneAccum),
+    flag_input_boundedness: |_| None, // Accept any boundedness for inputs
+    flag_output_boundedness: preserve_boundedness, // Output boundedness matches input boundedness
     write_fn: |wc @ &WriteContextArgs {
                    root,
                    is_pull,

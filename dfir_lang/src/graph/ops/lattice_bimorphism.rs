@@ -3,7 +3,7 @@ use syn::parse_quote;
 
 use super::{
     OperatorCategory, OperatorConstraints, OperatorWriteOutput, WriteContextArgs,
-    RANGE_0, RANGE_1,
+    RANGE_0, RANGE_1, output_bounded_if_all_bounded,
 };
 
 /// An operator representing a [lattice bimorphism](https://hydro.run/docs/dfir/lattices_crate/lattice_math#lattice-bimorphism).
@@ -56,6 +56,8 @@ pub const LATTICE_BIMORPHISM: OperatorConstraints = OperatorConstraints {
     ports_inn: Some(|| super::PortListSpec::Fixed(parse_quote! { 0, 1 })),
     ports_out: None,
     input_delaytype_fn: |_| None,
+    flag_input_boundedness: |_| None, // Accept any boundedness for inputs
+    flag_output_boundedness: output_bounded_if_all_bounded, // Output is bounded only if all inputs are bounded
     write_fn: |&WriteContextArgs {
                    root,
                    context,

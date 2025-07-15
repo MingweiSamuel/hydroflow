@@ -1,6 +1,6 @@
 use super::{
     DelayType, OperatorCategory, OperatorConstraints, IDENTITY_WRITE_FN, RANGE_0,
-    RANGE_1,
+    RANGE_1, preserve_boundedness,
 };
 
 /// Buffers all input items and releases them in the next tick.
@@ -75,6 +75,8 @@ pub const DEFER_TICK: OperatorConstraints = OperatorConstraints {
     flo_type: None,
     ports_inn: None,
     ports_out: None,
-    input_delaytype_fn: |_| Some(DelayType::Tick),
+      input_delaytype_fn: |_| Some(DelayType::Tick),
+    flag_input_boundedness: |_| None, // Accept any boundedness for inputs
+    flag_output_boundedness: preserve_boundedness, // Output boundedness matches input boundedness
     write_fn: IDENTITY_WRITE_FN,
 };

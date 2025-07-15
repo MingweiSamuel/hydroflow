@@ -1,7 +1,7 @@
 use quote::quote_spanned;
 
 use super::{
-    FloType, OpInstGenerics, OperatorCategory, OperatorConstraints, OperatorInstance,
+    Boundedness, FloType, OpInstGenerics, OperatorCategory, OperatorConstraints, OperatorInstance,
     OperatorWriteOutput, WriteContextArgs, RANGE_0, RANGE_1,
 };
 
@@ -31,6 +31,8 @@ pub const SOURCE_JSON: OperatorConstraints = OperatorConstraints {
     ports_inn: None,
     ports_out: None,
     input_delaytype_fn: |_| None,
+    flag_input_boundedness: |_| None, // No inputs to constrain
+    flag_output_boundedness: |_| vec![Boundedness::Bounded], // Output is bounded (single element)
     write_fn: |wc @ &WriteContextArgs {
                    root,
                    op_span,

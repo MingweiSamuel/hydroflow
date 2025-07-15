@@ -1,8 +1,8 @@
 use quote::{ToTokens, quote_spanned};
 
 use super::{
-    DelayType, OpInstGenerics, OperatorCategory, OperatorConstraints, OperatorInstance,
-    OperatorWriteOutput, Persistence, RANGE_1, WriteContextArgs,
+    Boundedness, DelayType, OpInstGenerics, OperatorCategory, OperatorConstraints, OperatorInstance,
+    OperatorWriteOutput, Persistence, RANGE_1, WriteContextArgs, preserve_boundedness,
 };
 
 /// > 1 input stream of type `(K, V1)`, 1 output stream of type `(K, V2)`.
@@ -80,7 +80,9 @@ pub const FOLD_KEYED: OperatorConstraints = OperatorConstraints {
     flo_type: None,
     ports_inn: None,
     ports_out: None,
-    input_delaytype_fn: |_| Some(DelayType::Stratum),
+   input_delaytype_fn: |_| Some(DelayType::Stratum),
+    flag_input_boundedness: |_| None, // Accept any boundedness for inputs
+    flag_output_boundedness: preserve_boundedness, // Output boundedness matches input boundedness
     write_fn: |wc @ &WriteContextArgs {
                    df_ident,
                    context,

@@ -3,7 +3,7 @@ use syn::parse_quote;
 
 use super::{
     DelayType, OperatorCategory, OperatorConstraints, OperatorWriteOutput,
-    WriteContextArgs, RANGE_0, RANGE_1,
+    WriteContextArgs, RANGE_0, RANGE_1, output_bounded_if_all_bounded,
 };
 
 /// > 2 input streams, 1 output stream, no arguments.
@@ -38,6 +38,8 @@ pub const DEFER_SIGNAL: OperatorConstraints = OperatorConstraints {
     ports_inn: Some(|| super::PortListSpec::Fixed(parse_quote! { input, signal })),
     ports_out: None,
     input_delaytype_fn: |_| Some(DelayType::Stratum),
+    flag_input_boundedness: |_| None, // Accept any boundedness for inputs
+    flag_output_boundedness: output_bounded_if_all_bounded, // Output is bounded only if all inputs are bounded
     write_fn: |wc @ &WriteContextArgs {
                    context,
                    df_ident,
