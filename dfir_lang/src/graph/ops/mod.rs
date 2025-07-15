@@ -33,6 +33,15 @@ pub enum DelayType {
     TickLazy,
 }
 
+/// The boundedness property of pipelines.
+#[derive(Clone, Copy, PartialOrd, Ord, PartialEq, Eq, Debug, Serialize, Deserialize)]
+pub enum Boundedness {
+    /// Pipeline will have a finite number of elements.
+    Bounded,
+    /// Pipeline may have an infinite number of elements.
+    Unbounded,
+}
+
 /// Specification of the named (or unnamed) ports for an operator's inputs or outputs.
 pub enum PortListSpec {
     /// Any number of unnamed (or optionally named) ports.
@@ -82,6 +91,12 @@ pub struct OperatorConstraints {
 
     /// Determines if this input must be preceeded by a stratum barrier.
     pub input_delaytype_fn: fn(&PortIndexValue) -> Option<DelayType>,
+    /// Expresses what boundednesses are valid for each input port. `Some(x)` indicates the
+    /// boundedness must be `x`, while `None` indicates any boundness is valid.
+    pub flag_input_boundedness: fn(&PortIndexValue) -> Option<Boundedness>,
+    /// Determines the output boundnesses for each output port, based on the boundednesses of all
+    /// input ports.
+    pub flag_output_boundedness: fn(&[Boundedness]) -> Vec<Boundedness>,
     /// The operator's codegen. Returns code that is emited is several different locations. See [`OperatorWriteOutput`].
     pub write_fn: WriteFn,
 }
