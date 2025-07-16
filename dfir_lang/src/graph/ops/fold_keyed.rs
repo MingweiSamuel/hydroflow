@@ -1,7 +1,7 @@
 use quote::{ToTokens, quote_spanned};
 
 use super::{
-    Boundedness, DelayType, OpInstGenerics, OperatorCategory, OperatorConstraints, OperatorInstance,
+     DelayType, OpInstGenerics, OperatorCategory, OperatorConstraints, OperatorInstance,
     OperatorWriteOutput, Persistence, RANGE_1, WriteContextArgs, preserve_boundedness,
 };
 

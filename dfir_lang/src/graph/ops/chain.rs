@@ -1,7 +1,7 @@
 use crate::graph::PortIndexValue;
 
 use super::{
-    Boundedness, DelayType, OperatorCategory, OperatorConstraints, RANGE_0, RANGE_1, output_bounded_if_all_bounded
+     DelayType, OperatorCategory, OperatorConstraints, RANGE_0, RANGE_1, output_bounded_if_all_bounded
 };
 
 /// > 2 input streams of the same type, 1 output stream of the same type

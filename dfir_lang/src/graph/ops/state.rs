@@ -1,4 +1,6 @@
 use syn::parse_quote_spanned;
+use crate::graph::ops::preserve_boundedness;
+
 use super::{
     OperatorCategory, OperatorConstraints,
     WriteContextArgs, RANGE_1,
@@ -37,6 +39,8 @@ pub const STATE: OperatorConstraints = OperatorConstraints {
     ports_inn: None,
     ports_out: None,
     input_delaytype_fn: |_| None,
+    flag_input_boundedness: |_| None,
+    flag_output_boundedness: preserve_boundedness,
     write_fn: |wc @ &WriteContextArgs { op_span, .. },
                diagnostics| {
 

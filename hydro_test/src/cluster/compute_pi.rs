@@ -9,10 +9,10 @@ pub fn compute_pi<'a>(
     flow: &FlowBuilder<'a>,
     batch_size: usize,
 ) -> (Cluster<'a, Worker>, Process<'a, Leader>) {
-    let cluster = flow.cluster();
-    let process = flow.process();
+    let workers = flow.cluster();
+    let leader = flow.process();
 
-    let trials = cluster
+    let trials = workers
         .tick()
         .spin_batch(q!(batch_size))
         .map(q!(|_| rand::random::<(f64, f64)>()))
@@ -30,8 +30,8 @@ pub fn compute_pi<'a>(
         .all_ticks();
 
     let estimate = trials
-        .send_bincode_anonymous(&process)
-        .reduce_commutative(q!(|(inside, total), (inside_batch, total_batch)| {
+        .send_bincode_anonymous(&leader)
+        .reduce(q!(|(inside, total), (inside_batch, total_batch)| {
             *inside += inside_batch;
             *total += total_batch;
         }));
@@ -48,7 +48,7 @@ pub fn compute_pi<'a>(
         );
     }));
 
-    (cluster, process)
+    (workers, leader)
 }
 
 #[cfg(test)]

@@ -6,7 +6,7 @@ use syn::{PathArguments, PathSegment, Token, Type, TypePath};
 use super::{
     OpInstGenerics, OperatorCategory, OperatorConstraints, OperatorInstance,
     OperatorWriteOutput, PortIndexValue, PortListSpec, WriteContextArgs, RANGE_0, RANGE_1,
-    preserve_boundedness,
+    
 };
 use crate::diagnostic::{Diagnostic, Level};
 use crate::graph::change_spans;

@@ -1,5 +1,5 @@
 use super::{
-    Boundedness, DelayType, OperatorCategory, OperatorConstraints, IDENTITY_WRITE_FN, RANGE_0,
+     DelayType, OperatorCategory, OperatorConstraints, IDENTITY_WRITE_FN, RANGE_0,
     RANGE_1, preserve_boundedness,
 };
 

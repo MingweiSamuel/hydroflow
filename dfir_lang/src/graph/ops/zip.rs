@@ -2,8 +2,8 @@ use quote::quote_spanned;
 use syn::parse_quote;
 
 use super::{
-    Boundedness, OperatorCategory, OperatorConstraints, OperatorWriteOutput, RANGE_0, RANGE_1, 
-    WriteContextArgs, output_bounded_if_all_bounded,
+    Boundedness, OperatorCategory, OperatorConstraints, OperatorWriteOutput, RANGE_0, RANGE_1,
+    WriteContextArgs,
 };
 
 /// > 2 input streams of type `V1` and `V2`, 1 output stream of type `(V1, V2)`
@@ -37,7 +37,14 @@ pub const ZIP: OperatorConstraints = OperatorConstraints {
     ports_out: None,
     input_delaytype_fn: |_| None,
     flag_input_boundedness: |_| None, // Accept any boundedness for inputs
-    flag_output_boundedness: output_bounded_if_all_bounded, // Output is bounded only if all inputs are bounded
+    flag_output_boundedness: |inputs| {
+        // Output is shortest input.
+        if inputs.contains(&Boundedness::Bounded) {
+            vec![Boundedness::Bounded]
+        } else {
+            vec![Boundedness::Unbounded]
+        }
+    },
     write_fn: |wc @ &WriteContextArgs {
                    root,
                    context,

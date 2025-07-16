@@ -1,5 +1,7 @@
 use quote::{quote_spanned, ToTokens};
 
+use crate::graph::ops::preserve_boundedness;
+
 use super::{
     OperatorCategory, OperatorConstraints, OperatorWriteOutput, WriteContextArgs, RANGE_0, RANGE_1,
     RANGE_ANY,
@@ -32,6 +34,8 @@ pub const TEE: OperatorConstraints = OperatorConstraints {
     ports_inn: None,
     ports_out: None,
     input_delaytype_fn: |_| None,
+    flag_input_boundedness: |_| None,
+    flag_output_boundedness: preserve_boundedness,
     write_fn: |&WriteContextArgs {
                    root,
                    op_span,

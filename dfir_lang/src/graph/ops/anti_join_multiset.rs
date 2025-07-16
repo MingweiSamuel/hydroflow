@@ -2,7 +2,7 @@ use quote::{quote_spanned, ToTokens};
 use syn::parse_quote;
 
 use super::{
-    Boundedness, DelayType, OperatorCategory, OperatorConstraints, OperatorWriteOutput, PortIndexValue, 
+     DelayType, OperatorCategory, OperatorConstraints, OperatorWriteOutput, PortIndexValue, 
     RANGE_0, RANGE_1, WriteContextArgs, output_bounded_if_all_bounded,
 };
 use crate::graph::ops::Persistence;

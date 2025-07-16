@@ -2,8 +2,8 @@ use quote::quote_spanned;
 use syn::parse_quote;
 
 use super::{
-    Boundedness, OperatorCategory, OperatorConstraints, OperatorWriteOutput, WriteContextArgs,
-    RANGE_0, RANGE_1, preserve_boundedness,
+     OperatorCategory, OperatorConstraints, OperatorWriteOutput, WriteContextArgs,
+    RANGE_0, RANGE_1,
 };
 
 /// > 1 input stream of pair tuples `(A, B)`, 2 output streams

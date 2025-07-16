@@ -2,7 +2,7 @@ use quote::quote_spanned;
 use syn::Ident;
 
 use super::{
-    Boundedness, OperatorCategory, OperatorConstraints, OperatorWriteOutput, RANGE_0, RANGE_1, 
+     OperatorCategory, OperatorConstraints, OperatorWriteOutput, RANGE_0, RANGE_1, 
     WriteContextArgs, preserve_boundedness,
 };
 

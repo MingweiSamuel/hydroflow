@@ -40,6 +40,8 @@ pub const SOURCE_STREAM_SERDE: OperatorConstraints = OperatorConstraints {
     ports_inn: None,
     ports_out: None,
     input_delaytype_fn: |_| None,
+    flag_input_boundedness: |_| None,
+    flag_output_boundedness: |_| vec![Boundedness::Unbounded],
     write_fn: |wc @ &WriteContextArgs {
                    root,
                    context,

@@ -1,7 +1,7 @@
 use quote::quote_spanned;
 
 use super::{
-    Boundedness, OperatorCategory, OperatorConstraints, OperatorWriteOutput,
+     OperatorCategory, OperatorConstraints, OperatorWriteOutput,
     WriteContextArgs, RANGE_0, RANGE_1, preserve_boundedness,
 };
 

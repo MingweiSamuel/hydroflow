@@ -5,6 +5,7 @@ use super::{
     Persistence, RANGE_1, WriteContextArgs,
 };
 use crate::diagnostic::{Diagnostic, Level};
+use crate::graph::ops::preserve_boundedness;
 
 /// List state operator, but with a closure to map the input to the state lattice and a factory
 /// function to initialize the internal data structure.
@@ -55,6 +56,8 @@ pub const STATE_BY: OperatorConstraints = OperatorConstraints {
     ports_inn: None,
     ports_out: None,
     input_delaytype_fn: |_| None,
+    flag_input_boundedness: |_| None,
+    flag_output_boundedness: preserve_boundedness,
     write_fn: |wc @ &WriteContextArgs {
                    root,
                    context,

@@ -2,7 +2,7 @@ use quote::quote_spanned;
 use syn::parse_quote_spanned;
 
 use super::{
-    Boundedness, make_missing_runtime_msg, OperatorCategory, OperatorConstraints,
+     make_missing_runtime_msg, OperatorCategory, OperatorConstraints,
     OperatorWriteOutput, WriteContextArgs, RANGE_0, RANGE_1,
 };
 

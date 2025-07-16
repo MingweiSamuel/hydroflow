@@ -17,6 +17,7 @@ use super::graph_write::{Dot, GraphWrite, Mermaid};
 use super::ops::{
     DelayType, OPERATORS, OperatorWriteOutput, WriteContextArgs, find_op_op_constraints,
     null_write_iterator_fn,
+    Boundedness,
 };
 use super::{
     CONTEXT, Color, DiMulGraph, GRAPH, GraphEdgeId, GraphLoopId, GraphNode, GraphNodeId,
@@ -75,6 +76,9 @@ pub struct DfirGraph {
     node_singleton_references: SparseSecondaryMap<GraphNodeId, Vec<Option<GraphNodeId>>>,
     /// What variable name each graph node belongs to (if any). For debugging (graph writing) purposes only.
     node_varnames: SparseSecondaryMap<GraphNodeId, Varname>,
+
+    /// The boundedness flag of each edge.
+    edge_boundedness: SecondaryMap<GraphEdgeId, Boundedness>,
 
     /// If this subgraph is 'lazy' then when it sends data to a lower stratum it does not cause a new tick to start
     /// This is to support lazy defers

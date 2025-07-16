@@ -7,7 +7,7 @@ use syn::{Expr, Pat};
 
 use super::{
     OperatorCategory, OperatorConstraints, OperatorInstance, OperatorWriteOutput,
-    PortIndexValue, PortListSpec, WriteContextArgs, RANGE_0, RANGE_1, preserve_boundedness,
+    PortIndexValue, PortListSpec, WriteContextArgs, RANGE_0, RANGE_1,
 };
 use crate::diagnostic::{Diagnostic, Level};
 use crate::pretty_span::PrettySpan;
