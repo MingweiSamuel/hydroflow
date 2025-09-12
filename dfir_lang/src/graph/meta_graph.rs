@@ -1041,7 +1041,7 @@ impl DfirGraph {
                                 )
                             };
 
-                            let fn_ident = format_ident!(
+                            let work_fn = format_ident!(
                                 "{}__{}__{}",
                                 ident,
                                 op_name,
@@ -1058,7 +1058,7 @@ impl DfirGraph {
                                 loop_id,
                                 op_span,
                                 op_tag: self.operator_tag.get(node_id).cloned(),
-                                work_fn: &fn_ident,
+                                work_fn: &work_fn,
                                 ident: &ident,
                                 is_pull,
                                 inputs: &inputs,
@@ -1089,7 +1089,7 @@ impl DfirGraph {
                             op_prologue_code.push(syn::parse_quote! {
                                 #[allow(non_snake_case)]
                                 #[inline(always)]
-                                fn #fn_ident<T>(thunk: impl FnOnce() -> T) -> T {
+                                fn #work_fn<T>(thunk: impl FnOnce() -> T) -> T {
                                     thunk()
                                 }
                             });
@@ -1103,7 +1103,7 @@ impl DfirGraph {
                                         let #ident = {
                                             #[allow(non_snake_case)]
                                             #[inline(always)]
-                                            pub fn #fn_ident<Item, Input: ::std::iter::Iterator<Item = Item>>(input: Input) -> impl ::std::iter::Iterator<Item = Item> {
+                                            pub fn #work_fn<Item, Input: ::std::iter::Iterator<Item = Item>>(input: Input) -> impl ::std::iter::Iterator<Item = Item> {
                                                 #[repr(transparent)]
                                                 struct Pull<Item, Input: ::std::iter::Iterator<Item = Item>> {
                                                     inner: Input
@@ -1127,7 +1127,7 @@ impl DfirGraph {
                                                     inner: input
                                                 }
                                             }
-                                            #fn_ident( #ident )
+                                            #work_fn( #ident )
                                         };
                                     }
                                 } else {
@@ -1135,7 +1135,12 @@ impl DfirGraph {
                                         let #ident = {
                                             #[allow(non_snake_case)]
                                             #[inline(always)]
-                                            pub fn #fn_ident<Item, Input: #root::futures::sink::Sink<Item>>(input: Input) -> impl #root::futures::sink::Sink<Item> {
+                                            pub fn #work_fn<Item, Input>(input: Input) -> impl #root::futures::sink::Sink<Item, Error = #root::Never>
+                                            where
+                                                Input: #root::futures::sink::Sink<Item, Error = #root::Never>
+                                            {
+                                                // TODO(mingwei): RE-ADD THE TYPE ERASURE WRAPPER
+
                                                 // #[repr(transparent)]
                                                 // struct Push<Item, Input: #root::futures::sink::Sink<Item>> {
                                                 //     inner: Input
@@ -1153,11 +1158,9 @@ impl DfirGraph {
                                                 // Push {
                                                 //     inner: input
                                                 // }
-
-                                                // TODO(mingwei): RE-ADD THE TYPE ERASURE WRAPPER
                                                 input
                                             }
-                                            #fn_ident( #ident )
+                                            #work_fn( #ident )
                                         };
                                     }
                                 };
@@ -1202,7 +1205,11 @@ impl DfirGraph {
                             Ident::new(&format!("pivot_run_sg_{:?}", subgraph_id.0), pivot_span);
                         subgraph_op_iter_code.push(quote_spanned! {pivot_span=>
                             #[inline(always)]
-                            async fn #pivot_fn_ident<Pull: ::std::iter::Iterator<Item = Item>, Push: #root::futures::sink::Sink<Item>, Item>(pull: Pull, push: Push) {
+                            async fn #pivot_fn_ident<Pull, Push, Item>(pull: Pull, push: Push)
+                            where
+                                Pull: ::std::iter::Iterator<Item = Item>,
+                                Push: #root::futures::sink::Sink<Item, Error = #root::Never>,
+                            {
                                 let mut push = ::std::pin::pin!(push);
                                 for item in pull {
                                     // TODO(mingwei): handle unwrap.
