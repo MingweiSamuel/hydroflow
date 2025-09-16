@@ -154,7 +154,7 @@ pub const STATE_BY: OperatorConstraints = OperatorConstraints {
                         mapfn: MappingFn,
                         state_handle: #root::scheduled::state::StateHandle<::std::cell::RefCell<Lat>>,
                         context: &'a #root::scheduled::context::Context,
-                    ) -> impl 'a + #root::futures::sink::Sink<Item>
+                    ) -> impl 'a + #root::futures::sink::Sink<Item, Error = Push::Error>
                     where
                         Item: 'a + ::std::clone::Clone,
                         MappingFn: 'a + Fn(Item) -> MappedItem,
@@ -180,7 +180,7 @@ pub const STATE_BY: OperatorConstraints = OperatorConstraints {
                         state_handle: #root::scheduled::state::StateHandle<::std::cell::RefCell<Lat>>,
                         mapfn: MappingFn,
                         context: &'a #root::scheduled::context::Context,
-                    ) -> impl 'a + #root::futures::sink::Sink<Item>
+                    ) -> impl 'a + #root::futures::sink::Sink<Item, Error = #root::Never>
                     where
                         Item: 'a,
                         MappedItem: 'a,
