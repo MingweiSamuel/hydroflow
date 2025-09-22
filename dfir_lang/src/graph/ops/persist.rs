@@ -129,7 +129,6 @@ pub const PERSIST: OperatorConstraints = OperatorConstraints {
                         Push: 'ctx + #root::futures::sink::Sink<Item, Error = #root::Never>,
                         Item: ::std::clone::Clone,
                     {
-                        // TODO(mingwei): re-add #work_fn wrapping
                         let replay_idx = if is_new_tick {
                             0
                         } else {
