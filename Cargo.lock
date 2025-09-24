@@ -3619,6 +3619,8 @@ name = "pusherator"
 version = "0.0.12"
 dependencies = [
  "either",
+ "futures",
+ "pin-project-lite",
  "variadics",
 ]
 

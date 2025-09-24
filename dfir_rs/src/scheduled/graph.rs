@@ -219,6 +219,19 @@ impl<'a> Dfir<'a> {
         work_done
     }
 
+    /// [`Self::run_tick`] but panics if a subgraph yields asynchronously.
+    #[tracing::instrument(level = "trace", skip(self), ret)]
+    pub fn run_tick_sync(&mut self) -> bool {
+        let mut work_done = false;
+        // While work is immediately available *on the current tick*.
+        while self.next_stratum(true) {
+            work_done = true;
+            // Do any work.
+            run_sync(self.run_stratum());
+        }
+        work_done
+    }
+
     /// Runs the dataflow until no more (externally-triggered) work is immediately available.
     /// Runs at least one tick of dataflow, even if no external events have been received.
     /// If the dataflow contains loops this method may run forever.
@@ -238,6 +251,19 @@ impl<'a> Dfir<'a> {
             // Yield between each stratum to receive more events.
             // TODO(mingwei): really only need to yield at start of ticks though.
             tokio::task::yield_now().await;
+        }
+        work_done
+    }
+
+    /// [`Self::run_available`] but panics if a subgraph yields asynchronously.
+    #[tracing::instrument(level = "trace", skip(self), ret)]
+    pub fn run_available_sync(&mut self) -> bool {
+        let mut work_done = false;
+        // While work is immediately available.
+        while self.next_stratum(false) {
+            work_done = true;
+            // Do any work.
+            run_sync(self.run_stratum());
         }
         work_done
     }
@@ -553,6 +579,17 @@ impl<'a> Dfir<'a> {
             self.run_available().await;
             // When no work is available yield until more events occur.
             self.recv_events_async().await;
+        }
+    }
+
+    /// [`Self::run`] but panics if a subgraph yields asynchronously.
+    #[tracing::instrument(level = "trace", skip(self), ret)]
+    pub fn run_sync(&mut self) -> Option<Never> {
+        loop {
+            // Run any work which is immediately available.
+            self.run_available_sync();
+            // When no work is available block until more events occur.
+            self.recv_events();
         }
     }
 
@@ -989,55 +1026,18 @@ impl Dfir<'_> {
     }
 }
 
-macro_rules! make_sync {
-    ($synch:ident, $asynch:ident, $ret:ty) => {
-        #[doc = concat!("A synchronous wrapper around [`Self::", stringify!($asynch), "`].")]
-        ///
-        /// This method will panic if the graph contains any async subgraph which returns `Poll::Pending`.
-        pub fn $synch(&mut self) -> $ret {
-            use std::sync::Arc;
-
-            #[derive(Default)]
-            struct BoolWaker {
-                woke: std::sync::atomic::AtomicBool,
-            }
-            impl BoolWaker {
-                fn new() -> Arc<Self> {
-                    Arc::new(Self::default())
-                }
-
-                fn woke(&self) -> bool {
-                    self.woke.load(std::sync::atomic::Ordering::Relaxed)
-                }
-            }
-            impl futures::task::ArcWake for BoolWaker {
-                fn wake_by_ref(arc_self: &Arc<Self>) {
-                    arc_self.woke.store(true, std::sync::atomic::Ordering::Relaxed);
-                }
-            }
-
-            let mut fut = std::pin::pin!(self.$asynch());
-            loop {
-                let bool_waker = BoolWaker::new();
-                let waker = futures::task::waker(Arc::clone(&bool_waker));
-                let mut ctx = std::task::Context::from_waker(&waker);
-                if let std::task::Poll::Ready(out) = fut.as_mut().poll(&mut ctx) {
-                    return out;
-                }
-                // Spin until waker stops being woken.
-                if !bool_waker.woke() {
-                    panic!(
-                        "Future has pending work: DFIR graph has an async subgraph which failed to run synchronously."
-                    )
-                }
-            }
+fn run_sync<Fut>(fut: Fut) -> Fut::Output
+where
+    Fut: Future,
+{
+    let mut fut = std::pin::pin!(fut);
+    let mut ctx = std::task::Context::from_waker(std::task::Waker::noop());
+    loop {
+        match fut.as_mut().poll(&mut ctx) {
+            std::task::Poll::Ready(out) => return out,
+            std::task::Poll::Pending => panic!("Future did not resolve immediately."),
         }
-    };
-}
-impl Dfir<'_> {
-    make_sync!(run_available_sync, run_available, bool);
-    make_sync!(run_tick_sync, run_tick, bool);
-    make_sync!(run_sync, run, Option<Never>);
+    }
 }
 
 impl Drop for Dfir<'_> {
