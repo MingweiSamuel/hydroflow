@@ -54,7 +54,7 @@ pub const FILTER: OperatorConstraints = OperatorConstraints {
         } else {
             let output = &outputs[0];
             quote_spanned! {op_span=>
-                let #ident = #root::pusherator::sinkerator::Filter::new(#func, #output);
+                let #ident = #root::pusherator::sink::Filter::new(#func, #output);
             }
         };
         Ok(OperatorWriteOutput {

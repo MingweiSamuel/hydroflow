@@ -139,7 +139,7 @@ pub const DEMUX_ENUM: OperatorConstraints = OperatorConstraints {
             } else {
                 let output = &outputs[0];
                 quote_spanned! {op_span=>
-                    let #ident = #root::compiled::push::Map::new(#map_fn, #output);
+                    let #ident = #root::pusherator::sink::Map::new(#map_fn, #output);
                 }
             }
         } else {
@@ -157,9 +157,7 @@ pub const DEMUX_ENUM: OperatorConstraints = OperatorConstraints {
                         ::std::pin::pin!( #sorted_outputs ),
                     )*
                 );
-                // TODO(mingwei): make a native sinkerator for this.
                 let #ident = #root::compiled::push::DemuxEnum::<_, #enum_type>::new(#outputs_ident);
-                let #ident = #root::pusherator::sinkerator::SinkCompat::new(#ident);
             }
         };
 

@@ -125,13 +125,13 @@ pub const PARTITION: OperatorConstraints = OperatorConstraints {
         let sorted_outputs = output_sort_permutation.into_iter().map(|i| &outputs[i]);
 
         let write_iterator = quote_spanned! {op_span=>
-            let #ident = #root::compiled::push::Map::new(
+            let #ident = #root::pusherator::sink::Map::new(
                 |__item| {
                     #[allow(clippy::redundant_closure_call)]
                     let __idx = (#func)(&__item, #arg2_val);
                     (__item, __idx)
                 },
-                #root::compiled::push::Partition::new(
+                #root::pusherator::sink::Partition::new(
                     #root::var_expr!( #( #sorted_outputs ),* ),
                 ),
             );

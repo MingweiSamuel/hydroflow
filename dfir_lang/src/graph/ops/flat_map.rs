@@ -56,7 +56,7 @@ pub const FLAT_MAP: OperatorConstraints = OperatorConstraints {
         } else {
             let output = &outputs[0];
             quote_spanned! {op_span=>
-                let #ident = #root::compiled::push::FlatMap::new(#func, #output);
+                let #ident = #root::pusherator::sink::FlatMap::new(#func, #output);
             }
         };
         Ok(OperatorWriteOutput {

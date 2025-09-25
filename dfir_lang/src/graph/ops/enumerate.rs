@@ -77,7 +77,7 @@ pub const ENUMERATE: OperatorConstraints = OperatorConstraints {
             }
         } else {
             quote_spanned! {op_span=>
-                let #ident = #root::compiled::push::Map::new(#map_fn, #output);
+                let #ident = #root::pusherator::sink::Map::new(#map_fn, #output);
             }
         };
 

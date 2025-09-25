@@ -15,7 +15,10 @@ pin_project! {
 }
 impl<Func> ForEach<Func> {
     /// Create with consuming `func`.
-    pub fn new(func: Func) -> Self {
+    pub fn new<Item>(func: Func) -> Self
+    where
+        Self: Sink<Item>,
+    {
         Self { func }
     }
 }

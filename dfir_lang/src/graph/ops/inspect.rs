@@ -53,12 +53,12 @@ pub const INSPECT: OperatorConstraints = OperatorConstraints {
             }
         } else if outputs.is_empty() {
             quote_spanned! {op_span=>
-                let #ident = #root::pusherator::sinkerator::Inspect::new(#func, #root::pusherator::sinkerator::ForEach::new(::std::mem::drop));
+                let #ident = #root::pusherator::sink::Inspect::new(#func, #root::pusherator::sink::ForEach::new(::std::mem::drop));
             }
         } else {
             let output = &outputs[0];
             quote_spanned! {op_span=>
-                let #ident = #root::pusherator::sinkerator::Inspect::new(#func, #output);
+                let #ident = #root::pusherator::sink::Inspect::new(#func, #output);
             }
         };
         Ok(OperatorWriteOutput {

@@ -20,3 +20,5 @@ pub use map::Map;
 pub use partition::{Partition, SinkVariadic};
 pub use pivot::Pivot;
 pub use unzip::Unzip;
+
+pub use futures::sink::Sink;
