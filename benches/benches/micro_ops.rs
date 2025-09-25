@@ -1,5 +1,7 @@
 use criterion::{BatchSize, Criterion, black_box, criterion_group, criterion_main};
 use dfir_rs::dfir_syntax;
+use dfir_rs::pin_project_lite::pin_project;
+use dfir_rs::pusherator::sinkerator::{self, Sinkerator};
 use rand::SeedableRng;
 use rand::distributions::{Distribution, Uniform};
 use rand::rngs::StdRng;
@@ -362,36 +364,146 @@ fn ops(c: &mut Criterion) {
 }
 
 fn sinks(c: &mut Criterion) {
-    use dfir_rs::compiled::push::{ForEach, Map};
-    use dfir_rs::futures::sink::Sink;
     use std::task::{Context, Poll, Waker};
+
+    use dfir_rs::pusherator::sink::{ForEach, Map};
+    use dfir_rs::futures::sink::Sink;
 
     let mut rng = StdRng::from_entropy();
 
     c.bench_function("micro/sinks/identity", |b| {
-        b.iter_batched(
+        b.to_async(tokio::runtime::Builder::new_current_thread().build().unwrap()).iter_batched(
             || {
+                #[inline(always)]
+                fn erase<Si, Item>(si: Si) -> impl Sink<Item, Error = Si::Error>
+                where
+                    Si: Sink<Item>,
+                {
+                    pin_project! {
+                        struct Erase<Si> {
+                            #[pin]
+                            si: Si,
+                        }
+                    }
+                    impl<Si, Item> Sink<Item> for Erase<Si>
+                    where
+                        Si: Sink<Item>,
+                    {
+                        type Error = Si::Error;
+
+                        #[inline(always)]
+                        fn poll_ready(self: std::pin::Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+                            self.project().si.poll_ready(cx)
+                        }
+
+                        #[inline(always)]
+                        fn start_send(self: std::pin::Pin<&mut Self>, item: Item) -> Result<(), Self::Error> {
+                            self.project().si.start_send(item)
+                        }
+
+                        #[inline(always)]
+                        fn poll_flush(self: std::pin::Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+                            self.project().si.poll_flush(cx)
+                        }
+
+                        #[inline(always)]
+                        fn poll_close(self: std::pin::Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+                            self.project().si.poll_close(cx)
+                        }
+                    }
+                    Erase { si }
+                }
+
                 const NUM_INTS: usize = 10_000;
                 let dist = Uniform::new(0, 100);
                 let data: Vec<usize> = (0..NUM_INTS).map(|_| dist.sample(&mut rng)).collect();
 
                 let sink = Map::new(
                     std::convert::identity::<usize>,
-                    ForEach::new(|x| {
+                    erase(ForEach::new(|x| {
                         black_box(x);
-                    }),
+                    })),
                 );
 
-                (data, sink)
+                (data, erase(sink))
             },
-            |(data, sink)| {
-                let mut sink = std::pin::pin!(sink);
-                let cx = &mut Context::from_waker(Waker::noop());
-                for item in data {
-                    assert_eq!(Poll::Ready(Ok(())), sink.as_mut().poll_ready(cx));
-                    sink.as_mut().start_send(item).unwrap();
+            |(data, sink)| async move {
+                // // let mut sink = std::pin::pin!(sink);
+                // // let cx = &mut Context::from_waker(Waker::noop());
+                // // for item in data {
+                // //     assert_eq!(Poll::Ready(Ok(())), sink.as_mut().poll_ready(cx));
+                // //     sink.as_mut().start_send(item).unwrap();
+                // // }
+                // // assert_eq!(Poll::Ready(Ok(())), sink.as_mut().poll_flush(cx));
+                // use futures::sink::SinkExt;
+                // let mut sink = sink;
+                // for item in data {
+                //     sink.feed(item).await.unwrap();
+                // }
+                // sink.flush().await.unwrap();
+                dfir_rs::pusherator::sink::Pivot::new(data.into_iter(), sink).await.unwrap();
+            },
+            BatchSize::LargeInput,
+        )
+    });
+
+    c.bench_function("micro/sinks_sinkerator/identity", |b| {
+        b.to_async(tokio::runtime::Builder::new_current_thread().build().unwrap()).iter_batched(
+            || {
+                #[inline(always)]
+                fn erase<Si, Item>(si: Si) -> impl Sinkerator<Item, Error = Si::Error>
+                where
+                    Si: Sinkerator<Item>,
+                {
+                    pin_project! {
+                        struct Erase<Si> {
+                            #[pin]
+                            si: Si,
+                        }
+                    }
+                    impl<Si, Item> Sinkerator<Item> for Erase<Si>
+                    where
+                        Si: Sinkerator<Item>,
+                    {
+                        type Error = Si::Error;
+
+                        #[inline(always)]
+                        fn poll_send(
+                            self: std::pin::Pin<&mut Self>,
+                            cx: &mut Context<'_>,
+                            item: Option<Item>,
+                        ) -> Poll<Result<(), Self::Error>> {
+                            self.project().si.poll_send(cx, item)
+                        }
+
+                        #[inline(always)]
+                        fn poll_flush(self: std::pin::Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+                            self.project().si.poll_flush(cx)
+                        }
+
+                        #[inline(always)]
+                        fn poll_close(self: std::pin::Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+                            self.project().si.poll_close(cx)
+                        }
+                    }
+                    Erase { si }
                 }
-                assert_eq!(Poll::Ready(Ok(())), sink.as_mut().poll_flush(cx));
+
+                const NUM_INTS: usize = 10_000;
+                let dist = Uniform::new(0, 100);
+                let data: Vec<usize> = (0..NUM_INTS).map(|_| dist.sample(&mut rng)).collect();
+
+                let sinkerator = sinkerator::Map::new(
+                    std::convert::identity::<usize>,
+                    erase(sinkerator::ForEach::new(|x| {
+                        black_box(x);
+                    })),
+                );
+
+                (data, erase(sinkerator))
+            },
+            |(data, sinkerator)| async move {
+                sinkerator::Pivot::new(data.into_iter(), sinkerator).await.unwrap();
             },
             BatchSize::LargeInput,
         )
@@ -401,7 +513,7 @@ fn sinks(c: &mut Criterion) {
 fn sinkerators(c: &mut Criterion) {
     let mut rng = StdRng::from_entropy();
 
-    c.bench_function("micro/sinkerators/identity", |b| {
+    c.bench_function("micro/codegen_sinkerators/identity", |b| {
         b.iter_batched_ref(
             || {
                 const NUM_INTS: usize = 10_000;

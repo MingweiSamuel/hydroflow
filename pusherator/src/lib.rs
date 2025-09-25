@@ -10,6 +10,9 @@
 #[cfg(feature = "futures")]
 #[cfg_attr(docsrs, doc(cfg(feature = "futures")))]
 pub use futures;
+#[cfg(feature = "futures")]
+#[cfg_attr(docsrs, doc(cfg(feature = "futures")))]
+pub use futures::never::Never;
 #[cfg(feature = "variadics")]
 #[cfg_attr(docsrs, doc(cfg(feature = "variadics")))]
 pub use variadics;

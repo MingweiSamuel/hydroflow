@@ -1,10 +1,12 @@
+// TODO(mingwei): Move this to separate crate (pusherator)
 use std::pin::Pin;
 use std::task::{Context, Poll, ready};
 
 use futures::sink::Sink;
 use pin_project_lite::pin_project;
+use pusherator::sinkerator::Sinkerator;
 
-use crate::util::demux_enum::DemuxEnumSink;
+use crate::util::demux_enum::{DemuxEnumSink, DemuxEnumSinkerator};
 
 pin_project! {
     /// Special sink for the `demux_enum` operator.
@@ -75,3 +77,23 @@ where
         Item::poll_close(self.project().outputs, cx)
     }
 }
+
+impl<Outputs, Item> Sinkerator<Item> for DemuxEnum<Outputs, crate::Never>
+where
+    Item: DemuxEnumSinkerator<Outputs>,
+{
+    type Error = Item::Error;
+
+    fn poll_send(mut self: Pin<&mut Self>, cx: &mut Context<'_>, item: Option<Item>) -> Poll<Result<(), Self::Error>> {
+        Item::poll_send(self.project().outputs, cx, item)
+    }
+
+    fn poll_flush(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        Item::poll_flush(self.project().outputs, cx)
+    }
+
+    fn poll_close(mut self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        Item::poll_close(self.project().outputs, cx)
+    }
+}
+

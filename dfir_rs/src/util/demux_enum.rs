@@ -30,7 +30,7 @@ pub trait DemuxEnum<Outputs>: DemuxEnumBase {
     note = "ensure that the type for each output is a tuple of the field for the variant: `()`, `(a,)`, or `(a, b, ...)`."
 )]
 pub trait DemuxEnumSink<Outputs>: DemuxEnumBase {
-    /// The error type for pushing self into the `Otuputs` `Sink`s.
+    /// The error type for pushing self into the `Outputs` `Sink`s.
     type Error;
 
     /// Poll whether the output corresponding to the enum variant in `&self` is ready.
@@ -42,6 +42,35 @@ pub trait DemuxEnumSink<Outputs>: DemuxEnumBase {
 
     /// Pushes `self` into the corresponding output pusherator in `outputs`.
     fn start_send(self, outputs: &mut Outputs) -> Result<(), Self::Error>;
+
+    /// Call `poll_flush` on all `Outputs`.
+    fn poll_flush(outputs: &mut Outputs, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>>;
+
+    /// Call `poll_close` on all `Outputs`.
+    fn poll_close(outputs: &mut Outputs, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>>;
+}
+
+/// Trait for use with the `demux_enum` operator.
+///
+/// This trait is meant to be derived: `#[derive(DemuxEnum)]`.
+///
+/// The derive will implement this such that `Outputs` can be any tuple where each item is a
+/// [`Sinkerator`](pusherator::sinkerator::Sinkerator) that corresponds to each of the variants of
+/// the tuple, in alphabetic order.
+#[diagnostic::on_unimplemented(
+    note = "ensure there is exactly one output for each enum variant.",
+    note = "ensure that the type for each output is a tuple of the field for the variant: `()`, `(a,)`, or `(a, b, ...)`."
+)]
+pub trait DemuxEnumSinkerator<Outputs>: Sized + DemuxEnumBase {
+    /// The error type for pushing self into the `Outputs` `Sinkerator`s.
+    type Error;
+
+    /// Pushes `item` (`Self`) to outputs, obeying the contract of [`pusherator::sinkerator::Sinkerator::poll_send`].
+    fn poll_send(
+        outputs: &mut Outputs,
+        cx: &mut Context<'_>,
+        item: Option<Self>,
+    ) -> Poll<Result<(), Self::Error>>;
 
     /// Call `poll_flush` on all `Outputs`.
     fn poll_flush(outputs: &mut Outputs, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>>;

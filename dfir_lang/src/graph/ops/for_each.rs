@@ -44,7 +44,7 @@ pub const FOR_EACH: OperatorConstraints = OperatorConstraints {
                _| {
         let func = &arguments[0];
         let write_iterator = quote_spanned! {op_span=>
-            let #ident = #root::compiled::push::ForEach::new(#func);
+            let #ident = #root::pusherator::sinkerator::ForEach::new(#func);
         };
         Ok(OperatorWriteOutput {
             write_iterator,

@@ -114,12 +114,13 @@ pub const DEST_SINK: OperatorConstraints = OperatorConstraints {
         };
         let write_iterator = quote_spanned! {op_span=>
             let #ident = {
-                fn sink_guard<Sink, Item>(sink: Sink) -> impl #root::futures::sink::Sink<Item, Error = #root::Never>
+                fn sink_guard<Sink, Item>(sink: Sink) -> impl #root::pusherator::sinkerator::Sinkerator<Item, Error = #root::Never>
                 where
                     Sink: #root::futures::sink::Sink<Item>,
                     Sink::Error: ::std::fmt::Debug,
                 {
-                    <Sink as #root::futures::sink::SinkExt<Item>>::sink_map_err(sink, |e| panic!("{:?}", e))
+                    let sink = <Sink as #root::futures::sink::SinkExt<Item>>::sink_map_err(sink, |e| panic!("{:?}", e));
+                    #root::pusherator::sinkerator::SinkCompat::new(sink)
                 }
                 sink_guard(&mut #sink_ident)
             };

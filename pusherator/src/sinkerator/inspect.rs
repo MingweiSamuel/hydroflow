@@ -6,16 +6,16 @@ use pin_project_lite::pin_project;
 use super::Sinkerator;
 
 pin_project! {
-    /// An [`Sinkerator`] which maps items using `Func` before sending them to the sink.
-    pub struct Map<Si, Func> {
+    /// An [`Sinkerator`] which will inspect items using `Func` before sending them to `Si`.
+    pub struct Inspect<Si, Func> {
         #[pin]
         si: Si,
         func: Func,
     }
 }
 
-impl<Si, Func> Map<Si, Func> {
-    /// Creates a new [`Map`], which will map items using `func` before sending them to `si`.
+impl<Si, Func> Inspect<Si, Func> {
+    /// Creates a new [`Inspect`], which will inspect items using `func` before sending them to `si`.
     pub fn new<Item>(func: Func, si: Si) -> Self
     where
         Self: Sinkerator<Item>,
@@ -24,10 +24,10 @@ impl<Si, Func> Map<Si, Func> {
     }
 }
 
-impl<Si, Func, Item, Out> Sinkerator<Item> for Map<Si, Func>
+impl<Si, Func, Item> Sinkerator<Item> for Inspect<Si, Func>
 where
-    Si: Sinkerator<Out>,
-    Func: FnMut(Item) -> Out,
+    Si: Sinkerator<Item>,
+    Func: FnMut(&Item),
 {
     type Error = Si::Error;
 
@@ -37,7 +37,7 @@ where
         item: Option<Item>,
     ) -> Poll<Result<(), Self::Error>> {
         let this = self.project();
-        this.si.poll_send(cx, item.map(this.func))
+        this.si.poll_send(cx, item.inspect(this.func))
     }
 
     fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {

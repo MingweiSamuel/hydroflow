@@ -11,8 +11,12 @@ pub trait Sinkerator<Item> {
 
     /// Sends an item to the sink.
     ///
-    /// If this method returns `Poll::Pending`, then the previous item has not been fully handled
-    /// and this method must be called again with `None` before a new `Some` value may be sent.
+    /// If this method does not return `Poll::Ready(Ok(()))`, this sink is considered to be in a
+    /// pending state, and this method may be called again repeatedly with `None`. Once
+    /// `Poll::Ready(Ok(())` is returned, the sink is in a ready state and another item `Some` may
+    /// be sent.
+    ///
+    /// Calling this method with `None` when the sink is already ready is allowed but discouraged.
     ///
     /// In most cases, if the sink encounters an error, the sink will permanently be unable to
     /// receive items.
@@ -23,6 +27,9 @@ pub trait Sinkerator<Item> {
     ) -> Poll<Result<(), Self::Error>>;
 
     /// Flush any remaining output from this sink.
+    ///
+    /// If the sink is in a pending state (`poll_send` did not return `Poll::Ready(Ok(()))`),
+    /// then pending items may fail to flush, though they will remain within the sink.
     ///
     /// Returns `Poll::Ready(Ok(()))` when no buffered items remain. If this
     /// value is returned then it is guaranteed that all previous values sent
@@ -38,6 +45,9 @@ pub trait Sinkerator<Item> {
 
     /// Flush any remaining output and close this sink, if necessary.
     ///
+    /// If the sink is in a pending state (`poll_send` did not return `Poll::Ready(Ok(()))`),
+    /// then pending items may fail to flush and will be dropped.
+    ///
     /// Returns `Poll::Ready(Ok(()))` when no buffered items remain and the sink
     /// has been successfully closed.
     ///
@@ -51,12 +61,24 @@ pub trait Sinkerator<Item> {
 }
 
 mod filter;
+mod filter_map;
+mod flat_map;
 mod flatten;
 mod for_each;
+mod inspect;
 mod map;
+mod pivot;
 mod sink_compat;
+mod tee;
+mod unzip;
 pub use filter::Filter;
+pub use filter_map::FilterMap;
+pub use flat_map::FlatMap;
 pub use flatten::Flatten;
 pub use for_each::ForEach;
+pub use inspect::Inspect;
 pub use map::Map;
+pub use pivot::Pivot;
 pub use sink_compat::SinkCompat;
+pub use tee::Tee;
+pub use unzip::Unzip;

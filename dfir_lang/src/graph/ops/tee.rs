@@ -49,10 +49,10 @@ pub const TEE: OperatorConstraints = OperatorConstraints {
                 .rev()
                 .map(|i| i.to_token_stream())
                 .reduce(|b, a|
-                    quote_spanned! {op_span=> #root::futures::sink::SinkExt::fanout(#a, #b) },
+                    quote_spanned! {op_span=> #root::pusherator::sinkerator::Tee::new(#a, #b) },
                 )
                 .unwrap_or_else(
-                    || quote_spanned! {op_span=> #root::futures::sink::drain() },
+                    || quote_spanned! {op_span=> #root::pusherator::sinkerator::ForEach::new(::std::mem::drop) },
                 );
             quote_spanned! {op_span=>
                 let #ident = #tees;

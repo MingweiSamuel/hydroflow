@@ -902,7 +902,7 @@ impl DfirGraph {
                 });
                 let send_port_code = send_ports.iter().map(|ident| {
                     quote! {
-                        let #ident = #root::compiled::push::ForEach::new(|v| {
+                        let #ident = #root::pusherator::sinkerator::ForEach::new(|v| {
                             #ident.give(Some(v));
                         });
                     }
@@ -1135,54 +1135,48 @@ impl DfirGraph {
                                         let #ident = {
                                             #[allow(non_snake_case)]
                                             #[inline(always)]
-                                            pub fn #work_fn<Item, Si>(sink: Si) -> impl #root::futures::sink::Sink<Item, Error = #root::Never>
+                                            pub fn #work_fn<Item, Si>(si: Si) -> impl #root::pusherator::sinkerator::Sinkerator<Item, Error = #root::Never>
                                             where
-                                                Si: #root::futures::sink::Sink<Item, Error = #root::Never>
+                                                Si: #root::pusherator::sinkerator::Sinkerator<Item, Error = #root::Never>
                                             {
                                                 #root::pin_project_lite::pin_project! {
                                                     #[repr(transparent)]
                                                     struct Push<Si> {
                                                         #[pin]
-                                                        sink: Si,
+                                                        si: Si,
                                                     }
                                                 }
-                                                impl<Item, Si> #root::futures::sink::Sink<Item> for Push<Si>
+                                                impl<Item, Si> #root::pusherator::sinkerator::Sinkerator<Item> for Push<Si>
                                                 where
-                                                    Si: #root::futures::sink::Sink<Item>,
+                                                    Si: #root::pusherator::sinkerator::Sinkerator<Item>,
                                                 {
                                                     type Error = Si::Error;
 
-                                                    fn poll_ready(
+                                                    fn poll_send(
                                                         self: ::std::pin::Pin<&mut Self>,
                                                         cx: &mut ::std::task::Context<'_>,
+                                                        item: Option<Item>,
                                                     ) -> ::std::task::Poll<::std::result::Result<(), Self::Error>> {
-                                                        self.project().sink.poll_ready(cx)
-                                                    }
-
-                                                    fn start_send(
-                                                        self: ::std::pin::Pin<&mut Self>,
-                                                        item: Item,
-                                                    ) -> ::std::result::Result<(), Self::Error> {
-                                                        self.project().sink.start_send(item)
+                                                        self.project().si.poll_send(cx, item)
                                                     }
 
                                                     fn poll_flush(
                                                         self: ::std::pin::Pin<&mut Self>,
                                                         cx: &mut ::std::task::Context<'_>,
                                                     ) -> ::std::task::Poll<::std::result::Result<(), Self::Error>> {
-                                                        self.project().sink.poll_flush(cx)
+                                                        self.project().si.poll_flush(cx)
                                                     }
 
                                                     fn poll_close(
                                                         self: ::std::pin::Pin<&mut Self>,
                                                         cx: &mut ::std::task::Context<'_>,
                                                     ) -> ::std::task::Poll<::std::result::Result<(), Self::Error>> {
-                                                        self.project().sink.poll_close(cx)
+                                                        self.project().si.poll_close(cx)
                                                     }
                                                 }
 
                                                 Push {
-                                                    sink
+                                                    si
                                                 }
                                             }
                                             #work_fn( #ident )
@@ -1230,19 +1224,15 @@ impl DfirGraph {
                             Ident::new(&format!("pivot_run_sg_{:?}", subgraph_id.0), pivot_span);
                         subgraph_op_iter_code.push(quote_spanned! {pivot_span=>
                             #[inline(always)]
-                            async fn #pivot_fn_ident<Pull, Push, Item>(pull: Pull, push: Push)
+                            fn #pivot_fn_ident<Pull, Push, Item>(pull: Pull, push: Push)
+                                -> impl ::std::future::Future<Output = ::std::result::Result<(), #root::Never>>
                             where
                                 Pull: ::std::iter::Iterator<Item = Item>,
-                                Push: #root::futures::sink::Sink<Item, Error = #root::Never>,
+                                Push: #root::pusherator::sinkerator::Sinkerator<Item, Error = #root::Never>,
                             {
-                                // NOTE(mingwei): `Sink` error type is `Never` so `.await.unwrap()` should be fine.
-                                let mut push = ::std::pin::pin!(push);
-                                for item in pull {
-                                    #root::futures::sink::SinkExt::feed(&mut push, item).await.unwrap();
-                                }
-                                #root::futures::sink::SinkExt::flush(&mut push).await.unwrap();
+                                #root::pusherator::sinkerator::Pivot::new(pull, push)
                             }
-                            (#pivot_fn_ident)(#pull_ident, #push_ident).await;
+                            (#pivot_fn_ident)(#pull_ident, #push_ident).await.unwrap(/* Never */);
                         });
                     }
                 };

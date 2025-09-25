@@ -3,6 +3,7 @@ use std::task::{Context, Poll, ready};
 
 use futures::sink::Sink;
 use pin_project_lite::pin_project;
+use pusherator::sinkerator::Sinkerator;
 
 pin_project! {
     /// Special sink for the `persist` operator.
@@ -76,5 +77,61 @@ where
         // Ensure all replayed items are sent before closing the underlying sink.
         ready!(self.as_mut().empty_replay(cx))?;
         self.project().sink.poll_close(cx)
+    }
+}
+
+impl<'ctx, Si, Item> Sinkerator<Item> for Persist<'ctx, Si, Item>
+where
+    Si: Sinkerator<Item>,
+    Item: Clone,
+{
+    type Error = Si::Error;
+
+    fn poll_send(
+        mut self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        item: Option<Item>,
+    ) -> Poll<Result<(), Self::Error>> {
+        let mut this = self.as_mut().project();
+
+        if let Some(item) = item {
+            debug_assert_eq!(
+                this.vec.len(),
+                *this.replay_idx,
+                "Sinkerator not ready: `poll_send` must return `Ready(Ok)` before an item may be sent."
+            );
+            // Persist
+            this.vec.push(item);
+        } else {
+            ready!(this.sink.as_mut().poll_send(cx, None)?);
+        }
+
+        // Replay
+        while let Some(item) = this.vec.get(*this.replay_idx) {
+            *this.replay_idx += 1;
+            ready!(this.sink.as_mut().poll_send(cx, Some(item.clone()))?);
+        }
+        debug_assert_eq!(this.vec.len(), *this.replay_idx);
+        Poll::Ready(Ok(()))
+    }
+
+    fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        let this = self.project();
+        debug_assert_eq!(
+            this.vec.len(),
+            *this.replay_idx,
+            "Sinkerator not ready: `poll_send` must return `Ready(Ok)` before flushing."
+        );
+        this.sink.poll_flush(cx)
+    }
+
+    fn poll_close(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+        let this = self.project();
+        debug_assert_eq!(
+            this.vec.len(),
+            *this.replay_idx,
+            "Sinkerator not ready: `poll_send` must return `Ready(Ok)` before closing."
+        );
+        this.sink.poll_close(cx)
     }
 }

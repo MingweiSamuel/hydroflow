@@ -33,10 +33,10 @@ where
 
     fn poll_ready(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         let this = self.project();
-        let ready0 = this.sink0.poll_ready(cx)?;
-        let ready1 = this.sink1.poll_ready(cx)?;
-        ready!(ready0);
-        ready!(ready1);
+        let poll0 = this.sink0.poll_ready(cx)?;
+        let poll1 = this.sink1.poll_ready(cx)?;
+        ready!(poll0);
+        ready!(poll1);
         Poll::Ready(Ok(()))
     }
     fn start_send(self: Pin<&mut Self>, item: (Item0, Item1)) -> Result<(), Self::Error> {
@@ -47,18 +47,18 @@ where
     }
     fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         let this = self.project();
-        let ready0 = this.sink0.poll_flush(cx)?;
-        let ready1 = this.sink1.poll_flush(cx)?;
-        ready!(ready0);
-        ready!(ready1);
+        let poll0 = this.sink0.poll_flush(cx)?;
+        let poll1 = this.sink1.poll_flush(cx)?;
+        ready!(poll0);
+        ready!(poll1);
         Poll::Ready(Ok(()))
     }
     fn poll_close(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         let this = self.project();
-        let ready0 = this.sink0.poll_close(cx)?;
-        let ready1 = this.sink1.poll_close(cx)?;
-        ready!(ready0);
-        ready!(ready1);
+        let poll0 = this.sink0.poll_close(cx)?;
+        let poll1 = this.sink1.poll_close(cx)?;
+        ready!(poll0);
+        ready!(poll1);
         Poll::Ready(Ok(()))
     }
 }

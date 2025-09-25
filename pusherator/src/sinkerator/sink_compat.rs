@@ -38,29 +38,37 @@ where
         let mut this = self.project();
         assert!(
             item.is_none() || this.buf.is_none(),
-            "Sinkerator not ready: `poll_send` must return `Ready` before another item may be sent."
+            "Sinkerator not ready: `poll_send` must return `Ready(Ok)` before an item may be sent."
         );
 
         let item = item.or_else(|| this.buf.take());
         if let Some(item) = item {
-            match this.sink.as_mut().poll_ready(cx)? {
-                Poll::Ready(()) => {
-                    this.sink.start_send(item)?;
-                }
-                Poll::Pending => {
-                    *this.buf = Some(item);
-                    return Poll::Pending;
-                }
+            if let Poll::Ready(()) = this.sink.as_mut().poll_ready(cx)? {
+                this.sink.start_send(item)?;
+                return Poll::Ready(Ok(()));
+            } else {
+                *this.buf = Some(item);
+                return Poll::Pending;
             }
         }
         Poll::Ready(Ok(()))
     }
 
     fn poll_flush(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.project().sink.poll_flush(cx)
+        let this = self.project();
+        assert!(
+            this.buf.is_none(),
+            "Sinkerator not ready: `poll_send` must return `Ready(Ok)` before flushing."
+        );
+        this.sink.poll_flush(cx)
     }
 
     fn poll_close(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-        self.project().sink.poll_close(cx)
+         let this = self.project();
+        assert!(
+            this.buf.is_none(),
+            "Sinkerator not ready: `poll_send` must return `Ready(Ok)` before closing."
+        );
+        this.sink.poll_close(cx)
     }
 }

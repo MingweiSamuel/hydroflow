@@ -169,7 +169,7 @@ pub struct ProcessBuilderContext<'context> {
 }
 
 fn sink_from_fn<T>(f: impl FnMut(T)) -> impl Sink<T, Error = crate::Never> {
-    crate::compiled::push::ForEach::new(f)
+    pusherator::sink::ForEach::new(f)
 }
 
 impl ProcessBuilderContext<'_> {

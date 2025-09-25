@@ -157,7 +157,9 @@ pub const DEMUX_ENUM: OperatorConstraints = OperatorConstraints {
                         ::std::pin::pin!( #sorted_outputs ),
                     )*
                 );
+                // TODO(mingwei): make a native sinkerator for this.
                 let #ident = #root::compiled::push::DemuxEnum::<_, #enum_type>::new(#outputs_ident);
+                let #ident = #root::pusherator::sinkerator::SinkCompat::new(#ident);
             }
         };
 

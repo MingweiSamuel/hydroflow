@@ -16,7 +16,7 @@ impl<Func> ForEach<Func> {
     /// Creates a new [`ForEach`], which will synchronously consume items using `func`.
     pub fn new<Item>(func: Func) -> Self
     where
-        Self: Sinkerator<Item>
+        Self: Sinkerator<Item>,
     {
         Self { func }
     }

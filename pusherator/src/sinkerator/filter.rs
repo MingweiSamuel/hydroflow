@@ -16,9 +16,9 @@ pin_project! {
 
 impl<Si, Func> Filter<Si, Func> {
     /// Creates a new [`Filter`], which will filter items using `func` to determine if to send them to `si`.
-    pub fn new<Item>(si: Si, func: Func) -> Self
+    pub fn new<Item>(func: Func, si: Si) -> Self
     where
-        Self: Sinkerator<Item>
+        Self: Sinkerator<Item>,
     {
         Self { si, func }
     }
@@ -26,8 +26,8 @@ impl<Si, Func> Filter<Si, Func> {
 
 impl<Si, Func, Item> Sinkerator<Item> for Filter<Si, Func>
 where
-    Func: FnMut(&Item) -> bool,
     Si: Sinkerator<Item>,
+    Func: FnMut(&Item) -> bool,
 {
     type Error = Si::Error;
 
@@ -37,17 +37,14 @@ where
         item: Option<Item>,
     ) -> Poll<Result<(), Self::Error>> {
         let this = self.project();
-        match item {
-            Some(item) => {
-                if (this.func)(&item) {
-                    this.si.poll_send(cx, Some(item))
-                } else {
-                    Poll::Ready(Ok(()))
-                }
+        if let Some(item) = item {
+            if (this.func)(&item) {
+                this.si.poll_send(cx, Some(item))
+            } else {
+                Poll::Ready(Ok(()))
             }
-            None => {
-                this.si.poll_send(cx, None)
-            }
+        } else {
+            this.si.poll_send(cx, None)
         }
     }
 
