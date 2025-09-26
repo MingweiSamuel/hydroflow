@@ -1032,11 +1032,9 @@ where
 {
     let mut fut = std::pin::pin!(fut);
     let mut ctx = std::task::Context::from_waker(std::task::Waker::noop());
-    loop {
-        match fut.as_mut().poll(&mut ctx) {
-            std::task::Poll::Ready(out) => return out,
-            std::task::Poll::Pending => panic!("Future did not resolve immediately."),
-        }
+    match fut.as_mut().poll(&mut ctx) {
+        std::task::Poll::Ready(out) => out,
+        std::task::Poll::Pending => panic!("Future did not resolve immediately."),
     }
 }
 

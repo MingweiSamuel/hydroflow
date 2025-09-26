@@ -1,5 +1,4 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
-#![warn(missing_docs)]
 //! Combinators for working with push-based iterators.
 //!
 //! These are grouped into several modules:

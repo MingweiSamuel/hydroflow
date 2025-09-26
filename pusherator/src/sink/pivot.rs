@@ -1,5 +1,5 @@
 use std::pin::Pin;
-use std::task::{Context, Poll, ready};
+use std::task::{Context, Poll};
 
 use futures::sink::Sink;
 use pin_project_lite::pin_project;

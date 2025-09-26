@@ -55,7 +55,7 @@ where
         }
 
         if let Some(iter) = this.iter.as_mut() {
-            while let Some(item) = iter.next() {
+            for item in iter {
                 ready!(this.si.as_mut().poll_send(cx, Some(item))?);
             }
         }

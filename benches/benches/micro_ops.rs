@@ -366,13 +366,18 @@ fn ops(c: &mut Criterion) {
 fn sinks(c: &mut Criterion) {
     use std::task::{Context, Poll, Waker};
 
-    use dfir_rs::pusherator::sink::{ForEach, Map};
     use dfir_rs::futures::sink::Sink;
+    use dfir_rs::pusherator::sink::{ForEach, Map};
 
     let mut rng = StdRng::from_entropy();
 
     c.bench_function("micro/sinks/identity", |b| {
-        b.to_async(tokio::runtime::Builder::new_current_thread().build().unwrap()).iter_batched(
+        b.to_async(
+            tokio::runtime::Builder::new_current_thread()
+                .build()
+                .unwrap(),
+        )
+        .iter_batched(
             || {
                 #[inline(always)]
                 fn erase<Si, Item>(si: Si) -> impl Sink<Item, Error = Si::Error>
@@ -392,22 +397,34 @@ fn sinks(c: &mut Criterion) {
                         type Error = Si::Error;
 
                         #[inline(always)]
-                        fn poll_ready(self: std::pin::Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+                        fn poll_ready(
+                            self: std::pin::Pin<&mut Self>,
+                            cx: &mut Context<'_>,
+                        ) -> Poll<Result<(), Self::Error>> {
                             self.project().si.poll_ready(cx)
                         }
 
                         #[inline(always)]
-                        fn start_send(self: std::pin::Pin<&mut Self>, item: Item) -> Result<(), Self::Error> {
+                        fn start_send(
+                            self: std::pin::Pin<&mut Self>,
+                            item: Item,
+                        ) -> Result<(), Self::Error> {
                             self.project().si.start_send(item)
                         }
 
                         #[inline(always)]
-                        fn poll_flush(self: std::pin::Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+                        fn poll_flush(
+                            self: std::pin::Pin<&mut Self>,
+                            cx: &mut Context<'_>,
+                        ) -> Poll<Result<(), Self::Error>> {
                             self.project().si.poll_flush(cx)
                         }
 
                         #[inline(always)]
-                        fn poll_close(self: std::pin::Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+                        fn poll_close(
+                            self: std::pin::Pin<&mut Self>,
+                            cx: &mut Context<'_>,
+                        ) -> Poll<Result<(), Self::Error>> {
                             self.project().si.poll_close(cx)
                         }
                     }
@@ -441,14 +458,21 @@ fn sinks(c: &mut Criterion) {
                 //     sink.feed(item).await.unwrap();
                 // }
                 // sink.flush().await.unwrap();
-                dfir_rs::pusherator::sink::Pivot::new(data.into_iter(), sink).await.unwrap();
+                dfir_rs::pusherator::sink::Pivot::new(data.into_iter(), sink)
+                    .await
+                    .unwrap();
             },
             BatchSize::LargeInput,
         )
     });
 
     c.bench_function("micro/sinks_sinkerator/identity", |b| {
-        b.to_async(tokio::runtime::Builder::new_current_thread().build().unwrap()).iter_batched(
+        b.to_async(
+            tokio::runtime::Builder::new_current_thread()
+                .build()
+                .unwrap(),
+        )
+        .iter_batched(
             || {
                 #[inline(always)]
                 fn erase<Si, Item>(si: Si) -> impl Sinkerator<Item, Error = Si::Error>
@@ -477,12 +501,18 @@ fn sinks(c: &mut Criterion) {
                         }
 
                         #[inline(always)]
-                        fn poll_flush(self: std::pin::Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+                        fn poll_flush(
+                            self: std::pin::Pin<&mut Self>,
+                            cx: &mut Context<'_>,
+                        ) -> Poll<Result<(), Self::Error>> {
                             self.project().si.poll_flush(cx)
                         }
 
                         #[inline(always)]
-                        fn poll_close(self: std::pin::Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
+                        fn poll_close(
+                            self: std::pin::Pin<&mut Self>,
+                            cx: &mut Context<'_>,
+                        ) -> Poll<Result<(), Self::Error>> {
                             self.project().si.poll_close(cx)
                         }
                     }
@@ -503,7 +533,9 @@ fn sinks(c: &mut Criterion) {
                 (data, erase(sinkerator))
             },
             |(data, sinkerator)| async move {
-                sinkerator::Pivot::new(data.into_iter(), sinkerator).await.unwrap();
+                sinkerator::Pivot::new(data.into_iter(), sinkerator)
+                    .await
+                    .unwrap();
             },
             BatchSize::LargeInput,
         )

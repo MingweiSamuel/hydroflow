@@ -1,8 +1,9 @@
 use std::pin::Pin;
 use std::task::{Context, Poll, ready};
 
-use super::Sinkerator;
 use pin_project_lite::pin_project;
+
+use super::Sinkerator;
 
 pin_project! {
     /// [`Future`] for pulling from an [`Iterator`] and pushing to a [`Sinkerator`].
@@ -43,7 +44,7 @@ where
             *this.ready = true;
         }
 
-        while let Some(item) = this.pull.next() {
+        for item in this.pull {
             if let Poll::Ready(result) = this.push.as_mut().poll_send(cx, Some(item)) {
                 let () = result?;
             } else {

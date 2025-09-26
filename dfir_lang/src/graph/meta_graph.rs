@@ -1135,9 +1135,9 @@ impl DfirGraph {
                                         let #ident = {
                                             #[allow(non_snake_case)]
                                             #[inline(always)]
-                                            pub fn #work_fn<Item, Si>(si: Si) -> impl #root::pusherator::sink::Sink<Item, Error = #root::Never>
+                                            pub fn #work_fn<Item, Si>(si: Si) -> impl #root::futures::sink::Sink<Item, Error = #root::Never>
                                             where
-                                                Si: #root::pusherator::sink::Sink<Item, Error = #root::Never>
+                                                Si: #root::futures::sink::Sink<Item, Error = #root::Never>
                                             {
                                                 #root::pin_project_lite::pin_project! {
                                                     #[repr(transparent)]
@@ -1146,9 +1146,9 @@ impl DfirGraph {
                                                         si: Si,
                                                     }
                                                 }
-                                                impl<Item, Si> #root::pusherator::sink::Sink<Item> for Push<Si>
+                                                impl<Item, Si> #root::futures::sink::Sink<Item> for Push<Si>
                                                 where
-                                                    Si: #root::pusherator::sink::Sink<Item>,
+                                                    Si: #root::futures::sink::Sink<Item>,
                                                 {
                                                     type Error = Si::Error;
 
@@ -1242,7 +1242,7 @@ impl DfirGraph {
                                 -> impl ::std::future::Future<Output = ::std::result::Result<(), #root::Never>>
                             where
                                 Pull: ::std::iter::Iterator<Item = Item>,
-                                Push: #root::pusherator::sink::Sink<Item, Error = #root::Never>,
+                                Push: #root::futures::sink::Sink<Item, Error = #root::Never>,
                             {
                                 #root::pusherator::sink::Pivot::new(pull, push)
                             }

@@ -64,7 +64,7 @@ where
     }
 
     fn poll_close(self: Pin<&mut Self>, cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
-         let this = self.project();
+        let this = self.project();
         assert!(
             this.buf.is_none(),
             "Sinkerator not ready: `poll_send` must return `Ready(Ok)` before closing."

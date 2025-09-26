@@ -84,7 +84,11 @@ where
 {
     type Error = Item::Error;
 
-    fn poll_send(self: Pin<&mut Self>, cx: &mut Context<'_>, item: Option<Item>) -> Poll<Result<(), Self::Error>> {
+    fn poll_send(
+        self: Pin<&mut Self>,
+        cx: &mut Context<'_>,
+        item: Option<Item>,
+    ) -> Poll<Result<(), Self::Error>> {
         Item::poll_send(self.project().outputs, cx, item)
     }
 
@@ -96,4 +100,3 @@ where
         Item::poll_close(self.project().outputs, cx)
     }
 }
-
