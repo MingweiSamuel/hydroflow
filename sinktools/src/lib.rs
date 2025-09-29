@@ -3,6 +3,8 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![warn(missing_docs)]
 
+use core::marker::PhantomData;
+
 pub use either;
 pub use futures_util::sink;
 pub use futures_util::sink::Sink;
@@ -10,16 +12,16 @@ pub use futures_util::sink::Sink;
 #[cfg_attr(docsrs, doc(cfg(feature = "variadics")))]
 pub use variadics;
 
-mod filter;
-mod filter_map;
-mod flat_map;
-mod flatten;
-mod for_each;
-mod inspect;
-mod map;
-mod send_all_iter;
-mod try_for_each;
-mod unzip;
+pub mod filter;
+pub mod filter_map;
+pub mod flat_map;
+pub mod flatten;
+pub mod for_each;
+pub mod inspect;
+pub mod map;
+pub mod send_all_iter;
+pub mod try_for_each;
+pub mod unzip;
 pub use filter::Filter;
 pub use filter_map::FilterMap;
 pub use flat_map::FlatMap;
@@ -154,6 +156,85 @@ pub trait Sinktools<Item>: Sink<Item> {
     }
 }
 impl<Si, Item> Sinktools<Item> for Si where Si: Sink<Item> {}
+
+/// A helper trait for building [`Sink`]s in forward order, unlike with `Sinktools`.
+///
+/// To start a sink adaptor chain, use [`SinkBuilder`].
+pub trait SinkBuild {
+    /// The output item type.
+    type Item;
+
+    /// The built [`Sink`] type, if it is prepended to `Next`.
+    type Build<Next: Sink<Self::Item>>;
+    /// Prepend this sink to `next`.
+    fn build<Next>(self, next: Next) -> Self::Build<Next>
+    where
+        Next: Sink<Self::Item>;
+
+    /// Clone each item and send to both `sink0` and `sink1`, completing this sink adaptor chain.
+    fn fanout<Si0, Si1>(self, sink0: Si0, sink1: Si1) -> Self::Build<sink::Fanout<Si0, Si1>>
+    where
+        Self: Sized,
+        Self::Item: Clone,
+        Si0: Sink<Self::Item>,
+        Si1: Sink<Self::Item, Error = Si0::Error>,
+    {
+        self.build(sink::SinkExt::fanout(sink0, sink1))
+    }
+
+    /// Appends a function which consumes each element, completing this sink adaptor chain.
+    fn for_each<Func>(self, func: Func) -> Self::Build<ForEach<Func>>
+    where
+        Self: Sized,
+        Func: FnMut(Self::Item),
+    {
+        self.build(ForEach::new(func))
+    }
+
+    /// Appends a function which consumes each element and returns a result, completing this sink
+    /// adaptor chain.
+    fn try_for_each<Func, Error>(self, func: Func) -> Self::Build<TryForEach<Func>>
+    where
+        Self: Sized,
+        Func: FnMut(Self::Item) -> Result<(), Error>,
+    {
+        self.build(TryForEach::new(func))
+    }
+
+    /// Appends a function which is called on each element and pases along each output.
+    fn map<Func, Out>(self, func: Func) -> map::MapBuilder<Self, Func>
+    where
+        Self: Sized,
+        Func: FnMut(Self::Item) -> Out,
+    {
+        map::MapBuilder { prev: self, func }
+    }
+}
+
+/// Start a [`SinkBuild`] adaptor chain, with `Item` as the input item type.
+pub struct SinkBuilder<Item>(PhantomData<fn() -> Item>);
+impl<Item> Default for SinkBuilder<Item> {
+    fn default() -> Self {
+        Self(PhantomData)
+    }
+}
+impl<Item> SinkBuilder<Item> {
+    /// Create a new sink builder.
+    pub fn new() -> Self {
+        Self::default()
+    }
+}
+impl<Item> SinkBuild for SinkBuilder<Item> {
+    type Item = Item;
+
+    type Build<Next: Sink<Self::Item>> = Next;
+    fn build<Next>(self, next: Next) -> Self::Build<Next>
+    where
+        Next: Sink<Self::Item>,
+    {
+        next
+    }
+}
 
 macro_rules! forward_sink {
     (

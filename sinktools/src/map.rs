@@ -2,7 +2,7 @@ use core::pin::Pin;
 
 use pin_project_lite::pin_project;
 
-use crate::{Sink, forward_sink};
+use crate::{Sink, SinkBuild, forward_sink};
 
 pin_project! {
     /// Same as [`core::iterator::Map`] but as a [`Sink`].
@@ -45,4 +45,26 @@ where
     }
 
     forward_sink!(poll_ready, poll_flush, poll_close);
+}
+
+/// [`SinkBuild`] for [`Map`].
+pub struct MapBuilder<Prev, Func> {
+    pub(crate) prev: Prev,
+    pub(crate) func: Func,
+}
+impl<Prev, ItemOut, Func> SinkBuild for MapBuilder<Prev, Func>
+where
+    Prev: SinkBuild,
+    Func: FnMut(Prev::Item) -> ItemOut,
+{
+    type Item = ItemOut;
+
+    type Build<Next: Sink<ItemOut>> = Prev::Build<Map<Next, Func>>;
+
+    fn build<Next>(self, next: Next) -> Self::Build<Next>
+    where
+        Next: Sink<ItemOut>,
+    {
+        self.prev.build(Map::new(self.func, next))
+    }
 }
