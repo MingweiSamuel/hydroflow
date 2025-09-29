@@ -54,3 +54,25 @@ where
         self.project().sink.poll_close(cx)
     }
 }
+
+/// [`SinkBuild`] for [`Inspect`].
+pub struct InspectBuilder<Prev, Func> {
+    pub(crate) prev: Prev,
+    pub(crate) func: Func,
+}
+impl<Prev, Func> crate::SinkBuild for InspectBuilder<Prev, Func>
+where
+    Prev: crate::SinkBuild,
+    Func: FnMut(&Prev::Item),
+{
+    type Item = Prev::Item;
+
+    type Build<Next: Sink<Prev::Item>> = Prev::Build<Inspect<Next, Func>>;
+
+    fn build<Next>(self, next: Next) -> Self::Build<Next>
+    where
+        Next: Sink<Prev::Item>,
+    {
+        self.prev.build(Inspect::new(self.func, next))
+    }
+}

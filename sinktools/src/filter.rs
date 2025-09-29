@@ -49,3 +49,25 @@ where
 
     forward_sink!(poll_ready, poll_flush, poll_close);
 }
+
+/// [`SinkBuild`] for [`Filter`].
+pub struct FilterBuilder<Prev, Func> {
+    pub(crate) prev: Prev,
+    pub(crate) func: Func,
+}
+impl<Prev, Func> crate::SinkBuild for FilterBuilder<Prev, Func>
+where
+    Prev: crate::SinkBuild,
+    Func: FnMut(&Prev::Item) -> bool,
+{
+    type Item = Prev::Item;
+
+    type Build<Next: Sink<Prev::Item>> = Prev::Build<Filter<Next, Func>>;
+
+    fn build<Next>(self, next: Next) -> Self::Build<Next>
+    where
+        Next: Sink<Prev::Item>,
+    {
+        self.prev.build(Filter::new(self.func, next))
+    }
+}

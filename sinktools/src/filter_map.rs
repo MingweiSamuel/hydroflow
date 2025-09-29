@@ -50,6 +50,28 @@ where
     forward_sink!(poll_ready, poll_flush, poll_close);
 }
 
+/// [`SinkBuild`] for [`FilterMap`].
+pub struct FilterMapBuilder<Prev, Func> {
+    pub(crate) prev: Prev,
+    pub(crate) func: Func,
+}
+impl<Prev, ItemOut, Func> crate::SinkBuild for FilterMapBuilder<Prev, Func>
+where
+    Prev: crate::SinkBuild,
+    Func: FnMut(Prev::Item) -> Option<ItemOut>,
+{
+    type Item = ItemOut;
+
+    type Build<Next: Sink<ItemOut>> = Prev::Build<FilterMap<Next, Func>>;
+
+    fn build<Next>(self, next: Next) -> Self::Build<Next>
+    where
+        Next: Sink<ItemOut>,
+    {
+        self.prev.build(FilterMap::new(self.func, next))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use futures_util::stream::StreamExt;

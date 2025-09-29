@@ -209,6 +209,67 @@ pub trait SinkBuild {
     {
         map::MapBuilder { prev: self, func }
     }
+
+    /// Appends a predicate function which filters items.
+    fn filter<Func>(self, func: Func) -> filter::FilterBuilder<Self, Func>
+    where
+        Self: Sized,
+        Func: FnMut(&Self::Item) -> bool,
+    {
+        filter::FilterBuilder { prev: self, func }
+    }
+
+    /// Appends a function which both filters and maps items.
+    fn filter_map<Func, Out>(self, func: Func) -> filter_map::FilterMapBuilder<Self, Func>
+    where
+        Self: Sized,
+        Func: FnMut(Self::Item) -> Option<Out>,
+    {
+        filter_map::FilterMapBuilder { prev: self, func }
+    }
+
+    /// Appends a function which maps each item to an iterator and flattens the results.
+    fn flat_map<Func, IntoIter>(self, func: Func) -> flat_map::FlatMapBuilder<Self, Func>
+    where
+        Self: Sized,
+        Func: FnMut(Self::Item) -> IntoIter,
+        IntoIter: IntoIterator,
+    {
+        flat_map::FlatMapBuilder { prev: self, func }
+    }
+
+    /// Flattens items that are iterators.
+    fn flatten<IntoIter>(self) -> flatten::FlattenBuilder<Self>
+    where
+        Self: Sized,
+        Self::Item: IntoIterator,
+    {
+        flatten::FlattenBuilder { prev: self }
+    }
+
+    /// Appends a function which inspects each item without modifying it.
+    fn inspect<Func>(self, func: Func) -> inspect::InspectBuilder<Self, Func>
+    where
+        Self: Sized,
+        Func: FnMut(&Self::Item),
+    {
+        inspect::InspectBuilder { prev: self, func }
+    }
+
+    /// Splits items into two sinks based on tuple structure.
+    fn unzip<Si0, Si1, Item0, Item1>(
+        self,
+        sink0: Si0,
+        sink1: Si1,
+    ) -> Self::Build<Map<Unzip<Si0, Si1>, fn(Self::Item) -> (Item0, Item1)>>
+    where
+        Self: Sized,
+        Self::Item: Into<(Item0, Item1)>,
+        Si0: Sink<Item0>,
+        Si1: Sink<Item1>,
+    {
+        self.build(Map::new(|item| item.into(), Unzip::new(sink0, sink1)))
+    }
 }
 
 /// Start a [`SinkBuild`] adaptor chain, with `Item` as the input item type.

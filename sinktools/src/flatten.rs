@@ -93,6 +93,27 @@ where
     }
 }
 
+/// [`SinkBuild`] for [`Flatten`].
+pub struct FlattenBuilder<Prev> {
+    pub(crate) prev: Prev,
+}
+impl<Prev> crate::SinkBuild for FlattenBuilder<Prev>
+where
+    Prev: crate::SinkBuild,
+    Prev::Item: IntoIterator,
+{
+    type Item = <Prev::Item as IntoIterator>::Item;
+
+    type Build<Next: Sink<Self::Item>> = Prev::Build<Flatten<Next, <Prev::Item as IntoIterator>::IntoIter, Self::Item>>;
+
+    fn build<Next>(self, next: Next) -> Self::Build<Next>
+    where
+        Next: Sink<Self::Item>,
+    {
+        self.prev.build(Flatten::new(next))
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use futures_util::stream::StreamExt;

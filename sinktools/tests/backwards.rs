@@ -1,4 +1,4 @@
-//! Comprehensive unit tests for all sink adaptors in sinktools.
+//! Comprehensive unit tests for all sink adaptors in [`sinktools::Sinktools`].
 
 use std::cell::RefCell;
 use std::rc::Rc;

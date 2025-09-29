@@ -94,3 +94,26 @@ where
         self.project().sink.poll_close(cx)
     }
 }
+
+/// [`SinkBuild`] for [`FlatMap`].
+pub struct FlatMapBuilder<Prev, Func> {
+    pub(crate) prev: Prev,
+    pub(crate) func: Func,
+}
+impl<Prev, Func, IntoIter> crate::SinkBuild for FlatMapBuilder<Prev, Func>
+where
+    Prev: crate::SinkBuild,
+    Func: FnMut(Prev::Item) -> IntoIter,
+    IntoIter: IntoIterator,
+{
+    type Item = IntoIter::Item;
+
+    type Build<Next: Sink<IntoIter::Item>> = Prev::Build<FlatMap<Next, Func, IntoIter::IntoIter, IntoIter::Item>>;
+
+    fn build<Next>(self, next: Next) -> Self::Build<Next>
+    where
+        Next: Sink<IntoIter::Item>,
+    {
+        self.prev.build(FlatMap::new(self.func, next))
+    }
+}
