@@ -13,6 +13,9 @@
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![cfg_attr(not(any(test, feature = "std")), no_std)]
 
+use core::any::Any;
+
+use sealed::sealed;
 /// module of collection types for variadics
 #[cfg_attr(docsrs, cfg(feature = "std"))]
 #[cfg(feature = "std")]
@@ -20,9 +23,7 @@ pub mod variadic_collections;
 #[cfg_attr(docsrs, cfg(feature = "std"))]
 #[cfg(feature = "std")]
 mod vec_variadic;
-use core::any::Any;
 
-use sealed::sealed;
 #[cfg_attr(docsrs, cfg(feature = "std"))]
 #[cfg(feature = "std")]
 pub use vec_variadic::VecVariadic;

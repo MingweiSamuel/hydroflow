@@ -7,13 +7,15 @@ use futures_util::sink::SinkExt;
 use sinktools::*;
 
 /// Helper function to create a collecting sink using Rc<RefCell<Vec<T>>>
-fn create_collecting_sink<T: Clone + 'static>() -> (impl Sink<T, Error = ()>, Rc<RefCell<Vec<T>>>) {
+fn create_collecting_sink<T: Clone + 'static>() -> (
+    impl Sink<T, Error = std::convert::Infallible>,
+    Rc<RefCell<Vec<T>>>,
+) {
     let collected = Rc::new(RefCell::new(Vec::new()));
     let collected_clone = collected.clone();
 
     let sink = ForEach::new(move |item: T| {
         collected_clone.borrow_mut().push(item);
-        Ok::<(), ()>(())
     });
 
     (sink, collected)
@@ -132,7 +134,6 @@ async fn test_for_each_adaptor() {
 
     let mut for_each_sink = ForEach::new(move |x: i32| {
         processed_clone.borrow_mut().push(x * 2);
-        Ok::<(), ()>(())
     });
 
     // Send values
@@ -235,7 +236,7 @@ async fn test_empty_inputs() {
 #[tokio::test]
 async fn test_error_handling() {
     // Test ForEach with error
-    let mut error_sink = ForEach::new(|x: i32| if x == 3 { Err("error on 3") } else { Ok(()) });
+    let mut error_sink = TryForEach::new(|x: i32| if x == 3 { Err("error on 3") } else { Ok(()) });
 
     // These should succeed
     error_sink.send(1).await.unwrap();

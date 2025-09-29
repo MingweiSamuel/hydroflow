@@ -6,15 +6,17 @@ use pin_project_lite::pin_project;
 use crate::Sink;
 
 pin_project! {
-    /// Same as [`core::iterator::ForEach`] but as a [`Sink`].
+    /// Same as [`crate::ForEach`] but the closure returns `Result<(), Error>` instead of `()`.
+    ///
+    /// This is useful when you want to handle errors in the closure.
     ///
     /// Synchronously consumes items and always returns `Poll::Ready(Ok(())`.
     #[must_use = "sinks do nothing unless polled"]
-    pub struct ForEach<Func> {
+    pub struct TryForEach<Func> {
         func: Func,
     }
 }
-impl<Func> ForEach<Func> {
+impl<Func> TryForEach<Func> {
     /// Create with consuming `func`.
     pub fn new(func: Func) -> Self {
         Self { func }
@@ -28,19 +30,18 @@ impl<Func> ForEach<Func> {
         Self::new(func)
     }
 }
-impl<Func, Item> Sink<Item> for ForEach<Func>
+impl<Func, Item, Error> Sink<Item> for TryForEach<Func>
 where
-    Func: FnMut(Item),
+    Func: FnMut(Item) -> Result<(), Error>,
 {
-    type Error = core::convert::Infallible;
+    type Error = Error;
 
     fn poll_ready(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {
         Poll::Ready(Ok(()))
     }
 
     fn start_send(self: Pin<&mut Self>, item: Item) -> Result<(), Self::Error> {
-        (self.project().func)(item);
-        Ok(())
+        (self.project().func)(item)
     }
 
     fn poll_flush(self: Pin<&mut Self>, _cx: &mut Context<'_>) -> Poll<Result<(), Self::Error>> {

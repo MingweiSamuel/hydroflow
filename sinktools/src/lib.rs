@@ -1,4 +1,4 @@
-//! Extra [`Sink`] adaptors and functions.
+#![doc = include_str!("../README.md")]
 #![cfg_attr(not(test), no_std)]
 #![cfg_attr(docsrs, feature(doc_cfg))]
 #![warn(missing_docs)]
@@ -18,6 +18,7 @@ mod for_each;
 mod inspect;
 mod map;
 mod send_all_iter;
+mod try_for_each;
 mod unzip;
 pub use filter::Filter;
 pub use filter_map::FilterMap;
@@ -27,6 +28,7 @@ pub use for_each::ForEach;
 pub use inspect::Inspect;
 pub use map::Map;
 pub use send_all_iter::SendAllIter;
+pub use try_for_each::TryForEach;
 pub use unzip::Unzip;
 
 #[cfg(feature = "variadics")]
