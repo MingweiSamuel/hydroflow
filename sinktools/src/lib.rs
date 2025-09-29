@@ -261,14 +261,13 @@ pub trait SinkBuild {
         self,
         sink0: Si0,
         sink1: Si1,
-    ) -> Self::Build<Map<Unzip<Si0, Si1>, fn(Self::Item) -> (Item0, Item1)>>
+    ) -> Self::Build<Unzip<Si0, Si1>>
     where
-        Self: Sized,
-        Self::Item: Into<(Item0, Item1)>,
+        Self: Sized + SinkBuild<Item = (Item0, Item1)>,
         Si0: Sink<Item0>,
         Si1: Sink<Item1>,
     {
-        self.build(Map::new(|item| item.into(), Unzip::new(sink0, sink1)))
+        self.build(Unzip::new(sink0, sink1))
     }
 }
 
