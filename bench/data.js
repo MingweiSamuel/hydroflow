@@ -1,6 +1,6 @@
 window.BENCHMARK_DATA = 
 {
-  "lastUpdate": 1767413139232,
+  "lastUpdate": 1767500190561,
   "repoUrl": "https://github.com/MingweiSamuel/hydroflow",
   "entries": {
     "Benchmark": [
@@ -242420,6 +242420,208 @@ window.BENCHMARK_DATA =
             "name": "micro/ops/group_by",
             "value": 9319,
             "range": "± 225",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Mingwei Samuel",
+            "username": "MingweiSamuel",
+            "email": "mingwes@amazon.com"
+          },
+          "committer": {
+            "name": "Mingwei Samuel",
+            "username": "MingweiSamuel",
+            "email": "mingwes@amazon.com"
+          },
+          "id": "e305aac64a4289c71651e90029d8224daf508250",
+          "message": "ci: upload benchmark html as artifacts for viewing in PRs [ci-bench]",
+          "timestamp": "2025-09-22T21:37:45Z",
+          "url": "https://github.com/MingweiSamuel/hydroflow/commit/e305aac64a4289c71651e90029d8224daf508250"
+        },
+        "date": 1767500190514,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "arithmetic/dfir_rs/compiled",
+            "value": 310597,
+            "range": "± 554",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "arithmetic/dfir_rs/compiled_no_cheating",
+            "value": 6524326,
+            "range": "± 233470",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "arithmetic/dfir_rs/surface",
+            "value": 6554992,
+            "range": "± 20219",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/dfir_rs/surface",
+            "value": 40904009,
+            "range": "± 171219",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/dfir_rs/surface",
+            "value": 6499557,
+            "range": "± 11677",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/dfir_rs",
+            "value": 6167353,
+            "range": "± 56088",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/dfir_rs/surface",
+            "value": 24471210,
+            "range": "± 640796",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/dfir_rs",
+            "value": 8033306,
+            "range": "± 137520",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/dfir_rs/compiled",
+            "value": 6522662,
+            "range": "± 5028",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/dfir_rs/surface",
+            "value": 6671909,
+            "range": "± 12021",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/dfir_rs/scheduled",
+            "value": 1794297,
+            "range": "± 12450",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/dfir_rs",
+            "value": 1927455,
+            "range": "± 17974",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/dfir_rs/surface",
+            "value": 5271616,
+            "range": "± 16703",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/dfir_rs/surface_cheating",
+            "value": 1548011,
+            "range": "± 14804",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "dfir_rs_diamond",
+            "value": 53229342,
+            "range": "± 938047",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/identity",
+            "value": 4296,
+            "range": "± 84",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/unique",
+            "value": 27205,
+            "range": "± 508",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/map",
+            "value": 4403,
+            "range": "± 90",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/flat_map",
+            "value": 6887,
+            "range": "± 70",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/join",
+            "value": 83042,
+            "range": "± 466",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/difference",
+            "value": 71963,
+            "range": "± 1612",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/union",
+            "value": 17406,
+            "range": "± 141",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/tee",
+            "value": 7277,
+            "range": "± 59",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/fold",
+            "value": 20778,
+            "range": "± 1132",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/sort",
+            "value": 82544,
+            "range": "± 921",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/crossjoin",
+            "value": 72650,
+            "range": "± 1733",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/anti_join",
+            "value": 9992,
+            "range": "± 335",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/next_tick/small",
+            "value": 49328,
+            "range": "± 1255",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/next_tick/big",
+            "value": 69475,
+            "range": "± 4082",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/group_by",
+            "value": 9443,
+            "range": "± 252",
             "unit": "ns/iter"
           }
         ]
