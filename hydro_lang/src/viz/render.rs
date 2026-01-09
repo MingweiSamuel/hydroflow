@@ -54,13 +54,13 @@ impl std::fmt::Display for NodeLabel {
 
 /// Base struct for text-based graph writers that use indentation.
 /// Contains common fields shared by DOT and Mermaid writers.
-pub struct IndentedGraphWriter<W> {
+pub struct IndentedGraphWriter<'a, W> {
     pub write: W,
     pub indent: usize,
-    pub config: HydroWriteConfig,
+    pub config: HydroWriteConfig<'a>,
 }
 
-impl<W> IndentedGraphWriter<W> {
+impl<'a, W> IndentedGraphWriter<'a, W> {
     /// Create a new writer with default configuration.
     pub fn new(write: W) -> Self {
         Self {
@@ -71,16 +71,16 @@ impl<W> IndentedGraphWriter<W> {
     }
 
     /// Create a new writer with the given configuration.
-    pub fn new_with_config(write: W, config: &HydroWriteConfig) -> Self {
+    pub fn new_with_config(write: W, config: HydroWriteConfig<'a>) -> Self {
         Self {
             write,
             indent: 0,
-            config: config.clone(),
+            config,
         }
     }
 }
 
-impl<W: Write> IndentedGraphWriter<W> {
+impl<W: Write> IndentedGraphWriter<'_, W> {
     /// Write an indented line using the current indentation level.
     pub fn writeln_indented(&mut self, content: &str) -> Result<(), std::fmt::Error> {
         writeln!(self.write, "{b:i$}{content}", b = "", i = self.indent)
@@ -467,25 +467,21 @@ pub fn add_network_edge_tag(
 }
 
 /// Configuration for graph writing.
-#[derive(Debug, Clone)]
-pub struct HydroWriteConfig {
+#[derive(Debug, Clone, Copy)]
+pub struct HydroWriteConfig<'a> {
     pub show_metadata: bool,
     pub show_location_groups: bool,
     pub use_short_labels: bool,
-    pub process_id_name: Vec<(usize, String)>,
-    pub cluster_id_name: Vec<(usize, String)>,
-    pub external_id_name: Vec<(usize, String)>,
+    pub location_names: &'a [(usize, String)],
 }
 
-impl Default for HydroWriteConfig {
+impl Default for HydroWriteConfig<'_> {
     fn default() -> Self {
         Self {
             show_metadata: false,
             show_location_groups: true,
             use_short_labels: true, // Default to short labels for all renderers
-            process_id_name: vec![],
-            cluster_id_name: vec![],
-            external_id_name: vec![],
+            location_names: &[],
         }
     }
 }
@@ -899,7 +895,7 @@ impl HydroNode {
         struct TransformParams<'a> {
             structure: &'a mut HydroGraphStructure,
             seen_tees: &'a mut HashMap<*const std::cell::RefCell<HydroNode>, usize>,
-            config: &'a HydroWriteConfig,
+            config: &'a HydroWriteConfig<'a>,
             input: &'a HydroNode,
             metadata: &'a HydroIrMetadata,
             op_name: String,

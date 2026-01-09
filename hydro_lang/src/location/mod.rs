@@ -22,6 +22,7 @@ use futures::stream::Stream as FuturesStream;
 use proc_macro2::Span;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
+use slotmap::new_key_type;
 use stageleft::{QuotedWithContext, q, quote_type};
 use syn::parse_quote;
 use tokio_util::codec::{Decoder, Encoder, LengthDelimitedCodec};
@@ -82,6 +83,24 @@ pub enum NetworkHint {
 
 pub(crate) fn check_matching_location<'a, L: Location<'a>>(l1: &L, l2: &L) {
     assert_eq!(Location::id(l1), Location::id(l2), "locations do not match");
+}
+
+new_key_type! {
+    /// A unique identifier for a clock tick.
+    pub struct LocationKey;
+}
+
+#[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
+pub enum LocationType {
+    Process,
+    Cluster,
+    External,
+}
+
+impl LocationType {
+    pub fn is_external(self) -> bool {
+        matches!(self, Self::External)
+    }
 }
 
 #[expect(missing_docs, reason = "TODO")]

@@ -17,12 +17,16 @@ use quote::ToTokens;
 #[cfg(feature = "build")]
 use quote::quote;
 #[cfg(feature = "build")]
+use slotmap::SparseSecondaryMap;
+#[cfg(feature = "build")]
 use syn::parse_quote;
 use syn::visit::{self, Visit};
 use syn::visit_mut::VisitMut;
 
 #[cfg(feature = "build")]
 use crate::compile::deploy_provider::{Deploy, RegisterPort};
+#[cfg(feature = "build")]
+use crate::location::LocationKey;
 use crate::location::NetworkHint;
 use crate::location::dynamic::LocationId;
 
@@ -661,9 +665,9 @@ impl HydroRoot {
         &mut self,
         extra_stmts: &mut BTreeMap<usize, Vec<syn::Stmt>>,
         seen_tees: &mut SeenTees,
-        processes: &HashMap<usize, D::Process>,
-        clusters: &HashMap<usize, D::Cluster>,
-        externals: &HashMap<usize, D::External>,
+        processes: &SparseSecondaryMap<LocationKey, D::Process>,
+        clusters: &SparseSecondaryMap<LocationKey, D::Cluster>,
+        externals: &SparseSecondaryMap<LocationKey, D::External>,
     ) where
         D: Deploy<'a>,
     {

@@ -6,13 +6,14 @@ use std::panic::RefUnwindSafe;
 use std::rc::Rc;
 
 use libloading::Library;
+use slotmap::{SecondaryMap, SparseSecondaryMap};
 
 use super::builder::SimBuilder;
 use super::compiled::{CompiledSim, CompiledSimInstance};
 use super::graph::{SimDeploy, SimExternal, SimNode, compile_sim, create_sim_graph_trybuild};
 use crate::compile::ir::HydroRoot;
-use crate::location::Location;
 use crate::location::dynamic::LocationId;
+use crate::location::{Location, LocationKey};
 use crate::prelude::Cluster;
 use crate::staging_util::Invariant;
 
@@ -22,21 +23,21 @@ pub struct SimFlow<'a> {
 
     pub(crate) external_ports: Rc<RefCell<(Vec<usize>, usize)>>,
 
-    pub(crate) processes: HashMap<usize, SimNode>,
-    pub(crate) clusters: HashMap<usize, SimNode>,
-    pub(crate) externals: HashMap<usize, SimExternal>,
+    /// SimNode for each Process.
+    pub(crate) processes: SparseSecondaryMap<LocationKey, SimNode>,
+    /// SimNode for each Cluster.
+    pub(crate) clusters: SparseSecondaryMap<LocationKey, SimNode>,
+    /// SimExternal for each External.
+    pub(crate) externals: SparseSecondaryMap<LocationKey, SimExternal>,
 
     /// A mapping from external "keys", which are used for looking up connections, to the IDs
     /// of the external channels created in the simulation.
     pub(crate) external_registered: Rc<RefCell<HashMap<usize, usize>>>,
 
-    pub(crate) cluster_max_sizes: HashMap<LocationId, usize>,
+    pub(crate) cluster_max_sizes: SparseSecondaryMap<LocationKey, usize>,
 
-    /// Lists all the processes that were created in the flow, same ID as `processes`
-    /// but with the type name of the tag.
-    pub(crate) _process_id_name: Vec<(usize, String)>,
-    pub(crate) _external_id_name: Vec<(usize, String)>,
-    pub(crate) _cluster_id_name: Vec<(usize, String)>,
+    /// Human-readable name for each location (Process, Cluster, External).
+    pub(crate) location_names: SecondaryMap<LocationKey, String>,
 
     pub(crate) _phantom: Invariant<'a>,
 }
@@ -44,7 +45,7 @@ pub struct SimFlow<'a> {
 impl<'a> SimFlow<'a> {
     /// Sets the maximum size of the given cluster in the simulation.
     pub fn with_cluster_size<C>(mut self, cluster: &Cluster<'a, C>, max_size: usize) -> Self {
-        self.cluster_max_sizes.insert(cluster.id(), max_size);
+        self.cluster_max_sizes.insert(cluster.key, max_size);
         self
     }
 
@@ -110,9 +111,8 @@ impl<'a> SimFlow<'a> {
             leaf.compile_network::<SimDeploy>(
                 &mut BTreeMap::new(),
                 &mut seen_tees_instantiate,
-                &self.processes,
-                &self.clusters,
-                &self.externals,
+                &self.location_nodes,
+                &self.external_nodes,
             );
         });
 

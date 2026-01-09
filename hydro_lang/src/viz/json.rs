@@ -69,27 +69,22 @@ pub struct HydroJson<W> {
     write: W,
     nodes: Vec<serde_json::Value>,
     edges: Vec<serde_json::Value>,
-    locations: HashMap<usize, (String, Vec<usize>)>, // location_id -> (label, node_ids)
-    node_locations: HashMap<usize, usize>,           // node_id -> location_id
+    /// location_id -> (label, node_ids)
+    locations: HashMap<usize, (String, Vec<usize>)>,
+    /// node_id -> location_id
+    node_locations: HashMap<usize, usize>,
     edge_count: usize,
-    // Type name mappings
-    process_names: HashMap<usize, String>,
-    cluster_names: HashMap<usize, String>,
-    external_names: HashMap<usize, String>,
-    // Store backtraces for hierarchy generation
+    /// Map from raw location IDs to location names.
+    location_names: HashMap<usize, String>,
+    /// Store backtraces for hierarchy generation.
     node_backtraces: HashMap<usize, Backtrace>,
-    // Config flags
+    /// Config flags.
     use_short_labels: bool,
 }
 
 impl<W> HydroJson<W> {
     pub fn new(write: W, config: &super::render::HydroWriteConfig) -> Self {
-        let process_names: HashMap<usize, String> =
-            config.process_id_name.iter().cloned().collect();
-        let cluster_names: HashMap<usize, String> =
-            config.cluster_id_name.iter().cloned().collect();
-        let external_names: HashMap<usize, String> =
-            config.external_id_name.iter().cloned().collect();
+        let location_names = config.location_names.iter().cloned().collect();
 
         Self {
             write,
@@ -98,9 +93,7 @@ impl<W> HydroJson<W> {
             locations: HashMap::new(),
             node_locations: HashMap::new(),
             edge_count: 0,
-            process_names,
-            cluster_names,
-            external_names,
+            location_names,
             node_backtraces: HashMap::new(),
             use_short_labels: config.use_short_labels,
         }
@@ -466,36 +459,11 @@ where
         location_id: usize,
         location_type: &str,
     ) -> Result<(), Self::Err> {
-        let location_label = match location_type {
-            "Process" => {
-                if let Some(name) = self.process_names.get(&location_id) {
-                    // Use default name if the type name is just "()" (unit type)
-                    if name == "()" {
-                        format!("Process {}", location_id)
-                    } else {
-                        name.clone()
-                    }
-                } else {
-                    format!("Process {}", location_id)
-                }
-            }
-            "Cluster" => {
-                if let Some(name) = self.cluster_names.get(&location_id) {
-                    name.clone()
-                } else {
-                    format!("Cluster {}", location_id)
-                }
-            }
-            "External" => {
-                if let Some(name) = self.external_names.get(&location_id) {
-                    name.clone()
-                } else {
-                    format!("External {}", location_id)
-                }
-            }
-            _ => location_type.to_string(),
+        let location_label = if let Some(location_name) = self.location_names.get(&location_id) {
+            format!("{} {}", location_type, location_name)
+        } else {
+            format!("{} {}", location_type, location_id)
         };
-
         self.locations
             .insert(location_id, (location_label, Vec::new()));
         Ok(())
@@ -1048,9 +1016,7 @@ impl<W> HydroJson<W> {
 /// Create JSON from Hydro IR with type names
 pub fn hydro_ir_to_json(
     ir: &[HydroRoot],
-    process_names: Vec<(usize, String)>,
-    cluster_names: Vec<(usize, String)>,
-    external_names: Vec<(usize, String)>,
+    location_names: &[(usize, String)],
 ) -> Result<String, Box<dyn std::error::Error>> {
     let mut output = String::new();
 
@@ -1058,9 +1024,7 @@ pub fn hydro_ir_to_json(
         show_metadata: false,
         show_location_groups: true,
         use_short_labels: true, // Default to short labels
-        process_id_name: process_names,
-        cluster_id_name: cluster_names,
-        external_id_name: external_names,
+        location_names,
     };
 
     super::render::write_hydro_ir_json(&mut output, ir, &config)?;
@@ -1071,14 +1035,10 @@ pub fn hydro_ir_to_json(
 /// Open JSON visualization in browser using the docs visualizer with URL-encoded data
 pub fn open_json_browser(
     ir: &[HydroRoot],
-    process_names: Vec<(usize, String)>,
-    cluster_names: Vec<(usize, String)>,
-    external_names: Vec<(usize, String)>,
+    location_names: &[(usize, String)],
 ) -> Result<(), Box<dyn std::error::Error>> {
     let config = super::render::HydroWriteConfig {
-        process_id_name: process_names,
-        cluster_id_name: cluster_names,
-        external_id_name: external_names,
+        location_names,
         ..Default::default()
     };
 
@@ -1089,15 +1049,11 @@ pub fn open_json_browser(
 /// Save JSON to file using the consolidated debug utilities
 pub fn save_json(
     ir: &[HydroRoot],
-    process_names: Vec<(usize, String)>,
-    cluster_names: Vec<(usize, String)>,
-    external_names: Vec<(usize, String)>,
+    location_names: &[(usize, String)],
     filename: &str,
 ) -> Result<std::path::PathBuf, Box<dyn std::error::Error>> {
     let config = super::render::HydroWriteConfig {
-        process_id_name: process_names,
-        cluster_id_name: cluster_names,
-        external_id_name: external_names,
+        location_names,
         ..Default::default()
     };
 
@@ -1112,8 +1068,6 @@ pub fn open_browser(
 ) -> Result<(), Box<dyn std::error::Error>> {
     open_json_browser(
         built_flow.ir(),
-        built_flow.process_id_name().clone(),
-        built_flow.cluster_id_name().clone(),
-        built_flow.external_id_name().clone(),
+        built_flow.location_names(),
     )
 }

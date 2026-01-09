@@ -6,9 +6,7 @@ use crate::viz::render::HydroWriteConfig;
 /// Graph generation API for built flows
 pub struct GraphApi<'a> {
     ir: &'a [HydroRoot],
-    process_id_name: &'a [(usize, String)],
-    cluster_id_name: &'a [(usize, String)],
-    external_id_name: &'a [(usize, String)],
+    location_names: &'a [(usize, String)],
 }
 
 /// Graph output format
@@ -38,18 +36,8 @@ impl GraphFormat {
 }
 
 impl<'a> GraphApi<'a> {
-    pub fn new(
-        ir: &'a [HydroRoot],
-        process_id_name: &'a [(usize, String)],
-        cluster_id_name: &'a [(usize, String)],
-        external_id_name: &'a [(usize, String)],
-    ) -> Self {
-        Self {
-            ir,
-            process_id_name,
-            cluster_id_name,
-            external_id_name,
-        }
+    pub fn new(ir: &'a [HydroRoot], location_names: &'a [(usize, String)]) -> Self {
+        Self { ir, location_names }
     }
 
     /// Convert configuration options to HydroWriteConfig
@@ -63,9 +51,7 @@ impl<'a> GraphApi<'a> {
             show_metadata,
             show_location_groups,
             use_short_labels,
-            process_id_name: self.process_id_name.to_vec(),
-            cluster_id_name: self.cluster_id_name.to_vec(),
-            external_id_name: self.external_id_name.to_vec(),
+            location_names: self.location_names,
         }
     }
 
@@ -379,29 +365,25 @@ mod tests {
     #[test]
     fn test_graph_api_creation() {
         let ir = vec![];
-        let process_id_name = vec![(0, "test_process".to_string())];
-        let cluster_id_name = vec![];
-        let external_id_name = vec![];
+        let location_names = vec![(0, "test_process".to_string())];
 
-        let api = GraphApi::new(&ir, &process_id_name, &cluster_id_name, &external_id_name);
+        let api = GraphApi::new(&ir, &location_names);
 
         // Test config creation
         let config = api.to_hydro_config(true, true, false);
         assert!(config.show_metadata);
         assert!(config.show_location_groups);
         assert!(!config.use_short_labels);
-        assert_eq!(config.process_id_name.len(), 1);
-        assert_eq!(config.process_id_name[0].1, "test_process");
+        assert_eq!(config.location_names.len(), 1);
+        assert_eq!(config.location_names[0].1, "test_process");
     }
 
     #[test]
     fn test_string_generation() {
         let ir = vec![];
-        let process_id_name = vec![(0, "test_process".to_string())];
-        let cluster_id_name = vec![];
-        let external_id_name = vec![];
+        let location_names = vec![(0, "test_process".to_string())];
 
-        let api = GraphApi::new(&ir, &process_id_name, &cluster_id_name, &external_id_name);
+        let api = GraphApi::new(&ir, &location_names);
 
         // Test that string generation methods don't panic and return some content
         let mermaid = api.mermaid_to_string(true, true, false);

@@ -6,17 +6,18 @@
 
 use serde::{Deserialize, Serialize};
 
+use super::LocationKey;
 #[cfg(stageleft_runtime)]
 use crate::compile::{
     builder::FlowState,
     ir::{CollectionKind, HydroIrMetadata},
 };
 
-#[expect(missing_docs, reason = "TODO")]
+/// An ID representing a location, including "virtual" locations (atomic/tick).
 #[derive(PartialEq, Eq, PartialOrd, Ord, Clone, Debug, Hash, Serialize, Deserialize)]
 pub enum LocationId {
-    Process(usize),
-    Cluster(usize),
+    Process(LocationKey),
+    Cluster(LocationKey),
     Atomic(
         /// The tick that the atomic region is associated with.
         Box<LocationId>,
@@ -51,7 +52,7 @@ impl LocationId {
         }
     }
 
-    pub fn raw_id(&self) -> usize {
+    pub fn key(&self) -> LocationKey {
         match self {
             LocationId::Process(id) => *id,
             LocationId::Cluster(id) => *id,

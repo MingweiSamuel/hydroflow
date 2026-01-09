@@ -5,6 +5,7 @@ use serde::de::DeserializeOwned;
 
 use crate::compile::builder::FlowState;
 use crate::live_collections::stream::{ExactlyOnce, Ordering, Retries, TotalOrder};
+use crate::location::LocationKey;
 use crate::staging_util::Invariant;
 
 pub enum NotMany {}
@@ -83,7 +84,7 @@ where
 }
 
 pub struct External<'a, Tag> {
-    pub(crate) id: usize,
+    pub(crate) key: LocationKey,
 
     pub(crate) flow_state: FlowState,
 
@@ -93,7 +94,7 @@ pub struct External<'a, Tag> {
 impl<P> Clone for External<'_, P> {
     fn clone(&self) -> Self {
         External {
-            id: self.id,
+            key: self.key,
             flow_state: self.flow_state.clone(),
             _phantom: PhantomData,
         }
