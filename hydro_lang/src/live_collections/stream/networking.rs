@@ -304,7 +304,7 @@ impl<'a, T, L, B: Boundedness, O: Ordering, R: Retries> Stream<T, Process<'a, L>
     /// # use hydro_lang::prelude::*;
     /// # use futures::StreamExt;
     /// # tokio_test::block_on(async move {
-    /// let flow = FlowBuilder::new();
+    /// let mut flow = FlowBuilder::new();
     /// let process = flow.process::<()>();
     /// let numbers: Stream<_, Process<_>, Unbounded> = process.source_iter(q!(vec![1, 2, 3]));
     /// let external = flow.external::<()>();
@@ -339,7 +339,7 @@ impl<'a, T, L, B: Boundedness, O: Ordering, R: Retries> Stream<T, Process<'a, L>
         flow_state_borrow.next_external_out += 1;
 
         flow_state_borrow.push_root(HydroRoot::SendExternal {
-            to_external_id: other.id,
+            to_external_key: other.key,
             to_key: external_key,
             to_many: false,
             unpaired: true,
@@ -350,7 +350,7 @@ impl<'a, T, L, B: Boundedness, O: Ordering, R: Retries> Stream<T, Process<'a, L>
         });
 
         ExternalBincodeStream {
-            process_id: other.id,
+            process_key: other.key,
             port_id: external_key,
             _phantom: PhantomData,
         }
@@ -363,8 +363,10 @@ impl<'a, T, L, B: Boundedness, O: Ordering, R: Retries> Stream<T, Process<'a, L>
     where
         T: Serialize + DeserializeOwned,
     {
+        use crate::location::LocationKey;
+
         let external_location: External<'a, ()> = External {
-            id: 0,
+            key: LocationKey::FIRST,
             flow_state: self.location.flow_state().clone(),
             _phantom: PhantomData,
         };
@@ -1165,7 +1167,7 @@ mod tests {
     fn sim_send_bincode_o2o() {
         use crate::networking::TCP;
 
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
         let node2 = flow.process::<()>();
 
@@ -1193,7 +1195,7 @@ mod tests {
     #[cfg(feature = "sim")]
     #[test]
     fn sim_send_bincode_m2o() {
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let cluster = flow.cluster::<()>();
         let node = flow.process::<()>();
 
@@ -1226,7 +1228,7 @@ mod tests {
     #[cfg(feature = "sim")]
     #[test]
     fn sim_send_bincode_multiple_m2o() {
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let cluster1 = flow.cluster::<()>();
         let cluster2 = flow.cluster::<()>();
         let node = flow.process::<()>();
@@ -1272,7 +1274,7 @@ mod tests {
     #[cfg(feature = "sim")]
     #[test]
     fn sim_send_bincode_o2m() {
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let cluster = flow.cluster::<()>();
         let node = flow.process::<()>();
 
@@ -1303,7 +1305,7 @@ mod tests {
     #[cfg(feature = "sim")]
     #[test]
     fn sim_broadcast_bincode_o2m() {
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let cluster = flow.cluster::<()>();
         let node = flow.process::<()>();
 
@@ -1342,7 +1344,7 @@ mod tests {
     #[cfg(feature = "sim")]
     #[test]
     fn sim_send_bincode_m2m() {
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let cluster = flow.cluster::<()>();
         let node = flow.process::<()>();
 

@@ -1445,7 +1445,7 @@ mod tests {
     async fn key_count_bounded_value() {
         let mut deployment = Deployment::new();
 
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
         let external = flow.external::<()>();
 
@@ -1483,7 +1483,7 @@ mod tests {
     async fn key_count_unbounded_value() {
         let mut deployment = Deployment::new();
 
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
         let external = flow.external::<()>();
 
@@ -1530,7 +1530,7 @@ mod tests {
     async fn into_singleton_bounded_value() {
         let mut deployment = Deployment::new();
 
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
         let external = flow.external::<()>();
 
@@ -1577,7 +1577,7 @@ mod tests {
     async fn into_singleton_unbounded_value() {
         let mut deployment = Deployment::new();
 
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
         let external = flow.external::<()>();
 
@@ -1640,7 +1640,7 @@ mod tests {
     #[cfg(feature = "sim")]
     #[test]
     fn sim_unbounded_singleton_snapshot() {
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
 
         let (input_port, input) = node.sim_input();
@@ -1669,7 +1669,7 @@ mod tests {
     async fn get_many_outer_join() {
         let mut deployment = Deployment::new();
 
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
         let external = flow.external::<()>();
 

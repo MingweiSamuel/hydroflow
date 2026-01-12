@@ -12,16 +12,13 @@ use super::builder::SimBuilder;
 use super::compiled::{CompiledSim, CompiledSimInstance};
 use super::graph::{SimDeploy, SimExternal, SimNode, compile_sim, create_sim_graph_trybuild};
 use crate::compile::ir::HydroRoot;
-use crate::location::dynamic::LocationId;
-use crate::location::{Location, LocationKey};
+use crate::location::LocationKey;
 use crate::prelude::Cluster;
 use crate::staging_util::Invariant;
 
 /// A not-yet-compiled simulator for a Hydro program.
 pub struct SimFlow<'a> {
     pub(crate) ir: Vec<HydroRoot>,
-
-    pub(crate) external_ports: Rc<RefCell<(Vec<usize>, usize)>>,
 
     /// SimNode for each Process.
     pub(crate) processes: SparseSecondaryMap<LocationKey, SimNode>,
@@ -30,11 +27,13 @@ pub struct SimFlow<'a> {
     /// SimExternal for each External.
     pub(crate) externals: SparseSecondaryMap<LocationKey, SimExternal>,
 
+    pub(crate) cluster_max_sizes: SparseSecondaryMap<LocationKey, usize>,
+
+    pub(crate) external_ports: Rc<RefCell<(Vec<usize>, usize)>>,
+
     /// A mapping from external "keys", which are used for looking up connections, to the IDs
     /// of the external channels created in the simulation.
     pub(crate) external_registered: Rc<RefCell<HashMap<usize, usize>>>,
-
-    pub(crate) cluster_max_sizes: SparseSecondaryMap<LocationKey, usize>,
 
     /// Human-readable name for each location (Process, Cluster, External).
     pub(crate) location_names: SecondaryMap<LocationKey, String>,
@@ -84,22 +83,20 @@ impl<'a> SimFlow<'a> {
 
     /// Compiles the simulation into a dynamically loadable library, and returns a handle to it.
     pub fn compiled(mut self) -> CompiledSim {
-        use std::collections::BTreeMap;
-
         use dfir_lang::graph::{eliminate_extra_unions_tees, partition_graph};
 
         let mut sim_emit = SimBuilder {
-            process_graphs: BTreeMap::new(),
-            cluster_graphs: BTreeMap::new(),
-            process_tick_dfirs: BTreeMap::new(),
-            cluster_tick_dfirs: BTreeMap::new(),
+            process_graphs: SparseSecondaryMap::new(),
+            cluster_graphs: SparseSecondaryMap::new(),
+            process_tick_dfirs: SparseSecondaryMap::new(),
+            cluster_tick_dfirs: SparseSecondaryMap::new(),
             extra_stmts_global: vec![],
-            extra_stmts_cluster: BTreeMap::new(),
+            extra_stmts_cluster: SparseSecondaryMap::new(),
             next_hoff_id: 0,
         };
 
         self.externals.insert(
-            0,
+            LocationKey::FIRST,
             SimExternal {
                 external_ports: self.external_ports.clone(),
                 registered: self.external_registered.clone(),
@@ -109,10 +106,11 @@ impl<'a> SimFlow<'a> {
         let mut seen_tees_instantiate: HashMap<_, _> = HashMap::new();
         self.ir.iter_mut().for_each(|leaf| {
             leaf.compile_network::<SimDeploy>(
-                &mut BTreeMap::new(),
+                &mut SecondaryMap::new(),
                 &mut seen_tees_instantiate,
-                &self.location_nodes,
-                &self.external_nodes,
+                &self.processes,
+                &self.clusters,
+                &self.externals,
             );
         });
 
@@ -133,7 +131,7 @@ impl<'a> SimFlow<'a> {
                     partition_graph(flat_graph).expect("Failed to partition (cycle detected)."),
                 )
             })
-            .collect::<BTreeMap<_, _>>();
+            .collect::<SparseSecondaryMap<_, _>>();
 
         let cluster_graphs = sim_emit
             .cluster_graphs
@@ -146,7 +144,7 @@ impl<'a> SimFlow<'a> {
                     partition_graph(flat_graph).expect("Failed to partition (cycle detected)."),
                 )
             })
-            .collect::<BTreeMap<_, _>>();
+            .collect::<SparseSecondaryMap<_, _>>();
 
         let process_tick_graphs = sim_emit
             .process_tick_dfirs
@@ -159,7 +157,7 @@ impl<'a> SimFlow<'a> {
                     partition_graph(flat_graph).expect("Failed to partition (cycle detected)."),
                 )
             })
-            .collect::<BTreeMap<_, _>>();
+            .collect::<SparseSecondaryMap<_, _>>();
 
         let cluster_tick_graphs = sim_emit
             .cluster_tick_dfirs
@@ -172,12 +170,11 @@ impl<'a> SimFlow<'a> {
                     partition_graph(flat_graph).expect("Failed to partition (cycle detected)."),
                 )
             })
-            .collect::<BTreeMap<_, _>>();
+            .collect::<SparseSecondaryMap<_, _>>();
 
         for c in self.clusters.keys() {
             assert!(
-                self.cluster_max_sizes
-                    .contains_key(&LocationId::Cluster(*c)),
+                self.cluster_max_sizes.contains_key(c),
                 "Cluster {:?} missing max size; call with_cluster_size() before compiled()",
                 c
             );

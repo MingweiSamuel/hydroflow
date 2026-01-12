@@ -65,14 +65,14 @@ impl<'a, C> Location<'a> for Cluster<'a, C> {
 }
 
 pub struct ClusterIds<'a> {
-    pub id: usize,
+    pub key: LocationKey,
     pub _phantom: PhantomData<&'a ()>,
 }
 
 impl<'a> Clone for ClusterIds<'a> {
     fn clone(&self) -> Self {
         Self {
-            id: self.id,
+            key: self.key,
             _phantom: Default::default(),
         }
     }
@@ -86,7 +86,7 @@ impl<'a, Ctx> FreeVariableWithContextWithProps<Ctx, ()> for ClusterIds<'a> {
         Self: Sized,
     {
         let ident = syn::Ident::new(
-            &format!("__hydro_lang_cluster_ids_{}", self.id),
+            &format!("__hydro_lang_cluster_ids_{:?}", self.key),
             Span::call_site(),
         );
 
@@ -183,7 +183,7 @@ mod tests {
     #[cfg(feature = "sim")]
     #[test]
     fn sim_cluster_self_id() {
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let cluster1 = flow.cluster::<()>();
         let cluster2 = flow.cluster::<()>();
 
@@ -216,7 +216,7 @@ mod tests {
     fn sim_cluster_with_tick() {
         use std::collections::HashMap;
 
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let cluster = flow.cluster::<()>();
         let node = flow.process::<()>();
 
@@ -257,7 +257,7 @@ mod tests {
     #[cfg(feature = "sim")]
     #[test]
     fn sim_cluster_membership() {
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let cluster = flow.cluster::<()>();
         let node = flow.process::<()>();
 

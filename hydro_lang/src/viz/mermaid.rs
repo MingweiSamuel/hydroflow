@@ -1,7 +1,7 @@
 use std::borrow::Cow;
 use std::fmt::Write;
 
-use super::render::{HydroEdgeProp, HydroGraphWrite, HydroNodeType, IndentedGraphWriter};
+use super::render::{HydroEdgeProp, HydroGraphWrite, HydroNodeType, HydroWriteConfig, IndentedGraphWriter};
 
 /// Escapes a string for use in a mermaid graph label.
 pub fn escape_mermaid(string: &str) -> String {
@@ -22,12 +22,12 @@ pub fn escape_mermaid(string: &str) -> String {
 }
 
 /// Mermaid graph writer for Hydro IR.
-pub struct HydroMermaid<W> {
-    base: IndentedGraphWriter<W>,
+pub struct HydroMermaid<'a, W> {
+    base: IndentedGraphWriter<'a, W>,
     link_count: usize,
 }
 
-impl<W> HydroMermaid<W> {
+impl<'a, W> HydroMermaid<'a, W> {
     pub fn new(write: W) -> Self {
         Self {
             base: IndentedGraphWriter::new(write),
@@ -35,7 +35,7 @@ impl<W> HydroMermaid<W> {
         }
     }
 
-    pub fn new_with_config(write: W, config: &super::render::HydroWriteConfig) -> Self {
+    pub fn new_with_config(write: W, config: HydroWriteConfig<'a>) -> Self {
         Self {
             base: IndentedGraphWriter::new_with_config(write, config),
             link_count: 0,
@@ -43,7 +43,7 @@ impl<W> HydroMermaid<W> {
     }
 }
 
-impl<W> HydroGraphWrite for HydroMermaid<W>
+impl<W> HydroGraphWrite for HydroMermaid<'_, W>
 where
     W: Write,
 {
@@ -230,13 +230,11 @@ where
 pub fn open_browser(
     built_flow: &crate::compile::built::BuiltFlow,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let config = super::render::HydroWriteConfig {
+    let config = HydroWriteConfig {
         show_metadata: false,
         show_location_groups: true,
         use_short_labels: true, // Default to short labels
-        process_id_name: built_flow.process_id_name().clone(),
-        cluster_id_name: built_flow.cluster_id_name().clone(),
-        external_id_name: built_flow.external_id_name().clone(),
+        location_names: built_flow.location_names(),
     };
 
     // Use the existing debug function

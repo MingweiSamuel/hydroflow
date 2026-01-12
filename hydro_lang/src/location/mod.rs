@@ -20,9 +20,11 @@ use std::time::Duration;
 use bytes::{Bytes, BytesMut};
 use futures::stream::Stream as FuturesStream;
 use proc_macro2::Span;
+use quote::quote;
 use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
-use slotmap::new_key_type;
+use slotmap::{Key, KeyData, SlotMap, new_key_type};
+use stageleft::runtime_support::{FreeVariableWithContextWithProps, QuoteTokens};
 use stageleft::{QuotedWithContext, q, quote_type};
 use syn::parse_quote;
 use tokio_util::codec::{Decoder, Encoder, LengthDelimitedCodec};
@@ -88,6 +90,33 @@ pub(crate) fn check_matching_location<'a, L: Location<'a>>(l1: &L, l2: &L) {
 new_key_type! {
     /// A unique identifier for a clock tick.
     pub struct LocationKey;
+}
+
+impl LocationKey {
+    pub const FIRST: Self = LocationKey(KeyData::from_ffi(0x0000000100000001));
+}
+
+impl<Ctx> FreeVariableWithContextWithProps<Ctx, ()> for LocationKey {
+    type O = LocationKey;
+
+    fn to_tokens(self, _ctx: &Ctx) -> (QuoteTokens, ())
+    where
+        Self: Sized,
+    {
+        let root = get_this_crate();
+        let value = self.data().as_ffi();
+        (
+            QuoteTokens {
+                prelude: None,
+                expr: Some(quote! {
+                    <#root::location::LocationKey as ::core::convert::From<_>>::from(
+                        #root::runtime_support::slotmap::KeyData::from_ffi(#value)
+                    )
+                }),
+            },
+            (),
+        )
+    }
 }
 
 #[derive(Clone, Copy, Debug, Eq, Hash, PartialEq)]
@@ -272,7 +301,7 @@ pub trait Location<'a>: dynamic::DynLocation {
 
         (
             ExternalBincodeSink {
-                process_id: from.id,
+                process_key: from.key,
                 port_id: port.port_id,
                 _phantom: PhantomData,
             },
@@ -292,7 +321,7 @@ pub trait Location<'a>: dynamic::DynLocation {
         T: Serialize + DeserializeOwned,
     {
         let external_location: External<'a, ()> = External {
-            id: 0,
+            key: LocationKey::FIRST,
             flow_state: self.flow_state().clone(),
             _phantom: PhantomData,
         };
@@ -317,7 +346,7 @@ pub trait Location<'a>: dynamic::DynLocation {
     /// # use bytes::Bytes;
     /// # use hydro_lang::location::NetworkHint;
     /// # use tokio_util::codec::LengthDelimitedCodec;
-    /// # let flow = FlowBuilder::new();
+    /// # let mut flow = FlowBuilder::new();
     /// let node = flow.process::<()>();
     /// let external = flow.external::<()>();
     /// let (port, incoming, outgoing) =
@@ -371,7 +400,7 @@ pub trait Location<'a>: dynamic::DynLocation {
         let mut flow_state_borrow = self.flow_state().borrow_mut();
 
         flow_state_borrow.push_root(HydroRoot::SendExternal {
-            to_external_id: from.id,
+            to_external_key: from.key,
             to_key: next_external_port_id,
             to_many: false,
             unpaired: false,
@@ -390,7 +419,7 @@ pub trait Location<'a>: dynamic::DynLocation {
         > = Stream::new(
             self.clone(),
             HydroNode::ExternalInput {
-                from_external_id: from.id,
+                from_external_key: from.key,
                 from_key: next_external_port_id,
                 from_many: false,
                 codec_type: quote_type::<Codec>().into(),
@@ -409,7 +438,7 @@ pub trait Location<'a>: dynamic::DynLocation {
 
         (
             ExternalBytesPort {
-                process_id: from.id,
+                process_key: from.key,
                 port_id: next_external_port_id,
                 _phantom: PhantomData,
             },
@@ -451,7 +480,7 @@ pub trait Location<'a>: dynamic::DynLocation {
         };
 
         flow_state_borrow.push_root(HydroRoot::SendExternal {
-            to_external_id: from.id,
+            to_external_key: from.key,
             to_key: next_external_port_id,
             to_many: false,
             unpaired: false,
@@ -473,7 +502,7 @@ pub trait Location<'a>: dynamic::DynLocation {
         let raw_stream: Stream<InT, Self, Unbounded, TotalOrder, ExactlyOnce> = Stream::new(
             self.clone(),
             HydroNode::ExternalInput {
-                from_external_id: from.id,
+                from_external_key: from.key,
                 from_key: next_external_port_id,
                 from_many: false,
                 codec_type: quote_type::<LengthDelimitedCodec>().into(),
@@ -492,7 +521,7 @@ pub trait Location<'a>: dynamic::DynLocation {
 
         (
             ExternalBincodeBidi {
-                process_id: from.id,
+                process_key: from.key,
                 port_id: next_external_port_id,
                 _phantom: PhantomData,
             },
@@ -527,7 +556,7 @@ pub trait Location<'a>: dynamic::DynLocation {
         let mut flow_state_borrow = self.flow_state().borrow_mut();
 
         flow_state_borrow.push_root(HydroRoot::SendExternal {
-            to_external_id: from.id,
+            to_external_key: from.key,
             to_key: next_external_port_id,
             to_many: true,
             unpaired: false,
@@ -546,7 +575,7 @@ pub trait Location<'a>: dynamic::DynLocation {
         > = Stream::new(
             self.clone(),
             HydroNode::ExternalInput {
-                from_external_id: from.id,
+                from_external_key: from.key,
                 from_key: next_external_port_id,
                 from_many: true,
                 codec_type: quote_type::<Codec>().into(),
@@ -565,8 +594,8 @@ pub trait Location<'a>: dynamic::DynLocation {
 
         let membership_stream_ident = syn::Ident::new(
             &format!(
-                "__hydro_deploy_many_{}_{}_membership",
-                from.id, next_external_port_id
+                "__hydro_deploy_many_{:?}_{}_membership",
+                from.key, next_external_port_id
             ),
             Span::call_site(),
         );
@@ -595,7 +624,7 @@ pub trait Location<'a>: dynamic::DynLocation {
 
         (
             ExternalBytesPort {
-                process_id: from.id,
+                process_key: from.key,
                 port_id: next_external_port_id,
                 _phantom: PhantomData,
             },
@@ -647,7 +676,7 @@ pub trait Location<'a>: dynamic::DynLocation {
         };
 
         flow_state_borrow.push_root(HydroRoot::SendExternal {
-            to_external_id: from.id,
+            to_external_key: from.key,
             to_key: next_external_port_id,
             to_many: true,
             unpaired: false,
@@ -670,7 +699,7 @@ pub trait Location<'a>: dynamic::DynLocation {
             KeyedStream::new(
                 self.clone(),
                 HydroNode::ExternalInput {
-                    from_external_id: from.id,
+                    from_external_key: from.key,
                     from_key: next_external_port_id,
                     from_many: true,
                     codec_type: quote_type::<LengthDelimitedCodec>().into(),
@@ -690,8 +719,8 @@ pub trait Location<'a>: dynamic::DynLocation {
 
         let membership_stream_ident = syn::Ident::new(
             &format!(
-                "__hydro_deploy_many_{}_{}_membership",
-                from.id, next_external_port_id
+                "__hydro_deploy_many_{:?}_{}_membership",
+                from.key, next_external_port_id
             ),
             Span::call_site(),
         );
@@ -720,7 +749,7 @@ pub trait Location<'a>: dynamic::DynLocation {
 
         (
             ExternalBincodeBidi {
-                process_id: from.id,
+                process_key: from.key,
                 port_id: next_external_port_id,
                 _phantom: PhantomData,
             },
@@ -839,6 +868,12 @@ pub trait Location<'a>: dynamic::DynLocation {
     }
 }
 
+#[test]
+fn location_key_test() {
+    let first_key = SlotMap::with_key().insert(());
+    assert_eq!(LocationKey::FIRST, first_key);
+}
+
 #[cfg(feature = "deploy")]
 #[cfg(test)]
 mod tests {
@@ -858,7 +893,7 @@ mod tests {
     async fn top_level_singleton_replay_cardinality() {
         let mut deployment = Deployment::new();
 
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
         let external = flow.external::<()>();
 
@@ -901,7 +936,7 @@ mod tests {
     async fn tick_singleton_replay_cardinality() {
         let mut deployment = Deployment::new();
 
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
         let external = flow.external::<()>();
 
@@ -939,7 +974,7 @@ mod tests {
     async fn external_bytes() {
         let mut deployment = Deployment::new();
 
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let first_node = flow.process::<()>();
         let external = flow.external::<()>();
 
@@ -967,7 +1002,7 @@ mod tests {
     async fn multi_external_source() {
         let mut deployment = Deployment::new();
 
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let first_node = flow.process::<()>();
         let external = flow.external::<()>();
 
@@ -1002,7 +1037,7 @@ mod tests {
     async fn second_connection_only_multi_source() {
         let mut deployment = Deployment::new();
 
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let first_node = flow.process::<()>();
         let external = flow.external::<()>();
 
@@ -1034,7 +1069,7 @@ mod tests {
     async fn multi_external_bytes() {
         let mut deployment = Deployment::new();
 
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let first_node = flow.process::<()>();
         let external = flow.external::<()>();
 
@@ -1073,7 +1108,7 @@ mod tests {
     #[tokio::test]
     async fn single_client_external_bytes() {
         let mut deployment = Deployment::new();
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let first_node = flow.process::<()>();
         let external = flow.external::<()>();
         let (port, input, complete_sink) = first_node
@@ -1105,7 +1140,7 @@ mod tests {
     async fn echo_external_bytes() {
         let mut deployment = Deployment::new();
 
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let first_node = flow.process::<()>();
         let external = flow.external::<()>();
 
@@ -1137,7 +1172,7 @@ mod tests {
     async fn echo_external_bincode() {
         let mut deployment = Deployment::new();
 
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let first_node = flow.process::<()>();
         let external = flow.external::<()>();
 

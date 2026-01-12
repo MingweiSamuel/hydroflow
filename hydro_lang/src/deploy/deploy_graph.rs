@@ -21,6 +21,7 @@ use nameof::name_of;
 use proc_macro2::Span;
 use serde::Serialize;
 use serde::de::DeserializeOwned;
+use slotmap::SparseSecondaryMap;
 use stageleft::{QuotedWithContext, RuntimeData};
 use syn::parse_quote;
 
@@ -31,7 +32,7 @@ use crate::compile::deploy_provider::{
 use crate::compile::trybuild::generate::{HYDRO_RUNTIME_FEATURES, create_graph_trybuild};
 use crate::location::dynamic::LocationId;
 use crate::location::member_id::TaglessMemberId;
-use crate::location::{MembershipEvent, NetworkHint};
+use crate::location::{LocationKey, MembershipEvent, NetworkHint};
 use crate::staging_util::get_this_crate;
 
 /// Deployment backend that uses [`hydro_deploy`] for provisioning and launching.
@@ -45,7 +46,8 @@ impl<'a> Deploy<'a> for HydroDeploy {
     type Process = DeployNode;
     type Cluster = DeployCluster;
     type External = DeployExternal;
-    type Meta = HashMap<usize, Vec<TaglessMemberId>>;
+    /// Map from Cluster location ID to member IDs.
+    type Meta = SparseSecondaryMap<LocationKey, Vec<TaglessMemberId>>;
     type GraphId = ();
     type Port = String;
     type ExternalRawPort = CustomClientPort;
@@ -397,7 +399,7 @@ impl<'a> Deploy<'a> for HydroDeploy {
     }
 
     fn cluster_ids(
-        of_cluster: usize,
+        of_cluster: LocationKey,
     ) -> impl QuotedWithContext<'a, &'a [TaglessMemberId], ()> + Clone + 'a {
         cluster_members(RuntimeData::new("__hydro_lang_trybuild_cli"), of_cluster)
     }
@@ -701,7 +703,8 @@ impl<'a> RegisterPort<'a, HydroDeploy> for DeployExternal {
 
 impl Node for DeployExternal {
     type Port = String;
-    type Meta = HashMap<usize, Vec<TaglessMemberId>>;
+    /// Map from Cluster location ID to member IDs.
+    type Meta = SparseSecondaryMap<LocationKey, Vec<TaglessMemberId>>;
     type InstantiateEnv = Deployment;
 
     fn next_port(&self) -> Self::Port {
@@ -726,7 +729,7 @@ impl Node for DeployExternal {
 }
 
 impl ExternalSpec<'_, HydroDeploy> for Arc<dyn Host> {
-    fn build(self, _id: usize, _name_hint: &str) -> DeployExternal {
+    fn build(self, _key: LocationKey, _name_hint: &str) -> DeployExternal {
         DeployExternal {
             next_port: Rc::new(RefCell::new(0)),
             host: self,
@@ -738,7 +741,7 @@ impl ExternalSpec<'_, HydroDeploy> for Arc<dyn Host> {
 }
 
 impl<H: Host + 'static> ExternalSpec<'_, HydroDeploy> for Arc<H> {
-    fn build(self, _id: usize, _name_hint: &str) -> DeployExternal {
+    fn build(self, _key: LocationKey, _name_hint: &str) -> DeployExternal {
         DeployExternal {
             next_port: Rc::new(RefCell::new(0)),
             host: self,
@@ -757,7 +760,7 @@ pub(crate) enum CrateOrTrybuild {
 #[expect(missing_docs, reason = "TODO")]
 #[derive(Clone)]
 pub struct DeployNode {
-    id: usize,
+    key: LocationKey,
     next_port: Rc<RefCell<usize>>,
     service_spec: Rc<RefCell<Option<CrateOrTrybuild>>>,
     underlying: Rc<RefCell<Option<Arc<RustCrateService>>>>,
@@ -771,7 +774,8 @@ impl DeployCrateWrapper for DeployNode {
 
 impl Node for DeployNode {
     type Port = String;
-    type Meta = HashMap<usize, Vec<TaglessMemberId>>;
+    /// Map from Cluster location ID to member IDs.
+    type Meta = SparseSecondaryMap<LocationKey, Vec<TaglessMemberId>>;
     type InstantiateEnv = Deployment;
 
     fn next_port(&self) -> String {
@@ -786,7 +790,7 @@ impl Node for DeployNode {
         underlying_node.as_ref().unwrap().update_meta(HydroMeta {
             clusters: meta.clone(),
             cluster_id: None,
-            subgraph_id: self.id,
+            subgraph_key: self.key,
         });
     }
 
@@ -834,7 +838,7 @@ impl DeployCrateWrapper for DeployClusterNode {
 #[expect(missing_docs, reason = "TODO")]
 #[derive(Clone)]
 pub struct DeployCluster {
-    id: usize,
+    key: LocationKey,
     next_port: Rc<RefCell<usize>>,
     cluster_spec: Rc<RefCell<Option<Vec<CrateOrTrybuild>>>>,
     members: Rc<RefCell<Vec<DeployClusterNode>>>,
@@ -850,7 +854,8 @@ impl DeployCluster {
 
 impl Node for DeployCluster {
     type Port = String;
-    type Meta = HashMap<usize, Vec<TaglessMemberId>>;
+    /// Map from Cluster location ID to member IDs.
+    type Meta = SparseSecondaryMap<LocationKey, Vec<TaglessMemberId>>;
     type InstantiateEnv = Deployment;
 
     fn next_port(&self) -> String {
@@ -915,7 +920,7 @@ impl Node for DeployCluster {
             })
             .collect::<Vec<_>>();
         meta.insert(
-            self.id,
+            self.key,
             (0..(cluster_nodes.len() as u32))
                 .map(TaglessMemberId::from_raw_id)
                 .collect(),
@@ -931,7 +936,7 @@ impl Node for DeployCluster {
             node.underlying.update_meta(HydroMeta {
                 clusters: meta.clone(),
                 cluster_id: Some(TaglessMemberId::from_raw_id(cluster_id as u32)),
-                subgraph_id: self.id,
+                subgraph_key: self.key,
             });
         }
     }
@@ -949,9 +954,9 @@ impl DeployProcessSpec {
 }
 
 impl ProcessSpec<'_, HydroDeploy> for DeployProcessSpec {
-    fn build(self, id: usize, _name_hint: &str) -> DeployNode {
+    fn build(self, key: LocationKey, _name_hint: &str) -> DeployNode {
         DeployNode {
-            id,
+            key,
             next_port: Rc::new(RefCell::new(0)),
             service_spec: Rc::new(RefCell::new(Some(CrateOrTrybuild::Crate(self.0, self.1)))),
             underlying: Rc::new(RefCell::new(None)),
@@ -960,10 +965,10 @@ impl ProcessSpec<'_, HydroDeploy> for DeployProcessSpec {
 }
 
 impl ProcessSpec<'_, HydroDeploy> for TrybuildHost {
-    fn build(mut self, id: usize, name_hint: &str) -> DeployNode {
-        self.name_hint = Some(format!("{} (process {id})", name_hint));
+    fn build(mut self, key: LocationKey, name_hint: &str) -> DeployNode {
+        self.name_hint = Some(format!("{} (process {:?})", name_hint, key));
         DeployNode {
-            id,
+            key,
             next_port: Rc::new(RefCell::new(0)),
             service_spec: Rc::new(RefCell::new(Some(CrateOrTrybuild::Trybuild(self)))),
             underlying: Rc::new(RefCell::new(None)),
@@ -983,9 +988,9 @@ impl DeployClusterSpec {
 }
 
 impl ClusterSpec<'_, HydroDeploy> for DeployClusterSpec {
-    fn build(self, id: usize, _name_hint: &str) -> DeployCluster {
+    fn build(self, key: LocationKey, _name_hint: &str) -> DeployCluster {
         DeployCluster {
-            id,
+            key,
             next_port: Rc::new(RefCell::new(0)),
             cluster_spec: Rc::new(RefCell::new(Some(
                 self.0
@@ -1000,10 +1005,10 @@ impl ClusterSpec<'_, HydroDeploy> for DeployClusterSpec {
 }
 
 impl<T: Into<TrybuildHost>, I: IntoIterator<Item = T>> ClusterSpec<'_, HydroDeploy> for I {
-    fn build(self, id: usize, name_hint: &str) -> DeployCluster {
-        let name_hint = format!("{} (cluster {id})", name_hint);
+    fn build(self, key: LocationKey, name_hint: &str) -> DeployCluster {
+        let name_hint = format!("{} (cluster {:?})", name_hint, key);
         DeployCluster {
-            id,
+            key,
             next_port: Rc::new(RefCell::new(0)),
             cluster_spec: Rc::new(RefCell::new(Some(
                 self.into_iter()

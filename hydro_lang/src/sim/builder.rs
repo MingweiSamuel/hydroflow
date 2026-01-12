@@ -1,13 +1,13 @@
-use std::collections::BTreeMap;
-
 use dfir_lang::graph::FlatGraphBuilder;
 use proc_macro2::Span;
 use quote::ToTokens;
+use slotmap::SparseSecondaryMap;
 use syn::parse_quote;
 
 use crate::compile::ir::{
     CollectionKind, DebugExpr, DfirBuilder, HydroIrOpMetadata, StreamOrder, StreamRetry,
 };
+use crate::location::LocationKey;
 use crate::location::dynamic::LocationId;
 
 /// A builder for DFIR graphs used in simulations.
@@ -27,23 +27,24 @@ use crate::location::dynamic::LocationId;
 /// elements from that buffer into the tick's DFIR graph with a separate handoff channel.
 pub struct SimBuilder {
     pub extra_stmts_global: Vec<syn::Stmt>,
-    pub extra_stmts_cluster: BTreeMap<LocationId, Vec<syn::Stmt>>,
-    pub process_graphs: BTreeMap<LocationId, FlatGraphBuilder>,
-    pub cluster_graphs: BTreeMap<LocationId, FlatGraphBuilder>,
-    pub process_tick_dfirs: BTreeMap<LocationId, FlatGraphBuilder>,
-    pub cluster_tick_dfirs: BTreeMap<LocationId, FlatGraphBuilder>,
+    pub extra_stmts_cluster: SparseSecondaryMap<LocationKey, Vec<syn::Stmt>>,
+    pub process_graphs: SparseSecondaryMap<LocationKey, FlatGraphBuilder>,
+    pub cluster_graphs: SparseSecondaryMap<LocationKey, FlatGraphBuilder>,
+    pub process_tick_dfirs: SparseSecondaryMap<LocationKey, FlatGraphBuilder>,
+    pub cluster_tick_dfirs: SparseSecondaryMap<LocationKey, FlatGraphBuilder>,
     pub next_hoff_id: usize,
 }
 
 impl SimBuilder {
-    fn add_extra_stmt_internal(&mut self, location: &LocationId, stmt: syn::Stmt) {
-        match location {
-            LocationId::Process(_) => {
+    fn add_extra_stmt_internal(&mut self, location_id: &LocationId, stmt: syn::Stmt) {
+        match location_id {
+            LocationId::Process(_key) => {
                 self.extra_stmts_global.push(stmt);
             }
-            LocationId::Cluster(_) => {
+            LocationId::Cluster(location_key) => {
                 self.extra_stmts_cluster
-                    .entry(location.clone())
+                    .entry(*location_key)
+                    .expect("location was removed")
                     .or_default()
                     .push(stmt);
             }
@@ -100,18 +101,30 @@ impl DfirBuilder for SimBuilder {
         true
     }
 
-    fn get_dfir_mut(&mut self, location: &LocationId) -> &mut FlatGraphBuilder {
-        match location {
-            LocationId::Process(_) => self.process_graphs.entry(location.clone()).or_default(),
-            LocationId::Cluster(_) => self.cluster_graphs.entry(location.clone()).or_default(),
+    fn get_dfir_mut(&mut self, location_id: &LocationId) -> &mut FlatGraphBuilder {
+        match location_id {
+            &LocationId::Process(location_key) => self
+                .process_graphs
+                .entry(location_key)
+                .expect("location was removed")
+                .or_default(),
+            &LocationId::Cluster(location_key) => self
+                .cluster_graphs
+                .entry(location_key)
+                .expect("location was removed")
+                .or_default(),
             LocationId::Atomic(tick) => self.get_dfir_mut(tick.as_ref()),
             LocationId::Tick(_, l) => match l.root() {
-                LocationId::Process(_) => {
-                    self.process_tick_dfirs.entry(location.clone()).or_default()
-                }
-                LocationId::Cluster(_) => {
-                    self.cluster_tick_dfirs.entry(location.clone()).or_default()
-                }
+                &LocationId::Process(location_key) => self
+                    .process_tick_dfirs
+                    .entry(location_key)
+                    .expect("location was removed")
+                    .or_default(),
+                &LocationId::Cluster(location_key) => self
+                    .cluster_tick_dfirs
+                    .entry(location_key)
+                    .expect("location was removed")
+                    .or_default(),
                 _ => unreachable!(),
             },
         }
@@ -728,7 +741,8 @@ impl DfirBuilder for SimBuilder {
                 });
 
                 self.extra_stmts_cluster
-                    .entry(from.clone())
+                    .entry(from.key())
+                    .expect("location was removed")
                     .or_default()
                     .push(syn::parse_quote! {
                         let #sink = #sink.clone();
@@ -784,7 +798,8 @@ impl DfirBuilder for SimBuilder {
                 });
 
                 self.extra_stmts_cluster
-                    .entry(to.clone())
+                    .entry(to.key())
+                    .expect("location was removed")
                     .or_default()
                     .push(syn::parse_quote! {
                         let #source = {
@@ -844,14 +859,14 @@ impl DfirBuilder for SimBuilder {
                 });
 
                 self.extra_stmts_cluster
-                    .entry(from.clone())
+                    .entry(from.key()).expect("location was removed")
                     .or_default()
                     .push(syn::parse_quote! {
                         let #sink = #sink.clone();
                     });
 
                 self.extra_stmts_cluster
-                    .entry(to.clone())
+                    .entry(to.key()).expect("location was removed")
                     .or_default()
                     .push(syn::parse_quote! {
                         let #source = {

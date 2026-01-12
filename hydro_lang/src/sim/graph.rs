@@ -8,6 +8,7 @@ use dfir_lang::graph::DfirGraph;
 use proc_macro2::Span;
 use quote::quote;
 use sha2::{Digest, Sha256};
+use slotmap::SparseSecondaryMap;
 use stageleft::QuotedWithContext;
 use syn::visit_mut::VisitMut;
 use tempfile::TempPath;
@@ -19,9 +20,9 @@ use crate::compile::trybuild::generate::{
 };
 use crate::compile::trybuild::rewriters::UseTestModeStaged;
 use crate::deploy::deploy_runtime::cluster_membership_stream;
-use crate::location::MembershipEvent;
 use crate::location::dynamic::LocationId;
 use crate::location::member_id::TaglessMemberId;
+use crate::location::{LocationKey, MembershipEvent};
 
 #[derive(Clone)]
 pub struct SimNode {
@@ -338,7 +339,7 @@ impl<'a> Deploy<'a> for SimDeploy {
 
     #[expect(unreachable_code, reason = "todo!() is unreachable")]
     fn cluster_ids(
-        _of_cluster: usize,
+        _of_cluster: LocationKey,
     ) -> impl QuotedWithContext<'a, &'a [TaglessMemberId], ()> + Clone + 'a {
         todo!();
         stageleft::q!(todo!())
@@ -496,13 +497,13 @@ pub(super) fn compile_sim(bin: String, trybuild: TrybuildConfig) -> Result<TempP
 }
 
 pub(super) fn create_sim_graph_trybuild(
-    process_graphs: BTreeMap<LocationId, DfirGraph>,
-    cluster_graphs: BTreeMap<LocationId, DfirGraph>,
-    cluster_max_sizes: HashMap<LocationId, usize>,
-    process_tick_graphs: BTreeMap<LocationId, DfirGraph>,
-    cluster_tick_graphs: BTreeMap<LocationId, DfirGraph>,
+    process_graphs: SparseSecondaryMap<LocationKey, DfirGraph>,
+    cluster_graphs: SparseSecondaryMap<LocationKey, DfirGraph>,
+    cluster_max_sizes: SparseSecondaryMap<LocationKey, usize>,
+    process_tick_graphs: SparseSecondaryMap<LocationKey, DfirGraph>,
+    cluster_tick_graphs: SparseSecondaryMap<LocationKey, DfirGraph>,
     extra_stmts_global: Vec<syn::Stmt>,
-    extra_stmts_cluster: BTreeMap<LocationId, Vec<syn::Stmt>>,
+    extra_stmts_cluster: SparseSecondaryMap<LocationKey, Vec<syn::Stmt>>,
 ) -> (String, TrybuildConfig) {
     let source_dir = cargo::manifest_dir().unwrap();
     let source_manifest = dependencies::get_manifest(&source_dir).unwrap();
@@ -609,13 +610,13 @@ pub(super) fn create_sim_graph_trybuild(
 
 #[expect(clippy::too_many_arguments, reason = "necessary for code generation")]
 fn compile_sim_graph_trybuild(
-    process_graphs: BTreeMap<LocationId, DfirGraph>,
-    cluster_graphs: BTreeMap<LocationId, DfirGraph>,
-    cluster_max_sizes: HashMap<LocationId, usize>,
-    process_tick_graphs: BTreeMap<LocationId, DfirGraph>,
-    cluster_tick_graphs: BTreeMap<LocationId, DfirGraph>,
+    process_graphs: SparseSecondaryMap<LocationKey, DfirGraph>,
+    cluster_graphs: SparseSecondaryMap<LocationKey, DfirGraph>,
+    cluster_max_sizes: SparseSecondaryMap<LocationKey, usize>,
+    process_tick_graphs: SparseSecondaryMap<LocationKey, DfirGraph>,
+    cluster_tick_graphs: SparseSecondaryMap<LocationKey, DfirGraph>,
     extra_stmts_global: Vec<syn::Stmt>,
-    extra_stmts_cluster: BTreeMap<LocationId, Vec<syn::Stmt>>,
+    extra_stmts_cluster: SparseSecondaryMap<LocationKey, Vec<syn::Stmt>>,
     crate_name: String,
     is_test: bool,
 ) -> syn::File {
@@ -638,40 +639,38 @@ fn compile_sim_graph_trybuild(
 
     let process_dfir_exprs = process_graphs
         .into_iter()
-        .map(|(lid, g)| {
+        .map(|(loc_key, g)| {
             let dfir_expr = dfir_into_code(&g);
-            let ser_lid = serde_json::to_string(&lid).unwrap();
-            syn::parse_quote!((#ser_lid, None, #dfir_expr))
+            let ser_loc_key = serde_json::to_string(&loc_key).unwrap();
+            syn::parse_quote!((#ser_loc_key, None, #dfir_expr))
         })
         .collect::<Vec<syn::Expr>>();
 
-    let mut cluster_ticks_grouped_by_root = cluster_tick_graphs.into_iter().fold::<BTreeMap<
-        LocationId,
-        Vec<(LocationId, DfirGraph)>,
-    >, _>(
-        BTreeMap::new(),
-        |mut acc, (lid, g)| {
-            let root = lid.root();
-            acc.entry(root.clone()).or_default().push((lid, g));
-            acc
-        },
-    );
+    let mut cluster_ticks_grouped_by_root =
+        SparseSecondaryMap::<_, Vec<(LocationKey, DfirGraph)>>::new();
+    for (loc_key, g) in cluster_tick_graphs {
+        cluster_ticks_grouped_by_root
+            .entry(loc_key)
+            .expect("location was removed")
+            .or_default()
+            .push((loc_key, g));
+    }
 
     let cluster_dfir_stmts = cluster_graphs
         .into_iter()
-        .map(|(lid, g)| {
+        .map(|(loc_key, g)| {
             let dfir_expr = dfir_into_code(&g);
 
             let tick_dfir_stmts = cluster_ticks_grouped_by_root
-                .remove(&lid)
+                .remove(loc_key)
                 .unwrap_or_default()
                 .into_iter()
-                .map(|(tick_lid, tick_g)| {
+                .map(|(tick_loc_key, tick_g)| {
                     let tick_dfir_expr = dfir_into_code(&tick_g);
-                    let ser_tick_lid = serde_json::to_string(&tick_lid).unwrap();
+                    let ser_tick_loc_key = serde_json::to_string(&tick_loc_key).unwrap();
                     syn::parse_quote! {
                         __tick_dfirs.push((
-                            #ser_tick_lid,
+                            #ser_tick_loc_key,
                             Some(__current_cluster_id),
                             #tick_dfir_expr
                         ));
@@ -679,26 +678,20 @@ fn compile_sim_graph_trybuild(
                 })
                 .collect::<Vec<syn::Stmt>>();
 
-            let ser_lid = serde_json::to_string(&lid).unwrap();
+            let ser_loc_key = serde_json::to_string(&loc_key).unwrap();
             let extra_stmts_per_cluster =
-                extra_stmts_cluster.get(&lid).cloned().unwrap_or_default();
-            let max_size = cluster_max_sizes.get(&lid).cloned().unwrap() as u32;
-
-            let cid = if let LocationId::Cluster(cid) = lid {
-                cid
-            } else {
-                unreachable!()
-            };
+                extra_stmts_cluster.get(loc_key).cloned().unwrap_or_default();
+            let max_size = cluster_max_sizes.get(loc_key).cloned().unwrap() as u32;
 
             let self_id_ident = syn::Ident::new(
-                &format!("__hydro_lang_cluster_self_id_{}", cid),
+                &format!("__hydro_lang_cluster_self_id_{:?}", loc_key),
                 Span::call_site(),
             );
 
             syn::parse_quote! {
                 for __current_cluster_id in 0..#max_size {
                     __async_dfirs.push((
-                        #ser_lid,
+                        #ser_loc_key,
                         Some(__current_cluster_id),
                         {
                             #(#extra_stmts_per_cluster)*
@@ -716,10 +709,10 @@ fn compile_sim_graph_trybuild(
 
     let process_tick_dfir_exprs = process_tick_graphs
         .into_iter()
-        .map(|(lid, g)| {
+        .map(|(loc_key, g)| {
             let dfir_expr = dfir_into_code(&g);
-            let ser_lid = serde_json::to_string(&lid).unwrap();
-            syn::parse_quote!((#ser_lid, None, #dfir_expr))
+            let ser_loc_key = serde_json::to_string(&loc_key).unwrap();
+            syn::parse_quote!((#ser_loc_key, None, #dfir_expr))
         })
         .collect::<Vec<syn::Expr>>();
 
@@ -727,14 +720,11 @@ fn compile_sim_graph_trybuild(
 
     let cluster_ids_stmts = cluster_max_sizes
         .iter()
-        .map(|(lid, max_size)| {
+        .map(|(loc_key, max_size)| {
             let ident = syn::Ident::new(
                 &format!(
-                    "__hydro_lang_cluster_ids_{}",
-                    match lid {
-                        LocationId::Cluster(cid) => cid.to_string(),
-                        _ => panic!("Expected cluster location ID"),
-                    }
+                    "__hydro_lang_cluster_ids_{:?}",
+                    loc_key,
                 ),
                 Span::call_site(),
             );

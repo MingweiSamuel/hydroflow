@@ -1,7 +1,6 @@
 use core::panic;
 use std::cell::RefCell;
 #[cfg(feature = "build")]
-use std::collections::BTreeMap;
 use std::collections::HashMap;
 use std::fmt::{Debug, Display};
 use std::hash::{Hash, Hasher};
@@ -17,7 +16,7 @@ use quote::ToTokens;
 #[cfg(feature = "build")]
 use quote::quote;
 #[cfg(feature = "build")]
-use slotmap::SparseSecondaryMap;
+use slotmap::{SecondaryMap, SparseSecondaryMap};
 #[cfg(feature = "build")]
 use syn::parse_quote;
 use syn::visit::{self, Visit};
@@ -405,13 +404,15 @@ pub trait DfirBuilder {
 }
 
 #[cfg(feature = "build")]
-impl DfirBuilder for BTreeMap<usize, FlatGraphBuilder> {
+impl DfirBuilder for SecondaryMap<LocationKey, FlatGraphBuilder> {
     fn singleton_intermediates(&self) -> bool {
         false
     }
 
     fn get_dfir_mut(&mut self, location: &LocationId) -> &mut FlatGraphBuilder {
-        self.entry(location.root().raw_id()).or_default()
+        self.entry(location.root().key())
+            .expect("location was removed")
+            .or_default()
     }
 
     fn batch(
@@ -638,7 +639,7 @@ pub enum HydroRoot {
         op_metadata: HydroIrOpMetadata,
     },
     SendExternal {
-        to_external_id: usize,
+        to_external_key: LocationKey,
         to_key: usize,
         to_many: bool,
         unpaired: bool,
@@ -663,7 +664,7 @@ impl HydroRoot {
     #[cfg(feature = "build")]
     pub fn compile_network<'a, D>(
         &mut self,
-        extra_stmts: &mut BTreeMap<usize, Vec<syn::Stmt>>,
+        extra_stmts: &mut SecondaryMap<LocationKey, Vec<syn::Stmt>>,
         seen_tees: &mut SeenTees,
         processes: &SparseSecondaryMap<LocationKey, D::Process>,
         clusters: &SparseSecondaryMap<LocationKey, D::Cluster>,
@@ -676,7 +677,7 @@ impl HydroRoot {
             &mut |l| {
                 if let HydroRoot::SendExternal {
                     input,
-                    to_external_id,
+                    to_external_key,
                     to_key,
                     to_many,
                     unpaired,
@@ -687,9 +688,10 @@ impl HydroRoot {
                     let ((sink_expr, source_expr), connect_fn) = match instantiate_fn {
                         DebugInstantiate::Building => {
                             let to_node = externals
-                                .get(to_external_id)
+                                .get(*to_external_key)
                                 .unwrap_or_else(|| {
-                                    panic!("A external used in the graph was not instantiated: {}", to_external_id)
+                                    // TODO(mingwei): include string name, dedup missing handling
+                                    panic!("A external used in the graph was not instantiated: {:?}", to_external_key)
                                 })
                                 .clone();
 
@@ -698,16 +700,17 @@ impl HydroRoot {
                                     if *to_many {
                                         (
                                             (
-                                                D::e2o_many_sink(format!("{}_{}", *to_external_id, *to_key)),
+                                                D::e2o_many_sink(format!("{:?}_{}", *to_external_key, *to_key)),
                                                 parse_quote!(DUMMY),
                                             ),
                                             Box::new(|| {}) as Box<dyn FnOnce()>,
                                         )
                                     } else {
                                         let from_node = processes
-                                            .get(process_id)
+                                            .get(*process_id)
                                             .unwrap_or_else(|| {
-                                                panic!("A process used in the graph was not instantiated: {}", process_id)
+                                                // TODO(mingwei): include string name, dedup missing handling
+                                                panic!("A process used in the graph was not instantiated: {:?}", process_id)
                                             })
                                             .clone();
 
@@ -721,11 +724,11 @@ impl HydroRoot {
                                             to_node.register(*to_key, source_port.clone());
 
                                             let _ = D::e2o_source(
-                                                refcell_extra_stmts.borrow_mut().entry(*process_id).or_default(),
+                                                refcell_extra_stmts.borrow_mut().entry(*process_id).expect("process removed").or_default(),
                                                 &to_node, &source_port,
                                                 &from_node, &sink_port,
                                                 &quote_type::<LengthDelimitedCodec>(),
-                                                format!("{}_{}", *to_external_id, *to_key)
+                                                format!("{:?}_{}", *to_external_key, *to_key)
                                             );
                                         }
 
@@ -736,7 +739,7 @@ impl HydroRoot {
                                                     &sink_port,
                                                     &to_node,
                                                     &source_port,
-                                                    format!("{}_{}", *to_external_id, *to_key)
+                                                    format!("{:?}_{}", *to_external_key, *to_key)
                                                 ),
                                                 parse_quote!(DUMMY),
                                             ),
@@ -797,7 +800,7 @@ impl HydroRoot {
                     }
                     .into();
                 } else if let HydroNode::ExternalInput {
-                    from_external_id,
+                    from_external_key,
                     from_key,
                     from_many,
                     codec_type,
@@ -810,21 +813,23 @@ impl HydroRoot {
                     let ((sink_expr, source_expr), connect_fn) = match instantiate_fn {
                         DebugInstantiate::Building => {
                             let from_node = externals
-                                .get(from_external_id)
+                                .get(*from_external_key)
                                 .unwrap_or_else(|| {
+                                    // TODO(mingwei): include string name, dedup missing handling
                                     panic!(
-                                        "A external used in the graph was not instantiated: {}",
-                                        from_external_id
+                                        "A external used in the graph was not instantiated: {:?}",
+                                        from_external_key
                                     )
                                 })
                                 .clone();
 
                             match metadata.location_kind.root() {
-                                LocationId::Process(process_id) => {
+                                &LocationId::Process(process_key) => {
                                     let to_node = processes
-                                        .get(process_id)
+                                        .get(process_key)
                                         .unwrap_or_else(|| {
-                                            panic!("A process used in the graph was not instantiated: {}", process_id)
+                                            // TODO(mingwei): include string name, dedup missing handling
+                                            panic!("A process used in the graph was not instantiated: {:?}", process_key)
                                         })
                                         .clone();
 
@@ -838,18 +843,18 @@ impl HydroRoot {
                                             parse_quote!(DUMMY),
                                             if *from_many {
                                                 D::e2o_many_source(
-                                                    refcell_extra_stmts.borrow_mut().entry(*process_id).or_default(),
+                                                    refcell_extra_stmts.borrow_mut().entry(process_key).expect("location was removed").or_default(),
                                                     &to_node, &source_port,
                                                     codec_type.0.as_ref(),
-                                                    format!("{}_{}", *from_external_id, *from_key)
+                                                    format!("{:?}_{}", *from_external_key, *from_key)
                                                 )
                                             } else {
                                                 D::e2o_source(
-                                                    refcell_extra_stmts.borrow_mut().entry(*process_id).or_default(),
+                                                    refcell_extra_stmts.borrow_mut().entry(process_key).expect("location was removed").or_default(),
                                                     &from_node, &sink_port,
                                                     &to_node, &source_port,
                                                     codec_type.0.as_ref(),
-                                                    format!("{}_{}", *from_external_id, *from_key)
+                                                    format!("{:?}_{}", *from_external_key, *from_key)
                                                 )
                                             },
                                         ),
@@ -950,7 +955,7 @@ impl HydroRoot {
                 op_metadata: op_metadata.clone(),
             },
             HydroRoot::SendExternal {
-                to_external_id,
+                to_external_key,
                 to_key,
                 to_many,
                 unpaired,
@@ -959,7 +964,7 @@ impl HydroRoot {
                 input,
                 op_metadata,
             } => HydroRoot::SendExternal {
-                to_external_id: *to_external_id,
+                to_external_key: *to_external_key,
                 to_key: *to_key,
                 to_many: *to_many,
                 unpaired: *unpaired,
@@ -1197,8 +1202,10 @@ impl HydroRoot {
 }
 
 #[cfg(feature = "build")]
-pub fn emit<'a, D: Deploy<'a>>(ir: &mut Vec<HydroRoot>) -> BTreeMap<usize, FlatGraphBuilder> {
-    let mut builders = BTreeMap::new();
+pub fn emit<'a, D: Deploy<'a>>(
+    ir: &mut Vec<HydroRoot>,
+) -> SecondaryMap<LocationKey, FlatGraphBuilder> {
+    let mut builders = SecondaryMap::new();
     let mut built_tees = HashMap::new();
     let mut next_stmt_id = 0;
     for leaf in ir {
@@ -1367,7 +1374,7 @@ pub enum CollectionKind {
 
 #[derive(Clone)]
 pub struct HydroIrMetadata {
-    pub location_kind: LocationId,
+    pub location_id: LocationId,
     pub collection_kind: CollectionKind,
     pub cardinality: Option<usize>,
     pub tag: Option<String>,
@@ -1390,7 +1397,7 @@ impl Eq for HydroIrMetadata {}
 impl Debug for HydroIrMetadata {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("HydroIrMetadata")
-            .field("location_kind", &self.location_kind)
+            .field("location_id", &self.location_id)
             .field("collection_kind", &self.collection_kind)
             .finish()
     }
@@ -1645,7 +1652,7 @@ pub enum HydroNode {
     },
 
     ExternalInput {
-        from_external_id: usize,
+        from_external_key: LocationKey,
         from_key: usize,
         from_many: bool,
         codec_type: DebugType,
@@ -2028,7 +2035,7 @@ impl HydroNode {
                 metadata: metadata.clone(),
             },
             HydroNode::ExternalInput {
-                from_external_id,
+                from_external_key,
                 from_key,
                 from_many,
                 codec_type,
@@ -2037,7 +2044,7 @@ impl HydroNode {
                 deserialize_fn,
                 metadata,
             } => HydroNode::ExternalInput {
-                from_external_id: *from_external_id,
+                from_external_key: *from_external_key,
                 from_key: *from_key,
                 from_many: *from_many,
                 codec_type: codec_type.clone(),
@@ -3656,24 +3663,29 @@ impl HydroNode {
 fn instantiate_network<'a, D>(
     from_location: &LocationId,
     to_location: &LocationId,
-    processes: &HashMap<usize, D::Process>,
-    clusters: &HashMap<usize, D::Cluster>,
+    processes: &SparseSecondaryMap<LocationKey, D::Process>,
+    clusters: &SparseSecondaryMap<LocationKey, D::Cluster>,
 ) -> (syn::Expr, syn::Expr, Box<dyn FnOnce()>)
 where
     D: Deploy<'a>,
 {
     let ((sink, source), connect_fn) = match (from_location, to_location) {
-        (LocationId::Process(from), LocationId::Process(to)) => {
+        (&LocationId::Process(from), &LocationId::Process(to)) => {
             let from_node = processes
                 .get(from)
                 .unwrap_or_else(|| {
-                    panic!("A process used in the graph was not instantiated: {}", from)
+                    // TODO(mingwei): include string name, dedup missing handling
+                    panic!(
+                        "A process used in the graph was not instantiated: {:?}",
+                        from
+                    )
                 })
                 .clone();
             let to_node = processes
                 .get(to)
                 .unwrap_or_else(|| {
-                    panic!("A process used in the graph was not instantiated: {}", to)
+                    // TODO(mingwei): include string name, dedup missing handling
+                    panic!("A process used in the graph was not instantiated: {:?}", to)
                 })
                 .clone();
 
@@ -3685,17 +3697,22 @@ where
                 D::o2o_connect(&from_node, &sink_port, &to_node, &source_port),
             )
         }
-        (LocationId::Process(from), LocationId::Cluster(to)) => {
+        (&LocationId::Process(from), &LocationId::Cluster(to)) => {
             let from_node = processes
                 .get(from)
                 .unwrap_or_else(|| {
-                    panic!("A process used in the graph was not instantiated: {}", from)
+                    // TODO(mingwei): include string name, dedup missing handling
+                    panic!(
+                        "A process used in the graph was not instantiated: {:?}",
+                        from
+                    )
                 })
                 .clone();
             let to_node = clusters
                 .get(to)
                 .unwrap_or_else(|| {
-                    panic!("A cluster used in the graph was not instantiated: {}", to)
+                    // TODO(mingwei): include string name, dedup missing handling
+                    panic!("A cluster used in the graph was not instantiated: {:?}", to)
                 })
                 .clone();
 
@@ -3707,17 +3724,22 @@ where
                 D::o2m_connect(&from_node, &sink_port, &to_node, &source_port),
             )
         }
-        (LocationId::Cluster(from), LocationId::Process(to)) => {
+        (&LocationId::Cluster(from), &LocationId::Process(to)) => {
             let from_node = clusters
                 .get(from)
                 .unwrap_or_else(|| {
-                    panic!("A cluster used in the graph was not instantiated: {}", from)
+                    // TODO(mingwei): include string name, dedup missing handling
+                    panic!(
+                        "A cluster used in the graph was not instantiated: {:?}",
+                        from
+                    )
                 })
                 .clone();
             let to_node = processes
                 .get(to)
                 .unwrap_or_else(|| {
-                    panic!("A process used in the graph was not instantiated: {}", to)
+                    // TODO(mingwei): include string name, dedup missing handling
+                    panic!("A process used in the graph was not instantiated: {:?}", to)
                 })
                 .clone();
 
@@ -3729,17 +3751,22 @@ where
                 D::m2o_connect(&from_node, &sink_port, &to_node, &source_port),
             )
         }
-        (LocationId::Cluster(from), LocationId::Cluster(to)) => {
+        (&LocationId::Cluster(from), &LocationId::Cluster(to)) => {
             let from_node = clusters
                 .get(from)
                 .unwrap_or_else(|| {
-                    panic!("A cluster used in the graph was not instantiated: {}", from)
+                    // TODO(mingwei): include string name, dedup missing handling
+                    panic!(
+                        "A cluster used in the graph was not instantiated: {:?}",
+                        from
+                    )
                 })
                 .clone();
             let to_node = clusters
                 .get(to)
                 .unwrap_or_else(|| {
-                    panic!("A cluster used in the graph was not instantiated: {}", to)
+                    // TODO(mingwei): include string name, dedup missing handling
+                    panic!("A cluster used in the graph was not instantiated: {:?}", to)
                 })
                 .clone();
 

@@ -2496,7 +2496,7 @@ mod tests {
 
         let mut deployment = Deployment::new();
 
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let first_node = flow.process::<P1>();
         let second_node = flow.process::<P2>();
         let external = flow.external::<P2>();
@@ -2529,7 +2529,7 @@ mod tests {
     async fn first_cardinality() {
         let mut deployment = Deployment::new();
 
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
         let external = flow.external::<()>();
 
@@ -2563,7 +2563,7 @@ mod tests {
     async fn unbounded_reduce_remembers_state() {
         let mut deployment = Deployment::new();
 
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
         let external = flow.external::<()>();
 
@@ -2597,7 +2597,7 @@ mod tests {
     async fn atomic_fold_replays_each_tick() {
         let mut deployment = Deployment::new();
 
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
         let external = flow.external::<()>();
 
@@ -2640,7 +2640,7 @@ mod tests {
     async fn unbounded_scan_remembers_state() {
         let mut deployment = Deployment::new();
 
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
         let external = flow.external::<()>();
 
@@ -2679,7 +2679,7 @@ mod tests {
     async fn unbounded_enumerate_remembers_state() {
         let mut deployment = Deployment::new();
 
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
         let external = flow.external::<()>();
 
@@ -2710,7 +2710,7 @@ mod tests {
     async fn unbounded_unique_remembers_state() {
         let mut deployment = Deployment::new();
 
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
         let external = flow.external::<()>();
 
@@ -2745,7 +2745,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn sim_batch_nondet_size() {
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
 
         let (in_send, input) = node.sim_input::<_, TotalOrder, _>();
@@ -2769,7 +2769,7 @@ mod tests {
     #[cfg(feature = "sim")]
     #[test]
     fn sim_batch_preserves_order() {
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
 
         let (in_send, input) = node.sim_input();
@@ -2793,7 +2793,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn sim_batch_unordered_shuffles() {
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
 
         let (in_send, input) = node.sim_input::<_, NoOrder, _>();
@@ -2819,7 +2819,7 @@ mod tests {
     #[cfg(feature = "sim")]
     #[test]
     fn sim_batch_unordered_shuffles_count() {
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
 
         let (in_send, input) = node.sim_input::<_, NoOrder, _>();
@@ -2843,7 +2843,7 @@ mod tests {
     #[test]
     #[should_panic]
     fn sim_observe_order_batched() {
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
 
         let (in_send, input) = node.sim_input::<_, NoOrder, _>();
@@ -2864,7 +2864,7 @@ mod tests {
     #[cfg(feature = "sim")]
     #[test]
     fn sim_observe_order_batched_count() {
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
 
         let (in_send, input) = node.sim_input::<_, NoOrder, _>();
@@ -2890,7 +2890,7 @@ mod tests {
     #[cfg(feature = "sim")]
     #[test]
     fn sim_unordered_count_instance_count() {
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
 
         let (in_send, input) = node.sim_input::<_, NoOrder, _>();

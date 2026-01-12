@@ -1,12 +1,15 @@
 use std::error::Error;
 
+use slotmap::SecondaryMap;
+
 use crate::compile::ir::HydroRoot;
+use crate::location::LocationKey;
 use crate::viz::render::HydroWriteConfig;
 
 /// Graph generation API for built flows
 pub struct GraphApi<'a> {
     ir: &'a [HydroRoot],
-    location_names: &'a [(usize, String)],
+    location_names: &'a SecondaryMap<LocationKey, String>,
 }
 
 /// Graph output format
@@ -36,7 +39,7 @@ impl GraphFormat {
 }
 
 impl<'a> GraphApi<'a> {
-    pub fn new(ir: &'a [HydroRoot], location_names: &'a [(usize, String)]) -> Self {
+    pub fn new(ir: &'a [HydroRoot], location_names: &'a SecondaryMap<LocationKey, String>) -> Self {
         Self { ir, location_names }
     }
 
@@ -365,7 +368,8 @@ mod tests {
     #[test]
     fn test_graph_api_creation() {
         let ir = vec![];
-        let location_names = vec![(0, "test_process".to_string())];
+        let location_names =
+            SecondaryMap::from_iter([(LocationKey::FIRST, "test_process".to_string())]);
 
         let api = GraphApi::new(&ir, &location_names);
 
@@ -375,13 +379,14 @@ mod tests {
         assert!(config.show_location_groups);
         assert!(!config.use_short_labels);
         assert_eq!(config.location_names.len(), 1);
-        assert_eq!(config.location_names[0].1, "test_process");
+        assert_eq!(config.location_names[LocationKey::FIRST], "test_process");
     }
 
     #[test]
     fn test_string_generation() {
         let ir = vec![];
-        let location_names = vec![(0, "test_process".to_string())];
+        let location_names =
+            SecondaryMap::from_iter([(LocationKey::FIRST, "test_process".to_string())]);
 
         let api = GraphApi::new(&ir, &location_names);
 

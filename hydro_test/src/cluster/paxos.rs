@@ -886,7 +886,7 @@ mod tests {
 
     #[test]
     fn proposer_indexes_payloads() {
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
         let tick = node.tick();
 
@@ -912,7 +912,7 @@ mod tests {
 
     #[test]
     fn proposer_indexes_payloads_jumps_on_new_max() {
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
         let tick = node.tick();
 

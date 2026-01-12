@@ -15,7 +15,7 @@ mod trophies;
 #[cfg_attr(not(target_os = "linux"), ignore)] // sim reproducer not yet reproducible on non-linux OSes
 fn sim_crash_in_output() {
     // run as PATH="$PATH:." cargo sim -p hydro_lang --features sim -- sim_crash_in_output
-    let flow = FlowBuilder::new();
+    let mut flow = FlowBuilder::new();
     let node = flow.process::<()>();
 
     let (in_send, input) = node.sim_input();
@@ -36,7 +36,7 @@ fn sim_crash_in_output() {
 #[cfg_attr(not(target_os = "linux"), ignore)] // sim reproducer not yet reproducible on non-linux OSes
 fn sim_crash_in_output_with_filter() {
     // run as PATH="$PATH:." cargo sim -p hydro_lang --features sim -- sim_crash_in_output_with_filter
-    let flow = FlowBuilder::new();
+    let mut flow = FlowBuilder::new();
     let node = flow.process::<()>();
 
     let (in_send, input) = node.sim_input::<Bytes, _, _>();
@@ -60,7 +60,7 @@ fn sim_crash_in_output_with_filter() {
 #[test]
 fn sim_batch_preserves_order_fuzzed() {
     // uses RNG fuzzing in CI
-    let flow = FlowBuilder::new();
+    let mut flow = FlowBuilder::new();
     let node = flow.process::<()>();
 
     let (in_send, input) = node.sim_input();
@@ -121,7 +121,7 @@ fn fuzzed_batching_program_sliced<'a>(
 #[should_panic]
 fn sim_crash_with_fuzzed_batching() {
     // run as PATH="$PATH:." cargo sim -p hydro_lang --features sim -- sim_crash_with_fuzzed_batching
-    let flow = FlowBuilder::new();
+    let mut flow = FlowBuilder::new();
     let node = flow.process::<()>();
     let (in_send, out_recv) = fuzzed_batching_program(node);
 
@@ -150,7 +150,7 @@ fn sim_crash_with_fuzzed_batching() {
 #[test]
 #[cfg_attr(target_os = "windows", ignore)] // trace locations don't work on Windows right now
 fn trace_for_fuzzed_batching() {
-    let flow = FlowBuilder::new();
+    let mut flow = FlowBuilder::new();
     let node = flow.process::<()>();
 
     let (in_send, out_recv) = fuzzed_batching_program(node);
@@ -202,7 +202,7 @@ fn trace_for_fuzzed_batching() {
 #[test]
 #[cfg_attr(target_os = "windows", ignore)] // trace locations don't work on Windows right now
 fn trace_for_fuzzed_batching_sliced() {
-    let flow = FlowBuilder::new();
+    let mut flow = FlowBuilder::new();
     let node = flow.process::<()>();
 
     let (in_send, out_recv) = fuzzed_batching_program_sliced(node);

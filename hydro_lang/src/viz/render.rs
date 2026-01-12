@@ -3,6 +3,7 @@ use std::error::Error;
 use std::fmt::Write;
 
 use auto_impl::auto_impl;
+use slotmap::{SecondaryMap, SparseSecondaryMap};
 
 pub use super::graphviz::{HydroDot, escape_dot};
 pub use super::json::HydroJson;
@@ -11,6 +12,7 @@ pub use super::mermaid::{HydroMermaid, escape_mermaid};
 use crate::compile::ir::backtrace::Backtrace;
 use crate::compile::ir::{DebugExpr, HydroIrMetadata, HydroNode, HydroRoot, HydroSource};
 use crate::location::dynamic::LocationId;
+use crate::location::{LocationKey, LocationType};
 
 /// Label for a graph node - can be either a static string or contain expressions.
 #[derive(Debug, Clone)]
@@ -472,19 +474,20 @@ pub struct HydroWriteConfig<'a> {
     pub show_metadata: bool,
     pub show_location_groups: bool,
     pub use_short_labels: bool,
-    pub location_names: &'a [(usize, String)],
+    pub location_names: &'a SecondaryMap<LocationKey, String>,
 }
 
-impl Default for HydroWriteConfig<'_> {
-    fn default() -> Self {
-        Self {
-            show_metadata: false,
-            show_location_groups: true,
-            use_short_labels: true, // Default to short labels for all renderers
-            location_names: &[],
-        }
-    }
-}
+// TODO(mingwei): REMOVE
+// impl Default for HydroWriteConfig<'_> {
+//     fn default() -> Self {
+//         Self {
+//             show_metadata: false,
+//             show_location_groups: true,
+//             use_short_labels: true, // Default to short labels for all renderers
+//             location_names: &SecondaryMap::new(),
+//         }
+//     }
+// }
 
 /// Node information in the Hydro graph.
 #[derive(Clone)]
@@ -509,7 +512,7 @@ pub struct HydroGraphEdge {
 pub struct HydroGraphStructure {
     pub nodes: HashMap<usize, HydroGraphNode>,
     pub edges: Vec<HydroGraphEdge>,
-    pub locations: HashMap<usize, String>, // location_id -> location_type
+    pub locations: SparseSecondaryMap<LocationKey, LocationType>, // location_key -> location_type
     pub next_node_id: usize,
 }
 
@@ -593,8 +596,8 @@ impl HydroGraphStructure {
         });
     }
 
-    pub fn add_location(&mut self, location_id: usize, location_type: String) {
-        self.locations.insert(location_id, location_type);
+    pub fn add_location(&mut self, location_key: LocationKey, location_type: LocationType) {
+        self.locations.insert(location_key, location_type);
     }
 }
 
@@ -650,25 +653,17 @@ pub fn extract_short_label(full_label: &str) -> String {
     }
 }
 
-/// Helper function to extract location ID and type from metadata.
-fn extract_location_id(location_id: &LocationId) -> (Option<usize>, Option<String>) {
-    match location_id.root() {
-        LocationId::Process(id) => (Some(*id), Some("Process".to_string())),
-        LocationId::Cluster(id) => (Some(*id), Some("Cluster".to_string())),
-        _ => panic!("unexpected location type"),
-    }
-}
-
+// TODO(mingwei): remove this and pre-allocate `structure`.
 /// Helper function to set up location in structure from metadata.
 fn setup_location(
     structure: &mut HydroGraphStructure,
     metadata: &HydroIrMetadata,
-) -> Option<usize> {
-    let (location_id, location_type) = extract_location_id(&metadata.location_kind);
-    if let (Some(loc_id), Some(loc_type)) = (location_id, location_type) {
-        structure.add_location(loc_id, loc_type);
-    }
-    location_id
+) -> LocationKey {
+    let root = metadata.location_id.root();
+    let location_key = root.key();
+    let location_type = root.location_type().unwrap();
+    structure.add_location(location_key, location_type);
+    location_key
 }
 
 /// Helper function to add an edge with semantic tags extracted from metadata.
@@ -842,7 +837,7 @@ impl HydroRoot {
             ),
 
             HydroRoot::SendExternal {
-                to_external_id,
+                to_external_key,
                 to_key,
                 input,
                 ..
@@ -853,7 +848,7 @@ impl HydroRoot {
                 input,
                 None,
                 NodeLabel::with_exprs(
-                    format!("send_external({}:{})", to_external_id, to_key),
+                    format!("send_external({:?}:{})", to_external_key, to_key),
                     vec![],
                 ),
             ),
@@ -1034,14 +1029,14 @@ impl HydroNode {
             }
 
             HydroNode::ExternalInput {
-                from_external_id,
+                from_external_key,
                 from_key,
                 metadata,
                 ..
             } => build_source_node(
                 structure,
                 metadata,
-                format!("external_input({}:{})", from_external_id, from_key),
+                format!("external_input({:?}:{})", from_external_key, from_key),
             ),
 
             HydroNode::CycleSource {
@@ -1376,14 +1371,14 @@ impl HydroNode {
                 let input_id = input.build_graph_structure(structure, seen_tees, config);
                 let _from_location_id = setup_location(structure, metadata);
 
-                let to_location_id = match metadata.location_kind.root() {
-                    LocationId::Process(id) => {
-                        structure.add_location(*id, "Process".to_string());
-                        Some(*id)
+                let to_location_key = match metadata.location_kind.root() {
+                    LocationId::Process(key) => {
+                        structure.add_location(*key, LocationType::Process);
+                        Some(*key)
                     }
-                    LocationId::Cluster(id) => {
-                        structure.add_location(*id, "Cluster".to_string());
-                        Some(*id)
+                    LocationId::Cluster(key) => {
+                        structure.add_location(*key, LocationType::Cluster);
+                        Some(*key)
                     }
                     _ => None,
                 };

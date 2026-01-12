@@ -200,12 +200,12 @@ impl<'a> FlowBuilder<'a> {
         self.with_default_optimize().with_cluster(cluster, spec)
     }
 
-    pub fn with_remaining_clusters<D: Deploy<'a>, S: ClusterSpec<'a, D> + 'a>(
-        self,
-        spec: impl Fn() -> S,
-    ) -> DeployFlow<'a, D> {
-        self.with_default_optimize().with_remaining_clusters(spec)
-    }
+    // pub fn with_remaining_clusters<D: Deploy<'a>, S: ClusterSpec<'a, D> + 'a>(
+    //     self,
+    //     spec: impl Fn() -> S,
+    // ) -> DeployFlow<'a, D> {
+    //     self.with_default_optimize().with_remaining_clusters(spec)
+    // }
 
     pub fn compile<D: Deploy<'a>>(self) -> CompiledFlow<'a, D::GraphId> {
         self.with_default_optimize::<D>().compile()

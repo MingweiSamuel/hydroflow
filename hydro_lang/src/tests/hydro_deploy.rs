@@ -71,7 +71,7 @@ async fn docker() {
 
     let mut deployment = DockerDeploy::new(network);
 
-    let builder = FlowBuilder::new();
+    let mut builder = FlowBuilder::new();
     let external = builder.external();
     let p1 = builder.process();
     let c2 = builder.cluster();
@@ -151,7 +151,7 @@ async fn docker() {
 async fn localhost() {
     let mut deployment = Deployment::new();
 
-    let builder = FlowBuilder::new();
+    let mut builder = FlowBuilder::new();
     let external = builder.external();
     let p1 = builder.process();
     let c2 = builder.cluster();
@@ -222,7 +222,7 @@ async fn localhost() {
 async fn distributed_echo_aws() {
     let mut deployment: Deployment = Deployment::new();
 
-    let builder = FlowBuilder::new();
+    let mut builder = FlowBuilder::new();
     let external = builder.external();
     let p1 = builder.process();
     let c2 = builder.cluster();

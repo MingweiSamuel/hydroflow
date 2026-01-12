@@ -1,8 +1,8 @@
-use std::collections::{BTreeMap, HashMap};
+use std::collections::HashMap;
 use std::marker::PhantomData;
 
 use dfir_lang::graph::{DfirGraph, eliminate_extra_unions_tees, partition_graph};
-use slotmap::{SecondaryMap, SlotMap};
+use slotmap::{SecondaryMap, SlotMap, SparseSecondaryMap};
 
 use super::compiled::CompiledFlow;
 use super::deploy::{DeployFlow, DeployResult};
@@ -26,7 +26,7 @@ pub struct BuiltFlow<'a> {
 
 pub(crate) fn build_inner<'a, D: Deploy<'a>>(
     ir: &mut Vec<HydroRoot>,
-) -> BTreeMap<usize, DfirGraph> {
+) -> SecondaryMap<LocationKey, DfirGraph> {
     emit::<D>(ir)
         .into_iter()
         .map(|(k, v)| {
@@ -212,26 +212,37 @@ impl<'a> BuiltFlow<'a> {
 
         let global_port_counter = Rc::new(Cell::new(0));
 
-        let (mut processes, mut clusters, mut externals) = Default::default();
+        let mut processes = SparseSecondaryMap::new();
+        let mut clusters = SparseSecondaryMap::new();
+        let mut externals = SparseSecondaryMap::new();
         let all_external_registered = Rc::new(RefCell::new(HashMap::new()));
 
-        for (key, loc) in self.locations.iter() {
+        for (location_key, loc) in self.locations.iter() {
             match loc {
                 LocationType::Process => {
-                    processes.insert(key, SimNode {
-                        port_counter: global_port_counter.clone(),
-                    });
+                    processes.insert(
+                        location_key,
+                        SimNode {
+                            port_counter: global_port_counter.clone(),
+                        },
+                    );
                 }
                 LocationType::Cluster => {
-                    clusters.insert(key, SimNode {
-                        port_counter: global_port_counter.clone(),
-                    });
+                    clusters.insert(
+                        location_key,
+                        SimNode {
+                            port_counter: global_port_counter.clone(),
+                        },
+                    );
                 }
                 LocationType::External => {
-                    externals.insert(key, SimExternal {
-                        external_ports: external_ports.clone(),
-                        registered: all_external_registered.clone(),
-                    });
+                    externals.insert(
+                        location_key,
+                        SimExternal {
+                            external_ports: external_ports.clone(),
+                            registered: all_external_registered.clone(),
+                        },
+                    );
                 }
             }
         }
@@ -242,6 +253,7 @@ impl<'a> BuiltFlow<'a> {
             clusters,
             externals,
             cluster_max_sizes: SparseSecondaryMap::new(),
+            external_ports,
             external_registered: all_external_registered.clone(),
             location_names: self.location_names,
             _phantom: PhantomData,
@@ -249,41 +261,35 @@ impl<'a> BuiltFlow<'a> {
     }
 
     pub fn into_deploy<D: Deploy<'a>>(mut self) -> DeployFlow<'a, D> {
-        let processes = if D::has_trivial_node() {
-            self.process_id_name
-                .iter()
-                .map(|id| (id.0, D::trivial_process(id.0)))
-                .collect()
-        } else {
-            HashMap::new()
-        };
+        let mut processes = SparseSecondaryMap::new();
+        let mut clusters = SparseSecondaryMap::new();
+        let mut externals = SparseSecondaryMap::new();
 
-        let clusters = if D::has_trivial_node() {
-            self.cluster_id_name
-                .iter()
-                .map(|id| (id.0, D::trivial_cluster(id.0)))
-                .collect()
-        } else {
-            HashMap::new()
-        };
-
-        let externals = if D::has_trivial_node() {
-            self.external_id_name
-                .iter()
-                .map(|id| (id.0, D::trivial_external(id.0)))
-                .collect()
-        } else {
-            HashMap::new()
-        };
+        // If trivial, we pre-fill all the nodes. Otherwise, it is up to the user to assign them via
+        // [`DeployFlow`] APIs.
+        if D::has_trivial_node() {
+            for (location_key, loc) in self.locations.iter() {
+                match loc {
+                    LocationType::Process => {
+                        processes.insert(location_key, D::trivial_process(location_key));
+                    }
+                    LocationType::Cluster => {
+                        clusters.insert(location_key, D::trivial_cluster(location_key));
+                    }
+                    LocationType::External => {
+                        externals.insert(location_key, D::trivial_external(location_key));
+                    }
+                }
+            }
+        }
 
         DeployFlow {
             ir: std::mem::take(&mut self.ir),
+            locations: self.locations,
+            location_names: self.location_names,
             processes,
-            process_id_name: std::mem::take(&mut self.process_id_name),
             clusters,
-            cluster_id_name: std::mem::take(&mut self.cluster_id_name),
             externals,
-            external_id_name: std::mem::take(&mut self.external_id_name),
             _phantom: PhantomData,
         }
     }
@@ -303,21 +309,6 @@ impl<'a> BuiltFlow<'a> {
         self.into_deploy().with_remaining_processes(spec)
     }
 
-    pub fn with_external<P, D: Deploy<'a>>(
-        self,
-        process: &External<P>,
-        spec: impl ExternalSpec<'a, D>,
-    ) -> DeployFlow<'a, D> {
-        self.into_deploy().with_external(process, spec)
-    }
-
-    pub fn with_remaining_externals<D: Deploy<'a>, S: ExternalSpec<'a, D> + 'a>(
-        self,
-        spec: impl Fn() -> S,
-    ) -> DeployFlow<'a, D> {
-        self.into_deploy().with_remaining_externals(spec)
-    }
-
     pub fn with_cluster<C, D: Deploy<'a>>(
         self,
         cluster: &Cluster<C>,
@@ -331,6 +322,21 @@ impl<'a> BuiltFlow<'a> {
         spec: impl Fn() -> S,
     ) -> DeployFlow<'a, D> {
         self.into_deploy().with_remaining_clusters(spec)
+    }
+
+    pub fn with_external<P, D: Deploy<'a>>(
+        self,
+        process: &External<P>,
+        spec: impl ExternalSpec<'a, D>,
+    ) -> DeployFlow<'a, D> {
+        self.into_deploy().with_external(process, spec)
+    }
+
+    pub fn with_remaining_externals<D: Deploy<'a>, S: ExternalSpec<'a, D> + 'a>(
+        self,
+        spec: impl Fn() -> S,
+    ) -> DeployFlow<'a, D> {
+        self.into_deploy().with_remaining_externals(spec)
     }
 
     pub fn compile<D: Deploy<'a>>(self) -> CompiledFlow<'a, D::GraphId> {

@@ -24,7 +24,7 @@ pub async fn multi_location_test<'a, T, C, O: Ordering, R: Retries>(
     C: Future<Output = ()>,
 {
     let mut deployment = hydro_deploy::Deployment::new();
-    let flow = FlowBuilder::new();
+    let mut flow = FlowBuilder::new();
     let process = flow.process::<()>();
     let external = flow.external::<()>();
     let out = thunk(&flow, &process);
@@ -53,7 +53,7 @@ pub async fn stream_transform_test<'a, T, C, O: Ordering, R: Retries>(
     C: Future<Output = ()>,
 {
     let mut deployment = hydro_deploy::Deployment::new();
-    let flow = FlowBuilder::new();
+    let mut flow = FlowBuilder::new();
     let process = flow.process::<()>();
     let external = flow.external::<()>();
     let out = thunk(&process);

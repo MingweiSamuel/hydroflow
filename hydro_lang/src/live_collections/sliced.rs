@@ -777,7 +777,7 @@ mod tests {
 
     #[test]
     fn sim_state_counter() {
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
 
         let (input_send, input) = node.sim_input::<i32, _, _>();
@@ -813,7 +813,7 @@ mod tests {
         use crate::live_collections::boundedness::Bounded;
         use crate::location::{Location, Tick};
 
-        let flow = FlowBuilder::new();
+        let mut flow = FlowBuilder::new();
         let node = flow.process::<()>();
 
         let (input_send, input) = node.sim_input::<i32, _, _>();

@@ -1,7 +1,9 @@
 use std::borrow::Cow;
 use std::fmt::Write;
 
-use super::render::{HydroEdgeProp, HydroGraphWrite, HydroNodeType, IndentedGraphWriter};
+use super::render::{
+    HydroEdgeProp, HydroGraphWrite, HydroNodeType, HydroWriteConfig, IndentedGraphWriter,
+};
 
 /// Escapes a string for use in a DOT graph label.
 pub fn escape_dot(string: &str, newline: &str) -> String {
@@ -9,25 +11,25 @@ pub fn escape_dot(string: &str, newline: &str) -> String {
 }
 
 /// DOT/Graphviz graph writer for Hydro IR.
-pub struct HydroDot<W> {
-    base: IndentedGraphWriter<W>,
+pub struct HydroDot<'a, W> {
+    base: IndentedGraphWriter<'a, W>,
 }
 
-impl<W> HydroDot<W> {
+impl<'a, W> HydroDot<'a, W> {
     pub fn new(write: W) -> Self {
         Self {
             base: IndentedGraphWriter::new(write),
         }
     }
 
-    pub fn new_with_config(write: W, config: &super::render::HydroWriteConfig) -> Self {
+    pub fn new_with_config(write: W, config: HydroWriteConfig<'a>) -> Self {
         Self {
             base: IndentedGraphWriter::new_with_config(write, config),
         }
     }
 }
 
-impl<W> HydroGraphWrite for HydroDot<W>
+impl<W> HydroGraphWrite for HydroDot<'_, W>
 where
     W: Write,
 {
@@ -269,13 +271,11 @@ where
 pub fn open_browser(
     built_flow: &crate::compile::built::BuiltFlow,
 ) -> Result<(), Box<dyn std::error::Error>> {
-    let config = super::render::HydroWriteConfig {
+    let config = HydroWriteConfig {
         show_metadata: false,
         show_location_groups: true,
         use_short_labels: true, // Default to short labels
-        process_id_name: built_flow.process_id_name().clone(),
-        cluster_id_name: built_flow.cluster_id_name().clone(),
-        external_id_name: built_flow.external_id_name().clone(),
+        location_names: built_flow.location_names(),
     };
 
     // Use the existing debug function

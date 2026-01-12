@@ -31,7 +31,7 @@ use tracing::{debug, instrument};
 
 use crate::location::dynamic::LocationId;
 use crate::location::member_id::TaglessMemberId;
-use crate::location::{MemberId, MembershipEvent};
+use crate::location::{LocationKey, MemberId, MembershipEvent};
 
 pub fn deploy_containerized_o2o(target: &str, bind_addr: &str) -> (syn::Expr, syn::Expr) {
     (
@@ -288,21 +288,21 @@ pub fn cluster_membership_stream<'a>(
     location_id: &LocationId,
 ) -> impl QuotedWithContext<'a, Box<dyn Stream<Item = (TaglessMemberId, MembershipEvent)> + Unpin>, ()>
 {
-    let raw_id = location_id.raw_id();
+    let key = location_id.key();
 
     q!(Box::new(self::docker_membership_stream(
         std::env::var("DEPLOYMENT_INSTANCE").unwrap(),
-        raw_id
+        key
     ))
         as Box<
             dyn Stream<Item = (TaglessMemberId, MembershipEvent)> + Unpin,
         >)
 }
 
-#[instrument(skip_all, fields(%deployment_instance, %location_id))]
+#[instrument(skip_all, fields(%deployment_instance, ?location_key))]
 fn docker_membership_stream(
     deployment_instance: String,
-    location_id: usize,
+    location_key: LocationKey,
 ) -> impl Stream<Item = (TaglessMemberId, MembershipEvent)> + Unpin {
     use bollard::Docker;
     use bollard::query_parameters::{EventsOptions, ListContainersOptions};
@@ -330,7 +330,7 @@ fn docker_membership_stream(
                     .actor
                     .and_then(|a| a.attributes.and_then(|attrs| attrs.get("name").cloned()))?;
 
-                if name.contains(format!("{deployment_instance}-{location_id}").as_str()) {
+                if name.contains(format!("{deployment_instance}-{location_key:?}").as_str()) {
                     match e.action.as_deref() {
                         Some("start") => Some((name.clone(), MembershipEvent::Joined)),
                         Some("die") => Some((name, MembershipEvent::Left)),
@@ -348,7 +348,7 @@ fn docker_membership_stream(
 
         filters.insert(
             "name".to_string(),
-            vec![format!("{deployment_instance}-{location_id}")],
+            vec![format!("{deployment_instance}-{location_key:?}")],
         );
 
         let options = Some(ListContainersOptions {

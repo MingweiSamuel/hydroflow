@@ -100,7 +100,7 @@ where
     F: Fn(&[HydroRoot], &HydroWriteConfig) -> String,
 {
     let config = config.unwrap_or_default();
-    renderer(roots, &config)
+    (renderer)(roots, &config)
 }
 
 /// Compress JSON content using gzip compression.

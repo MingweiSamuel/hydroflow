@@ -20,7 +20,7 @@ stageleft::stageleft_no_entry_crate!();
 pub mod runtime_support {
     #[cfg(feature = "sim")]
     pub use colored;
-    pub use {bincode, dfir_rs, hydro_deploy_integration, stageleft, tokio};
+    pub use {bincode, dfir_rs, hydro_deploy_integration, slotmap, stageleft, tokio};
     #[cfg(feature = "deploy_integration")]
     pub mod launch;
 }
@@ -111,7 +111,6 @@ mod manual_expr;
 
 #[cfg(feature = "viz")]
 #[cfg_attr(docsrs, doc(cfg(feature = "viz")))]
-#[expect(missing_docs, reason = "TODO")]
 pub mod viz;
 
 mod staging_util;
