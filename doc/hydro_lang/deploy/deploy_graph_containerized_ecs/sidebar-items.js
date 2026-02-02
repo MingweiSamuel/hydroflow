@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"struct":["DockerDeployClusterEcs","DockerDeployClusterSpecEcs","DockerDeployEcs","DockerDeployExternalEcs","DockerDeployExternalSpecEcs","DockerDeployProcessEcs","DockerDeployProcessSpecEcs","DockerNetworkEcs"]};
+window.SIDEBAR_ITEMS = {"struct":["BuildConfig","ClusterManifest","EcsDeploy","EcsDeployCluster","EcsDeployClusterSpec","EcsDeployExternal","EcsDeployExternalSpec","EcsDeployProcess","EcsDeployProcessSpec","HydroManifest","PortInfo","ProcessManifest"]};
