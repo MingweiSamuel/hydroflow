@@ -129,7 +129,7 @@
 <a href=#129 id=129 data-nosnippet>129</a>        <span class="kw">match </span>bind_type {
 <a href=#130 id=130 data-nosnippet>130</a>            BaseServerStrategy::UnixSocket =&gt; ServerBindConfig::UnixSocket,
 <a href=#131 id=131 data-nosnippet>131</a>            BaseServerStrategy::InternalTcpPort(port) =&gt; {
-<a href=#132 id=132 data-nosnippet>132</a>                ServerBindConfig::TcpPort(<span class="string">"127.0.0.1"</span>.to_string(), <span class="kw-2">*</span>port)
+<a href=#132 id=132 data-nosnippet>132</a>                ServerBindConfig::TcpPort(<span class="string">"127.0.0.1"</span>.to_owned(), <span class="kw-2">*</span>port)
 <a href=#133 id=133 data-nosnippet>133</a>            }
 <a href=#134 id=134 data-nosnippet>134</a>            BaseServerStrategy::ExternalTcpPort(<span class="kw">_</span>) =&gt; <span class="macro">panic!</span>(<span class="string">"Cannot bind to external port"</span>),
 <a href=#135 id=135 data-nosnippet>135</a>        }
@@ -213,7 +213,7 @@
 <a href=#213 id=213 data-nosnippet>213</a>                .arg(<span class="string">"--print"</span>)
 <a href=#214 id=214 data-nosnippet>214</a>                .arg(<span class="string">"target-libdir"</span>)
 <a href=#215 id=215 data-nosnippet>215</a>                .output()
-<a href=#216 id=216 data-nosnippet>216</a>                .map(|output| String::from_utf8(output.stdout).unwrap().trim().to_string())
+<a href=#216 id=216 data-nosnippet>216</a>                .map(|output| str::from_utf8(<span class="kw-2">&amp;</span>output.stdout).unwrap().trim().to_owned())
 <a href=#217 id=217 data-nosnippet>217</a>                .unwrap()
 <a href=#218 id=218 data-nosnippet>218</a>        });
 <a href=#219 id=219 data-nosnippet>219</a>

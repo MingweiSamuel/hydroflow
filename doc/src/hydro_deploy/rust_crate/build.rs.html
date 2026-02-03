@@ -187,9 +187,9 @@
 <a href=#187 id=187 data-nosnippet>187</a>                        <span class="kw">match </span>message.unwrap() {
 <a href=#188 id=188 data-nosnippet>188</a>                            cargo_metadata::Message::CompilerArtifact(artifact) =&gt; {
 <a href=#189 id=189 data-nosnippet>189</a>                                <span class="kw">let </span>is_output = <span class="kw">if </span>params.example.is_some() {
-<a href=#190 id=190 data-nosnippet>190</a>                                    artifact.target.kind.contains(<span class="kw-2">&amp;</span><span class="string">"example"</span>.to_string())
+<a href=#190 id=190 data-nosnippet>190</a>                                    artifact.target.kind.iter().any(|k| <span class="string">"example" </span>== k)
 <a href=#191 id=191 data-nosnippet>191</a>                                } <span class="kw">else </span>{
-<a href=#192 id=192 data-nosnippet>192</a>                                    artifact.target.kind.contains(<span class="kw-2">&amp;</span><span class="string">"bin"</span>.to_string())
+<a href=#192 id=192 data-nosnippet>192</a>                                    artifact.target.kind.iter().any(|k| <span class="string">"bin" </span>== k)
 <a href=#193 id=193 data-nosnippet>193</a>                                };
 <a href=#194 id=194 data-nosnippet>194</a>
 <a href=#195 id=195 data-nosnippet>195</a>                                <span class="kw">if </span>is_output {

@@ -913,7 +913,7 @@
 <a href=#913 id=913 data-nosnippet>913</a>        {
 <a href=#914 id=914 data-nosnippet>914</a>            <span class="kw">let </span><span class="kw-2">mut </span>node = <span class="self">self</span>.ir_node.borrow_mut();
 <a href=#915 id=915 data-nosnippet>915</a>            <span class="kw">let </span>metadata = node.metadata_mut();
-<a href=#916 id=916 data-nosnippet>916</a>            metadata.tag = <span class="prelude-val">Some</span>(name.to_string());
+<a href=#916 id=916 data-nosnippet>916</a>            metadata.tag = <span class="prelude-val">Some</span>(name.to_owned());
 <a href=#917 id=917 data-nosnippet>917</a>        }
 <a href=#918 id=918 data-nosnippet>918</a>        <span class="self">self
 <a href=#919 id=919 data-nosnippet>919</a>    </span>}
@@ -1797,7 +1797,7 @@
 <a href=#1797 id=1797 data-nosnippet>1797</a>    /// #     .first();
 <a href=#1798 id=1798 data-nosnippet>1798</a>    /// let stream = // [ "a", "b" ]
 <a href=#1799 id=1799 data-nosnippet>1799</a>    /// # process
-<a href=#1800 id=1800 data-nosnippet>1800</a>    /// #     .source_iter(q!(vec!["a".to_string(), "b".to_string()]))
+<a href=#1800 id=1800 data-nosnippet>1800</a>    /// #     .source_iter(q!(vec!["a".to_owned(), "b".to_owned()]))
 <a href=#1801 id=1801 data-nosnippet>1801</a>    /// #     .batch(&amp;tick, nondet!(/** test */));
 <a href=#1802 id=1802 data-nosnippet>1802</a>    /// stream.repeat_with_keys(keyed_singleton)
 <a href=#1803 id=1803 data-nosnippet>1803</a>    /// # .entries().all_ticks()
@@ -1808,7 +1808,7 @@
 <a href=#1808 id=1808 data-nosnippet>1808</a>    /// #     results.push(stream.next().await.unwrap());
 <a href=#1809 id=1809 data-nosnippet>1809</a>    /// # }
 <a href=#1810 id=1810 data-nosnippet>1810</a>    /// # results.sort();
-<a href=#1811 id=1811 data-nosnippet>1811</a>    /// # assert_eq!(results, vec![(1, "a".to_string()), (1, "b".to_string()), (2, "a".to_string()), (2, "b".to_string())]);
+<a href=#1811 id=1811 data-nosnippet>1811</a>    /// # assert_eq!(results, vec![(1, "a".to_owned()), (1, "b".to_owned()), (2, "a".to_owned()), (2, "b".to_owned())]);
 <a href=#1812 id=1812 data-nosnippet>1812</a>    /// # }));
 <a href=#1813 id=1813 data-nosnippet>1813</a>    /// # }
 <a href=#1814 id=1814 data-nosnippet>1814</a>    /// ```

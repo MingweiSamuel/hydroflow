@@ -839,7 +839,7 @@
 <a href=#839 id=839 data-nosnippet>839</a>                        trybuild,
 <a href=#840 id=840 data-nosnippet>840</a>                        <span class="kw-2">&amp;</span>config.project_dir,
 <a href=#841 id=841 data-nosnippet>841</a>                        <span class="kw-2">&amp;</span>config.target_dir,
-<a href=#842 id=842 data-nosnippet>842</a>                        <span class="kw-2">&amp;</span>config.features,
+<a href=#842 id=842 data-nosnippet>842</a>                        config.features.as_deref(),
 <a href=#843 id=843 data-nosnippet>843</a>                        <span class="kw-2">&amp;</span>bin_name,
 <a href=#844 id=844 data-nosnippet>844</a>                        <span class="kw-2">&amp;</span>config.linking_mode,
 <a href=#845 id=845 data-nosnippet>845</a>                    ),
@@ -959,7 +959,7 @@
 <a href=#959 id=959 data-nosnippet>959</a>                                trybuild,
 <a href=#960 id=960 data-nosnippet>960</a>                                <span class="kw-2">&amp;</span>config.project_dir,
 <a href=#961 id=961 data-nosnippet>961</a>                                <span class="kw-2">&amp;</span>config.target_dir,
-<a href=#962 id=962 data-nosnippet>962</a>                                <span class="kw-2">&amp;</span>config.features,
+<a href=#962 id=962 data-nosnippet>962</a>                                config.features.as_deref(),
 <a href=#963 id=963 data-nosnippet>963</a>                                bin_name,
 <a href=#964 id=964 data-nosnippet>964</a>                                <span class="kw-2">&amp;</span>config.linking_mode,
 <a href=#965 id=965 data-nosnippet>965</a>                            ),
@@ -1080,7 +1080,7 @@
 <a href=#1080 id=1080 data-nosnippet>1080</a>    trybuild: TrybuildHost,
 <a href=#1081 id=1081 data-nosnippet>1081</a>    dir: <span class="kw-2">&amp;</span>std::path::Path,
 <a href=#1082 id=1082 data-nosnippet>1082</a>    target_dir: <span class="kw-2">&amp;</span>std::path::PathBuf,
-<a href=#1083 id=1083 data-nosnippet>1083</a>    features: <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;Vec&lt;String&gt;&gt;,
+<a href=#1083 id=1083 data-nosnippet>1083</a>    features: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>[String]&gt;,
 <a href=#1084 id=1084 data-nosnippet>1084</a>    bin_name: <span class="kw-2">&amp;</span>str,
 <a href=#1085 id=1085 data-nosnippet>1085</a>    linking_mode: <span class="kw-2">&amp;</span>LinkingMode,
 <a href=#1086 id=1086 data-nosnippet>1086</a>) -&gt; RustCrate {
@@ -1120,7 +1120,7 @@
 <a href=#1120 id=1120 data-nosnippet>1120</a>    }
 <a href=#1121 id=1121 data-nosnippet>1121</a>
 <a href=#1122 id=1122 data-nosnippet>1122</a>    ret = ret.features(
-<a href=#1123 id=1123 data-nosnippet>1123</a>        <span class="macro">vec!</span>[<span class="string">"hydro___feature_deploy_integration"</span>.to_string()]
+<a href=#1123 id=1123 data-nosnippet>1123</a>        <span class="macro">vec!</span>[<span class="string">"hydro___feature_deploy_integration"</span>.to_owned()]
 <a href=#1124 id=1124 data-nosnippet>1124</a>            .into_iter()
 <a href=#1125 id=1125 data-nosnippet>1125</a>            .chain(
 <a href=#1126 id=1126 data-nosnippet>1126</a>                trybuild

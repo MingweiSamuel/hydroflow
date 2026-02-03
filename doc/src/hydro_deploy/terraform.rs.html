@@ -220,13 +220,13 @@
 <a href=#220 id=220 data-nosnippet>220</a>                    || line.contains(<span class="string">": Read complete after"</span>)
 <a href=#221 id=221 data-nosnippet>221</a>                {
 <a href=#222 id=222 data-nosnippet>222</a>                } <span class="kw">else if </span>line.ends_with(<span class="string">": Creating..."</span>) {
-<a href=#223 id=223 data-nosnippet>223</a>                    <span class="kw">let </span>id = line.split(<span class="string">':'</span>).next().unwrap().trim().to_string();
+<a href=#223 id=223 data-nosnippet>223</a>                    <span class="kw">let </span>id = line.split(<span class="string">':'</span>).next().unwrap().trim();
 <a href=#224 id=224 data-nosnippet>224</a>                    <span class="kw">let </span>(channel_send, channel_recv) = tokio::sync::oneshot::channel();
 <a href=#225 id=225 data-nosnippet>225</a>                    waiting_for_result.insert(
-<a href=#226 id=226 data-nosnippet>226</a>                        id.to_string(),
+<a href=#226 id=226 data-nosnippet>226</a>                        id.to_owned(),
 <a href=#227 id=227 data-nosnippet>227</a>                        (
 <a href=#228 id=228 data-nosnippet>228</a>                            channel_send,
-<a href=#229 id=229 data-nosnippet>229</a>                            tokio::task::spawn(ProgressTracker::leaf(id, <span class="kw">async move </span>{
+<a href=#229 id=229 data-nosnippet>229</a>                            tokio::task::spawn(ProgressTracker::leaf(id.to_owned(), <span class="kw">async move </span>{
 <a href=#230 id=230 data-nosnippet>230</a>                                <span class="comment">// `Err(RecvError)` means send side was dropped due to another error.
 <a href=#231 id=231 data-nosnippet>231</a>                                // Ignore here to prevent spurious panic stack traces.
 <a href=#232 id=232 data-nosnippet>232</a>                                </span><span class="kw">let </span>_result = channel_recv.<span class="kw">await</span>;

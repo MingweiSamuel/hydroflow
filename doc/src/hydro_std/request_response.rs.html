@@ -80,10 +80,10 @@
 <a href=#80 id=80 data-nosnippet>80</a>            </span>metadata_ack_recv.assert_yields([(<span class="number">1</span>, <span class="number">42</span>)]).<span class="kw">await</span>;
 <a href=#81 id=81 data-nosnippet>81</a>
 <a href=#82 id=82 data-nosnippet>82</a>            <span class="comment">// Now send response
-<a href=#83 id=83 data-nosnippet>83</a>            </span>response_send.send((<span class="number">1</span>, <span class="string">"hello"</span>.to_string()));
+<a href=#83 id=83 data-nosnippet>83</a>            </span>response_send.send((<span class="number">1</span>, <span class="string">"hello"</span>.to_owned()));
 <a href=#84 id=84 data-nosnippet>84</a>            <span class="comment">// Should get joined result
 <a href=#85 id=85 data-nosnippet>85</a>            </span>joined_recv
-<a href=#86 id=86 data-nosnippet>86</a>                .assert_yields_unordered([(<span class="number">1</span>, (<span class="number">42</span>, <span class="string">"hello"</span>.to_string()))])
+<a href=#86 id=86 data-nosnippet>86</a>                .assert_yields_unordered([(<span class="number">1</span>, (<span class="number">42</span>, <span class="string">"hello"</span>.to_owned()))])
 <a href=#87 id=87 data-nosnippet>87</a>                .<span class="kw">await</span>;
 <a href=#88 id=88 data-nosnippet>88</a>        });
 <a href=#89 id=89 data-nosnippet>89</a>    }
@@ -115,11 +115,11 @@
 <a href=#115 id=115 data-nosnippet>115</a>            metadata_ack_recv.assert_yields([(<span class="number">1</span>, <span class="number">10</span>), (<span class="number">2</span>, <span class="number">20</span>)]).<span class="kw">await</span>;
 <a href=#116 id=116 data-nosnippet>116</a>
 <a href=#117 id=117 data-nosnippet>117</a>            <span class="comment">// Send responses for both keys
-<a href=#118 id=118 data-nosnippet>118</a>            </span>response_send.send_many([(<span class="number">2</span>, <span class="string">"two"</span>.to_string()), (<span class="number">1</span>, <span class="string">"one"</span>.to_string())]);
+<a href=#118 id=118 data-nosnippet>118</a>            </span>response_send.send_many([(<span class="number">2</span>, <span class="string">"two"</span>.to_owned()), (<span class="number">1</span>, <span class="string">"one"</span>.to_owned())]);
 <a href=#119 id=119 data-nosnippet>119</a>            joined_recv
 <a href=#120 id=120 data-nosnippet>120</a>                .assert_yields_only_unordered([
-<a href=#121 id=121 data-nosnippet>121</a>                    (<span class="number">1</span>, (<span class="number">10</span>, <span class="string">"one"</span>.to_string())),
-<a href=#122 id=122 data-nosnippet>122</a>                    (<span class="number">2</span>, (<span class="number">20</span>, <span class="string">"two"</span>.to_string())),
+<a href=#121 id=121 data-nosnippet>121</a>                    (<span class="number">1</span>, (<span class="number">10</span>, <span class="string">"one"</span>.to_owned())),
+<a href=#122 id=122 data-nosnippet>122</a>                    (<span class="number">2</span>, (<span class="number">20</span>, <span class="string">"two"</span>.to_owned())),
 <a href=#123 id=123 data-nosnippet>123</a>                ])
 <a href=#124 id=124 data-nosnippet>124</a>                .<span class="kw">await</span>;
 <a href=#125 id=125 data-nosnippet>125</a>        });
@@ -152,11 +152,11 @@
 <a href=#152 id=152 data-nosnippet>152</a>            metadata_ack_recv.assert_yields([(<span class="number">1</span>, <span class="number">42</span>)]).<span class="kw">await</span>;
 <a href=#153 id=153 data-nosnippet>153</a>
 <a href=#154 id=154 data-nosnippet>154</a>            <span class="comment">// Send responses for key 1 (has metadata) and key 2 (no metadata)
-<a href=#155 id=155 data-nosnippet>155</a>            </span>response_send.send_many([(<span class="number">1</span>, <span class="string">"matched"</span>.to_string()), (<span class="number">2</span>, <span class="string">"unmatched"</span>.to_string())]);
+<a href=#155 id=155 data-nosnippet>155</a>            </span>response_send.send_many([(<span class="number">1</span>, <span class="string">"matched"</span>.to_owned()), (<span class="number">2</span>, <span class="string">"unmatched"</span>.to_owned())]);
 <a href=#156 id=156 data-nosnippet>156</a>
 <a href=#157 id=157 data-nosnippet>157</a>            <span class="comment">// Only key 1 should produce output
 <a href=#158 id=158 data-nosnippet>158</a>            </span>joined_recv
-<a href=#159 id=159 data-nosnippet>159</a>                .assert_yields_only_unordered([(<span class="number">1</span>, (<span class="number">42</span>, <span class="string">"matched"</span>.to_string()))])
+<a href=#159 id=159 data-nosnippet>159</a>                .assert_yields_only_unordered([(<span class="number">1</span>, (<span class="number">42</span>, <span class="string">"matched"</span>.to_owned()))])
 <a href=#160 id=160 data-nosnippet>160</a>                .<span class="kw">await</span>;
 <a href=#161 id=161 data-nosnippet>161</a>        });
 <a href=#162 id=162 data-nosnippet>162</a>    }
@@ -188,13 +188,13 @@
 <a href=#188 id=188 data-nosnippet>188</a>            metadata_ack_recv.assert_yields([(<span class="number">1</span>, <span class="number">42</span>)]).<span class="kw">await</span>;
 <a href=#189 id=189 data-nosnippet>189</a>
 <a href=#190 id=190 data-nosnippet>190</a>            <span class="comment">// First response for key 1 should match
-<a href=#191 id=191 data-nosnippet>191</a>            </span>response_send.send((<span class="number">1</span>, <span class="string">"first"</span>.to_string()));
+<a href=#191 id=191 data-nosnippet>191</a>            </span>response_send.send((<span class="number">1</span>, <span class="string">"first"</span>.to_owned()));
 <a href=#192 id=192 data-nosnippet>192</a>            joined_recv
-<a href=#193 id=193 data-nosnippet>193</a>                .assert_yields_unordered([(<span class="number">1</span>, (<span class="number">42</span>, <span class="string">"first"</span>.to_string()))])
+<a href=#193 id=193 data-nosnippet>193</a>                .assert_yields_unordered([(<span class="number">1</span>, (<span class="number">42</span>, <span class="string">"first"</span>.to_owned()))])
 <a href=#194 id=194 data-nosnippet>194</a>                .<span class="kw">await</span>;
 <a href=#195 id=195 data-nosnippet>195</a>
 <a href=#196 id=196 data-nosnippet>196</a>            <span class="comment">// Second response for key 1 should be dropped (metadata already consumed)
-<a href=#197 id=197 data-nosnippet>197</a>            </span>response_send.send((<span class="number">1</span>, <span class="string">"second"</span>.to_string()));
+<a href=#197 id=197 data-nosnippet>197</a>            </span>response_send.send((<span class="number">1</span>, <span class="string">"second"</span>.to_owned()));
 <a href=#198 id=198 data-nosnippet>198</a>            joined_recv.assert_no_more().<span class="kw">await</span>;
 <a href=#199 id=199 data-nosnippet>199</a>        });
 <a href=#200 id=200 data-nosnippet>200</a>    }

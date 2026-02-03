@@ -383,11 +383,11 @@
 <a href=#383 id=383 data-nosnippet>383</a>        <span class="kw">let </span><span class="kw-2">mut </span>fleet = Fleet::new();
 <a href=#384 id=384 data-nosnippet>384</a>
 <a href=#385 id=385 data-nosnippet>385</a>        <span class="comment">// Hostnames for the server and client
-<a href=#386 id=386 data-nosnippet>386</a>        </span><span class="kw">let </span>server: Hostname = <span class="string">"server"</span>.to_string();
-<a href=#387 id=387 data-nosnippet>387</a>        <span class="kw">let </span>client: Hostname = <span class="string">"client"</span>.to_string();
+<a href=#386 id=386 data-nosnippet>386</a>        </span><span class="kw">let </span>server: Hostname = <span class="string">"server"</span>.to_owned();
+<a href=#387 id=387 data-nosnippet>387</a>        <span class="kw">let </span>client: Hostname = <span class="string">"client"</span>.to_owned();
 <a href=#388 id=388 data-nosnippet>388</a>
 <a href=#389 id=389 data-nosnippet>389</a>        <span class="comment">// Interface name for the echo "protocol"
-<a href=#390 id=390 data-nosnippet>390</a>        </span><span class="kw">let </span>interface: String = <span class="string">"echo"</span>.to_string();
+<a href=#390 id=390 data-nosnippet>390</a>        </span><span class="kw">let </span>interface: String = <span class="string">"echo"</span>.to_owned();
 <a href=#391 id=391 data-nosnippet>391</a>
 <a href=#392 id=392 data-nosnippet>392</a>        <span class="kw">let </span>server_address = Address::new(server.clone(), interface.clone());
 <a href=#393 id=393 data-nosnippet>393</a>
@@ -428,7 +428,7 @@
 <a href=#428 id=428 data-nosnippet>428</a>        });
 <a href=#429 id=429 data-nosnippet>429</a>
 <a href=#430 id=430 data-nosnippet>430</a>        <span class="comment">// Trigger the client to send a message.
-<a href=#431 id=431 data-nosnippet>431</a>        </span>client_trigger_tx.send(<span class="string">"Hello, world!"</span>.to_string()).unwrap();
+<a href=#431 id=431 data-nosnippet>431</a>        </span>client_trigger_tx.send(<span class="string">"Hello, world!"</span>.to_owned()).unwrap();
 <a href=#432 id=432 data-nosnippet>432</a>
 <a href=#433 id=433 data-nosnippet>433</a>        <span class="comment">// Run the simulation until no new work is done by any host.
 <a href=#434 id=434 data-nosnippet>434</a>        </span>fleet.run_until_quiescent().<span class="kw">await</span>;

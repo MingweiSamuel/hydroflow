@@ -478,7 +478,7 @@
 <a href=#478 id=478 data-nosnippet>478</a>    /// # tokio_test::block_on(hydro_lang::test_util::stream_transform_test(|process| {
 <a href=#479 id=479 data-nosnippet>479</a>    /// let keyed_singleton = // { 1: "a", 2: "b", 3: "c" }
 <a href=#480 id=480 data-nosnippet>480</a>    /// # process
-<a href=#481 id=481 data-nosnippet>481</a>    /// #     .source_iter(q!(vec![(1, "a".to_string()), (2, "b".to_string()), (3, "c".to_string())]))
+<a href=#481 id=481 data-nosnippet>481</a>    /// #     .source_iter(q!(vec![(1, "a".to_owned()), (2, "b".to_owned()), (3, "c".to_owned())]))
 <a href=#482 id=482 data-nosnippet>482</a>    /// #     .into_keyed()
 <a href=#483 id=483 data-nosnippet>483</a>    /// #     .batch(&amp;process.tick(), nondet!(/** test */))
 <a href=#484 id=484 data-nosnippet>484</a>    /// #     .first();
@@ -486,7 +486,7 @@
 <a href=#486 id=486 data-nosnippet>486</a>    /// # .all_ticks()
 <a href=#487 id=487 data-nosnippet>487</a>    /// # }, |mut stream| async move {
 <a href=#488 id=488 data-nosnippet>488</a>    /// // { 1: "a", 2: "b", 3: "c" }
-<a href=#489 id=489 data-nosnippet>489</a>    /// # assert_eq!(stream.next().await.unwrap(), vec![(1, "a".to_string()), (2, "b".to_string()), (3, "c".to_string())].into_iter().collect());
+<a href=#489 id=489 data-nosnippet>489</a>    /// # assert_eq!(stream.next().await.unwrap(), vec![(1, "a".to_owned()), (2, "b".to_owned()), (3, "c".to_owned())].into_iter().collect());
 <a href=#490 id=490 data-nosnippet>490</a>    /// # }));
 <a href=#491 id=491 data-nosnippet>491</a>    /// # }
 <a href=#492 id=492 data-nosnippet>492</a>    /// ```
@@ -537,7 +537,7 @@
 <a href=#537 id=537 data-nosnippet>537</a>        {
 <a href=#538 id=538 data-nosnippet>538</a>            <span class="kw">let </span><span class="kw-2">mut </span>node = <span class="self">self</span>.ir_node.borrow_mut();
 <a href=#539 id=539 data-nosnippet>539</a>            <span class="kw">let </span>metadata = node.metadata_mut();
-<a href=#540 id=540 data-nosnippet>540</a>            metadata.tag = <span class="prelude-val">Some</span>(name.to_string());
+<a href=#540 id=540 data-nosnippet>540</a>            metadata.tag = <span class="prelude-val">Some</span>(name.to_owned());
 <a href=#541 id=541 data-nosnippet>541</a>        }
 <a href=#542 id=542 data-nosnippet>542</a>        <span class="self">self
 <a href=#543 id=543 data-nosnippet>543</a>    </span>}

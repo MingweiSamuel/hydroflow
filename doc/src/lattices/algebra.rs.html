@@ -41,7 +41,7 @@
 <a href=#41 id=41 data-nosnippet>41</a>    </span>one: S,  <span class="comment">// one is the identity element of g
 <a href=#42 id=42 data-nosnippet>42</a></span>) -&gt; <span class="prelude-ty">Result</span>&lt;(), <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str&gt; {
 <a href=#43 id=43 data-nosnippet>43</a>    commutative_monoid(items, f, zero.clone())<span class="question-mark">?</span>;
-<a href=#44 id=44 data-nosnippet>44</a>    monoid(items, g, one.clone())<span class="question-mark">?</span>;
+<a href=#44 id=44 data-nosnippet>44</a>    monoid(items, g, one)<span class="question-mark">?</span>;
 <a href=#45 id=45 data-nosnippet>45</a>
 <a href=#46 id=46 data-nosnippet>46</a>    absorbing_element(items, g, zero)<span class="question-mark">?</span>;
 <a href=#47 id=47 data-nosnippet>47</a>
@@ -456,22 +456,22 @@
 <a href=#456 id=456 data-nosnippet>456</a>
 <a href=#457 id=457 data-nosnippet>457</a>    <span class="comment">// TODO make this a loop through the SINGLE_FUNCTION_PROPERTIES array
 <a href=#458 id=458 data-nosnippet>458</a>    </span><span class="kw">if </span>associativity(items, <span class="kw-2">&amp;</span>f).is_ok() {
-<a href=#459 id=459 data-nosnippet>459</a>        properties_satisfied.push(<span class="string">"associativity"</span>.to_string());
+<a href=#459 id=459 data-nosnippet>459</a>        properties_satisfied.push(<span class="string">"associativity"</span>.to_owned());
 <a href=#460 id=460 data-nosnippet>460</a>    }
 <a href=#461 id=461 data-nosnippet>461</a>    <span class="kw">if </span>commutativity(items, <span class="kw-2">&amp;</span>f).is_ok() {
-<a href=#462 id=462 data-nosnippet>462</a>        properties_satisfied.push(<span class="string">"commutativity"</span>.to_string());
+<a href=#462 id=462 data-nosnippet>462</a>        properties_satisfied.push(<span class="string">"commutativity"</span>.to_owned());
 <a href=#463 id=463 data-nosnippet>463</a>    }
 <a href=#464 id=464 data-nosnippet>464</a>    <span class="kw">if </span>idempotency(items, <span class="kw-2">&amp;</span>f).is_ok() {
-<a href=#465 id=465 data-nosnippet>465</a>        properties_satisfied.push(<span class="string">"idempotency"</span>.to_string());
+<a href=#465 id=465 data-nosnippet>465</a>        properties_satisfied.push(<span class="string">"idempotency"</span>.to_owned());
 <a href=#466 id=466 data-nosnippet>466</a>    }
 <a href=#467 id=467 data-nosnippet>467</a>    <span class="kw">if </span>identity(items, <span class="kw-2">&amp;</span>f, e.clone()).is_ok() {
-<a href=#468 id=468 data-nosnippet>468</a>        properties_satisfied.push(<span class="string">"identity"</span>.to_string());
+<a href=#468 id=468 data-nosnippet>468</a>        properties_satisfied.push(<span class="string">"identity"</span>.to_owned());
 <a href=#469 id=469 data-nosnippet>469</a>    }
-<a href=#470 id=470 data-nosnippet>470</a>    <span class="kw">if </span>inverse(items, <span class="kw-2">&amp;</span>f, e.clone(), b).is_ok() {
-<a href=#471 id=471 data-nosnippet>471</a>        properties_satisfied.push(<span class="string">"inverse"</span>.to_string());
+<a href=#470 id=470 data-nosnippet>470</a>    <span class="kw">if </span>inverse(items, <span class="kw-2">&amp;</span>f, e, b).is_ok() {
+<a href=#471 id=471 data-nosnippet>471</a>        properties_satisfied.push(<span class="string">"inverse"</span>.to_owned());
 <a href=#472 id=472 data-nosnippet>472</a>    }
 <a href=#473 id=473 data-nosnippet>473</a>    <span class="kw">if </span>absorbing_element(items, <span class="kw-2">&amp;</span>f, z).is_ok() {
-<a href=#474 id=474 data-nosnippet>474</a>        properties_satisfied.push(<span class="string">"absorbing_element"</span>.to_string());
+<a href=#474 id=474 data-nosnippet>474</a>        properties_satisfied.push(<span class="string">"absorbing_element"</span>.to_owned());
 <a href=#475 id=475 data-nosnippet>475</a>    }
 <a href=#476 id=476 data-nosnippet>476</a>
 <a href=#477 id=477 data-nosnippet>477</a>    properties_satisfied
@@ -1089,10 +1089,10 @@
 <a href=#1089 id=1089 data-nosnippet>1089</a>            <span class="number">0</span>,
 <a href=#1090 id=1090 data-nosnippet>1090</a>        );
 <a href=#1091 id=1091 data-nosnippet>1091</a>        <span class="kw">let </span>correct_properties = <span class="macro">vec!</span>[
-<a href=#1092 id=1092 data-nosnippet>1092</a>            <span class="string">"associativity"</span>.to_string(),
-<a href=#1093 id=1093 data-nosnippet>1093</a>            <span class="string">"commutativity"</span>.to_string(),
-<a href=#1094 id=1094 data-nosnippet>1094</a>            <span class="string">"identity"</span>.to_string(),
-<a href=#1095 id=1095 data-nosnippet>1095</a>            <span class="string">"inverse"</span>.to_string(),
+<a href=#1092 id=1092 data-nosnippet>1092</a>            <span class="string">"associativity"</span>.to_owned(),
+<a href=#1093 id=1093 data-nosnippet>1093</a>            <span class="string">"commutativity"</span>.to_owned(),
+<a href=#1094 id=1094 data-nosnippet>1094</a>            <span class="string">"identity"</span>.to_owned(),
+<a href=#1095 id=1095 data-nosnippet>1095</a>            <span class="string">"inverse"</span>.to_owned(),
 <a href=#1096 id=1096 data-nosnippet>1096</a>        ];
 <a href=#1097 id=1097 data-nosnippet>1097</a>        <span class="macro">assert_eq!</span>(test_properties_satisfied, correct_properties);
 <a href=#1098 id=1098 data-nosnippet>1098</a>
@@ -1105,11 +1105,11 @@
 <a href=#1105 id=1105 data-nosnippet>1105</a>            f64::INFINITY,
 <a href=#1106 id=1106 data-nosnippet>1106</a>        );
 <a href=#1107 id=1107 data-nosnippet>1107</a>        <span class="kw">let </span>correct_properties = <span class="macro">vec!</span>[
-<a href=#1108 id=1108 data-nosnippet>1108</a>            <span class="string">"associativity"</span>.to_string(),
-<a href=#1109 id=1109 data-nosnippet>1109</a>            <span class="string">"commutativity"</span>.to_string(),
-<a href=#1110 id=1110 data-nosnippet>1110</a>            <span class="string">"idempotency"</span>.to_string(),
-<a href=#1111 id=1111 data-nosnippet>1111</a>            <span class="string">"identity"</span>.to_string(),
-<a href=#1112 id=1112 data-nosnippet>1112</a>            <span class="string">"absorbing_element"</span>.to_string(),
+<a href=#1108 id=1108 data-nosnippet>1108</a>            <span class="string">"associativity"</span>.to_owned(),
+<a href=#1109 id=1109 data-nosnippet>1109</a>            <span class="string">"commutativity"</span>.to_owned(),
+<a href=#1110 id=1110 data-nosnippet>1110</a>            <span class="string">"idempotency"</span>.to_owned(),
+<a href=#1111 id=1111 data-nosnippet>1111</a>            <span class="string">"identity"</span>.to_owned(),
+<a href=#1112 id=1112 data-nosnippet>1112</a>            <span class="string">"absorbing_element"</span>.to_owned(),
 <a href=#1113 id=1113 data-nosnippet>1113</a>        ];
 <a href=#1114 id=1114 data-nosnippet>1114</a>        <span class="macro">assert_eq!</span>(test_properties_satisfied, correct_properties);
 <a href=#1115 id=1115 data-nosnippet>1115</a>
@@ -1117,7 +1117,7 @@
 <a href=#1117 id=1117 data-nosnippet>1117</a>        </span><span class="kw">let </span>f = |x: u32, _y: u32| x;
 <a href=#1118 id=1118 data-nosnippet>1118</a>        <span class="kw">let </span>test_properties_satisfied =
 <a href=#1119 id=1119 data-nosnippet>1119</a>            get_single_function_properties(TEST_ITEMS, f, <span class="number">0</span>, |x| <span class="number">0u32</span>.wrapping_sub(x), <span class="number">0</span>);
-<a href=#1120 id=1120 data-nosnippet>1120</a>        <span class="kw">let </span>correct_properties = <span class="macro">vec!</span>[<span class="string">"associativity"</span>.to_string(), <span class="string">"idempotency"</span>.to_string()];
+<a href=#1120 id=1120 data-nosnippet>1120</a>        <span class="kw">let </span>correct_properties = <span class="macro">vec!</span>[<span class="string">"associativity"</span>.to_owned(), <span class="string">"idempotency"</span>.to_owned()];
 <a href=#1121 id=1121 data-nosnippet>1121</a>        <span class="macro">assert_eq!</span>(test_properties_satisfied, correct_properties);
 <a href=#1122 id=1122 data-nosnippet>1122</a>    }
 <a href=#1123 id=1123 data-nosnippet>1123</a>}

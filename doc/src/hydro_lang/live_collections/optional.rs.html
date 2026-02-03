@@ -794,7 +794,7 @@
 <a href=#794 id=794 data-nosnippet>794</a>        {
 <a href=#795 id=795 data-nosnippet>795</a>            <span class="kw">let </span><span class="kw-2">mut </span>node = <span class="self">self</span>.ir_node.borrow_mut();
 <a href=#796 id=796 data-nosnippet>796</a>            <span class="kw">let </span>metadata = node.metadata_mut();
-<a href=#797 id=797 data-nosnippet>797</a>            metadata.tag = <span class="prelude-val">Some</span>(name.to_string());
+<a href=#797 id=797 data-nosnippet>797</a>            metadata.tag = <span class="prelude-val">Some</span>(name.to_owned());
 <a href=#798 id=798 data-nosnippet>798</a>        }
 <a href=#799 id=799 data-nosnippet>799</a>        <span class="self">self
 <a href=#800 id=800 data-nosnippet>800</a>    </span>}

@@ -83,7 +83,7 @@
 <a href=#83 id=83 data-nosnippet>83</a>                        started_or_finished_count,
 <a href=#84 id=84 data-nosnippet>84</a>                        anticipated_total
 <a href=#85 id=85 data-nosnippet>85</a>                            .filter(|<span class="kw-2">&amp;</span>total| started_or_finished_count &lt;= total)
-<a href=#86 id=86 data-nosnippet>86</a>                            .map_or_else(|| <span class="string">"?"</span>.to_string(), |total| total.to_string()),
+<a href=#86 id=86 data-nosnippet>86</a>                            .map_or_else(|| <span class="string">"?"</span>.to_owned(), |total| total.to_string()),
 <a href=#87 id=87 data-nosnippet>87</a>                    )
 <a href=#88 id=88 data-nosnippet>88</a>                };
 <a href=#89 id=89 data-nosnippet>89</a>

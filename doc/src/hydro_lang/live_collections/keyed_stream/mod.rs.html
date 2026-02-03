@@ -1186,7 +1186,7 @@
 <a href=#1186 id=1186 data-nosnippet>1186</a>        {
 <a href=#1187 id=1187 data-nosnippet>1187</a>            <span class="kw">let </span><span class="kw-2">mut </span>node = <span class="self">self</span>.ir_node.borrow_mut();
 <a href=#1188 id=1188 data-nosnippet>1188</a>            <span class="kw">let </span>metadata = node.metadata_mut();
-<a href=#1189 id=1189 data-nosnippet>1189</a>            metadata.tag = <span class="prelude-val">Some</span>(name.to_string());
+<a href=#1189 id=1189 data-nosnippet>1189</a>            metadata.tag = <span class="prelude-val">Some</span>(name.to_owned());
 <a href=#1190 id=1190 data-nosnippet>1190</a>        }
 <a href=#1191 id=1191 data-nosnippet>1191</a>        <span class="self">self
 <a href=#1192 id=1192 data-nosnippet>1192</a>    </span>}
@@ -1394,11 +1394,11 @@
 <a href=#1394 id=1394 data-nosnippet>1394</a>    ///             *acc += x;
 <a href=#1395 id=1395 data-nosnippet>1395</a>    ///             if *acc &gt; 100 {
 <a href=#1396 id=1396 data-nosnippet>1396</a>    ///                 hydro_lang::live_collections::keyed_stream::Generate::Return(
-<a href=#1397 id=1397 data-nosnippet>1397</a>    ///                     "done!".to_string()
+<a href=#1397 id=1397 data-nosnippet>1397</a>    ///                     "done!".to_owned()
 <a href=#1398 id=1398 data-nosnippet>1398</a>    ///                 )
 <a href=#1399 id=1399 data-nosnippet>1399</a>    ///             } else if *acc % 2 == 0 {
 <a href=#1400 id=1400 data-nosnippet>1400</a>    ///                 hydro_lang::live_collections::keyed_stream::Generate::Yield(
-<a href=#1401 id=1401 data-nosnippet>1401</a>    ///                     "even".to_string()
+<a href=#1401 id=1401 data-nosnippet>1401</a>    ///                     "even".to_owned()
 <a href=#1402 id=1402 data-nosnippet>1402</a>    ///                 )
 <a href=#1403 id=1403 data-nosnippet>1403</a>    ///             } else {
 <a href=#1404 id=1404 data-nosnippet>1404</a>    ///                 hydro_lang::live_collections::keyed_stream::Generate::Continue
@@ -1413,7 +1413,7 @@
 <a href=#1413 id=1413 data-nosnippet>1413</a>    /// #     results.push(stream.next().await.unwrap());
 <a href=#1414 id=1414 data-nosnippet>1414</a>    /// # }
 <a href=#1415 id=1415 data-nosnippet>1415</a>    /// # results.sort();
-<a href=#1416 id=1416 data-nosnippet>1416</a>    /// # assert_eq!(results, vec![(0, "done!".to_string()), (0, "even".to_string()), (1, "even".to_string())]);
+<a href=#1416 id=1416 data-nosnippet>1416</a>    /// # assert_eq!(results, vec![(0, "done!".to_owned()), (0, "even".to_owned()), (1, "even".to_owned())]);
 <a href=#1417 id=1417 data-nosnippet>1417</a>    /// # }));
 <a href=#1418 id=1418 data-nosnippet>1418</a>    /// # }
 <a href=#1419 id=1419 data-nosnippet>1419</a>    /// ```
@@ -1484,7 +1484,7 @@
 <a href=#1484 id=1484 data-nosnippet>1484</a>            &gt;::collection_kind()),
 <a href=#1485 id=1485 data-nosnippet>1485</a>        };
 <a href=#1486 id=1486 data-nosnippet>1486</a>
-<a href=#1487 id=1487 data-nosnippet>1487</a>        KeyedStream::new(<span class="self">self</span>.location.clone(), flatten_node)
+<a href=#1487 id=1487 data-nosnippet>1487</a>        KeyedStream::new(<span class="self">self</span>.location, flatten_node)
 <a href=#1488 id=1488 data-nosnippet>1488</a>    }
 <a href=#1489 id=1489 data-nosnippet>1489</a>
 <a href=#1490 id=1490 data-nosnippet>1490</a>    <span class="doccomment">/// A variant of [`Stream::fold`], intended for keyed streams. The aggregation is executed

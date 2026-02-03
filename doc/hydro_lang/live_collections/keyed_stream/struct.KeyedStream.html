@@ -500,11 +500,11 @@ should be processed.</p>
             <span class="kw-2">*</span>acc += x;
             <span class="kw">if </span><span class="kw-2">*</span>acc &gt; <span class="number">100 </span>{
                 hydro_lang::live_collections::keyed_stream::Generate::Return(
-                    <span class="string">"done!"</span>.to_string()
+                    <span class="string">"done!"</span>.to_owned()
                 )
             } <span class="kw">else if </span><span class="kw-2">*</span>acc % <span class="number">2 </span>== <span class="number">0 </span>{
                 hydro_lang::live_collections::keyed_stream::Generate::Yield(
-                    <span class="string">"even"</span>.to_string()
+                    <span class="string">"even"</span>.to_owned()
                 )
             } <span class="kw">else </span>{
                 hydro_lang::live_collections::keyed_stream::Generate::Continue

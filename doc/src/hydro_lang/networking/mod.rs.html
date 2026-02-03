@@ -50,7 +50,7 @@
 <a href=#50 id=50 data-nosnippet>50</a>    </span><span class="kw">fn </span>deserialize_thunk(tagged: <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>syn::Type&gt;) -&gt; syn::Expr;
 <a href=#51 id=51 data-nosnippet>51</a>
 <a href=#52 id=52 data-nosnippet>52</a>    <span class="doccomment">/// Returns the optional name of the network channel.
-<a href=#53 id=53 data-nosnippet>53</a>    </span><span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;String&gt;;
+<a href=#53 id=53 data-nosnippet>53</a>    </span><span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt;;
 <a href=#54 id=54 data-nosnippet>54</a>}
 <a href=#55 id=55 data-nosnippet>55</a>
 <a href=#56 id=56 data-nosnippet>56</a><span class="doccomment">/// A network channel configuration with `T` as transport backend and `S` as the serialization
@@ -92,8 +92,8 @@
 <a href=#92 id=92 data-nosnippet>92</a>        S::deserialize_thunk(tagged)
 <a href=#93 id=93 data-nosnippet>93</a>    }
 <a href=#94 id=94 data-nosnippet>94</a>
-<a href=#95 id=95 data-nosnippet>95</a>    <span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;String&gt; {
-<a href=#96 id=96 data-nosnippet>96</a>        <span class="kw-2">&amp;</span><span class="prelude-val">None
+<a href=#95 id=95 data-nosnippet>95</a>    <span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt; {
+<a href=#96 id=96 data-nosnippet>96</a>        <span class="prelude-val">None
 <a href=#97 id=97 data-nosnippet>97</a>    </span>}
 <a href=#98 id=98 data-nosnippet>98</a>}
 <a href=#99 id=99 data-nosnippet>99</a>
@@ -111,8 +111,8 @@
 <a href=#111 id=111 data-nosnippet>111</a>        S::deserialize_thunk(tagged)
 <a href=#112 id=112 data-nosnippet>112</a>    }
 <a href=#113 id=113 data-nosnippet>113</a>
-<a href=#114 id=114 data-nosnippet>114</a>    <span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="prelude-ty">Option</span>&lt;String&gt; {
-<a href=#115 id=115 data-nosnippet>115</a>        <span class="kw-2">&amp;</span><span class="self">self</span>.name
+<a href=#114 id=114 data-nosnippet>114</a>    <span class="kw">fn </span>name(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt; {
+<a href=#115 id=115 data-nosnippet>115</a>        <span class="self">self</span>.name.as_deref()
 <a href=#116 id=116 data-nosnippet>116</a>    }
 <a href=#117 id=117 data-nosnippet>117</a>}
 <a href=#118 id=118 data-nosnippet>118</a>

@@ -1215,8 +1215,8 @@
 <a href=#1215 id=1215 data-nosnippet>1215</a>
 <a href=#1216 id=1216 data-nosnippet>1216</a>        deployment.start().<span class="kw">await</span>.unwrap();
 <a href=#1217 id=1217 data-nosnippet>1217</a>
-<a href=#1218 id=1218 data-nosnippet>1218</a>        external_in_1.send(<span class="string">"hi"</span>.to_string()).<span class="kw">await</span>.unwrap();
-<a href=#1219 id=1219 data-nosnippet>1219</a>        external_in_2.send(<span class="string">"hello"</span>.to_string()).<span class="kw">await</span>.unwrap();
+<a href=#1218 id=1218 data-nosnippet>1218</a>        external_in_1.send(<span class="string">"hi"</span>.to_owned()).<span class="kw">await</span>.unwrap();
+<a href=#1219 id=1219 data-nosnippet>1219</a>        external_in_2.send(<span class="string">"hello"</span>.to_owned()).<span class="kw">await</span>.unwrap();
 <a href=#1220 id=1220 data-nosnippet>1220</a>
 <a href=#1221 id=1221 data-nosnippet>1221</a>        <span class="macro">assert_eq!</span>(external_out_1.next().<span class="kw">await</span>.unwrap(), <span class="string">"HI"</span>);
 <a href=#1222 id=1222 data-nosnippet>1222</a>        <span class="macro">assert_eq!</span>(external_out_2.next().<span class="kw">await</span>.unwrap(), <span class="string">"HELLO"</span>);

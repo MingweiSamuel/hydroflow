@@ -76,13 +76,13 @@
 <a href=#76 id=76 data-nosnippet>76</a>        flow.sim()
 <a href=#77 id=77 data-nosnippet>77</a>            .with_cluster_size(<span class="kw-2">&amp;</span>shards, <span class="number">5</span>)
 <a href=#78 id=78 data-nosnippet>78</a>            .exhaustive(<span class="kw">async </span>|| {
-<a href=#79 id=79 data-nosnippet>79</a>                inc_in_port.send((<span class="number">1</span>, <span class="string">"abc"</span>.to_string()));
+<a href=#79 id=79 data-nosnippet>79</a>                inc_in_port.send((<span class="number">1</span>, <span class="string">"abc"</span>.to_owned()));
 <a href=#80 id=80 data-nosnippet>80</a>                inc_out_port
-<a href=#81 id=81 data-nosnippet>81</a>                    .assert_yields_unordered([(<span class="number">1</span>, <span class="string">"abc"</span>.to_string())])
+<a href=#81 id=81 data-nosnippet>81</a>                    .assert_yields_unordered([(<span class="number">1</span>, <span class="string">"abc"</span>.to_owned())])
 <a href=#82 id=82 data-nosnippet>82</a>                    .<span class="kw">await</span>;
-<a href=#83 id=83 data-nosnippet>83</a>                get_in_port.send((<span class="number">1</span>, <span class="string">"abc"</span>.to_string()));
+<a href=#83 id=83 data-nosnippet>83</a>                get_in_port.send((<span class="number">1</span>, <span class="string">"abc"</span>.to_owned()));
 <a href=#84 id=84 data-nosnippet>84</a>                get_out_port
-<a href=#85 id=85 data-nosnippet>85</a>                    .assert_yields_only_unordered([(<span class="number">1</span>, (<span class="string">"abc"</span>.to_string(), <span class="number">1</span>))])
+<a href=#85 id=85 data-nosnippet>85</a>                    .assert_yields_only_unordered([(<span class="number">1</span>, (<span class="string">"abc"</span>.to_owned(), <span class="number">1</span>))])
 <a href=#86 id=86 data-nosnippet>86</a>                    .<span class="kw">await</span>;
 <a href=#87 id=87 data-nosnippet>87</a>            });
 <a href=#88 id=88 data-nosnippet>88</a>    }

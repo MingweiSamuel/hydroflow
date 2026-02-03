@@ -17,7 +17,7 @@
 <a href=#17 id=17 data-nosnippet>17</a>///     let (outbound, inbound, _) = dfir_rs::util::bind_udp_bytes(addr).await;
 <a href=#18 id=18 data-nosnippet>18</a>///     let remote = dfir_rs::util::ipv4_resolve("localhost:9001".into()).unwrap();
 <a href=#19 id=19 data-nosnippet>19</a>///     let mut flow = dfir_rs::dfir_syntax! {
-<a href=#20 id=20 data-nosnippet>20</a>///         source_iter(vec![("hello".to_string(), 1), ("world".to_string(), 2)])
+<a href=#20 id=20 data-nosnippet>20</a>///         source_iter(vec![("hello".to_owned(), 1), ("world".to_owned(), 2)])
 <a href=#21 id=21 data-nosnippet>21</a>///             -&gt; map (|m| (m, remote)) -&gt; dest_sink_serde(outbound);
 <a href=#22 id=22 data-nosnippet>22</a>///     };
 <a href=#23 id=23 data-nosnippet>23</a>///     flow.run_available();

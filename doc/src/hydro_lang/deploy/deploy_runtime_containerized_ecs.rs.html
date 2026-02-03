@@ -419,10 +419,10 @@
 <a href=#419 id=419 data-nosnippet>419</a>                        };
 <a href=#420 id=420 data-nosnippet>420</a>
 <a href=#421 id=421 data-nosnippet>421</a>                        <span class="comment">// Use task_id as the member identifier
-<a href=#422 id=422 data-nosnippet>422</a>                        </span>current_tasks.insert(task_id.to_string());
+<a href=#422 id=422 data-nosnippet>422</a>                        </span>current_tasks.insert(task_id.to_owned());
 <a href=#423 id=423 data-nosnippet>423</a>                        <span class="kw">if </span>!known_tasks.contains(task_id) {
 <a href=#424 id=424 data-nosnippet>424</a>                            <span class="macro">trace!</span>(name: <span class="string">"task_joined"</span>, %task_id);
-<a href=#425 id=425 data-nosnippet>425</a>                            events.push((task_id.to_string(), MembershipEvent::Joined));
+<a href=#425 id=425 data-nosnippet>425</a>                            events.push((task_id.to_owned(), MembershipEvent::Joined));
 <a href=#426 id=426 data-nosnippet>426</a>                        }
 <a href=#427 id=427 data-nosnippet>427</a>                    }
 <a href=#428 id=428 data-nosnippet>428</a>                }
@@ -498,7 +498,7 @@
 <a href=#498 id=498 data-nosnippet>498</a>            <span class="kw">let </span><span class="prelude-val">Some</span>(task_arn) = task.task_arn() <span class="kw">else </span>{
 <a href=#499 id=499 data-nosnippet>499</a>                <span class="kw">continue</span>;
 <a href=#500 id=500 data-nosnippet>500</a>            };
-<a href=#501 id=501 data-nosnippet>501</a>            <span class="kw">let </span>current_task_id = task_arn.rsplit(<span class="string">'/'</span>).next().unwrap_or(<span class="string">""</span>);
+<a href=#501 id=501 data-nosnippet>501</a>            <span class="kw">let </span>current_task_id = task_arn.rsplit(<span class="string">'/'</span>).next().unwrap_or_default();
 <a href=#502 id=502 data-nosnippet>502</a>
 <a href=#503 id=503 data-nosnippet>503</a>            <span class="kw">if </span>current_task_id == task_id
 <a href=#504 id=504 data-nosnippet>504</a>                &amp;&amp; <span class="kw">let </span><span class="prelude-val">Some</span>(ip) = task
@@ -509,7 +509,7 @@
 <a href=#509 id=509 data-nosnippet>509</a>                    .and_then(|d| d.value())
 <a href=#510 id=510 data-nosnippet>510</a>            {
 <a href=#511 id=511 data-nosnippet>511</a>                <span class="macro">trace!</span>(name: <span class="string">"resolved_ip"</span>, %task_id, %ip);
-<a href=#512 id=512 data-nosnippet>512</a>                <span class="kw">return </span>ip.to_string();
+<a href=#512 id=512 data-nosnippet>512</a>                <span class="kw">return </span>ip.to_owned();
 <a href=#513 id=513 data-nosnippet>513</a>            }
 <a href=#514 id=514 data-nosnippet>514</a>        }
 <a href=#515 id=515 data-nosnippet>515</a>
@@ -549,10 +549,10 @@
 <a href=#549 id=549 data-nosnippet>549</a>        };
 <a href=#550 id=550 data-nosnippet>550</a>
 <a href=#551 id=551 data-nosnippet>551</a>        <span class="comment">// Extract task ID from ARN
-<a href=#552 id=552 data-nosnippet>552</a>        </span><span class="kw">let </span>task_id = task_arn.rsplit(<span class="string">'/'</span>).next().unwrap_or(<span class="string">""</span>);
+<a href=#552 id=552 data-nosnippet>552</a>        </span><span class="kw">let </span>task_id = task_arn.rsplit(<span class="string">'/'</span>).next().unwrap_or_default();
 <a href=#553 id=553 data-nosnippet>553</a>        <span class="kw">if </span>!task_id.is_empty() {
 <a href=#554 id=554 data-nosnippet>554</a>            <span class="macro">trace!</span>(name: <span class="string">"resolved_task_id"</span>, %task_family, %task_id);
-<a href=#555 id=555 data-nosnippet>555</a>            <span class="kw">return </span>task_id.to_string();
+<a href=#555 id=555 data-nosnippet>555</a>            <span class="kw">return </span>task_id.to_owned();
 <a href=#556 id=556 data-nosnippet>556</a>        }
 <a href=#557 id=557 data-nosnippet>557</a>
 <a href=#558 id=558 data-nosnippet>558</a>        <span class="macro">trace!</span>(name: <span class="string">"resolve_family_invalid_arn"</span>, %task_family, %task_arn);
@@ -568,6 +568,6 @@
 <a href=#568 id=568 data-nosnippet>568</a>        .rsplit(<span class="string">'/'</span>)
 <a href=#569 id=569 data-nosnippet>569</a>        .next()
 <a href=#570 id=570 data-nosnippet>570</a>        .expect(<span class="string">"Invalid ECS metadata URI format"</span>)
-<a href=#571 id=571 data-nosnippet>571</a>        .to_string()
+<a href=#571 id=571 data-nosnippet>571</a>        .to_owned()
 <a href=#572 id=572 data-nosnippet>572</a>}
 </code></pre></div></section></main></body></html>

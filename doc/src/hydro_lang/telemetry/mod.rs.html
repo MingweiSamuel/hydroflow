@@ -102,7 +102,7 @@
 <a href=#102 id=102 data-nosnippet>102</a>        <span class="kw">match </span>err {
 <a href=#103 id=103 data-nosnippet>103</a>            std::env::VarError::NotPresent =&gt; {
 <a href=#104 id=104 data-nosnippet>104</a>                <span class="comment">// RUST_LOG not set, the user wants the default.
-<a href=#105 id=105 data-nosnippet>105</a>                </span><span class="string">"error"</span>.to_string()
+<a href=#105 id=105 data-nosnippet>105</a>                </span><span class="string">"error"</span>.to_owned()
 <a href=#106 id=106 data-nosnippet>106</a>            }
 <a href=#107 id=107 data-nosnippet>107</a>            std::env::VarError::NotUnicode(v) =&gt; {
 <a href=#108 id=108 data-nosnippet>108</a>                <span class="comment">// Almost certainly there is a configuration issue.
@@ -110,7 +110,7 @@
 <a href=#110 id=110 data-nosnippet>110</a>                    <span class="string">"RUST_LOG is not unicode, defaulting to 'error' directive: {:?}"</span>,
 <a href=#111 id=111 data-nosnippet>111</a>                    v
 <a href=#112 id=112 data-nosnippet>112</a>                );
-<a href=#113 id=113 data-nosnippet>113</a>                <span class="string">"error"</span>.to_string()
+<a href=#113 id=113 data-nosnippet>113</a>                <span class="string">"error"</span>.to_owned()
 <a href=#114 id=114 data-nosnippet>114</a>            }
 <a href=#115 id=115 data-nosnippet>115</a>        }
 <a href=#116 id=116 data-nosnippet>116</a>    });
@@ -118,7 +118,7 @@
 <a href=#118 id=118 data-nosnippet>118</a>    <span class="kw">let </span>filter = EnvFilter::try_new(<span class="kw-2">&amp;</span>rust_log).unwrap_or_else(|err| {
 <a href=#119 id=119 data-nosnippet>119</a>        <span class="comment">// Configuration error.
 <a href=#120 id=120 data-nosnippet>120</a>        </span><span class="macro">eprintln!</span>(<span class="string">"Failed to parse RUST_LOG: {}, err: {:?}"</span>, rust_log, err);
-<a href=#121 id=121 data-nosnippet>121</a>        <span class="string">"error"</span>.to_string().parse().unwrap()
+<a href=#121 id=121 data-nosnippet>121</a>        <span class="string">"error"</span>.to_owned().parse().unwrap()
 <a href=#122 id=122 data-nosnippet>122</a>    });
 <a href=#123 id=123 data-nosnippet>123</a>
 <a href=#124 id=124 data-nosnippet>124</a>    initialize_tracing_with_filter(filter)

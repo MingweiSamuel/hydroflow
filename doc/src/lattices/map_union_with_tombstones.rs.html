@@ -486,21 +486,21 @@
 <a href=#486 id=486 data-nosnippet>486</a>    </span><span class="kw">fn </span>fst_string_basic() {
 <a href=#487 id=487 data-nosnippet>487</a>        <span class="kw">let </span><span class="kw-2">mut </span>x = MapUnionWithTombstonesFstString::new_from(
 <a href=#488 id=488 data-nosnippet>488</a>            HashMap::from([
-<a href=#489 id=489 data-nosnippet>489</a>                (<span class="string">"apple"</span>.to_string(), SetUnionHashSet::new_from([<span class="number">1</span>])),
-<a href=#490 id=490 data-nosnippet>490</a>                (<span class="string">"banana"</span>.to_string(), SetUnionHashSet::new_from([<span class="number">2</span>])),
+<a href=#489 id=489 data-nosnippet>489</a>                (<span class="string">"apple"</span>.to_owned(), SetUnionHashSet::new_from([<span class="number">1</span>])),
+<a href=#490 id=490 data-nosnippet>490</a>                (<span class="string">"banana"</span>.to_owned(), SetUnionHashSet::new_from([<span class="number">2</span>])),
 <a href=#491 id=491 data-nosnippet>491</a>            ]),
 <a href=#492 id=492 data-nosnippet>492</a>            FstTombstoneSet::new(),
 <a href=#493 id=493 data-nosnippet>493</a>        );
 <a href=#494 id=494 data-nosnippet>494</a>        <span class="kw">let </span><span class="kw-2">mut </span>y = MapUnionWithTombstonesFstString::new_from(
 <a href=#495 id=495 data-nosnippet>495</a>            HashMap::from([
-<a href=#496 id=496 data-nosnippet>496</a>                (<span class="string">"banana"</span>.to_string(), SetUnionHashSet::new_from([<span class="number">3</span>])),
-<a href=#497 id=497 data-nosnippet>497</a>                (<span class="string">"cherry"</span>.to_string(), SetUnionHashSet::new_from([<span class="number">4</span>])),
+<a href=#496 id=496 data-nosnippet>496</a>                (<span class="string">"banana"</span>.to_owned(), SetUnionHashSet::new_from([<span class="number">3</span>])),
+<a href=#497 id=497 data-nosnippet>497</a>                (<span class="string">"cherry"</span>.to_owned(), SetUnionHashSet::new_from([<span class="number">4</span>])),
 <a href=#498 id=498 data-nosnippet>498</a>            ]),
 <a href=#499 id=499 data-nosnippet>499</a>            FstTombstoneSet::new(),
 <a href=#500 id=500 data-nosnippet>500</a>        );
 <a href=#501 id=501 data-nosnippet>501</a>
 <a href=#502 id=502 data-nosnippet>502</a>        <span class="comment">// Add tombstone for "banana"
-<a href=#503 id=503 data-nosnippet>503</a>        </span>y.as_reveal_mut().<span class="number">1</span>.extend(<span class="macro">vec!</span>[<span class="string">"banana"</span>.to_string()]);
+<a href=#503 id=503 data-nosnippet>503</a>        </span>y.as_reveal_mut().<span class="number">1</span>.extend(<span class="macro">vec!</span>[<span class="string">"banana"</span>.to_owned()]);
 <a href=#504 id=504 data-nosnippet>504</a>
 <a href=#505 id=505 data-nosnippet>505</a>        x.merge(y);
 <a href=#506 id=506 data-nosnippet>506</a>

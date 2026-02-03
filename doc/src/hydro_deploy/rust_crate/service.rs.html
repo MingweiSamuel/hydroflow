@@ -305,7 +305,7 @@
 <a href=#305 id=305 data-nosnippet>305</a>            <span class="prelude-val">None</span>,
 <a href=#306 id=306 data-nosnippet>306</a>            || <span class="kw">async </span>{
 <a href=#307 id=307 data-nosnippet>307</a>                <span class="kw">let </span>launched_binary = <span class="self">self</span>.launched_binary.get().unwrap();
-<a href=#308 id=308 data-nosnippet>308</a>                launched_binary.stdin().send(<span class="string">"stop\n"</span>.to_string())<span class="question-mark">?</span>;
+<a href=#308 id=308 data-nosnippet>308</a>                launched_binary.stdin().send(<span class="string">"stop\n"</span>.to_owned())<span class="question-mark">?</span>;
 <a href=#309 id=309 data-nosnippet>309</a>
 <a href=#310 id=310 data-nosnippet>310</a>                <span class="kw">let </span>timeout_result = ProgressTracker::leaf(
 <a href=#311 id=311 data-nosnippet>311</a>                    <span class="string">"waiting for exit"</span>,

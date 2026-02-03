@@ -971,8 +971,8 @@
 <a href=#971 id=971 data-nosnippet>971</a>        <span class="kw">use </span><span class="kw">crate</span>::VecVariadic;
 <a href=#972 id=972 data-nosnippet>972</a>
 <a href=#973 id=973 data-nosnippet>973</a>        <span class="kw">type </span>Item = <span class="macro">var_type!</span>(i32, String);
-<a href=#974 id=974 data-nosnippet>974</a>        <span class="kw">let </span>first: Item = <span class="macro">var_expr!</span>(<span class="number">1</span>, <span class="string">"Joe"</span>.to_string());
-<a href=#975 id=975 data-nosnippet>975</a>        <span class="kw">let </span>second: Item = <span class="macro">var_expr!</span>(<span class="number">2</span>, <span class="string">"Mingwei"</span>.to_string());
+<a href=#974 id=974 data-nosnippet>974</a>        <span class="kw">let </span>first: Item = <span class="macro">var_expr!</span>(<span class="number">1</span>, <span class="string">"Joe"</span>.to_owned());
+<a href=#975 id=975 data-nosnippet>975</a>        <span class="kw">let </span>second: Item = <span class="macro">var_expr!</span>(<span class="number">2</span>, <span class="string">"Mingwei"</span>.to_owned());
 <a href=#976 id=976 data-nosnippet>976</a>        <span class="kw">let </span><span class="kw-2">mut </span>column_store = first.clone().into_singleton_vec();
 <a href=#977 id=977 data-nosnippet>977</a>        column_store.push(second.clone());
 <a href=#978 id=978 data-nosnippet>978</a>        <span class="macro">assert_eq!</span>(column_store.len(), <span class="number">2</span>);

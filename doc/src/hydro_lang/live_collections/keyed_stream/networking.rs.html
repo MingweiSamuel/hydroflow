@@ -124,7 +124,7 @@
 <a href=#124 id=124 data-nosnippet>124</a>        Stream::new(
 <a href=#125 id=125 data-nosnippet>125</a>            to.clone(),
 <a href=#126 id=126 data-nosnippet>126</a>            HydroNode::Network {
-<a href=#127 id=127 data-nosnippet>127</a>                name: name.clone(),
+<a href=#127 id=127 data-nosnippet>127</a>                name: name.map(ToOwned::to_owned),
 <a href=#128 id=128 data-nosnippet>128</a>                serialize_fn: serialize_pipeline.map(|e| e.into()),
 <a href=#129 id=129 data-nosnippet>129</a>                instantiate_fn: DebugInstantiate::Building,
 <a href=#130 id=130 data-nosnippet>130</a>                deserialize_fn: deserialize_pipeline.map(|e| e.into()),
@@ -241,7 +241,7 @@
 <a href=#241 id=241 data-nosnippet>241</a>        KeyedStream::new(
 <a href=#242 id=242 data-nosnippet>242</a>            to.clone(),
 <a href=#243 id=243 data-nosnippet>243</a>            HydroNode::Network {
-<a href=#244 id=244 data-nosnippet>244</a>                name: name.clone(),
+<a href=#244 id=244 data-nosnippet>244</a>                name: name.map(ToOwned::to_owned),
 <a href=#245 id=245 data-nosnippet>245</a>                serialize_fn: serialize_pipeline.map(|e| e.into()),
 <a href=#246 id=246 data-nosnippet>246</a>                instantiate_fn: DebugInstantiate::Building,
 <a href=#247 id=247 data-nosnippet>247</a>                deserialize_fn: deserialize_pipeline.map(|e| e.into()),
@@ -389,7 +389,7 @@
 <a href=#389 id=389 data-nosnippet>389</a>        <span class="kw">let </span>raw_stream: Stream&lt;(MemberId&lt;L&gt;, T), Cluster&lt;<span class="lifetime">'a</span>, L2&gt;, Unbounded, O, R&gt; = Stream::new(
 <a href=#390 id=390 data-nosnippet>390</a>            to.clone(),
 <a href=#391 id=391 data-nosnippet>391</a>            HydroNode::Network {
-<a href=#392 id=392 data-nosnippet>392</a>                name: name.clone(),
+<a href=#392 id=392 data-nosnippet>392</a>                name: name.map(ToOwned::to_owned),
 <a href=#393 id=393 data-nosnippet>393</a>                serialize_fn: serialize_pipeline.map(|e| e.into()),
 <a href=#394 id=394 data-nosnippet>394</a>                instantiate_fn: DebugInstantiate::Building,
 <a href=#395 id=395 data-nosnippet>395</a>                deserialize_fn: deserialize_pipeline.map(|e| e.into()),
@@ -557,7 +557,7 @@
 <a href=#557 id=557 data-nosnippet>557</a>            Stream::new(
 <a href=#558 id=558 data-nosnippet>558</a>                to.clone(),
 <a href=#559 id=559 data-nosnippet>559</a>                HydroNode::Network {
-<a href=#560 id=560 data-nosnippet>560</a>                    name: name.clone(),
+<a href=#560 id=560 data-nosnippet>560</a>                    name: name.map(ToOwned::to_owned),
 <a href=#561 id=561 data-nosnippet>561</a>                    serialize_fn: serialize_pipeline.map(|e| e.into()),
 <a href=#562 id=562 data-nosnippet>562</a>                    instantiate_fn: DebugInstantiate::Building,
 <a href=#563 id=563 data-nosnippet>563</a>                    deserialize_fn: deserialize_pipeline.map(|e| e.into()),

@@ -20,17 +20,17 @@
 <a href=#20 id=20 data-nosnippet>20</a>}
 <a href=#21 id=21 data-nosnippet>21</a>
 <a href=#22 id=22 data-nosnippet>22</a><span class="kw">impl </span>LaunchedSshHost <span class="kw">for </span>LaunchedComputeEngine {
-<a href=#23 id=23 data-nosnippet>23</a>    <span class="kw">fn </span>get_external_ip(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;String&gt; {
-<a href=#24 id=24 data-nosnippet>24</a>        <span class="self">self</span>.external_ip.clone()
+<a href=#23 id=23 data-nosnippet>23</a>    <span class="kw">fn </span>get_external_ip(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="prelude-ty">Option</span>&lt;<span class="kw-2">&amp;</span>str&gt; {
+<a href=#24 id=24 data-nosnippet>24</a>        <span class="self">self</span>.external_ip.as_deref()
 <a href=#25 id=25 data-nosnippet>25</a>    }
 <a href=#26 id=26 data-nosnippet>26</a>
-<a href=#27 id=27 data-nosnippet>27</a>    <span class="kw">fn </span>get_internal_ip(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
-<a href=#28 id=28 data-nosnippet>28</a>        <span class="self">self</span>.internal_ip.clone()
+<a href=#27 id=27 data-nosnippet>27</a>    <span class="kw">fn </span>get_internal_ip(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>str {
+<a href=#28 id=28 data-nosnippet>28</a>        <span class="kw-2">&amp;</span><span class="self">self</span>.internal_ip
 <a href=#29 id=29 data-nosnippet>29</a>    }
 <a href=#30 id=30 data-nosnippet>30</a>
-<a href=#31 id=31 data-nosnippet>31</a>    <span class="kw">fn </span>get_cloud_provider(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; String {
-<a href=#32 id=32 data-nosnippet>32</a>        <span class="string">"GCP"</span>.to_string()
-<a href=#33 id=33 data-nosnippet>33</a>    }
+<a href=#31 id=31 data-nosnippet>31</a>    <span class="kw">fn </span>get_cloud_provider(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span><span class="lifetime">'static </span>str {
+<a href=#32 id=32 data-nosnippet>32</a>        <span class="string">"GCP"
+<a href=#33 id=33 data-nosnippet>33</a>    </span>}
 <a href=#34 id=34 data-nosnippet>34</a>
 <a href=#35 id=35 data-nosnippet>35</a>    <span class="kw">fn </span>resource_result(<span class="kw-2">&amp;</span><span class="self">self</span>) -&gt; <span class="kw-2">&amp;</span>Arc&lt;ResourceResult&gt; {
 <a href=#36 id=36 data-nosnippet>36</a>        <span class="kw-2">&amp;</span><span class="self">self</span>.resource_result
@@ -63,10 +63,10 @@
 <a href=#63 id=63 data-nosnippet>63</a>            .terraform
 <a href=#64 id=64 data-nosnippet>64</a>            .required_providers
 <a href=#65 id=65 data-nosnippet>65</a>            .insert(
-<a href=#66 id=66 data-nosnippet>66</a>                <span class="string">"google"</span>.to_string(),
+<a href=#66 id=66 data-nosnippet>66</a>                <span class="string">"google"</span>.to_owned(),
 <a href=#67 id=67 data-nosnippet>67</a>                TerraformProvider {
-<a href=#68 id=68 data-nosnippet>68</a>                    source: <span class="string">"hashicorp/google"</span>.to_string(),
-<a href=#69 id=69 data-nosnippet>69</a>                    version: <span class="string">"4.53.1"</span>.to_string(),
+<a href=#68 id=68 data-nosnippet>68</a>                    source: <span class="string">"hashicorp/google"</span>.to_owned(),
+<a href=#69 id=69 data-nosnippet>69</a>                    version: <span class="string">"4.53.1"</span>.to_owned(),
 <a href=#70 id=70 data-nosnippet>70</a>                },
 <a href=#71 id=71 data-nosnippet>71</a>            );
 <a href=#72 id=72 data-nosnippet>72</a>
@@ -85,7 +85,7 @@
 <a href=#85 id=85 data-nosnippet>85</a>                resource_batch
 <a href=#86 id=86 data-nosnippet>86</a>                    .terraform
 <a href=#87 id=87 data-nosnippet>87</a>                    .data
-<a href=#88 id=88 data-nosnippet>88</a>                    .entry(<span class="string">"google_compute_network"</span>.to_string())
+<a href=#88 id=88 data-nosnippet>88</a>                    .entry(<span class="string">"google_compute_network"</span>.to_owned())
 <a href=#89 id=89 data-nosnippet>89</a>                    .or_default()
 <a href=#90 id=90 data-nosnippet>90</a>                    .insert(
 <a href=#91 id=91 data-nosnippet>91</a>                        vpc_network.clone(),
@@ -101,7 +101,7 @@
 <a href=#101 id=101 data-nosnippet>101</a>            resource_batch
 <a href=#102 id=102 data-nosnippet>102</a>                .terraform
 <a href=#103 id=103 data-nosnippet>103</a>                .resource
-<a href=#104 id=104 data-nosnippet>104</a>                .entry(<span class="string">"google_compute_network"</span>.to_string())
+<a href=#104 id=104 data-nosnippet>104</a>                .entry(<span class="string">"google_compute_network"</span>.to_owned())
 <a href=#105 id=105 data-nosnippet>105</a>                .or_default()
 <a href=#106 id=106 data-nosnippet>106</a>                .insert(
 <a href=#107 id=107 data-nosnippet>107</a>                    vpc_network.clone(),
@@ -115,7 +115,7 @@
 <a href=#115 id=115 data-nosnippet>115</a>            <span class="kw">let </span>firewall_entries = resource_batch
 <a href=#116 id=116 data-nosnippet>116</a>                .terraform
 <a href=#117 id=117 data-nosnippet>117</a>                .resource
-<a href=#118 id=118 data-nosnippet>118</a>                .entry(<span class="string">"google_compute_firewall"</span>.to_string())
+<a href=#118 id=118 data-nosnippet>118</a>                .entry(<span class="string">"google_compute_firewall"</span>.to_owned())
 <a href=#119 id=119 data-nosnippet>119</a>                .or_default();
 <a href=#120 id=120 data-nosnippet>120</a>
 <a href=#121 id=121 data-nosnippet>121</a>            <span class="comment">// allow all VMs to communicate with each other over internal IPs
@@ -263,10 +263,10 @@
 <a href=#263 id=263 data-nosnippet>263</a>            .terraform
 <a href=#264 id=264 data-nosnippet>264</a>            .required_providers
 <a href=#265 id=265 data-nosnippet>265</a>            .insert(
-<a href=#266 id=266 data-nosnippet>266</a>                <span class="string">"google"</span>.to_string(),
+<a href=#266 id=266 data-nosnippet>266</a>                <span class="string">"google"</span>.to_owned(),
 <a href=#267 id=267 data-nosnippet>267</a>                TerraformProvider {
-<a href=#268 id=268 data-nosnippet>268</a>                    source: <span class="string">"hashicorp/google"</span>.to_string(),
-<a href=#269 id=269 data-nosnippet>269</a>                    version: <span class="string">"4.53.1"</span>.to_string(),
+<a href=#268 id=268 data-nosnippet>268</a>                    source: <span class="string">"hashicorp/google"</span>.to_owned(),
+<a href=#269 id=269 data-nosnippet>269</a>                    version: <span class="string">"4.53.1"</span>.to_owned(),
 <a href=#270 id=270 data-nosnippet>270</a>                },
 <a href=#271 id=271 data-nosnippet>271</a>            );
 <a href=#272 id=272 data-nosnippet>272</a>
@@ -275,10 +275,10 @@
 <a href=#275 id=275 data-nosnippet>275</a>            .terraform
 <a href=#276 id=276 data-nosnippet>276</a>            .required_providers
 <a href=#277 id=277 data-nosnippet>277</a>            .insert(
-<a href=#278 id=278 data-nosnippet>278</a>                <span class="string">"local"</span>.to_string(),
+<a href=#278 id=278 data-nosnippet>278</a>                <span class="string">"local"</span>.to_owned(),
 <a href=#279 id=279 data-nosnippet>279</a>                TerraformProvider {
-<a href=#280 id=280 data-nosnippet>280</a>                    source: <span class="string">"hashicorp/local"</span>.to_string(),
-<a href=#281 id=281 data-nosnippet>281</a>                    version: <span class="string">"2.3.0"</span>.to_string(),
+<a href=#280 id=280 data-nosnippet>280</a>                    source: <span class="string">"hashicorp/local"</span>.to_owned(),
+<a href=#281 id=281 data-nosnippet>281</a>                    version: <span class="string">"2.3.0"</span>.to_owned(),
 <a href=#282 id=282 data-nosnippet>282</a>                },
 <a href=#283 id=283 data-nosnippet>283</a>            );
 <a href=#284 id=284 data-nosnippet>284</a>
@@ -287,10 +287,10 @@
 <a href=#287 id=287 data-nosnippet>287</a>            .terraform
 <a href=#288 id=288 data-nosnippet>288</a>            .required_providers
 <a href=#289 id=289 data-nosnippet>289</a>            .insert(
-<a href=#290 id=290 data-nosnippet>290</a>                <span class="string">"tls"</span>.to_string(),
+<a href=#290 id=290 data-nosnippet>290</a>                <span class="string">"tls"</span>.to_owned(),
 <a href=#291 id=291 data-nosnippet>291</a>                TerraformProvider {
-<a href=#292 id=292 data-nosnippet>292</a>                    source: <span class="string">"hashicorp/tls"</span>.to_string(),
-<a href=#293 id=293 data-nosnippet>293</a>                    version: <span class="string">"4.0.4"</span>.to_string(),
+<a href=#292 id=292 data-nosnippet>292</a>                    source: <span class="string">"hashicorp/tls"</span>.to_owned(),
+<a href=#293 id=293 data-nosnippet>293</a>                    version: <span class="string">"4.0.4"</span>.to_owned(),
 <a href=#294 id=294 data-nosnippet>294</a>                },
 <a href=#295 id=295 data-nosnippet>295</a>            );
 <a href=#296 id=296 data-nosnippet>296</a>
@@ -298,10 +298,10 @@
 <a href=#298 id=298 data-nosnippet>298</a>        </span>resource_batch
 <a href=#299 id=299 data-nosnippet>299</a>            .terraform
 <a href=#300 id=300 data-nosnippet>300</a>            .resource
-<a href=#301 id=301 data-nosnippet>301</a>            .entry(<span class="string">"tls_private_key"</span>.to_string())
+<a href=#301 id=301 data-nosnippet>301</a>            .entry(<span class="string">"tls_private_key"</span>.to_owned())
 <a href=#302 id=302 data-nosnippet>302</a>            .or_default()
 <a href=#303 id=303 data-nosnippet>303</a>            .insert(
-<a href=#304 id=304 data-nosnippet>304</a>                <span class="string">"vm_instance_ssh_key"</span>.to_string(),
+<a href=#304 id=304 data-nosnippet>304</a>                <span class="string">"vm_instance_ssh_key"</span>.to_owned(),
 <a href=#305 id=305 data-nosnippet>305</a>                <span class="macro">json!</span>({
 <a href=#306 id=306 data-nosnippet>306</a>                    <span class="string">"algorithm"</span>: <span class="string">"RSA"</span>,
 <a href=#307 id=307 data-nosnippet>307</a>                    <span class="string">"rsa_bits"</span>: <span class="number">4096
@@ -311,10 +311,10 @@
 <a href=#311 id=311 data-nosnippet>311</a>        resource_batch
 <a href=#312 id=312 data-nosnippet>312</a>            .terraform
 <a href=#313 id=313 data-nosnippet>313</a>            .resource
-<a href=#314 id=314 data-nosnippet>314</a>            .entry(<span class="string">"local_file"</span>.to_string())
+<a href=#314 id=314 data-nosnippet>314</a>            .entry(<span class="string">"local_file"</span>.to_owned())
 <a href=#315 id=315 data-nosnippet>315</a>            .or_default()
 <a href=#316 id=316 data-nosnippet>316</a>            .insert(
-<a href=#317 id=317 data-nosnippet>317</a>                <span class="string">"vm_instance_ssh_key_pem"</span>.to_string(),
+<a href=#317 id=317 data-nosnippet>317</a>                <span class="string">"vm_instance_ssh_key_pem"</span>.to_owned(),
 <a href=#318 id=318 data-nosnippet>318</a>                <span class="macro">json!</span>({
 <a href=#319 id=319 data-nosnippet>319</a>                    <span class="string">"content"</span>: <span class="string">"${tls_private_key.vm_instance_ssh_key.private_key_pem}"</span>,
 <a href=#320 id=320 data-nosnippet>320</a>                    <span class="string">"filename"</span>: <span class="string">".ssh/vm_instance_ssh_key_pem"</span>,
@@ -362,7 +362,7 @@
 <a href=#362 id=362 data-nosnippet>362</a>                <span class="kw">let </span>firewall_rule = resource_batch
 <a href=#363 id=363 data-nosnippet>363</a>                    .terraform
 <a href=#364 id=364 data-nosnippet>364</a>                    .resource
-<a href=#365 id=365 data-nosnippet>365</a>                    .entry(<span class="string">"google_compute_firewall"</span>.to_string())
+<a href=#365 id=365 data-nosnippet>365</a>                    .entry(<span class="string">"google_compute_firewall"</span>.to_owned())
 <a href=#366 id=366 data-nosnippet>366</a>                    .or_default()
 <a href=#367 id=367 data-nosnippet>367</a>                    .entry(<span class="macro">format!</span>(<span class="string">"open-external-port-{}"</span>, port))
 <a href=#368 id=368 data-nosnippet>368</a>                    .or_insert(<span class="macro">json!</span>({
@@ -397,7 +397,7 @@
 <a href=#397 id=397 data-nosnippet>397</a>        resource_batch
 <a href=#398 id=398 data-nosnippet>398</a>            .terraform
 <a href=#399 id=399 data-nosnippet>399</a>            .resource
-<a href=#400 id=400 data-nosnippet>400</a>            .entry(<span class="string">"google_compute_instance"</span>.to_string())
+<a href=#400 id=400 data-nosnippet>400</a>            .entry(<span class="string">"google_compute_instance"</span>.to_owned())
 <a href=#401 id=401 data-nosnippet>401</a>            .or_default()
 <a href=#402 id=402 data-nosnippet>402</a>            .insert(
 <a href=#403 id=403 data-nosnippet>403</a>                vm_key.clone(),
@@ -460,7 +460,7 @@
 <a href=#460 id=460 data-nosnippet>460</a>
 <a href=#461 id=461 data-nosnippet>461</a>                Arc::new(LaunchedComputeEngine {
 <a href=#462 id=462 data-nosnippet>462</a>                    resource_result: resource_result.clone(),
-<a href=#463 id=463 data-nosnippet>463</a>                    user: <span class="self">self</span>.user.as_ref().cloned().unwrap_or(<span class="string">"hydro"</span>.to_string()),
+<a href=#463 id=463 data-nosnippet>463</a>                    user: <span class="self">self</span>.user.as_ref().cloned().unwrap_or(<span class="string">"hydro"</span>.to_owned()),
 <a href=#464 id=464 data-nosnippet>464</a>                    internal_ip,
 <a href=#465 id=465 data-nosnippet>465</a>                    external_ip,
 <a href=#466 id=466 data-nosnippet>466</a>                })
