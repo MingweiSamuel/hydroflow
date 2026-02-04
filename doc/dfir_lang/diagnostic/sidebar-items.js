@@ -1,1 +1,1 @@
-window.SIDEBAR_ITEMS = {"enum":["Level"],"struct":["Diagnostic","SerdeSpan"]};
+window.SIDEBAR_ITEMS = {"enum":["Level"],"struct":["Diagnostic","Diagnostics","SerdeSpan"]};
