@@ -135,34 +135,35 @@
 <a href=#135 id=135 data-nosnippet>135</a>    set_global_default(
 <a href=#136 id=136 data-nosnippet>136</a>        registry().with(
 <a href=#137 id=137 data-nosnippet>137</a>            fmt::layer()
-<a href=#138 id=138 data-nosnippet>138</a>                .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
-<a href=#139 id=139 data-nosnippet>139</a>                .event_format(Formatter)
-<a href=#140 id=140 data-nosnippet>140</a>                .with_filter(filter.clone()),
-<a href=#141 id=141 data-nosnippet>141</a>        ),
-<a href=#142 id=142 data-nosnippet>142</a>    )
-<a href=#143 id=143 data-nosnippet>143</a>    .unwrap();
-<a href=#144 id=144 data-nosnippet>144</a>
-<a href=#145 id=145 data-nosnippet>145</a>    <span class="attr">#[expect(
-<a href=#146 id=146 data-nosnippet>146</a>        non_snake_case,
-<a href=#147 id=147 data-nosnippet>147</a>        reason = <span class="string">"this variable represents an env var which is in all caps"
-<a href=#148 id=148 data-nosnippet>148</a>    </span>)]
-<a href=#149 id=149 data-nosnippet>149</a>    </span><span class="kw">let </span>RUST_LOG = std::env::var(<span class="string">"RUST_LOG"</span>);
-<a href=#150 id=150 data-nosnippet>150</a>
-<a href=#151 id=151 data-nosnippet>151</a>    <span class="macro">tracing::trace!</span>(name: <span class="string">"Tracing Initialized"</span>, <span class="question-mark">?</span>RUST_LOG, <span class="question-mark">?</span>filter);
-<a href=#152 id=152 data-nosnippet>152</a>}
-<a href=#153 id=153 data-nosnippet>153</a>
-<a href=#154 id=154 data-nosnippet>154</a><span class="doccomment">/// Used to add a sidecar to generated code.
-<a href=#155 id=155 data-nosnippet>155</a></span><span class="kw">pub trait </span>Sidecar {
-<a href=#156 id=156 data-nosnippet>156</a>    <span class="doccomment">/// Generates code to create a sidecar.
-<a href=#157 id=157 data-nosnippet>157</a>    ///
-<a href=#158 id=158 data-nosnippet>158</a>    /// The generated code should be an expression which evaluates as a `Future`.
-<a href=#159 id=159 data-nosnippet>159</a>    </span><span class="kw">fn </span>to_expr(
-<a href=#160 id=160 data-nosnippet>160</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
-<a href=#161 id=161 data-nosnippet>161</a>        flow_name: <span class="kw-2">&amp;</span>str,
-<a href=#162 id=162 data-nosnippet>162</a>        location_key: LocationKey,
-<a href=#163 id=163 data-nosnippet>163</a>        location_type: LocationType,
-<a href=#164 id=164 data-nosnippet>164</a>        location_name: <span class="kw-2">&amp;</span>str,
-<a href=#165 id=165 data-nosnippet>165</a>        dfir_ident: <span class="kw-2">&amp;</span>syn::Ident,
-<a href=#166 id=166 data-nosnippet>166</a>    ) -&gt; syn::Expr;
-<a href=#167 id=167 data-nosnippet>167</a>}
+<a href=#138 id=138 data-nosnippet>138</a>                .with_writer(std::io::stderr)
+<a href=#139 id=139 data-nosnippet>139</a>                .with_span_events(FmtSpan::NEW | FmtSpan::CLOSE)
+<a href=#140 id=140 data-nosnippet>140</a>                .event_format(Formatter)
+<a href=#141 id=141 data-nosnippet>141</a>                .with_filter(filter.clone()),
+<a href=#142 id=142 data-nosnippet>142</a>        ),
+<a href=#143 id=143 data-nosnippet>143</a>    )
+<a href=#144 id=144 data-nosnippet>144</a>    .unwrap();
+<a href=#145 id=145 data-nosnippet>145</a>
+<a href=#146 id=146 data-nosnippet>146</a>    <span class="attr">#[expect(
+<a href=#147 id=147 data-nosnippet>147</a>        non_snake_case,
+<a href=#148 id=148 data-nosnippet>148</a>        reason = <span class="string">"this variable represents an env var which is in all caps"
+<a href=#149 id=149 data-nosnippet>149</a>    </span>)]
+<a href=#150 id=150 data-nosnippet>150</a>    </span><span class="kw">let </span>RUST_LOG = std::env::var(<span class="string">"RUST_LOG"</span>);
+<a href=#151 id=151 data-nosnippet>151</a>
+<a href=#152 id=152 data-nosnippet>152</a>    <span class="macro">tracing::trace!</span>(name: <span class="string">"Tracing Initialized"</span>, <span class="question-mark">?</span>RUST_LOG, <span class="question-mark">?</span>filter);
+<a href=#153 id=153 data-nosnippet>153</a>}
+<a href=#154 id=154 data-nosnippet>154</a>
+<a href=#155 id=155 data-nosnippet>155</a><span class="doccomment">/// Used to add a sidecar to generated code.
+<a href=#156 id=156 data-nosnippet>156</a></span><span class="kw">pub trait </span>Sidecar {
+<a href=#157 id=157 data-nosnippet>157</a>    <span class="doccomment">/// Generates code to create a sidecar.
+<a href=#158 id=158 data-nosnippet>158</a>    ///
+<a href=#159 id=159 data-nosnippet>159</a>    /// The generated code should be an expression which evaluates as a `Future`.
+<a href=#160 id=160 data-nosnippet>160</a>    </span><span class="kw">fn </span>to_expr(
+<a href=#161 id=161 data-nosnippet>161</a>        <span class="kw-2">&amp;</span><span class="self">self</span>,
+<a href=#162 id=162 data-nosnippet>162</a>        flow_name: <span class="kw-2">&amp;</span>str,
+<a href=#163 id=163 data-nosnippet>163</a>        location_key: LocationKey,
+<a href=#164 id=164 data-nosnippet>164</a>        location_type: LocationType,
+<a href=#165 id=165 data-nosnippet>165</a>        location_name: <span class="kw-2">&amp;</span>str,
+<a href=#166 id=166 data-nosnippet>166</a>        dfir_ident: <span class="kw-2">&amp;</span>syn::Ident,
+<a href=#167 id=167 data-nosnippet>167</a>    ) -&gt; syn::Expr;
+<a href=#168 id=168 data-nosnippet>168</a>}
 </code></pre></div></section></main></body></html>
