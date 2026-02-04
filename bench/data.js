@@ -1,6 +1,6 @@
 window.BENCHMARK_DATA = 
 {
-  "lastUpdate": 1770095808626,
+  "lastUpdate": 1770181740054,
   "repoUrl": "https://github.com/hydro-project/hydro",
   "entries": {
     "Benchmark": [
@@ -258868,6 +258868,214 @@ window.BENCHMARK_DATA =
             "name": "micro/ops/group_by",
             "value": 10460,
             "range": "± 577",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Shadaj Laddad",
+            "username": "shadaj",
+            "email": "shadaj@users.noreply.github.com"
+          },
+          "committer": {
+            "name": "GitHub",
+            "username": "web-flow",
+            "email": "noreply@github.com"
+          },
+          "id": "43d41a3c69f02e76943df968c2bddcb872928193",
+          "message": "feat(hydro_lang): Jepsen / Maelstrom backend for Hydro (#2532)\n\nThis adds Jepsen's Maelstrom system as another deployment target for\nHydro. This enables running Hydro programs with the Maelstrom harness,\nwhich tests distributed systems for consistency violations using the\nsame techniques as Jepsen's database evaluations.\n\nThe Hydro simulator remains the primary method for testing programs. It\nis order of magnitudes faster and tests *all* concurrent executions\ninstead of randomizing. But Maelstrom provides a handy set of exercises\nthat we can use to evaluate Hydro, provides carefully-specced verifiers\nfor transaction semantics, and makes it possible to compare Hydro to\nother distributed systems.",
+          "timestamp": "2026-02-04T00:49:19Z",
+          "url": "https://github.com/hydro-project/hydro/commit/43d41a3c69f02e76943df968c2bddcb872928193"
+        },
+        "date": 1770181739991,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "arithmetic/dfir_rs/compiled",
+            "value": 310828,
+            "range": "± 7215",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "arithmetic/dfir_rs/compiled_no_cheating",
+            "value": 6524541,
+            "range": "± 9626",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "arithmetic/dfir_rs/surface",
+            "value": 6874522,
+            "range": "± 22241",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/dfir_rs/surface",
+            "value": 64223887,
+            "range": "± 3493225",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/dfir_rs/surface",
+            "value": 6814130,
+            "range": "± 39151",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/dfir_rs",
+            "value": 3958199,
+            "range": "± 30016",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/dfir_rs/surface",
+            "value": 25642165,
+            "range": "± 715695",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/dfir_rs",
+            "value": 8292668,
+            "range": "± 221542",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/dfir_rs/compiled",
+            "value": 6524450,
+            "range": "± 356464",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/dfir_rs/surface",
+            "value": 6981101,
+            "range": "± 87085",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/dfir_rs/scheduled",
+            "value": 1703768,
+            "range": "± 21770",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/dfir_rs",
+            "value": 1780920,
+            "range": "± 47308",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/dfir_rs/surface",
+            "value": 5526848,
+            "range": "± 81022",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/dfir_rs/surface_cheating",
+            "value": 1535703,
+            "range": "± 8404",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "dfir_rs_diamond",
+            "value": 58223512,
+            "range": "± 4281822",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/identity",
+            "value": 25450,
+            "range": "± 258",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/unique",
+            "value": 41408,
+            "range": "± 301",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/map",
+            "value": 25529,
+            "range": "± 124",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/flat_map",
+            "value": 20109,
+            "range": "± 96",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/flat_map2",
+            "value": 334979,
+            "range": "± 13605",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/join",
+            "value": 90659,
+            "range": "± 1162",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/difference",
+            "value": 94760,
+            "range": "± 2001",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/union",
+            "value": 56890,
+            "range": "± 816",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/tee",
+            "value": 28627,
+            "range": "± 187",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/fold",
+            "value": 43336,
+            "range": "± 1237",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/sort",
+            "value": 109365,
+            "range": "± 916",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/crossjoin",
+            "value": 98318,
+            "range": "± 769",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/anti_join",
+            "value": 13723,
+            "range": "± 180",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/next_tick/small",
+            "value": 64354,
+            "range": "± 2259",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/next_tick/big",
+            "value": 69848,
+            "range": "± 2956",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/group_by",
+            "value": 11240,
+            "range": "± 387",
             "unit": "ns/iter"
           }
         ]
