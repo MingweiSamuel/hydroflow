@@ -1,6 +1,6 @@
 window.BENCHMARK_DATA = 
 {
-  "lastUpdate": 1787544193030,
+  "lastUpdate": 1787630544422,
   "repoUrl": "https://github.com/MingweiSamuel/hydroflow",
   "entries": {
     "Benchmark": [
@@ -289486,6 +289486,208 @@ window.BENCHMARK_DATA =
             "name": "micro/ops/group_by",
             "value": 6292,
             "range": "± 153",
+            "unit": "ns/iter"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "name": "Mingwei Samuel",
+            "username": "MingweiSamuel",
+            "email": "mingwes@amazon.com"
+          },
+          "committer": {
+            "name": "Mingwei Samuel",
+            "username": "MingweiSamuel",
+            "email": "mingwes@amazon.com"
+          },
+          "id": "e305aac64a4289c71651e90029d8224daf508250",
+          "message": "ci: upload benchmark html as artifacts for viewing in PRs [ci-bench]",
+          "timestamp": "2025-09-22T21:37:45Z",
+          "url": "https://github.com/MingweiSamuel/hydroflow/commit/e305aac64a4289c71651e90029d8224daf508250"
+        },
+        "date": 1787630544386,
+        "tool": "cargo",
+        "benches": [
+          {
+            "name": "arithmetic/dfir_rs/compiled",
+            "value": 272558,
+            "range": "± 338",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "arithmetic/dfir_rs/compiled_no_cheating",
+            "value": 5723325,
+            "range": "± 108113",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "arithmetic/dfir_rs/surface",
+            "value": 5771246,
+            "range": "± 62581",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_in/dfir_rs/surface",
+            "value": 27310815,
+            "range": "± 788279",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fan_out/dfir_rs/surface",
+            "value": 5688635,
+            "range": "± 11799",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/dfir_rs",
+            "value": 3895737,
+            "range": "± 23574",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "fork_join/dfir_rs/surface",
+            "value": 22156689,
+            "range": "± 236027",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/dfir_rs",
+            "value": 5438967,
+            "range": "± 35254",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/dfir_rs/compiled",
+            "value": 5724932,
+            "range": "± 76138",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "identity/dfir_rs/surface",
+            "value": 5846951,
+            "range": "± 8212",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/dfir_rs/scheduled",
+            "value": 1564137,
+            "range": "± 8420",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/dfir_rs",
+            "value": 1783380,
+            "range": "± 28316",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/dfir_rs/surface",
+            "value": 4299845,
+            "range": "± 36562",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "reachability/dfir_rs/surface_cheating",
+            "value": 1378170,
+            "range": "± 24861",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "dfir_rs_diamond",
+            "value": 44376129,
+            "range": "± 243504",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/identity",
+            "value": 3392,
+            "range": "± 41",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/unique",
+            "value": 22508,
+            "range": "± 160",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/map",
+            "value": 3917,
+            "range": "± 61",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/flat_map",
+            "value": 5819,
+            "range": "± 55",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/join",
+            "value": 61622,
+            "range": "± 1488",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/difference",
+            "value": 55897,
+            "range": "± 772",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/union",
+            "value": 14568,
+            "range": "± 510",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/tee",
+            "value": 5787,
+            "range": "± 27",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/fold",
+            "value": 16874,
+            "range": "± 845",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/sort",
+            "value": 69269,
+            "range": "± 644",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/crossjoin",
+            "value": 64067,
+            "range": "± 518",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/anti_join",
+            "value": 7482,
+            "range": "± 128",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/next_tick/small",
+            "value": 41725,
+            "range": "± 878",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/next_tick/big",
+            "value": 52497,
+            "range": "± 2111",
+            "unit": "ns/iter"
+          },
+          {
+            "name": "micro/ops/group_by",
+            "value": 7206,
+            "range": "± 97",
             "unit": "ns/iter"
           }
         ]
